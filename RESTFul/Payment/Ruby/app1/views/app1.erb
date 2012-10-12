@@ -1,0 +1,341 @@
+
+<!-- Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012 
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com 
+For more information contact developer.support@att.com -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <title>AT&T Sample Payment Application - Single Pay Application</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <link rel="stylesheet" type="text/css" href="css/common.css" />
+</head>
+<body>
+    <div id="container">
+        <!-- open HEADER -->
+        <div id="header">
+            <div>
+                <div class="hcRight">
+                    <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %>
+                </div>
+                <div class="hcLeft">
+                    Server Time:</div>
+            </div>
+            <div>
+                <div class="hcRight">
+                    <script language="JavaScript" type="text/javascript">
+                        var myDate = new Date();
+                        document.write(myDate);
+                    </script>
+                </div>
+                <div class="hcLeft">
+                    Client Time:</div>
+            </div>
+            <div>
+                <div class="hcRight">
+                    <script language="JavaScript" type="text/javascript">
+                        document.write("" + navigator.userAgent);
+                    </script>
+                </div>
+                <div class="hcLeft">
+                    User Agent:</div>
+            </div>
+            <br clear="all" />
+        </div>
+        <!-- close HEADER -->
+        <div>
+            <div class="content">
+                <h1>
+                    AT&T Sample Payment Application - Single Pay Application</h1>
+                <h2>
+                    Feature 1: Create New Transaction</h2>
+                <br />
+            </div>
+        </div>
+    	<form method="post" name="newTransaction" action="/newTransaction">
+        <div class="navigation">
+            <table border="0" width="100%">
+                <tbody>
+                    <tr>
+                        <td class="cell">
+                            <input type="radio" name="product" value="1" checked="checked" />Buy product 1 for
+                            $0.99
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell">
+                            <input type="radio" name="product" value="2" />Buy product 2 for $2.99
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                        </td>
+                        <td>
+                            <button type="submit" name="newTransaction">
+                                Buy Product</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+		</form>
+		<br clear="all" />
+		<div align="center"></div>
+			<% unless @new_transaction.nil? %>
+				<div class="successWide">
+					<strong>SUCCESS:</strong>
+					<br />
+							<strong>Merchant Transaction ID:</strong> <%= @new_transaction[:merchant_transaction_id] %>
+						<br/>
+							<strong>Transaction Auth Code:</strong> <%= @new_transaction[:transaction_auth_code] %>
+						<br />
+					<br/>
+					<form name="getNotaryDetails" action="<%= settings.notary_app_view_payload_url %>">
+    						<input type="submit" name="submit" value="View Notary Details" />
+				</form>
+			</div>
+		<br/>
+		<% end %>
+			<% if @new_transaction_error %>
+				<div class="errorWide">
+					<strong>ERROR:</strong><br />
+					<%= @new_transaction_error %>
+				</div>
+			<br/>
+		<% end %>
+        <div class="wrapper">
+            <div class="content">
+                <h2>
+                    <br />
+                    Feature 2: Get Transaction Status </h2>
+    					</div>
+					</div>
+					<form method="post" name="getTransactionStatus" action="/getTransactionStatus">
+						<div id="navigation" align="center">
+							<table border="0" width="100%">
+								<tbody>
+									<% if @transactions.last %>
+										<tr>
+											<td class="cell">
+												<input type="radio" name="getTransactionType" value="1" checked="checked" />
+												Merchant Transaction ID: <%= @transactions.last ? @transactions.last[:merchant_transaction_id] : '' %></td>
+										</tr>
+										<tr>
+											<td class="cell">
+												<input type="radio" name="getTransactionType" value="2" />
+												Auth Code: <%= @transactions.last ? @transactions.last[:transaction_auth_code] : '' %></td>
+										</tr>
+                                        <tr>
+    										<td class="cell">
+												<input type="radio" name="getTransactionType" value="3" /> 
+                                                Transaction ID:
+										        <% if @transactions.last[:transaction_id] %> <%= @transactions.last[:transaction_id] %></td>
+												</td>
+											</tr>
+										<% end %>
+									<% end %>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td class="cell">
+											<button  type="submit" name="getTransactionStatus">
+												Get Transaction Status
+										</button></td>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+		</form>
+		<br clear="all" />
+		<% if @transaction_status %>
+			<div class="successWide">
+				<strong>SUCCESS</strong>
+				<br />
+			</div>
+			<br />
+			<div align="center">
+				<table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
+					<thead>
+						<tr>
+							<th style="width: 100px" class="cell" align="right"><strong>Parameter</strong></th>
+							<th style="width: 100px" class="cell"><strong></strong></th>
+							<th style="width: 275px" class="cell" align="left"><strong>Value</strong></th>
+						</tr>
+					</thead>
+					<tbody>
+						<% @transaction_status[:status].sort.each do |key, value| %>
+							<tr>
+								<td align="right" class="cell"><%= key %></td>
+								<td align="center" class="cell"></td>
+								<td align="left" class="cell"><%= value %></td>
+							</tr>
+						<% end %>
+					</tbody>
+				</table>
+			</div>
+		<% end %>
+		<% if @transaction_status_error %>
+			<div class="errorWide">
+				<strong>ERROR:</strong><br />
+				<%= @transaction_status_error %>
+			</div><br/>
+		<% end %>
+        <div class="wrapper">
+            <div class="content">
+                <h2>
+                    <br />
+                    Feature 3: Refund Transaction</h2>
+            </div>
+        </div>
+		<form method="post" name="refundTransaction" action="/refundTransaction">
+        <div class="navigation" align="center">
+            <table style="width: 750px" cellpadding="1" cellspacing="1" border="0">
+                <thead>
+                    <tr>
+                        <th style="width: 150px" class="cell" align="left">
+                            <strong>Transaction ID</strong>
+                        </th>
+                        <th style="width: 100px" class="cell">
+                        </th>
+                        <th style="width: 240px" class="cell" align="left">
+                            <strong>Merchant Transaction ID</strong>
+                        </th>
+                        <td>
+                            <div class="warning">
+                                <strong>WARNING:</strong><br />
+                                You must use Get Transaction Status to get the Transaction ID before you can refund
+                                it.
+                            </div>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+				<% @transactions.each do |t| %>                       
+					<tr>
+						<td class="cell" align="left">
+							<input type="radio" name="trxId" value="<%= t[:transaction_id] %>" checked="checked" />
+								<%= t[:transaction_id] %></td>
+							<td></td>
+						<td class="cell" align="left"><%= t[:merchant_transaction_id] %></td>
+					</tr>
+				<% end %>
+					<tr>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td class="cell">
+							<button  type="submit" name="refundTransaction">
+								Refund Transaction
+						</button></td>
+					</tr>
+				</tbody>
+            </table>
+        </div>
+		</form>
+		<br clear="all" />
+		<% if @transaction_refund %>
+			<div class="successWide">
+				<strong>SUCCESS</strong>
+				<br />
+			</div>
+			<br/>
+            <div align="center">
+        		<table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
+					<thead>
+						<tr>
+							<th style="width: 100px" class="cell" align="right"><strong>Parameter</strong></th>
+							<th style="width: 100px" class="cell"><strong></strong></th>
+							<th style="width: 275px" class="cell" align="left"><strong>Value</strong></th>
+						</tr>
+					</thead>
+					<tbody>
+						<% @transaction_refund[:status].sort.each do |key, value| %>
+							<tr>
+								<td align="right" class="cell"><%= key %></td>
+								<td align="center" class="cell"></td>
+								<td align="left" class="cell"><%= value %></td>
+							</tr>
+						<% end %>
+					</tbody>
+				</table>
+			</div>
+		<% end %>
+		<% if @refund_error %>
+			<div class="errorWide">
+				<strong>ERROR:</strong><br />
+				<%= @refund_error %>
+			</div><br/>
+		<% end %>
+        <div class="wrapper">
+            <div class="content">
+                <h2>
+                    <br />
+                    Feature 4: Notifications</h2>
+            </div>
+        </div>
+		<form method="post" name="refreshNotifications" action="/refreshNotifications">
+        <div class="navigation">
+            <br />
+            <div align="center">
+                <table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px" class="cell" align="left">
+                                <strong>Notification ID</strong>
+                            </th><th></th>
+                            <th style="width: 100px" class="cell" align="left">
+                                <strong>Notification Type</strong>
+                            </th><th></th>
+                            <th style="width: 125px" class="cell" align="left">
+                                <strong>Transaction ID</strong>
+                            </th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <% @notifications.each do |n| %>                       
+    				<tr>
+						<td style="width: 100px" td class="cell" align="left"><%= n[:notificationId] %></td><td></td>
+						<td style="width: 100px" td class="cell" align="left"><%= n[:notificationtype]%></td><td></td>
+                       				<td style="width: 100px" td class="cell" align="left"><%= n[:original_trxId] %></td><td></td>
+					</tr>
+				    <% end %>
+						<tr>
+                            <td class="cell">
+                                <button type="submit" name="refreshNotifications">
+                                    Refresh</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+			<br clear="all" />
+			</div>
+		</form>
+        <div id="footer">
+            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
+                Powered by AT&amp;T Cloud Architecture</div>
+            <p>
+                &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                    target="_blank">http://developer.att.com</a>
+                <br />
+                The Application hosted on this site are working examples intended to be used for
+                reference in creating products to consume AT&amp;T Services and not meant to be
+                used as part of your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services perform.
+                <br />
+                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
+                    target="_blank">https://devconnect-api.att.com</a>
+                <br />
+                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+        </div>
+    </div>
+</body>
+</html>
+
