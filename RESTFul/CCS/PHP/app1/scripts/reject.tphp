@@ -1,0 +1,18 @@
+<?php
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is reject script.");
+
+var callerID = currentCall.callerID;
+if (callerID == "1234567890") {
+    wait(3000);
+    say("Currently all supporting team members are busy");
+    say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+    reject();
+}
+else {
+    say("You passed the test!");
+    say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+}
+hangup();
+
+?>

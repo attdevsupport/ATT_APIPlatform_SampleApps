@@ -59,9 +59,9 @@ NOTE: You MUST select Speech in the list of services under field 'Services' in o
 	Each sample application contains a config.jsp file. It holds configurable parameters described in an easy to read format.
 	Please populate the following parameters in config.jsp as specified below:
 
-	1) clientIdWeb : {set the value as per your registered application 'API key' field value}
+	1) clientIdAut : {set the value as per your registered application 'API key' field value}
 
-	2) clientSecretWeb : {set the value as per your registered application 'Secret key' field value}
+	2) clientSecretAut : {set the value as per your registered application 'Secret key' field value}
 
 	3) FQDN : https://api.att.com
 

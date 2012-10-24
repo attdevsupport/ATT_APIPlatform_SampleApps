@@ -112,13 +112,13 @@ For more information contact developer.support@att.com -->
         </div>
       </div>
         
-      <form method="get" name="getDeliveryStatus" action="/getDeliveryStatus">
+      <form method="post" enctype="multipart/form-data" action="/getDeliveryStatus">
         <div id="navigation">
           <table border="0" width="100%">
             <tbody>
               <tr>
                 <td width="20%" valign="top" class="label">Message ID:</td>
-                <td class="cell"><input maxlength="20" size="12" name="smsId" value='<%= session[:sms_id] %>' style="width: 90%"/></td>
+                <td class="cell"><input maxlength="20" size="12" name="smsId" value="<%= session[:sms_id] %>" style="width: 90%"/></td>
               </tr>
             </tbody>
           </table>
@@ -128,7 +128,7 @@ For more information contact developer.support@att.com -->
             <tbody>
               <tr>
                 <td class="cell">
-                  <button type="submit" name="getDeliveryStatus">
+                  <button type="submit" name="submit">
                     Get Status
                   </button>
                 </td>
@@ -142,7 +142,7 @@ For more information contact developer.support@att.com -->
       <% if @delivery_error %>
         <div class="errorWide">
           <strong>ERROR:</strong><br/>
-          Message ID is null or empty          
+          <%= @delivery_error %>
         </div>
         <br/>
       <% end %>
@@ -167,9 +167,6 @@ For more information contact developer.support@att.com -->
       
       <form method="get" name="getReceivedSms" action="/getReceivedSms">
         <div id="navigation">
-
-
-
           <table border="0" width="100%">
             <tbody>
               <tr>
@@ -231,6 +228,5 @@ For more information contact developer.support@att.com -->
         For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
       </div>
     </div>
-  
   </body>
 </html>

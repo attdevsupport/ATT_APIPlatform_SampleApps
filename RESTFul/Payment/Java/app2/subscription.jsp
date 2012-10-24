@@ -9,7 +9,7 @@
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
 <title>AT&T Sample Payment Application - Subscription
-	Application</title>
+    Application</title>
 <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
 <link rel="stylesheet" type="text/css" href="style/common.css"/ >
 <script type="text/javascript" src="js/helper.js">
@@ -17,7 +17,7 @@
 </script>
 <head>
 <script type="text/javascript">
-	var _gaq = _gaq || [];
+    var _gaq = _gaq || [];
 	_gaq.push([ '_setAccount', 'UA-28378273-1' ]);
 	_gaq.push([ '_trackPageview' ]);
 
@@ -52,6 +52,7 @@ String newSubscription = request.getParameter("newSubscription");
 String getSubscriptionStatus = request.getParameter("getSubscriptionStatus");
 String getSubscriptionDetails = request.getParameter("getSubscriptionDetails");
 String refundSubscription = request.getParameter("refundSubscription");
+String cancelSubscription = request.getParameter("cancelSubscription");
 String refundReasonText = "User did not like product";
 String refreshNotifications = request.getParameter("refreshNotifications");
 
@@ -258,7 +259,6 @@ if(request.getParameter("SubscriptionAuthCode")!=null) {
 		
 if(request.getParameter("signedPayload")!=null && request.getParameter("signature")!=null){
     response.sendRedirect(FQDN + "/rest/3/Commerce/Payment/Subscriptions?clientid=" + clientIdAut + "&SignedPaymentDetail=" + request.getParameter("signedPayload") + "&Signature=" + request.getParameter("signature"));
-	System.out.println("BODY1: " + response);
 	}
 	
 if(request.getParameter("getTransactionType") != null)
@@ -359,10 +359,9 @@ GetMethod method = new GetMethod(url);
 method.addRequestHeader("Authorization","Bearer " + accessToken);
 method.addRequestHeader("Accept","application/json");
 int statusCode = client.executeMethod(method);  
-  
 if(statusCode==200) {
     JSONObject jsonResponse = new JSONObject(method.getResponseBodyAsString());
-    trxId = jsonResponse.getString("SubscriptionId");
+    trxId = jsonResponse.getString("ConsumerId");
     session.setAttribute("trxId", trxId);
     consumerId = jsonResponse.getString("ConsumerId");
     session.setAttribute("consumerId", consumerId);
@@ -377,7 +376,7 @@ if(statusCode==200) {
     outWrite.close();
     %>
 	<div class="successWide">
-		<strong>SUCCESS</strong><br />
+		<strong>SUCCESS</strong> <%=method.getResponseBodyAsString()%><br />
 
 	</div>
 	<br />
@@ -645,13 +644,31 @@ if(true) {
 }
 %>
 
-					<tr>
-						<td></td>
-						<td></td>
-						<td></td>
-						<td class="cell"><button type="submit"
-								name="refundSubscription">Refund Subscription</button></td>
-					</tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                        </td>
+                        <td>
+                        </td>
+                        <td class="cell">
+                            <button type="submit" name="cancelSubscription">
+                                Cancel Subscription</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                        </td>
+                        <td>
+                        </td>
+                        <td class="cell">
+                            <button type="submit" name="refundSubscription">
+                                Refund Subscription</button>
+                        </td>
+                    </tr>
+
 				</tbody>
 			</table>
 	</form>
@@ -659,7 +676,8 @@ if(true) {
 	<br clear="all" />
 
 
-	<% if(refundSubscription!=null) { 
+	<% if(refundSubscription!=null || cancelSubscription !=null) { 
+	
 	trxId = request.getParameter("trxIdRefund"); // Gets value for the checked radio button
     String url = FQDN + "/rest/3/Commerce/Payment/Transactions/" + trxId;  
     HttpClient client = new HttpClient();
@@ -669,7 +687,12 @@ if(true) {
     method.addRequestHeader("Accept","application/json");
     JSONObject bodyObject = new JSONObject();
     String reasonCode = "1";
-	String status = "Refunded";
+	String status = "";
+	if (refundSubscription !=null)
+		status = "Refunded";
+	else if (cancelSubscription !=null)
+		status = "SubscriptionCancelled";
+	
 	bodyObject.put("TransactionOperationStatus",status);
     bodyObject.put("RefundReasonCode",Double.parseDouble(reasonCode));
     bodyObject.put("RefundReasonText",refundReasonText);
@@ -709,7 +732,8 @@ if(true) {
 	</div>
 	<br />
 	<%
-  } else {
+  } 
+  else {
   	%>
 	<div class="errorWide">
 		<strong>ERROR:</strong><br />
@@ -826,7 +850,6 @@ String transactionId = "";
 		JSONObject jsonResponse1 = new JSONObject(method1.getResponseBodyAsString());
 		JSONArray notificationList = new JSONArray(jsonResponse1.getString("notificationList"));
 		String totalNumberOfNotifications = jsonResponse1.getString("totalNumberOfNotifications");
-        System.out.println("method1.getResponseBodyAsString()"+method1.getResponseBodyAsString());
       
         method1.releaseConnection();
 
@@ -844,7 +867,6 @@ String transactionId = "";
 				String url = FQDN + "/rest/3/Commerce/Payment/Notifications/" + not;		//Builds the Get Request
                 HttpClient clients = new HttpClient();
 				GetMethod methods = new GetMethod(url);
-                System.out.println("accessToken"+accessToken);
             	methods.addRequestHeader("Authorization", "Bearer " + accessToken);
                 methods.addRequestHeader("Accept", "application/json");
         		int statusCode = clients.executeMethod(methods);
@@ -874,7 +896,6 @@ String transactionId = "";
 					int statusCode3 = client2.executeMethod(method2);
 
 					if(statusCode3==200 || statusCode3==201) 
-					System.out.println("Acknowlegement success ");
 
 					methods.releaseConnection();    
 					method2.releaseConnection();

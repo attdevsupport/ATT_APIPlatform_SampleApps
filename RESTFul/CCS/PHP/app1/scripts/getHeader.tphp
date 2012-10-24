@@ -1,0 +1,14 @@
+<?php 
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is get headers script.");
+if (currentCall.getHeader("x-contact")) {
+    log("Your header value is " + currentCall.getHeader("x-contact"));
+}
+else {
+    log("Your header value was not found");
+}
+say("Fetched contact header using get header and logged to debugger");
+say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+hangup();
+
+?>

@@ -59,7 +59,7 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// Instance variables for local processing
     /// </summary>
     private string expirySeconds, refreshTokenExpiryTime;
-    
+
     /// <summary>
     /// Instance variables for local processing
     /// </summary>
@@ -83,7 +83,7 @@ public partial class MMS_App1 : System.Web.UI.Page
                 return true;
             };
     }
-    
+
     #endregion
 
     #region Page and Button Events
@@ -101,7 +101,7 @@ public partial class MMS_App1 : System.Web.UI.Page
 
             DateTime currentServerTime = DateTime.UtcNow;
             serverTimeLabel.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
-            
+
             this.ReadConfigFile();
         }
         catch (Exception ex)
@@ -120,7 +120,7 @@ public partial class MMS_App1 : System.Web.UI.Page
         try
         {
             if (this.ReadAndGetAccessToken() == true)
-            {   
+            {
                 long fileSize = 0;
                 if (!string.IsNullOrEmpty(FileUpload1.FileName))
                 {
@@ -358,11 +358,11 @@ public partial class MMS_App1 : System.Web.UI.Page
                 this.accessTokenExpiryTime = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in));
 
                 DateTime refreshExpiry = currentServerTime.AddHours(this.refreshTokenExpiresIn);
-                
+
                 if (deserializedJsonObj.expires_in.Equals("0"))
                 {
                     int defaultAccessTokenExpiresIn = 100; // In Years
-                    this.accessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn);                     
+                    this.accessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn);
                 }
 
                 this.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() + " " + refreshExpiry.ToLongTimeString();
@@ -512,11 +512,11 @@ public partial class MMS_App1 : System.Web.UI.Page
         table.CssClass = "successWide";
         table.Font.Name = "Sans-serif";
         table.Font.Size = 9;
-        
+
         TableRow rowOne = new TableRow();
         TableCell rowOneCellOne = new TableCell();
         rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "SUCCESS:";        
+        rowOneCellOne.Text = "SUCCESS:";
         rowOne.Controls.Add(rowOneCellOne);
         table.Controls.Add(rowOne);
 
@@ -538,11 +538,11 @@ public partial class MMS_App1 : System.Web.UI.Page
         rowThreeCellTwo.Text = url.ToString();
         rowThree.Controls.Add(rowThreeCellTwo);
         table.Controls.Add(rowThree);
-        
+
         getStatusPanel.Controls.Add(table);
     }
 
-#endregion
+    #endregion
 
     #region Application Specific Methods
 
@@ -786,8 +786,8 @@ public partial class MMS_App1 : System.Web.UI.Page
         string boundary = "----------------------------" + DateTime.Now.Ticks.ToString("x");
 
         HttpWebRequest mmsRequestObject = (HttpWebRequest)WebRequest.Create(string.Empty + this.endPoint + "/rest/mms/2/messaging/outbox");
-        mmsRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);        
-        mmsRequestObject.ContentType = "multipart/form-data; type=\"application/x-www-form-urlencoded\"; start=\"<startpart>\"; boundary=\"" + boundary + "\"\r\n";
+        mmsRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);
+        mmsRequestObject.ContentType = "multipart/related;boundary=\"" + boundary + "\"\r\n";
         mmsRequestObject.Method = "POST";
         mmsRequestObject.KeepAlive = true;
 
@@ -798,7 +798,7 @@ public partial class MMS_App1 : System.Web.UI.Page
 
         string data = string.Empty;
         data += "--" + boundary + "\r\n";
-        data += "Content-Type:application/x-www-form-urlencoded;charset=UTF-8\r\nContent-Transfer-Encoding:8bit\r\nContent-ID:<startpart>\r\n\r\n" + sendMMSData + "\r\n";
+        data += "Content-Type:application/x-www-form-urlencoded;charset=UTF-8\r\nContent-Transfer-Encoding:8bit\r\nContent-Disposition: form-data; name=\"root-fields\"\r\nContent-ID:<startpart>\r\n\r\n" + sendMMSData + "\r\n";
 
         totalpostBytes = this.FormMIMEParts(boundary, ref data);
 
@@ -929,15 +929,16 @@ public partial class MMS_App1 : System.Web.UI.Page
         try
         {
             string mmsFileName = Path.GetFileName(filePath);
-
+            string mmsFileExtension = Path.GetExtension(filePath);
+            string attachmentContentType = MapContentTypeFromExtension(mmsFileExtension);
             fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             binaryReader = new BinaryReader(fileStream);
 
             byte[] image = binaryReader.ReadBytes((int)fileStream.Length);
 
             data += "--" + boundary + "\r\n";
-            data += "Content-Disposition:attachment;name=\"" + mmsFileName + "\"\r\n";
-            data += "Content-Type:image/gif\r\n";
+            data += "Content-Disposition:attachment;filename=\"" + mmsFileName + "\"\r\n";
+            data += "Content-Type:" + attachmentContentType + "\r\n";
             data += "Content-ID:<" + mmsFileName + ">\r\n";
             data += "Content-Transfer-Encoding:binary\r\n\r\n";
 
@@ -1032,6 +1033,36 @@ public partial class MMS_App1 : System.Web.UI.Page
     }
 
     /// <summary>
+    /// Content type based on the file extension.
+    /// </summary>
+    /// <param name="extension">file extension</param>
+    /// <returns>the Content type mapped to the extension"/> summed memory stream</returns>
+    private static string MapContentTypeFromExtension(string extension)
+    {
+        Dictionary<string, string> extensionToContentTypeMapping = new Dictionary<string, string>()
+            {
+                { ".jpg", "image/jpeg" }, { ".bmp", "image/bmp" }, { ".mp3", "audio/mp3" },
+                { ".m4a", "audio/m4a" }, { ".gif", "image/gif" }, { ".3gp", "video/3gpp" },
+                { ".3g2", "video/3gpp2" }, { ".wmv", "video/x-ms-wmv" }, { ".m4v", "video/x-m4v" },
+                { ".amr", "audio/amr" }, { ".mp4", "video/mp4" }, { ".avi", "video/x-msvideo" },
+                { ".mov", "video/quicktime" }, { ".mpeg", "video/mpeg" }, { ".wav", "audio/x-wav" },
+                { ".aiff", "audio/x-aiff" }, { ".aifc", "audio/x-aifc" }, { ".midi", ".midi" },
+                { ".au", "audio/basic" }, { ".xwd", "image/x-xwindowdump" }, { ".png", "image/png" },
+                { ".tiff", "image/tiff" }, { ".ief", "image/ief" }, { ".txt", "text/plain" },
+                { ".html", "text/html" }, { ".vcf", "text/x-vcard" }, { ".vcs", "text/x-vcalendar" },
+                { ".mid", "application/x-midi" }, { ".imy", "audio/iMelody" }
+            };
+        if (extensionToContentTypeMapping.ContainsKey(extension))
+        {
+            return extensionToContentTypeMapping[extension];
+        }
+        else
+        {
+            throw new ArgumentException("invalid attachment extension");
+        }
+    }
+
+    /// <summary>
     /// This function adds two byte arrays
     /// </summary>
     /// <param name="firstByteArray">first array of bytes</param>
@@ -1098,9 +1129,9 @@ public class DeliveryInfoList
     /// <summary>
     /// Gets or sets the value of deliveryInfo
     /// </summary>
-    public List<deliveryInfo> deliveryInfo 
-    { 
-        get; 
+    public List<deliveryInfo> deliveryInfo
+    {
+        get;
         set;
     }
 }
@@ -1123,8 +1154,8 @@ public class deliveryInfo
     /// Gets or sets the value of address
     /// </summary>
     public string address
-    { 
-        get; 
+    {
+        get;
         set;
     }
 
@@ -1160,7 +1191,7 @@ public class AccessTokenResponse
         get;
         set;
     }
-    
+
     /// <summary>
     /// Gets or sets the value of expires_in
     /// </summary>

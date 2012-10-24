@@ -36,12 +36,12 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// <summary>
     /// Local Variables
     /// </summary>
-    private string apiKey, secretKey, authCode, accessToken, authorizeRedirectUri, scope, expirySeconds, refreshToken, accessTokenExpiryTime, refreshTokenExpiryTime;
+    private string apiKey, secretKey, accessToken, scope, expirySeconds, refreshToken, accessTokenExpiryTime, refreshTokenExpiryTime;
 
     /// <summary>
     /// Local Variables
     /// </summary>
-    private Table successTable, failureTable, successTableGetTransaction, failureTableGetTransaction, successTableGetSubscriptionDetails, successTableSubscriptionRefund;
+    private Table successTable, failureTable, successTableGetTransaction, successTableGetSubscriptionDetails, successTableSubscriptionRefund;
 
     /// <summary>
     /// Local Variables
@@ -71,7 +71,7 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// <summary>
     /// Local Variables
     /// </summary>
-    private string transactionTimeString, payLoadStringFromRequest, signedPayload, signedSignature, notaryURL;
+    private string transactionTimeString, signedPayload, signedSignature, notaryURL;
 
     /// <summary>
     /// Local Variables
@@ -241,7 +241,6 @@ public partial class Payment_App2 : System.Web.UI.Page
                     return;
                 }
 
-                // resourcePathString = resourcePathString + "?access_token=" + this.access_token;
                 HttpWebRequest objRequest = (HttpWebRequest)System.Net.WebRequest.Create(resourcePathString);
                 objRequest.Headers.Add("Authorization", "Bearer " + this.accessToken);
                 objRequest.Method = "GET";
@@ -253,9 +252,6 @@ public partial class Payment_App2 : System.Web.UI.Page
                     string getTransactionStatusResponseData = getTransactionStatusResponseStream.ReadToEnd();
                     JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
                     SubscriptionStatusResponse deserializedJsonObj = (SubscriptionStatusResponse)deserializeJsonObject.Deserialize(getTransactionStatusResponseData, typeof(SubscriptionStatusResponse));
-                    //DrawPanelForFailure(getSubscriptionStatusPanel, getTransactionStatusResponseData);
-                    //lblstatusMerSubsId.Text = deserializedJsonObj.MerchantSubscriptionId;
-                    //lblstatusSubsId.Text = deserializedJsonObj.SubscriptionId;
                     GetSubscriptionID.Text = "Subscription ID: " + deserializedJsonObj.SubscriptionId;
 
                     if (this.CheckItemInSubsDetailsFile(deserializedJsonObj.MerchantSubscriptionId, deserializedJsonObj.ConsumerId) == false)
@@ -399,9 +395,6 @@ public partial class Payment_App2 : System.Web.UI.Page
                             JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
                             SubscriptionDetailsResponse deserializedJsonObj = (SubscriptionDetailsResponse)deserializeJsonObject.Deserialize(subsDetailsResponseData, typeof(SubscriptionDetailsResponse));
                             subsDetailsSuccessTable.Visible = true;
-                            //lblMerSubId.Text = merSubsID.ToString();
-                            //lblConsId.Text = consID.ToString();
-                            //DrawPanelForFailure(getSubscriptionStatusPanel, subsDetailsResponseData);
                             this.DrawPanelForGetSubscriptionDetailsSuccess(subsDetailsPanel);
                             this.AddRowToGetSubscriptionDetailsSuccessPanel(getSubscriptionStatusPanel, "CreationDate", deserializedJsonObj.CreationDate);
                             this.AddRowToGetSubscriptionDetailsSuccessPanel(getSubscriptionStatusPanel, "Currency", deserializedJsonObj.Currency);
@@ -439,7 +432,7 @@ public partial class Payment_App2 : System.Web.UI.Page
     }
 
     /// <summary>
-    /// Get Subscription Refund button click
+    /// Refunds a subscription.
     /// </summary>
     /// <param name="sender">Sender Details</param>
     /// <param name="e">List of Arguments</param>
@@ -448,6 +441,7 @@ public partial class Payment_App2 : System.Web.UI.Page
         string subsID = string.Empty;
         bool recordFound = false;
         string strReq = "{\"TransactionOperationStatus\":\"Refunded\",\"RefundReasonCode\":1,\"RefundReasonText\":\"Customer was not happy\"}";
+        
         string dataLength = string.Empty;
         try
         {
@@ -515,18 +509,139 @@ public partial class Payment_App2 : System.Web.UI.Page
                             string subsRefundResponseData = subsRefundResponseStream.ReadToEnd();
                             JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
                             RefundResponse deserializedJsonObj = (RefundResponse)deserializeJsonObject.Deserialize(subsRefundResponseData, typeof(RefundResponse));
-                            //DrawPanelForFailure(subsRefundPanel, subsRefundResponseData);
                             subsRefundSuccessTable.Visible = true;
-                            //lbRefundTranID.Text = deserializedJsonObj.TransactionId;
-                            DrawPanelForSubscriptionRefundSuccess(subsRefundPanel);
+                            this.DrawPanelForSubscriptionRefundSuccess(subsRefundPanel);
 
-                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "CommitConfirmationId", deserializedJsonObj.CommitConfirmationId);
-                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "IsSuccess", deserializedJsonObj.IsSuccess);
-                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "OriginalPurchaseAmount", deserializedJsonObj.OriginalPurchaseAmount);
-                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionId", deserializedJsonObj.TransactionId);
-                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionStatus", deserializedJsonObj.TransactionStatus);
-                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "Version", deserializedJsonObj.Version);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "CommitConfirmationId", deserializedJsonObj.CommitConfirmationId);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "IsSuccess", deserializedJsonObj.IsSuccess);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "OriginalPurchaseAmount", deserializedJsonObj.OriginalPurchaseAmount);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionId", deserializedJsonObj.TransactionId);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionStatus", deserializedJsonObj.TransactionStatus);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "Version", deserializedJsonObj.Version);
  
+                            if (this.latestFive == false)
+                            {
+                                this.subsRefundList.RemoveAll(x => x.Key.Equals(subsID));
+                                this.UpdatesSubsRefundListToFile();
+                                this.ResetSubsRefundList();
+                                subsRefundTable.Controls.Clear();
+                                this.DrawSubsRefundSection(false);
+                                GetSubscriptionMerchantSubsID.Text = "Merchant Transaction ID: ";
+                                GetSubscriptionAuthCode.Text = "Auth Code: ";
+                                GetSubscriptionID.Text = "Subscription ID: ";
+                            }
+
+                            subsRefundResponseStream.Close();
+                        }
+                    }
+                }
+            }
+        }
+        catch (WebException we)
+        {
+            if (null != we.Response)
+            {
+                using (Stream stream = we.Response.GetResponseStream())
+                {
+                    StreamReader reader = new StreamReader(stream);
+                    this.DrawPanelForFailure(subsRefundPanel, reader.ReadToEnd());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            this.DrawPanelForFailure(subsRefundPanel, ex.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Cancel a subscription.
+    /// </summary>
+    /// <param name="sender">Sender Details</param>
+    /// <param name="e">List of Arguments</param>
+    protected void BtnCancelSubscription_Click(object sender, EventArgs e)
+    {
+        string subsID = string.Empty;
+        bool recordFound = false;
+        string strReq = "{\"TransactionOperationStatus\":\"SubscriptionCancelled\",\"RefundReasonCode\":1,\"RefundReasonText\":\"Customer was not happy\"}";
+        
+        string dataLength = string.Empty;
+        try
+        {
+            if (this.subsRefundList.Count > 0)
+            {
+                foreach (Control subRefundTableRow in subsRefundTable.Controls)
+                {
+                    if (subRefundTableRow is TableRow)
+                    {
+                        foreach (Control subRefundTableRowCell in subRefundTableRow.Controls)
+                        {
+                            if (subRefundTableRowCell is TableCell)
+                            {
+                                foreach (Control subRefundTableCellControl in subRefundTableRowCell.Controls)
+                                {
+                                    if (subRefundTableCellControl is RadioButton)
+                                    {
+                                        if (((RadioButton)subRefundTableCellControl).Checked)
+                                        {
+                                            subsID = ((RadioButton)subRefundTableCellControl).Text.ToString();
+                                            recordFound = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (recordFound == true)
+                {
+                    if (this.ReadAndGetAccessToken(subsRefundPanel) == true)
+                    {
+                        if (this.accessToken == null || this.accessToken.Length <= 0)
+                        {
+                            return;
+                        }
+
+                        string merSubsID = this.GetValueOfKeyFromRefund(subsID);
+
+                        if (merSubsID.CompareTo("null") == 0)
+                        {
+                            return;
+                        }
+
+                        WebRequest objRequest = (WebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/3/Commerce/Payment/Transactions/" + subsID);
+                        objRequest.Headers.Add("Authorization", "Bearer " + this.accessToken);
+                        objRequest.Method = "PUT";
+                        objRequest.ContentType = "application/json";
+
+                        UTF8Encoding encoding = new UTF8Encoding();
+                        byte[] postBytes = encoding.GetBytes(strReq);
+                        objRequest.ContentLength = postBytes.Length;
+
+                        dataLength = postBytes.Length.ToString();
+
+                        Stream postStream = objRequest.GetRequestStream();
+                        postStream.Write(postBytes, 0, postBytes.Length);
+                        postStream.Close();
+
+                        WebResponse subsRefundResponeObject = (WebResponse)objRequest.GetResponse();
+                        using (StreamReader subsRefundResponseStream = new StreamReader(subsRefundResponeObject.GetResponseStream()))
+                        {
+                            string subsRefundResponseData = subsRefundResponseStream.ReadToEnd();
+                            JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                            RefundResponse deserializedJsonObj = (RefundResponse)deserializeJsonObject.Deserialize(subsRefundResponseData, typeof(RefundResponse));
+                            subsRefundSuccessTable.Visible = true;
+                            this.DrawPanelForSubscriptionRefundSuccess(subsRefundPanel);
+
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "CommitConfirmationId", deserializedJsonObj.CommitConfirmationId);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "IsSuccess", deserializedJsonObj.IsSuccess);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "OriginalPurchaseAmount", deserializedJsonObj.OriginalPurchaseAmount);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionId", deserializedJsonObj.TransactionId);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionStatus", deserializedJsonObj.TransactionStatus);
+                            this.AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "Version", deserializedJsonObj.Version);
+
                             if (this.latestFive == false)
                             {
                                 this.subsRefundList.RemoveAll(x => x.Key.Equals(subsID));
@@ -592,18 +707,20 @@ public partial class Payment_App2 : System.Web.UI.Page
                 notificationDetail = notificationDetailsStream.ReadToEnd();
                 notificationDetailsStream.Close();
             }
+
             string[] notificationDetailArray = notificationDetail.Split('$');
             int noOfNotifications = 0;
             if (null != notificationDetailArray)
             {
                 noOfNotifications = notificationDetailArray.Length - 1;
             }
+
             int count = 0;
 
             while (noOfNotifications >= 0)
             {
                 string[] notificationDetails = notificationDetailArray[noOfNotifications].Split(':');
-                if (count <= noOfNotificationsToDisplay)
+                if (count <= this.noOfNotificationsToDisplay)
                 {
                     if (notificationDetails.Length == 3)
                     {
@@ -614,6 +731,7 @@ public partial class Payment_App2 : System.Web.UI.Page
                 {
                     break;
                 }
+
                 count++;
                 noOfNotifications--;
             }
@@ -636,8 +754,7 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// </summary>
     /// <param name="notificationId">Notification Id</param>
     /// <param name="notificationType">Notification Type</param>
-    /// <param name="transactionId">Transaction Id</param>
-    /// <param name="merchantTransactionId">Merchant Transaction Id</param>
+    /// <param name="transactionId">Transaction Id</param>    
     private void AddRowToNotificationTable(string notificationId, string notificationType, string transactionId)
     {
         TableRow row = new TableRow();
@@ -818,7 +935,7 @@ public partial class Payment_App2 : System.Web.UI.Page
         }
         else
         {
-            noOfNotificationsToDisplay = Convert.ToInt32(ConfigurationManager.AppSettings["noOfNotificationsToDisplay"]);
+            this.noOfNotificationsToDisplay = Convert.ToInt32(ConfigurationManager.AppSettings["noOfNotificationsToDisplay"]);
         }
 
         return true;
@@ -978,7 +1095,7 @@ public partial class Payment_App2 : System.Web.UI.Page
                 headingRow.Controls.Add(headingCellThree);
                 TableCell headingCellFour = new TableCell();
                 headingCellFour.CssClass = "warning";
-                LiteralControl warningMessage = new LiteralControl("<b>WARNING:</b><br/>You must use Get Subscription Status before you can refund.");
+                LiteralControl warningMessage = new LiteralControl("<b>WARNING:</b><br/>You must use Get Subscription Status before you can refund or cancel it.");
                 headingCellFour.Controls.Add(warningMessage);
                 headingRow.Controls.Add(headingCellFour);
                 subsRefundTable.Controls.Add(headingRow);
@@ -1954,11 +2071,6 @@ public partial class Payment_App2 : System.Web.UI.Page
         /// Gets or sets SubscriptionRecurrences
         /// </summary>
         public string Recurrences { get; set; }
-
-        /// <summary>
-        /// Gets or sets SubscriptionRemaining
-        /// </summary>
-       // public string SubscriptionRemaining { get; set; }
 
         /// <summary>
         /// Gets or sets Version

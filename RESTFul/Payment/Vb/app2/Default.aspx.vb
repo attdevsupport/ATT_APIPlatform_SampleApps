@@ -394,7 +394,7 @@ Partial Public Class Payment_App2
     End Sub
 
     ''' <summary>
-    ''' Get Subscription Refund button click
+    ''' Refund a subscription.
     ''' </summary>
     ''' <param name="sender">Sender Details</param>
     ''' <param name="e">List of Arguments</param>
@@ -402,6 +402,7 @@ Partial Public Class Payment_App2
         Dim subsID As String = String.Empty
         Dim recordFound As Boolean = False
         Dim strReq As String = "{""TransactionOperationStatus"":""Refunded"",""RefundReasonCode"":1,""RefundReasonText"":""Customer was not happy""}"
+
         Dim dataLength As String = String.Empty
         Try
             If Me.subsRefundList.Count > 0 Then
@@ -455,9 +456,111 @@ Partial Public Class Payment_App2
                             Dim subsRefundResponseData As String = subsRefundResponseStream.ReadToEnd()
                             Dim deserializeJsonObject As New JavaScriptSerializer()
                             Dim deserializedJsonObj As RefundResponse = DirectCast(deserializeJsonObject.Deserialize(subsRefundResponseData, GetType(RefundResponse)), RefundResponse)
-                            'DrawPanelForFailure(subsRefundPanel, subsRefundResponseData);
+
                             subsRefundSuccessTable.Visible = True
-                            'lbRefundTranID.Text = deserializedJsonObj.TransactionId
+
+                            DrawPanelForSubscriptionRefundSuccess(subsRefundPanel)
+                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "CommitConfirmationId", deserializedJsonObj.CommitConfirmationId)
+                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "IsSuccess", deserializedJsonObj.IsSuccess)
+                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "OriginalPurchaseAmount", deserializedJsonObj.OriginalPurchaseAmount)
+                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionId", deserializedJsonObj.TransactionId)
+                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "TransactionStatus", deserializedJsonObj.TransactionStatus)
+                            AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "Version", deserializedJsonObj.Version)
+
+
+                            If Me.latestFive = False Then
+                                Me.subsRefundList.RemoveAll(Function(x) x.Key.Equals(subsID))
+                                Me.UpdatesSubsRefundListToFile()
+                                Me.ResetSubsRefundList()
+                                subsRefundTable.Controls.Clear()
+                                Me.DrawSubsRefundSection(False)
+                                GetSubscriptionMerchantSubsID.Text = "Merchant Transaction ID: "
+                                GetSubscriptionAuthCode.Text = "Auth Code: "
+                                GetSubscriptionID.Text = "Subscription ID: "
+                            End If
+
+                            subsRefundResponseStream.Close()
+                        End Using
+                    End If
+                End If
+            End If
+        Catch we As WebException
+            If we.Response IsNot Nothing Then
+                Using stream As Stream = we.Response.GetResponseStream()
+                    Dim reader As New StreamReader(stream)
+                    Me.DrawPanelForFailure(subsRefundPanel, reader.ReadToEnd())
+                End Using
+            End If
+        Catch ex As Exception
+            Me.DrawPanelForFailure(subsRefundPanel, ex.ToString())
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Cancel a subscription.
+    ''' </summary>
+    ''' <param name="sender">Sender Details</param>
+    ''' <param name="e">List of Arguments</param>
+    Protected Sub BtnCancelSubscription_Click(ByVal sender As Object, ByVal e As EventArgs)
+        Dim subsID As String = String.Empty
+        Dim recordFound As Boolean = False
+        Dim strReq As String = "{""TransactionOperationStatus"":""SubscriptionCancelled"",""RefundReasonCode"":1,""RefundReasonText"":""Customer was not happy""}"
+
+        Dim dataLength As String = String.Empty
+        Try
+            If Me.subsRefundList.Count > 0 Then
+                For Each subRefundTableRow As Control In subsRefundTable.Controls
+                    If TypeOf subRefundTableRow Is TableRow Then
+                        For Each subRefundTableRowCell As Control In subRefundTableRow.Controls
+                            If TypeOf subRefundTableRowCell Is TableCell Then
+                                For Each subRefundTableCellControl As Control In subRefundTableRowCell.Controls
+                                    If TypeOf subRefundTableCellControl Is RadioButton Then
+                                        If DirectCast(subRefundTableCellControl, RadioButton).Checked Then
+                                            subsID = DirectCast(subRefundTableCellControl, RadioButton).Text.ToString()
+                                            recordFound = True
+                                            Exit For
+                                        End If
+                                    End If
+                                Next
+                            End If
+                        Next
+                    End If
+                Next
+
+                If recordFound = True Then
+                    If Me.ReadAndGetAccessToken(subsRefundPanel) = True Then
+                        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+                            Return
+                        End If
+
+                        Dim merSubsID As String = Me.GetValueOfKeyFromRefund(subsID)
+
+                        If merSubsID.CompareTo("null") = 0 Then
+                            Return
+                        End If
+
+                        Dim objRequest As WebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/rest/3/Commerce/Payment/Transactions/" & subsID), WebRequest)
+                        objRequest.Headers.Add("Authorization", "Bearer " & Me.accessToken)
+                        objRequest.Method = "PUT"
+                        objRequest.ContentType = "application/json"
+
+                        Dim encoding As New UTF8Encoding()
+                        Dim postBytes As Byte() = encoding.GetBytes(strReq)
+                        objRequest.ContentLength = postBytes.Length
+
+                        dataLength = postBytes.Length.ToString()
+
+                        Dim postStream As Stream = objRequest.GetRequestStream()
+                        postStream.Write(postBytes, 0, postBytes.Length)
+                        postStream.Close()
+
+                        Dim subsRefundResponeObject As WebResponse = DirectCast(objRequest.GetResponse(), WebResponse)
+                        Using subsRefundResponseStream As New StreamReader(subsRefundResponeObject.GetResponseStream())
+                            Dim subsRefundResponseData As String = subsRefundResponseStream.ReadToEnd()
+                            Dim deserializeJsonObject As New JavaScriptSerializer()
+                            Dim deserializedJsonObj As RefundResponse = DirectCast(deserializeJsonObject.Deserialize(subsRefundResponseData, GetType(RefundResponse)), RefundResponse)
+                            subsRefundSuccessTable.Visible = True
+
                             DrawPanelForSubscriptionRefundSuccess(subsRefundPanel)
                             AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "CommitConfirmationId", deserializedJsonObj.CommitConfirmationId)
                             AddRowToSubscriptionRefundSuccessPanel(subsRefundPanel, "IsSuccess", deserializedJsonObj.IsSuccess)
@@ -553,7 +656,6 @@ Partial Public Class Payment_App2
     ''' <param name="notificationId">Notification Id</param>
     ''' <param name="notificationType">Notification Type</param>
     ''' <param name="transactionId">Transaction Id</param>
-    ''' <param name="merchantTransactionId">Merchant Transaction Id</param>
     Private Sub AddRowToNotificationTable(ByVal notificationId As String, ByVal notificationType As String, ByVal transactionId As String)
         Dim row As New TableRow()
         Dim cellOne As New TableCell()
@@ -862,7 +964,7 @@ Partial Public Class Payment_App2
                 headingRow.Controls.Add(headingCellThree)
                 Dim headingCellFour As New TableCell()
                 headingCellFour.CssClass = "warning"
-                Dim warningMessage As New LiteralControl("<b>WARNING:</b><br/>You must use Get Subscription Status before you can refund.")
+                Dim warningMessage As New LiteralControl("<b>WARNING:</b><br/>You must use Get Subscription Status before you can refund or cancel it.")
                 headingCellFour.Controls.Add(warningMessage)
                 headingRow.Controls.Add(headingCellFour)
                 subsRefundTable.Controls.Add(headingRow)
@@ -937,7 +1039,7 @@ Partial Public Class Payment_App2
     Private Sub GetSubsDetailsFromFile()
         Dim file As New FileStream(Request.MapPath(Me.subsDetailsFile), FileMode.Open, FileAccess.Read)
         Dim sr As New StreamReader(file)
-        Dim line As String
+        Dim line As String = String.Empty
 
         While (InlineAssignHelper(line, sr.ReadLine())) IsNot Nothing
             Dim subsDetailsKeys As String() = Regex.Split(line, ":-:")
@@ -957,7 +1059,7 @@ Partial Public Class Payment_App2
     Private Sub GetSubsRefundFromFile()
         Dim file As New FileStream(Request.MapPath(Me.subsRefundFile), FileMode.Open, FileAccess.Read)
         Dim sr As New StreamReader(file)
-        Dim line As String
+        Dim line As String = String.Empty
 
         While (InlineAssignHelper(line, sr.ReadLine())) IsNot Nothing
             Dim subsRefundKeys As String() = Regex.Split(line, ":-:")
@@ -1018,7 +1120,7 @@ Partial Public Class Payment_App2
     ''' <param name="merchantTransactionId">Merchant Transaction Id details</param>
     ''' <returns>Returns True or False</returns>
     Private Function CheckItemInSubsRefundFile(ByVal transactionid As String, ByVal merchantTransactionId As String) As Boolean
-        Dim line As String
+        Dim line As String = String.Empty
         Dim lineToFind As String = transactionid & ":-:" & merchantTransactionId
         Dim file As New System.IO.StreamReader(Request.MapPath(Me.subsRefundFile))
         While (InlineAssignHelper(line, file.ReadLine())) IsNot Nothing
@@ -1039,7 +1141,7 @@ Partial Public Class Payment_App2
     ''' <param name="merchantTransactionId">Merchant Transaction Id details</param>
     ''' <returns>Returns True or False</returns>
     Private Function CheckItemInSubsDetailsFile(ByVal transactionid As String, ByVal merchantTransactionId As String) As Boolean
-        Dim line As String
+        Dim line As String = String.Empty
         Dim lineToFind As String = transactionid & ":-:" & merchantTransactionId
         Dim file As New System.IO.StreamReader(Request.MapPath(Me.subsDetailsFile))
         While (InlineAssignHelper(line, file.ReadLine())) IsNot Nothing
@@ -2039,11 +2141,6 @@ Partial Public Class Payment_App2
             End Set
         End Property
         Private m_Recurrences As String
-
-        ''' <summary>
-        ''' Gets or sets SubscriptionRemaining
-        ''' </summary>
-        ' public string SubscriptionRemaining { get; set; }
 
         ''' <summary>
         ''' Gets or sets Version

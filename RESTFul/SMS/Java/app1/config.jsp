@@ -6,9 +6,11 @@
 %>
 
 <%
+String scope="SMS";
 String clientIdAut = "";
-String clientSecretAut = "";
+String clientSecretAut =  "";
+String FQDN = "https://api-uat.bf.pacer.sl.attcompute.com";
+
 String shortCode1 = "";
 String shortCode2 = "";
-String FQDN = "https://api.att.com";
 %>

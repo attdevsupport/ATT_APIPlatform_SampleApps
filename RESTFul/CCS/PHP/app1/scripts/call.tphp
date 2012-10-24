@@ -1,0 +1,26 @@
+<?php
+
+call('+1' + nd);
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is call script.");
+say(messageToPlay, {
+    allowSignals: "exit",
+    onSignal: function (event) {
+        say("Received exit signal, hence music is stopped.  Enjoy the music again.");
+    }
+});
+say(messageToPlay, {
+    allowSignals: "stopHold",
+    onSignal: function (event) {
+        say("Received stop hold signal, hence music is stopped.  Enjoy the music again.");
+    }
+});
+say(messageToPlay, {
+    allowSignals: "dequeue",
+    onSignal: function (event) {
+        say("Received dequeue signal, hence music is stopped.");
+    }
+});
+say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+hangup();
+
+?>

@@ -1,8 +1,15 @@
+
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# For more information contact developer.support@att.com
+
 #!/usr/bin/ruby
 require 'rubygems'
 require 'json'
 require 'rest_client'
 require 'sinatra'
+require 'open-uri'
 require 'sinatra/config_file'
 require File.join(File.dirname(__FILE__), 'common.rb')
 
@@ -12,32 +19,22 @@ config_file 'config.yml'
 
 set :port, settings.port
 
+SCOPE = 'DC'
+
 # obtain an OAuth access token if necessary
 def authorize
-  if session[:dc_access_token].nil? or session[:dc_address_for_token] != session[:dc_address] then
-    session[:dc_address_for_token] = session[:dc_address]
-    redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=DC&redirect_uri=#{settings.redirect_url}"
+  if session[:dc_access_token].nil? then
+   redirect "#{settings.auth_code_url}client_id=#{settings.api_key}&scope=DC&redirect_uri=#{settings.redirect_url}"
   else
-    redirect '/getDeviceCapabilities'
+   redirect '/GetDeviceCapabilities'
   end
 end
 
-# perform the API call
-def get_device_capabilities
-  url = "#{settings.FQDN}/1/devices/tel:#{session[:dc_address]}/info?"
-
-  # access_token
-  url += "access_token=#{session[:dc_access_token]}"
-
-  RestClient.get url do |response, request, code, &block|
-    @r = response
-  end
-  
-  if @r.code == 200
-    @result = JSON.parse @r
-  else
-    @error = @r
-  end
+def get_device_capabilties
+   
+  response = RestClient.get "#{settings.getdc_url}", :Authorization => "BEARER #{session[:dc_access_token]}", :Content_Type => 'application/json', :Accept => 'application/json'
+   
+  @result = JSON.parse(response)
 
 rescue => e
   @error = e.message
@@ -45,36 +42,32 @@ ensure
   return erb :dc
 end
 
-# -- methods --
-# '/' -> '/submit' -> oAuth -> '/getDeviceCapabilities' -> '/'
+def get_access_token
 
-get '/' do
-  erb :dc
+  if params[:error] != nil
+     session[:access_error] = params[:error]
+     session[:error_type] = params[:error_description]
+     redirect '/'
+  else
+     response = RestClient.post "#{settings.access_token_url}", :grant_type => "authorization_code", :client_id => settings.api_key, :client_secret => settings.secret_key, :code => params[:code]
+     from_json = JSON.parse response
+     session[:dc_access_token] = from_json['access_token']
+     redirect '/GetDeviceCapabilities'
+  end
 end
 
 get '/auth/callback' do
-  response = RestClient.get "#{settings.FQDN}/oauth/token?grant_type=authorization_code&client_id=#{settings.api_key}&client_secret=#{settings.secret_key}&code=#{params[:code]}"
-  from_json = JSON.parse(response.to_str)
-  session[:dc_access_token] = from_json['access_token']
-  redirect '/getDeviceCapabilities'
+  get_access_token
 end
 
-
-get '/getDeviceCapabilities' do
-  get_device_capabilities
-end
-
-post '/submit' do
-  # validate phone number
-  a = parse_address(params[:address])
-  unless a
-    @error = 'Phone number format not recognized, try xxx-xxx-xxxx or xxxxxxxxxx'
-    erb :dc
+get '/' do
+  if session[:access_error] != nil
+    return erb :dc
   else
-    session[:dc_address] = a
-    session[:dc_entered_address] = params[:address]
-    authorize # after a successful authorization browser will be redirected to /auth/callback and then /get-device-capabilities
+    authorize
   end
-
 end
 
+get '/GetDeviceCapabilities' do
+  get_device_capabilties
+end

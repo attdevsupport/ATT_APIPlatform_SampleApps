@@ -1,6 +1,15 @@
+
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# For more information contact developer.support@att.com
+
 port:             4567
-api_key:
-secret_key:
-redirect_url:     http://localhost:4567/auth/callback
-default_phone:    425-802-8620
+api_key:          
+secret_key:       
 FQDN:             https://api.att.com
+redirect_url:     http://localhost:4567/auth/callback
+getdc_url:        https://api.att.com/rest/2/Devices/Info
+auth_code_url:    https://api.att.com/oauth/authorize?
+access_token_url: https://api.att.com/oauth/access_token
+endpoint:         /rest/2/Devices/Info

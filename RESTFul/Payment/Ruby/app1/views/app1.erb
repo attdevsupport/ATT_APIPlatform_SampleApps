@@ -284,26 +284,26 @@ For more information contact developer.support@att.com -->
         <div class="navigation">
             <br />
             <div align="center">
-                <table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
+                <table style="width: 750px" cellpadding="1" cellspacing="1" border="0">
                     <thead>
                         <tr>
                             <th style="width: 100px" class="cell" align="left">
                                 <strong>Notification ID</strong>
-                            </th><th></th>
-                            <th style="width: 100px" class="cell" align="left">
+                            </th>
+                            <th style="width: 150px" class="cell" align="left">
                                 <strong>Notification Type</strong>
-                            </th><th></th>
-                            <th style="width: 125px" class="cell" align="left">
+                            </th>
+                            <th style="width: 200px" class="cell" align="left">
                                 <strong>Transaction ID</strong>
-                            </th><th></th>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                     <% @notifications.each do |n| %>                       
     				<tr>
-						<td style="width: 100px" td class="cell" align="left"><%= n[:notificationId] %></td><td></td>
-						<td style="width: 100px" td class="cell" align="left"><%= n[:notificationtype]%></td><td></td>
-                       				<td style="width: 100px" td class="cell" align="left"><%= n[:original_trxId] %></td><td></td>
+						<td class="cell" align="left"><%= n[:notificationId] %></td>
+						<td class="cell" align="left"><%= n[:notificationtype]%></td>
+                       				<td class="cell" align="left"><%= n[:original_trxId] %></td>
 					</tr>
 				    <% end %>
 						<tr>

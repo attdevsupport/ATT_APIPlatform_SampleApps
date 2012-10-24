@@ -1,0 +1,6 @@
+<?php
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is hangup script.  Thank you and Good Bye.");
+hangup();
+
+?>

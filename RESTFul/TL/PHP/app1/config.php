@@ -12,5 +12,5 @@ For more information contact developer.support@att.com
     $FQDN = "https://api.att.com";
     $authorize_redirect_uri = "http://localhost/attf/TL/PHP/app1/index.php";
     $scope = "TL";
-    $default_address = "425-802-8620";
+   
 ?>

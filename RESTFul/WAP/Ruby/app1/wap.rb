@@ -59,16 +59,10 @@ def wapPush
   
   url = "#{settings.FQDN}/1/messages/outbox/wapPush?"
   
-  RestClient.post url, mimeContent, :Authorization => "Bearer #{@access_token}", :Accept => 'application/json', :Content_Type => 'multipart/form-data; type="application/json"; start=""; boundary="' + @split + '"' do |response, request, code, &block|
-    @r = response
-  end
+  response = RestClient.post url, mimeContent, :Authorization => "Bearer #{@access_token}", :Accept => 'application/json', :Content_Type => 'multipart/form-data; type="application/json"; start=""; boundary="' + @split + '"'
 
-  if @r.code == 200
-    @result = JSON.parse @r
-    session[:wap_id] = @result['id']
-  else
-    @error = @r
-  end
+  @result = JSON.parse(response)
+  session[:wap_id] = @result['id']
   
 rescue => e
   @error = e.message

@@ -20,7 +20,7 @@ set :port, settings.port
 
 SCOPE = 'PAYMENT'
 
-['/','/newSubscription','/getSubscriptionStatus','/getSubscriptionDetails','/refundSubscription', '/refreshNotifications', '/acknowledgeNotifications', '/callbackSubscription'].each do |path|
+['/','/newSubscription','/getSubscriptionStatus','/getSubscriptionDetails','/refundSubscription', '/cancelSubscription', '/refreshNotifications', '/acknowledgeNotifications', '/callbackSubscription'].each do |path|
   before path do
     read_recent_notifications
     read_recent_items
@@ -50,6 +50,10 @@ end
 
 post '/refundSubscription' do
   refund_subscription
+end
+
+post '/cancelSubscription' do
+  cancel_subscription
 end
 
 get '/refreshNotifications' do
@@ -225,6 +229,33 @@ def refund_subscription
   
   payload = Hash.new
   payload['TransactionOperationStatus'] = 'Refunded'
+  payload['RefundReasonCode'] = 1
+  payload['RefundReasonText'] = 'User did not like product'
+ 
+  RestClient.put url, payload.to_json, :Authorization => "Bearer #{@access_token}", :Content_Type => 'application/json', :Accept => 'application/json' do |response, request, code, &block|
+    @r = response
+  end
+  
+  if @r.code == 200
+    @subscription_refund = @subscriptions.last
+    @subscription_refund[:status] = JSON.parse @r
+    @refund = Hash.new
+    @refund[:subscription_id] = params['trxId']
+  else
+    @refund_error = @r
+  end
+  erb :app2
+end
+
+def cancel_subscription
+  if params['trxId'].nil? || params['trxId'].empty?
+    redirect '/'
+  end
+
+  url = settings.FQDN + "/rest/3/Commerce/Payment/Transactions/" + params['trxId']
+  
+  payload = Hash.new
+  payload['TransactionOperationStatus'] = 'SubscriptionCancelled'
   payload['RefundReasonCode'] = 1
   payload['RefundReasonText'] = 'User did not like product'
  

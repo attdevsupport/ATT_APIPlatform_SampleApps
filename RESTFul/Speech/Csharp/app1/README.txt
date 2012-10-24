@@ -1,18 +1,17 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
-* TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
 * Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-  AT&T API Platform Samples - Speech app 1
+  AT&T API Samples - Speech app 1
  --------------------------------
 
 This application allows the user to send an audio file for speech to text 
 transcription, and get the transcribed text.
 
 This file describes how to set up, configure and run the C# Applications of the 
-AT&T API Platform sample applications. 
+AT&T .Net Restful sample applications. 
 It covers all steps required to register the application on DevConnect and, based
 on the generated API keys and secrets, create and run one's own full-fledged 
 sample applications.

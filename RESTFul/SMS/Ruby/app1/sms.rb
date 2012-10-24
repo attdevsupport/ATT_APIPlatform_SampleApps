@@ -33,6 +33,7 @@ SCOPE = 'SMS'
 end
 
 get '/' do
+  session[:sms_id] = nil
   erb :sms
 end
 
@@ -42,8 +43,8 @@ post '/sendSms' do
   send_sms
 end
 
-get '/getDeliveryStatus' do
-  session[:sms_id] = params[:smsId]
+post '/getDeliveryStatus' do
+  @sms = session[:sms_id]
   get_delivery_status
 end
 
@@ -58,12 +59,12 @@ get '/clear' do
 end
 
 def send_sms
+
   if @address_valid = parse_address(session[:sms1_address])
     address = 'tel:' + session[:sms1_address].gsub("-","")
 	
     result = 'Address=' + "#{address}" + '&Message='+ "#{params[:message]}"
-	
-	response = RestClient.post "#{settings.FQDN}/rest/sms/2/messaging/outbox", "#{result}", :Authorization => "Bearer #{@access_token}"
+    response = RestClient.post "#{settings.FQDN}/rest/sms/2/messaging/outbox", "#{result}", :Authorization => "Bearer #{@access_token}"
 	
     @sms_id = session[:sms_id] = JSON.parse(response)['Id']
   end
@@ -76,7 +77,8 @@ end
 
 
 def get_delivery_status
-  response = RestClient.get "#{settings.FQDN}/rest/sms/2/messaging/outbox/#{session[:sms_id]}?", :Authorization => "Bearer #{@access_token}"
+  
+  response = RestClient.get "#{settings.FQDN}/rest/sms/2/messaging/outbox/#{@sms}?", :Authorization => "Bearer #{@access_token}"
 
   delivery_info_list = JSON.parse(response).fetch 'DeliveryInfoList';
   delivery_info = delivery_info_list['DeliveryInfo'].first
@@ -106,4 +108,3 @@ rescue => e
 ensure
   return erb :sms
 end
-

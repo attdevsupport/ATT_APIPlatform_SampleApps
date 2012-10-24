@@ -65,7 +65,7 @@ Copy the sample application  folder to apache web root folder, for example /var/
    4) $oauth_file = "/tmp/smsoauthtoken.php"  : Oauth Token persistance location, should be writable by Apache server  
    5) $authorize_redirect_uri = ""            : url where oAuth provider will redirect to in case of successful authentication. 
                                                 Needs to be exactly the same as one used while registering application in DevConnect.
-   6) $scope = "TL";                         : Oauth scope ( SMS ) 
+   6) $scope = "TL";                         : Oauth scope ( TL ) 
 
    Note: If your application is promoted from Sandbox environment to Production environment and you decide to use
    production application settings, you must update parameters 1-2 as per production application details.

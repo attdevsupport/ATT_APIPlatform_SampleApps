@@ -68,6 +68,7 @@ below:
 2) secret_key : {set the value as per your registered application 
 'Secret key' field value} 
 3) FQDN : https://api.att.com 
+4) $oauth_file = "speechoauthtoken.php" : Oauth Token persistance location.
 
 Note: You must update parameters 1-2 after you promote your application 
 from 'Sandbox' environment to 'Production' environment. 

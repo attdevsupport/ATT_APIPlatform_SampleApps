@@ -33,6 +33,7 @@ SCOPE = 'MMS'
 end
 
 get '/' do
+  session[:mms_id] = nil
   erb :mms
 end
 
@@ -42,8 +43,8 @@ post '/sendMms' do
   send_mms
 end
   
-get '/getMmsDeliveryStatus' do
-  session[:mms_id] = params[:mmsId]
+post '/getMmsDeliveryStatus' do
+  @mms = session[:mms_id]
   get_mms_delivery_status
 end
 
@@ -54,6 +55,7 @@ get '/clear' do
 end
 
 def send_mms
+
   if @address_valid = parse_address(session[:mms1_address])
     address = 'tel:' + session[:mms1_address].gsub("-","")
     att_idx = 0
@@ -99,6 +101,7 @@ def send_mms
 
     @mms_id = session[:mms_id] = JSON.parse(response)['Id']
   end
+
 rescue => e
   @send_error = e.response
 ensure
@@ -106,13 +109,15 @@ ensure
 end
 
 def get_mms_delivery_status
-  response = RestClient.get "#{settings.FQDN}/rest/mms/2/messaging/outbox/#{session[:mms_id]}?", :Authorization => "Bearer #{@access_token}"
+
+  response = RestClient.get "#{settings.FQDN}/rest/mms/2/messaging/outbox/#{@mms}?", :Authorization => "Bearer #{@access_token}"
 
   delivery_info_list = JSON.parse(response).fetch 'DeliveryInfoList'
   delivery_info = delivery_info_list['DeliveryInfo'].first
 
   @delivery_status = delivery_info['DeliveryStatus']
   @delivery_Url    = delivery_info_list['ResourceUrl']
+
 rescue => e
   @delivery_error = e.response
 ensure

@@ -16,6 +16,8 @@ Imports System.Security.Cryptography.X509Certificates
 Imports System.Text
 Imports System.Web.Script.Serialization
 Imports System.Web.UI.WebControls
+Imports System.Collections.Specialized
+Imports System.Web
 
 #End Region
 
@@ -51,6 +53,8 @@ Partial Public Class Speech_App1
     ''' </summary>
     Private refreshTokenExpiresIn As Integer
 
+    Private xArgsData As String = String.Empty
+
     ''' <summary>
     ''' Access Token Types
     ''' </summary>
@@ -75,7 +79,7 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="sender">Button that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
         ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
         If Not Page.IsPostBack Then
             resultsPanel.Visible = False
@@ -94,7 +98,7 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="sender">sender that invoked this event</param>
     ''' <param name="e">eventargs of the button</param>
-    Protected Sub BtnSubmit_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub BtnSubmit_Click(sender As Object, e As EventArgs)
         Try
             resultsPanel.Visible = False
 
@@ -177,6 +181,19 @@ Partial Public Class Speech_App1
         Else
             Me.refreshTokenExpiresIn = 24
         End If
+        If Not IsPostBack Then
+            If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SpeechContext")) Then
+                Dim speechContexts As String() = ConfigurationManager.AppSettings("SpeechContext").ToString().Split(";"c)
+                For Each speechContext As String In speechContexts
+                    ddlSpeechContext.Items.Add(speechContext)
+                Next
+                ddlSpeechContext.Items(0).Selected = True
+            End If
+            If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("X-Arg")) Then
+                xArgsData = HttpUtility.UrlEncode(ConfigurationManager.AppSettings("X-Arg"))
+                txtXArgs.Text = ConfigurationManager.AppSettings("X-Arg")
+            End If
+        End If
 
         Return True
     End Function
@@ -247,7 +264,7 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="type">Access Type - either client Credential or Refresh Token</param>
     ''' <returns>true/false; true - if success on getting access token, else false</returns>
-    Private Function GetAccessToken(ByVal type As AccessType) As Boolean
+    Private Function GetAccessToken(type As AccessType) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim postStream As Stream = Nothing
         Dim streamWriter As StreamWriter = Nothing
@@ -340,15 +357,9 @@ Partial Public Class Speech_App1
     ''' <summary>
     ''' Neglect the ssl handshake error with authentication server 
     ''' </summary>
-    Function CertificateValidationCallBack( _
-    ByVal sender As Object, _
-    ByVal certificate As X509Certificate, _
-    ByVal chain As X509Chain, _
-    ByVal sslPolicyErrors As SslPolicyErrors _
-) As Boolean
-
-        Return True
-    End Function
+    Private Sub BypassCertificateError()
+        ServicePointManager.ServerCertificateValidationCallback = DirectCast([Delegate].Combine(ServicePointManager.ServerCertificateValidationCallback, Function(sender1 As Object, certificate As X509Certificate, chain As X509Chain, sslPolicyErrors As SslPolicyErrors) True), RemoteCertificateValidationCallback)
+    End Sub
 
     ''' <summary>
     ''' Read access token file and validate the access token
@@ -384,7 +395,7 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="panelParam">Panel to draw success message</param>
     ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForSuccess(ByVal panelParam As Panel, ByVal message As String)
+    Private Sub DrawPanelForSuccess(panelParam As Panel, message As String)
         If panelParam.HasControls() Then
             panelParam.Controls.Clear()
         End If
@@ -412,7 +423,7 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="panelParam">Panel to draw success message</param>
     ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForFailure(ByVal panelParam As Panel, ByVal message As String)
+    Private Sub DrawPanelForFailure(panelParam As Panel, message As String)
         If panelParam.HasControls() Then
             panelParam.Controls.Clear()
         End If
@@ -440,17 +451,30 @@ Partial Public Class Speech_App1
 #Region "Speech Service Functions"
 
     ''' <summary>
+    ''' Neglect the ssl handshake error with authentication server
+    ''' </summary>
+    Function CertificateValidationCallBack( _
+    ByVal sender As Object, _
+    ByVal certificate As X509Certificate, _
+    ByVal chain As X509Chain, _
+    ByVal sslPolicyErrors As SslPolicyErrors _
+) As Boolean
+
+        Return True
+    End Function
+
+    ''' <summary>
     ''' Verifies whether the given file satisfies the criteria for speech api
     ''' </summary>
     ''' <param name="file">Name of the sound file</param>
     ''' <returns>true/false; true if valid file, else false</returns>
-    Private Function IsValidFile(ByVal file As String) As Boolean
+    Private Function IsValidFile(file As String) As Boolean
         Dim isValid As Boolean = False
 
         ' Verify File Extension
         Dim extension As String = System.IO.Path.GetExtension(file)
 
-        If Not String.IsNullOrEmpty(extension) AndAlso (extension.Equals(".wav") OrElse extension.Equals(".amr")) Then
+        If Not String.IsNullOrEmpty(extension) AndAlso (extension.Equals(".wav") OrElse extension.Equals(".amr") OrElse extension.Equals(".awb") OrElse extension.Equals(".spx")) Then
             isValid = True
         Else
             Me.DrawPanelForFailure(statusPanel, "Invalid file specified. Valid file formats are .wav and .amr")
@@ -464,7 +488,7 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="extension">file extension</param>
     ''' <returns>the Content type mapped to the extension"/> summed memory stream</returns>
-    Private Function MapContentTypeFromExtension(ByVal extension As String) As String
+    Private Function MapContentTypeFromExtension(extension As String) As String
         Dim extensionToContentTypeMapping As New Dictionary(Of String, String)() From { _
          {".jpg", "image/jpeg"}, _
          {".bmp", "image/bmp"}, _
@@ -494,7 +518,9 @@ Partial Public Class Speech_App1
          {".vcf", "text/x-vcard"}, _
          {".vcs", "text/x-vcalendar"}, _
          {".mid", "application/x-midi"}, _
-         {".imy", "audio/iMelody"} _
+         {".imy", "audio/iMelody"}, _
+         {".awb", "audio/amr-wb"}, _
+         {".spx", "audio/x-speex"} _
         }
         If extensionToContentTypeMapping.ContainsKey(extension) Then
             Return extensionToContentTypeMapping(extension)
@@ -517,17 +543,21 @@ Partial Public Class Speech_App1
             reader.Close()
             audioFileStream.Close()
             If binaryData IsNot Nothing Then
-                Dim httpRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & Me.fqdn & "/rest/1/SpeechToText"), HttpWebRequest)
+                Dim httpRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & Me.fqdn & "/rest/2/SpeechToText"), HttpWebRequest)
                 httpRequest.Headers.Add("Authorization", "Bearer " & Me.accessToken)
-                httpRequest.Headers.Add("X-SpeechContext", "Generic")
-
+                httpRequest.Headers.Add("X-SpeechContext", ddlSpeechContext.SelectedValue.ToString())
+                If Not String.IsNullOrEmpty(xArgsData.ToString()) Then
+                    httpRequest.Headers.Add("X-Arg", xArgsData.ToString())
+                End If
                 Dim contentType As String = Me.MapContentTypeFromExtension(Path.GetExtension(mmsFilePath))
                 httpRequest.ContentLength = binaryData.Length
                 httpRequest.ContentType = contentType
                 httpRequest.Accept = "application/json"
                 httpRequest.Method = "POST"
                 httpRequest.KeepAlive = True
-
+                If chkChunked.Items.FindByText("Send Chunked").Selected Then
+                    httpRequest.SendChunked = True
+                End If
                 postStream = httpRequest.GetRequestStream()
                 postStream.Write(binaryData, 0, binaryData.Length)
                 postStream.Close()
@@ -584,7 +614,7 @@ Partial Public Class Speech_App1
     ''' Displays the result onto the page
     ''' </summary>
     ''' <param name="speechResponse">SpeechResponse received from api</param>
-    Private Sub DisplayResult(ByVal speechResponse As SpeechResponse)
+    Private Sub DisplayResult(speechResponse As SpeechResponse)
         lblResponseId.Text = speechResponse.Recognition.ResponseId
         For Each nbest As NBest In speechResponse.Recognition.NBest
             lblHypothesis.Text = nbest.Hypothesis
@@ -622,7 +652,7 @@ Public Class AccessTokenResponse
         Get
             Return m_access_token
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_access_token = Value
         End Set
     End Property
@@ -635,7 +665,7 @@ Public Class AccessTokenResponse
         Get
             Return m_refresh_token
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_refresh_token = Value
         End Set
     End Property
@@ -648,7 +678,7 @@ Public Class AccessTokenResponse
         Get
             Return m_expires_in
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_expires_in = Value
         End Set
     End Property
@@ -666,7 +696,7 @@ Public Class SpeechResponse
         Get
             Return m_Recognition
         End Get
-        Set(ByVal value As Recognition)
+        Set(value As Recognition)
             m_Recognition = Value
         End Set
     End Property
@@ -684,7 +714,7 @@ Public Class Recognition
         Get
             Return m_ResponseId
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_ResponseId = Value
         End Set
     End Property
@@ -697,7 +727,7 @@ Public Class Recognition
         Get
             Return m_NBest
         End Get
-        Set(ByVal value As List(Of NBest))
+        Set(value As List(Of NBest))
             m_NBest = Value
         End Set
     End Property
@@ -715,7 +745,7 @@ Public Class NBest
         Get
             Return m_Hypothesis
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_Hypothesis = Value
         End Set
     End Property
@@ -729,7 +759,7 @@ Public Class NBest
         Get
             Return m_LanguageId
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_LanguageId = Value
         End Set
     End Property
@@ -742,7 +772,7 @@ Public Class NBest
         Get
             Return m_Confidence
         End Get
-        Set(ByVal value As Double)
+        Set(value As Double)
             m_Confidence = Value
         End Set
     End Property
@@ -759,7 +789,7 @@ Public Class NBest
         Get
             Return m_Grade
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_Grade = Value
         End Set
     End Property
@@ -774,7 +804,7 @@ Public Class NBest
         Get
             Return m_ResultText
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_ResultText = Value
         End Set
     End Property
@@ -788,7 +818,7 @@ Public Class NBest
         Get
             Return m_Words
         End Get
-        Set(ByVal value As List(Of String))
+        Set(value As List(Of String))
             m_Words = Value
         End Set
     End Property
@@ -801,7 +831,7 @@ Public Class NBest
         Get
             Return m_WordScores
         End Get
-        Set(ByVal value As List(Of Double))
+        Set(value As List(Of Double))
             m_WordScores = Value
         End Set
     End Property

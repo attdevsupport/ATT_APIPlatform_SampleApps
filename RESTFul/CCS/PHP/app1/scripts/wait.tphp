@@ -1,0 +1,8 @@
+<?php
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is answer script.");
+wait(3000);
+say("Thank you, for waiting three seconds and using AT&T Call Control Service Sample Application Demo.  Good Bye");
+hangup();
+
+?>

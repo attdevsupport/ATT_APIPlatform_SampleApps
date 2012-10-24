@@ -37,4 +37,3 @@ div#gallery { float: left; width: 150px; height: 190px; padding: 10px; margin-bo
 .errorWide { margin: 0 auto; border: 3px outset red; background: #fcc; width: 650px; padding: 5px; font-size: 11px }
 .warningWide { margin: 0 auto; border: 3px outset yellow; background: #ffc; width: 650px; padding: 5px; font-size: 11px }
 .successWide { margin: 0 auto; border: 3px outset green; background: #cfc; width: 650px; padding: 5px; font-size: 11px }
-

@@ -1,213 +1,278 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
-    <title>AT&T Sample DC Application - Get Device Capabilities Application</title>
-    <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
-    <link rel="stylesheet" type="text/css" href="style/common.css"/ >
-    <script type="text/javascript" src="js/helper.js">
-</script>
-<body>
-
+<!-- 
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' September 2011
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+Copyright 2011 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+For more information contact developer.support@att.com
+-->
 <%@ page contentType="text/html; charset=iso-8859-1" language="java" %>
-<%@ page import="org.apache.commons.httpclient.*"%>
-<%@ page import="org.apache.commons.httpclient.methods.*"%>
-<%@ page import="org.json.JSONObject"%>
-<%@ page import="java.util.Iterator"%>
+<%@ page import="com.att.api.dc.handler.DCHandler" %>
+<%@ page import="com.att.api.dc.model.DeviceInfo" %>
+<%@ page import="com.att.api.util.DateUtil" %>
 <%@ include file="config.jsp" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <title>AT&amp;T Sample DC Application - Get Device Capabilities Application</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <link rel="stylesheet" type="text/css" href="style/common.css" />
+</head>
+<body>
 <%
-String scope = (String) session.getAttribute("scope");
-if(scope==null) scope="";
-String postOauth = "DC.jsp?getDeviceInfo=true";
-String redirectUri = "";
-String address = request.getParameter("address");
-if(address==null || address.equalsIgnoreCase("null"))
-    address = (String) session.getAttribute("addressDC");
-if(address==null || address.equalsIgnoreCase("null"))
-	address = "425-802-8620";
-Boolean newAddress = false;
-if(!address.equalsIgnoreCase((String)session.getAttribute("addressDC"))) {
-    newAddress = true;
-}
-session.setAttribute("addressDC",address);
-String getDeviceInfo = request.getParameter("getDeviceInfo");
-%>
-
-<div id="container">
-<!-- open HEADER --><div id="header">
-
-<div>
-    <div id="hcRight">
-        <%=new java.util.Date()%>
-    </div>
-    <div id="hcLeft">Server Time:</div>
-</div>
-<div>
-	<div id="hcRight"><script language="JavaScript" type="text/javascript">
-var myDate = new Date();
-document.write(myDate);
-</script></div>
-	<div id="hcLeft">Client Time:</div>
-</div>
-<div>
-	<div id="hcRight"><script language="JavaScript" type="text/javascript">
-document.write("" + navigator.userAgent);
-</script></div>
-	<div id="hcLeft">User Agent:</div>
-</div>
-<br clear="all" />
-</div><!-- close HEADER -->
-
-<div id="wrapper">
-<div id="content">
-
-<h1>AT&T Sample DC Application - Get Device Capabilities Application</h1>
-<h2>Feature 1: Get Device Capabilities</h2>
-
-</div>
-</div>
-<form method="post" name="getDeviceInfo" action="DC.jsp">
-<div id="navigation">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input maxlength="16" size="12" name="address" value="<%=address%>" style="width: 90%">
-    </td>
-  </tr>
-  </tbody></table>
-  
-</div>
-<div id="extra">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td class="cell"><button type="submit" name="getDeviceInfo">Get Device Capabilities</button>
-    </td>
-  </tr>
-  </tbody></table>
-
-</div>
-<br clear="all" />
-</form>
-
-<%  
-    if(getDeviceInfo!=null) {
-    //Check for a few known formats the user could have entered the address, adjust accordingly
-    String invalidAddress = null;
-    if((address.indexOf("-")==3) && (address.length()==12))
-        address = "tel:" + address.substring(0,3) + address.substring(4,7) + address.substring(8,12);
-    else if((address.indexOf(":")==3) && (address.length()==14))
-        address = address;    
-    else if((address.indexOf("-")==-1) && (address.length()==10))
-        address = "tel:" + address;
-    else if((address.indexOf("-")==-1) && (address.length()==11))
-        address = "tel:" + address.substring(1);
-    else if((address.indexOf("-")==-1) && (address.indexOf("+")==0) && (address.length()==12))
-        address = "tel:" + address.substring(2);
-    else 
-        invalidAddress = "yes";
-if(invalidAddress==null) {
-        String accessToken = request.getParameter("access_token");
-    	if(accessToken==null || accessToken=="null"){
-    		accessToken = (String) session.getAttribute("accessToken");}
-    	if((newAddress==true) || (accessToken==null) || (!scope.equalsIgnoreCase("DC")) && (!scope.equalsIgnoreCase("SMS,MMS,WAP,DC,TL,PAYMENT"))) {
-    			session.setAttribute("scope", "DC");
-    			session.setAttribute("clientId", clientIdWeb);
-    			session.setAttribute("clientSecret", clientSecretWeb);
-    			session.setAttribute("address", address);
-    			session.setAttribute("postOauth", postOauth);
-    			session.setAttribute("redirectUri", redirectUri);
-    			response.sendRedirect("oauth.jsp?getExtCode=yes");
-    	}
-        String url = FQDN + "/1/devices/" + address + "/info";   
-        HttpClient client = new HttpClient();
-        GetMethod method = new GetMethod(url);  
-        method.setQueryString("access_token=" + accessToken);
-        method.addRequestHeader("Accept","application/json");
-        int statusCode = client.executeMethod(method);    
-        if(statusCode==200) {
-           	JSONObject jsonResponse = new JSONObject(method.getResponseBodyAsString());
-           	JSONObject deviceId = new JSONObject(jsonResponse.getString("deviceId"));
-            JSONObject capabilities = new JSONObject(jsonResponse.getString("capabilities"));
-            Iterator deviceIdKeys = deviceId.keys();
-            Iterator capabilitiesKeys = capabilities.keys();
-           	%>
-                <div class="successWide">
-                <strong>SUCCESS:</strong><br />
-                Device parameters listed below.
-                </div>
-                <br />
-                
-                <div align="center">
-                <table width="500" cellpadding="1" cellspacing="1" border="0">
-                    <thead>
-                    	<tr>
-                        	<th width="50%" class="label">Parameter</th>
-                            <th width="50%" class="label">Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        	<%
-                while(deviceIdKeys.hasNext()) {
-                String key = (String) deviceIdKeys.next();
-            %>
-                        <tr>
-                        <td class="cell" align="center"><em><%=key%></em></td>
-                    	<td class="cell" align="center"><em><%=deviceId.getString(key)%></em></td>
-                       </tr>
-            <%
-                }
-            %>
-            <%
-                while(capabilitiesKeys.hasNext()) {
-                String key = (String) capabilitiesKeys.next();
-            %>
-                        <tr>
-                        <td class="cell" align="center"><em><%=key%></em></td>
-                    	<td class="cell" align="center"><em><%=capabilities.getString(key)%></em></td>
-                       </tr>
-            <%
-                }
-            %>
-                    </tbody>
-                </table>
-                </div>
-                
-                <br />
-<%
-        } 
-        else {
-        	%>
-            <div class="errorWide">
-            <strong>ERROR:</strong><br />
-            <%=method.getResponseBodyAsString()%>
+	String accessToken = (String) session.getAttribute("accessToken");
+	
+	DCHandler dchandler = new DCHandler(request,endpoint,accessToken);
+	DeviceInfo deviceInfo = null;
+	if (accessToken != null)
+	{
+		deviceInfo = dchandler.processRequest();
+	}
+	else if (accessToken ==  null)
+	{
+		if (session.getAttribute("errorResponse") != null)
+		{
+			deviceInfo = new DeviceInfo();
+			deviceInfo.setStatus(false);
+			String errorResponse = (String) session.getAttribute("errorResponse");
+			deviceInfo.setErrorResponse(errorResponse);
+			session.removeAttribute("errorResponse");
+		}
+		else
+		{
+%>	
+		<jsp:forward page="oauth.jsp" />
+	    <%
+	    }
+	 }
+%>	 
+    <div id="container">
+        <!-- open HEADER -->
+        <div id="header">
+            <div>
+                <div class="hcRight"><%=DateUtil.getServerTime()%></div>
+                <div class="hcLeft">Server Time:</div>
             </div>
-            <br />
-    		<%
+            <div>
+                <div class="hcRight">
+
+                    <script language="JavaScript" type="text/javascript">
+                        var myDate = new Date();
+                        document.write(myDate);
+                    </script>
+                    
+                </div>
+                <div class="hcLeft">
+                    Client Time:</div>
+            </div>
+            <div>
+                <div class="hcRight">
+                    <script language="JavaScript" type="text/javascript">
+                        document.write("" + navigator.userAgent);
+                    </script>
+                </div>
+                <div class="hcLeft">
+                    User Agent:</div>
+            </div>
+            <br clear="all" />
+        </div>
+        <!-- close HEADER -->
+        <div>
+            <div class="content">
+                <h1>
+                    AT&amp;T Sample DC Application - Get Device Capabilities Application</h1>
+                <h2>
+                    Feature 1: Get Device Capabilities</h2>
+            </div>
+        </div>
+        <br />
+        <br />
+        <div class="extra">
+            <table>
+                <tbody>
+                    <div id="extraleft">
+                        <div class="warning">
+                            <strong>Note:</strong><br />
+                            <strong>OnNet Flow:</strong> Request Device Capabilities details from the AT&T network
+                            for the mobile device of an AT&T subscriber who is using an AT&T direct Mobile data
+                            connection to access this application.
+                            <br />
+                            <strong>OffNet Flow:</strong> Where the end-user is not on an AT&T Mobile data connection
+                            or using a Wi-Fi or tethering connection while accessing this application. This
+                            will result in an HTTP 400 error.
+                        </div>
+                    </div>
+                </tbody>
+            </table>
+        </div>
+        <br clear="all" />
+        <%
+        if (deviceInfo.isStatus())
+        {
+        %>
+	        <div class="successWide" id="tb_dc_output" visible="false">
+	            <strong>SUCCESS:</strong><br />
+	            Device parameters listed below.
+	        </div>
+	        <br />
+	        <div align="center">
+	            <table width="500" cellpadding="1" cellspacing="1" border="0" runat="server" id="tbDeviceCapabilities"
+	                visible="false">
+	                <thead>
+	                    <tr>
+	                        <th width="50%" class="label">
+	                            Parameter
+	                        </th>
+	                        <th width="50%" class="label">
+	                            Value
+	                        </th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>TypeAllocationCode</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getDeviceId() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>Name</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getName() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>Vendor</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getVendor() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>Model</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getModel() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>FirmwareVersion</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getFirmwareVersion() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>UaProf</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getUaProf() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>MmsCapable</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getMmsCapable() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>AssistedGps</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getAssitedGps() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>LocationTechnology</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getLocationTechnology() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>DeviceBrowser</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getBrowserType() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+	                    <tr>
+	                        <td class="cell" align="center">
+	                            <em>WapPushCapable</em>
+	                        </td>
+	                        <td class="cell" align="center">
+	                            <em>
+	                                <label id="lblTypeAllocationCode"><%=deviceInfo.getWapPushCapable() %></label>
+	                            </em>
+	                        </td>
+	                    </tr>
+					</tbody>
+				</table>        
+	        </div>
+        <%
         }
-        method.releaseConnection();
-    } else { %>
-                <div class="errorWide">
-                <strong>ERROR:</strong><br />
-                Invalid Address Entered
-                </div><br/>
-<%    }
-    }
-%>
-
-<div id="footer">
-
-	<div style="float: right; width: 20%; font-size: 9px; text-align: right">Powered by AT&amp;T Virtual Mobile</div>
-    <p>&#169; 2011 AT&amp;T Intellectual Property. All rights reserved.  <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
-<br>
-The Application hosted on this site are working examples intended to be used for reference in creating products to consume AT&amp;T Services and  not meant to be used as part of your product.  The data in these pages is for test purposes only and intended only for use as a reference in how the services perform.
-<br>
-For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
-<br>
-For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-
-</div>
-</div>
-
-</body></html>
+        else
+        {
+        %>
+	        <div id="tbDeviceCapabError" runat="server" cellspacing="1" class="errorWide" visible="false">
+	            <b>ERROR:</b><br />
+	            <label id="lblErrorMessage"><%=deviceInfo.getErrorResponse() %></label>
+	        </div>
+        <%
+        }
+        %>
+        <br clear="all" />
+        <div id="footer">
+            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
+                Powered by AT&amp;T Virtual Mobile</div>
+            <p>
+                &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                    target="_blank">http://developer.att.com</a>
+                <br />
+                The Application hosted on this site are working examples intended to be used for
+                reference in creating products to consume AT&amp;T Services and not meant to be
+                used as part of your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services perform.
+                <br />
+                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
+                    target="_blank">https://devconnect-api.att.com</a>
+                <br />
+                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
+        </div>
+    </div>
+    <p>
+        &nbsp;</p>
+</body>
+</html>

@@ -10,6 +10,7 @@ require 'json'
 require 'rest_client'
 require 'sinatra'
 require 'open-uri'
+require 'uri'
 require 'sinatra/config_file'
 require File.join(File.dirname(__FILE__), 'common.rb')
 
@@ -21,6 +22,8 @@ set :port, settings.port
 
 SCOPE = 'SPEECH'
 
+x_arg_val = URI.escape(settings.X_arg)
+
 ['/SpeechToText'].each do |path|
   before path do
     obtain_tokens(settings.FQDN, settings.api_key, settings.secret_key, SCOPE, settings.tokens_file)
@@ -28,6 +31,7 @@ SCOPE = 'SPEECH'
 end
 
 get '/' do
+  drop_down_list
   erb :speech
 end
 
@@ -42,8 +46,18 @@ post '/SpeechToText' do
     elsif @type.to_s.eql?"amr"
       @type = "audio/amr"
       speech_to_text
+    elsif @type.to_s.eql?"amr-wb"
+      @type = "audio/amr-wb"
+      speech_to_text
+    elsif @type.to_s.eql?"x-speex"
+      @type = "audio/x-speex"
+      speech_to_text
+    elsif @type.to_s.eql?"spx"
+      @type = "audio/spx"
+      speech_to_text
     else
-      @error = "Invalid file type, use audio/wav,audio/x-wav or audio/amr formats..."
+      drop_down_list
+      @error = "Invalid file type, use audio/wav, audio/x-wav, audio/amr, audio/amr-wb or x-speex."
       return erb :speech
     end
   else
@@ -51,18 +65,42 @@ post '/SpeechToText' do
   end
 end
 
+def default_to_generic
+  @speech_context = 'Generic'
+  if params[:SpeechContext] == ""
+    params[:SpeechContext] = @speech_context
+  end
+end
+
+def drop_down_list
+  @context_types = settings.speech_context.split(", ")
+  @type_list = Array.new
+  
+  @context_types.each do |p|
+    @type_list.push p
+  end
+end
 
 def speech_to_text
+  
+  x_arg_val = URI.escape(settings.X_arg)
+
+  drop_down_list
+  default_to_generic
 
   temp_file = params[:f1][:tempfile]
 
   @file_contents = File.read(temp_file.path)
 
-  url = "#{settings.FQDN}/rest/1/SpeechToText"
-
-  response = RestClient.post "#{settings.FQDN}/rest/1/SpeechToText", "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :Content_Transfer_Encoding => 'chunked', :X_SpeechContext => 'Generic', :Content_Type => "#{@type}" , :Accept => 'application/json'
-
-  @result = JSON.parse response
+  url = "#{settings.FQDN}/rest/2/SpeechToText"
+  
+  if params[:chkChunked] != nil
+    response = RestClient.post url, "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :Content_Transfer_Encoding => 'chunked', :X_arg => "#{x_arg_val}", :X_SpeechContext => params[:SpeechContext], :Content_Type => "#{@type}" , :Accept => 'application/json'
+	@result = JSON.parse response
+  else
+    response = RestClient.post url, "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :X_arg => "#{x_arg_val}", :X_SpeechContext => params[:SpeechContext], :Content_Type => "#{@type}" , :Accept => 'application/json'
+	@result = JSON.parse response
+  end
 
 rescue => e
   if e.response.nil?
@@ -74,22 +112,29 @@ ensure
   return erb :speech
 end
 
-
-
 def speech_default_file
+
+  x_arg_val = URI.escape(settings.X_arg)
+
+  drop_down_list
+  default_to_generic
+
   @filename = 'bostonSeltics.wav'
   @type = 'audio/wav'
-
 
   fullname = File.expand_path(File.dirname(File.dirname(__FILE__)))
   final = fullname + '/' + @filename
   @file_contents = File.read(final)
 
-  url = "#{settings.FQDN}/rest/1/SpeechToText"
+  url = "#{settings.FQDN}/rest/2/SpeechToText"
 
-  response = RestClient.post "#{settings.FQDN}/rest/1/SpeechToText", "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :Content_Transfer_Encoding => 'chunked', :X_SpeechContext => 'Generic', :Content_Type => "#{@type}" , :Accept => 'application/json'
-
-  @result = JSON.parse response
+  if params[:chkChunked] != nil
+    response = RestClient.post url, "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :Content_Transfer_Encoding => 'chunked', :X_arg => "#{x_arg_val}", :X_SpeechContext => params[:SpeechContext], :Content_Type => "#{@type}" , :Accept => 'application/json'
+	@result = JSON.parse response
+  else
+    response = RestClient.post url, "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :X_arg => "#{x_arg_val}", :X_SpeechContext => params[:SpeechContext], :Content_Type => "#{@type}" , :Accept => 'application/json'
+	@result = JSON.parse response
+  end
 
 rescue => e
   if e.response.nil?

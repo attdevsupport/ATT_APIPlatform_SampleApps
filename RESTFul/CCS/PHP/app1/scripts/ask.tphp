@@ -1,0 +1,20 @@
+<?php
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is ask script.");
+ask("What's your four or five digit pin? Press pound when finished", {
+    choices: "[4-5 DIGITS]",
+    terminator: "#",
+    timeout: 90.0,
+    mode: "dtmf",
+    interdigitTimeout: 5,
+    onChoice: function (event) {
+        say("Thank you for entering the pin");
+    },
+    onBadChoice: function (event) {
+        say("I am sorry, not able to get the pin");
+    }
+});
+say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+hangup();
+
+?>

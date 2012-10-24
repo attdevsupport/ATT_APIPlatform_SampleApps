@@ -1,0 +1,9 @@
+<?php
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is log script.");
+log("Caller ID: " + currentCall.callerID);
+say("Fetched current call caller id and log to the debugger");
+say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+hangup();
+
+?>

@@ -1,0 +1,15 @@
+<?php
+
+say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is transfer script.");
+say("Please wait while we transfer your call. Press star to cancel the transfer.");
+transfer(["+11234567890", "sip:12345678912@221.122.54.86"], {
+    playvalue: audioURI,
+    terminator: "*",
+    onTimeout: function (event) {
+        say("Sorry, but nobody answered");
+    }
+});
+say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
+hangup();
+
+?>

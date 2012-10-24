@@ -107,6 +107,7 @@ For more information contact developer.support@att.com -->
               Phone number format not recognized.
             </div>
             <br/>
+
           <% end %>
 
           <% if @send_error %>
@@ -132,7 +133,7 @@ For more information contact developer.support@att.com -->
         </div>
       </div>
         
-      <form method="GET" name="getMmsDeliveryStatus" action="/getMmsDeliveryStatus">
+      <form method="post" enctype="multipart/form-data" action="/getMmsDeliveryStatus">
         <div id="navigation">
             
           <table border="0" width="100%">
@@ -140,7 +141,7 @@ For more information contact developer.support@att.com -->
               <tr>
                 <td width="20%" valign="top" class="label">Message ID:</td>
                 <td class="cell">
-                  <input maxlength="20" size="12" name="mmsId" value='<%= session[:mms_id] %>' style="width: 90%">
+                  <input maxlength="20" size="12" name="mmsId" value="<%= session[:mms_id] %>" style="width: 90%">
                 </td>
               </tr>
             </tbody>
@@ -151,7 +152,7 @@ For more information contact developer.support@att.com -->
           <table border="0" width="100%">
             <tbody>
               <tr>
-                <td class="cell"><button type="submit" name="getMmsDeliveryStatus">Get Status</button>
+                <td class="cell"><button type="submit" name="submit">Get Status</button>
                 </td>
               </tr>
             </tbody>
@@ -164,7 +165,7 @@ For more information contact developer.support@att.com -->
         <div class="errorWide">
           <strong>ERROR:</strong>
           <br/>
-           Message ID is null or empty
+           <%= @delivery_error %>
         </div>
       <% end %>
 

@@ -47,13 +47,12 @@ For more information contact developer.support@att.com
             </div>
             <br clear="all" />
         </div>
-        <!-- close HEADER -->
         <div>
             <div class="content">
                 <h1>
-                    AT&amp;T Sample Speech Application  - Speech to Text(Generic) Application</h1>
+                    AT&amp;T Sample Speech Application - Speech to Text Application</h1>
                 <h2>
-                    Feature 1: Speech to Text(Generic)</h2>
+                    Feature 1: Speech to Text</h2>
             </div>
         </div>
         <br />
@@ -63,125 +62,182 @@ For more information contact developer.support@att.com
                 <tbody>
                     <tr>
                         <td valign="middle" class="label" align="right">
+                            Speech Context:
+                        </td>
+                        <td class="cell">
+                            <asp:DropDownList ID="ddlSpeechContext" runat="server">
+                            </asp:DropDownList>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td valign="middle" class="label" align="right">
                             Audio File:
                         </td>
                         <td class="cell">
                             <asp:FileUpload runat="server" ID="fileUpload1" />
                         </td>
+                    </tr>
+                    <tr>
                         <td>
-                            <asp:Button runat="server" ID="btnSubmit" text="Submit" 
-                                onclick="BtnSubmit_Click" />
                         </td>
-                    </tr> 
-                                        <tr>
-                    <td />
-                    <td>
-                    <div id="extraleft">
-                        <div class="warning">
-                            <strong>Note:</strong><br />
-                            If no file is chosen, a <a href="./default.wav">default.wav</a> file will be loaded on submit.<br />
-                            <strong>Speech file format constraints:</strong> <br />
-                                •	16 bit PCM WAV, single channel, 8 kHz sampling<br />
-                                •	AMR (narrowband), 12.2 kbit/s, 8 kHz sampling<br />
-                        </div>
-                    </div>
-                    </td>
-                    <td />
+                        <td>
+                            <asp:CheckBoxList ID="chkChunked" runat="server" CssClass="cell">
+                                <asp:ListItem Text="Send Chunked" />
+                            </asp:CheckBoxList>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td valign="middle" class="label" align="right">
+                            X-Args Defined:
+                        </td>
+                        <td class="cell">
+                            <asp:TextBox ID="txtXArgs" runat="server" TextMode="MultiLine" Enabled="False" 
+                                Rows="7" Width="234px"></asp:TextBox>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td></td>
+                        <td>
+                            <asp:Button runat="server" ID="btnSubmit" Text="Submit" OnClick="BtnSubmit_Click" />
+                        </td>
                     </tr>
                 </tbody>
-            </table>            
+            </table>
+        </div>
+        <div class="extra">
+            <table border="0" width="100%">
+                <tbody>
+                    <tr>
+                        <td />
+                        <td>
+                            <div id="extraleft">
+                                <div class="warning">
+                                    <strong>Note:</strong><br />
+                                    If no file is chosen, a <a href="./default.wav">default.wav</a> file will be loaded
+                                    on submit.<br />
+                                    <strong>Speech file format constraints:</strong>
+                                    <br />
+                                    • 16 bit PCM WAV, single channel, 8 kHz sampling
+                                    <br />
+                                    • 16 bit PCM WAV, single channel, 16 kHz sampling
+                                    <br />
+                                    • AMR (narrowband), 12.2 kbit/s, 8 kHz sampling
+                                    <br />
+                                    • AMR-WB (wideband) is 12.65 kbit/s, 16khz sampling
+                                    <br />
+                                    • OGG - speex encoding, 8kHz sampling
+                                    <br />
+                                    • OGG - speex encoding, 16kHz sampling
+                                </div>
+                            </div>
+                        </td>
+                        <td />
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <br clear="all" />
-        <br clear="all" />
         <div align="center">
-            <asp:Panel ID="statusPanel" runat="server" Font-Names="Calibri" 
-                Font-Size="XX-Small">
+            <asp:Panel ID="statusPanel" runat="server" Font-Names="Calibri" Font-Size="XX-Small">
             </asp:Panel>
         </div>
-
         <div align="center">
-        <asp:Panel ID="resultsPanel" runat="server" BorderWidth="0" Width="80%">
-            <table width="500" cellpadding="1" cellspacing="1" border="0">
-                <thead>
+            <asp:Panel ID="resultsPanel" runat="server" BorderWidth="0" Width="80%">
+                <table width="500" cellpadding="1" cellspacing="1" border="0">
+                    <thead>
+                        <tr>
+                            <th width="50%" class="label">
+                                Parameter
+                            </th>
+                            <th width="50%" class="label">
+                                Value
+                            </th>
+                        </tr>
+                    </thead>
                     <tr>
-                    	<th width="50%" class="label">Parameter</th>
-                        <th width="50%" class="label">Value</th>
+                        <td class="cell" align="center">
+                            <i>ResponseId </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblResponseId" runat="server"></asp:Label>
+                            </i>
+                        </td>
                     </tr>
-                </thead>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>ResponseId </i>
-                    </td>
-                    <td class="cell" align="center">
-                        <i><asp:Label ID="lblResponseId" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>Hypothesis </i>
-                    </td>
-                    <td class="cell" align="center">
-                        <i><asp:Label ID="lblHypothesis" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>LanguageId </i>
-                    </td>
-                    <td class="cell" align="center">
-                        <i><asp:Label ID="lblLanguageId" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>Confidence </i>
-                    </td>
-                    <td class="cell" align="center">
-                        <i><asp:Label ID="lblConfidence" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>Grade </i>
-                    </td>
-                    <td class="cell" align="center">
-                       <i><asp:Label ID="lblGrade" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>ResultText </i>
-                    </td>
-                    <td class="cell" align="center">
-                        <i><asp:Label ID="lblResultText" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>Words </i>
-                    </td>
-                    <td class="cell" align="center">
-                        <i><asp:Label ID="lblWords" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" align="center">
-                        <i>WordScores </i>
-                    </td>
-                    <td class="cell" align="center">
-                       <i><asp:Label ID="lblWordScores" runat="server"></asp:Label>
-                        </i>
-                    </td>
-                </tr>
-            </table>               
-        </asp:Panel>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>Hypothesis </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblHypothesis" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>LanguageId </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblLanguageId" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>Confidence </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblConfidence" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>Grade </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblGrade" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>ResultText </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblResultText" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>Words </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblWords" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" align="center">
+                            <i>WordScores </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblWordScores" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                </table>
+            </asp:Panel>
         </div>
         <br clear="all" />
         <div id="footer">

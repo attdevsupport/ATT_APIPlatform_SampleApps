@@ -1,18 +1,17 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
-* TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
 * Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-  AT&T API Platform Samples - Speech app 1
+  AT&T API Samples - Speech app 1
  --------------------------------
 
 This application allows the user to send an audio file for speech to text 
 transcription, and get the transcribed text.
 
 This file describes how to set up, configure and run the VB Applications of the 
-AT&T API Platform sample applications. 
+AT&T .Net Restful sample applications. 
 It covers all steps required to register the application on DevConnect and, based
 on the generated API keys and secrets, create and run one's own full-fledged 
 sample applications.
@@ -94,6 +93,14 @@ web.config as specified below:
                           access token information. If the parameter is not configured,
                           it will take the default value as ~\\SpeechApp1AccessToken.txt.
                           Give read/write access to this file.)
+
+7) X-Arg		: This is optional key, the value of the this key is sent as 
+			  an X-Arg hearder, which should contain name value pair 
+			  separated by semicolan Ex: name=value,name1=value1.
+
+8) SpeechContext	: This is mandatory key, the value of the this key is used to 
+			  populate Speech Context drop down list. The value of this key 
+			  should contain list of speech context values separated by semicolan
 
  
 Note: You must update parameters 1-2 after you promote your application from 'Sandbox' 

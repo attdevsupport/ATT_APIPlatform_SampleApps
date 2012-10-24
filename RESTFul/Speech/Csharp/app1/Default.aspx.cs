@@ -17,6 +17,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Web.UI.WebControls;
+using System.Collections.Specialized;
+using System.Web;
 
 #endregion
 
@@ -34,7 +36,7 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// <summary>
     /// Temporary variables for processing
     /// </summary>
-    private string apiKey, secretKey, accessToken, scope,  refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime;
+    private string apiKey, secretKey, accessToken, scope, refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime;
 
     /// <summary>
     /// variable for having the posted file.
@@ -50,6 +52,8 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// Gets or sets the value of refreshTokenExpiresIn
     /// </summary>
     private int refreshTokenExpiresIn;
+
+    string xArgsData = string.Empty;
 
     /// <summary>
     /// Access Token Types
@@ -134,7 +138,7 @@ public partial class Speech_App1 : System.Web.UI.Page
 
             IsValid = this.ReadAndGetAccessToken();
             if (IsValid == false)
-            {                
+            {
                 this.DrawPanelForFailure(statusPanel, "Unable to get access token");
                 return;
             }
@@ -147,7 +151,7 @@ public partial class Speech_App1 : System.Web.UI.Page
             return;
         }
     }
-    
+
     #endregion
 
     #region Access Token Related Functions
@@ -183,7 +187,7 @@ public partial class Speech_App1 : System.Web.UI.Page
         {
             this.DrawPanelForFailure(statusPanel, "secret_key is not defined in configuration file");
             return false;
-        }       
+        }
 
         this.scope = ConfigurationManager.AppSettings["scope"];
         if (string.IsNullOrEmpty(this.scope))
@@ -199,6 +203,23 @@ public partial class Speech_App1 : System.Web.UI.Page
         else
         {
             this.refreshTokenExpiresIn = 24;
+        }
+        if (!IsPostBack)
+        {
+            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SpeechContext"]))
+            {
+                string[] speechContexts = ConfigurationManager.AppSettings["SpeechContext"].ToString().Split(';');
+                foreach (string speechContext in speechContexts)
+                {
+                    ddlSpeechContext.Items.Add(speechContext);
+                }
+                ddlSpeechContext.Items[0].Selected = true;
+            }
+            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["X-Arg"]))
+            {
+                xArgsData = HttpUtility.UrlEncode(ConfigurationManager.AppSettings["X-Arg"]);
+                txtXArgs.Text = ConfigurationManager.AppSettings["X-Arg"];
+            }
         }
 
         return true;
@@ -337,7 +358,7 @@ public partial class Speech_App1 : System.Web.UI.Page
                 if (deserializedJsonObj.expires_in.Equals("0"))
                 {
                     int defaultAccessTokenExpiresIn = 100; // In Years
-                    this.accessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongDateString() + " " + currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongTimeString();                    
+                    this.accessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongDateString() + " " + currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongTimeString();
                 }
 
                 this.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() + " " + refreshExpiry.ToLongTimeString();
@@ -346,7 +367,7 @@ public partial class Speech_App1 : System.Web.UI.Page
                 streamWriter = new StreamWriter(fileStream);
                 streamWriter.WriteLine(this.accessToken);
                 streamWriter.WriteLine(this.accessTokenExpiryTime);
-                streamWriter.WriteLine(this.refreshToken);                
+                streamWriter.WriteLine(this.refreshToken);
                 streamWriter.WriteLine(this.refreshTokenExpiryTime);
 
                 // Close and clean up the StreamReader
@@ -523,7 +544,7 @@ public partial class Speech_App1 : System.Web.UI.Page
         // Verify File Extension
         string extension = System.IO.Path.GetExtension(file);
 
-        if (!string.IsNullOrEmpty(extension) && (extension.Equals(".wav") || extension.Equals(".amr")))
+        if (!string.IsNullOrEmpty(extension) && (extension.Equals(".wav") || extension.Equals(".amr") || extension.Equals(".awb") || extension.Equals(".spx")))
         {
             isValid = true;
         }
@@ -553,7 +574,8 @@ public partial class Speech_App1 : System.Web.UI.Page
                 { ".au", "audio/basic" }, { ".xwd", "image/x-xwindowdump" }, { ".png", "image/png" },
                 { ".tiff", "image/tiff" }, { ".ief", "image/ief" }, { ".txt", "text/plain" },
                 { ".html", "text/html" }, { ".vcf", "text/x-vcard" }, { ".vcs", "text/x-vcalendar" },
-                { ".mid", "application/x-midi" }, { ".imy", "audio/iMelody" }
+                { ".mid", "application/x-midi" }, { ".imy", "audio/iMelody" },
+                {".awb", "audio/amr-wb"}, {".spx", "audio/x-speex"}
             };
         if (extensionToContentTypeMapping.ContainsKey(extension))
         {
@@ -582,17 +604,23 @@ public partial class Speech_App1 : System.Web.UI.Page
             audioFileStream.Close();
             if (null != binaryData)
             {
-                HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(string.Empty + this.fqdn + "/rest/1/SpeechToText");
+                HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(string.Empty + this.fqdn + "/rest/2/SpeechToText");
                 httpRequest.Headers.Add("Authorization", "Bearer " + this.accessToken);
-                httpRequest.Headers.Add("X-SpeechContext", "Generic");
-
+                httpRequest.Headers.Add("X-SpeechContext", ddlSpeechContext.SelectedValue.ToString());
+                if (!string.IsNullOrEmpty(xArgsData.ToString()))
+                {
+                    httpRequest.Headers.Add("X-Arg", xArgsData.ToString());
+                }
                 string contentType = this.MapContentTypeFromExtension(Path.GetExtension(mmsFilePath));
                 httpRequest.ContentLength = binaryData.Length;
                 httpRequest.ContentType = contentType;
                 httpRequest.Accept = "application/json";
                 httpRequest.Method = "POST";
                 httpRequest.KeepAlive = true;
-
+                if (chkChunked.Items.FindByText("Send Chunked").Selected)
+                {
+                    httpRequest.SendChunked = true;
+                }
                 postStream = httpRequest.GetRequestStream();
                 postStream.Write(binaryData, 0, binaryData.Length);
                 postStream.Close();

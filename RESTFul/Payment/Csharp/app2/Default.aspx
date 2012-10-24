@@ -1,18 +1,11 @@
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
--->
-
 <%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="Payment_App2" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
     <title>AT&T Sample Payment Application - Subscription Application</title>
-    <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
+    <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
+    <link rel="stylesheet" type="text/css" href="style/common.css" />   
 </head>
 <body>
     <form id="form1" runat="server">
@@ -60,7 +53,7 @@ For more information contact developer.support@att.com
         <div class="navigation">
             <table border="0" width="100%">
                 <tbody>
-                    <tr>
+                    <tr><td>
                         <asp:RadioButtonList ID="Radio_SubscriptionProductType" runat="server" RepeatDirection="Vertical"
                             Font-Names="Calibri" Font-Size="Small">
                             <asp:ListItem Selected="True">Subscribe for $1.99 per month</asp:ListItem>
@@ -120,7 +113,7 @@ For more information contact developer.support@att.com
                                 <asp:ListItem ID="GetSubscriptionMerchantSubsID" Selected="True">Merchant Transaction ID: </asp:ListItem>
                                 <asp:ListItem ID="GetSubscriptionAuthCode">Auth Code: </asp:ListItem>
                                 <asp:ListItem ID="GetSubscriptionID">Subscription ID: </asp:ListItem>
-                            </asp:RadioButtonList>
+                            </asp:RadioButtonList></td>
                     </tr>
                 </tbody>
             </table>
@@ -181,7 +174,7 @@ For more information contact developer.support@att.com
             <div class="content">
                 <h2>
                     <br />
-                    Feature 4: Refund Subscription</h2>
+                    Feature 4: Refund/Cancel Subscription</h2>
             </div>
         </div>
         <div class="navigation">
@@ -191,7 +184,15 @@ For more information contact developer.support@att.com
         </div>
         <br clear="all" />
         <div class="extra">
-            <asp:Button runat="server" Text="Refund" ID="btnGetSubscriptionRefund" OnClick="BtnGetSubscriptionRefund_Click" />
+        <table>
+            <tr>
+                <td><asp:Button runat="server" Text="Cancel Subscription" 
+                        ID="btnCancelSubscription" onclick="BtnCancelSubscription_Click"/></td>
+            </tr>
+            <tr>
+                <td><asp:Button runat="server" Text="Refund Subscription" ID="btnGetSubscriptionRefund" OnClick="BtnGetSubscriptionRefund_Click" /></td>
+            </tr>
+        </table>
         </div>
         <br clear="all" />
         <br clear="all" />
