@@ -293,27 +293,27 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
         catch (TokenExpiredException te)
         {
-            this.DrawPanelForFailure(ContentPanelStatus, te.Message);
+            this.DrawPanelForFailure(statusPanel, te.Message);
         }
         catch (UnauthorizedRequest ur)
         {
-            this.DrawPanelForFailure(ContentPanelStatus, ur.Message);
+            this.DrawPanelForFailure(statusPanel, ur.Message);
         }
         catch (InvalidResponseException ie)
         {
-            this.DrawPanelForFailure(ContentPanelStatus, ie.Body);
+            this.DrawPanelForFailure(statusPanel, ie.Body);
         }
         catch (ArgumentNullException are)
         {
-            this.DrawPanelForFailure(ContentPanelStatus, are.Message);
+            this.DrawPanelForFailure(statusPanel, are.Message);
         }
         catch (ArgumentException ae)
         {
-            this.DrawPanelForFailure(ContentPanelStatus, ae.Message);
+            this.DrawPanelForFailure(statusPanel, ae.Message);
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(ContentPanelStatus, ex.Message);
+            this.DrawPanelForFailure(statusPanel, ex.Message);
         }
     }
 

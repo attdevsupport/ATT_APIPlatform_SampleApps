@@ -50,6 +50,8 @@ public partial class DC_App1 : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         BypassCertificateError();
+        DateTime currentServerTime = DateTime.UtcNow;
+        lblServerTime.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
         bool ableToReadConfigFile = this.ReadConfigFile();
         if (!ableToReadConfigFile)
         {

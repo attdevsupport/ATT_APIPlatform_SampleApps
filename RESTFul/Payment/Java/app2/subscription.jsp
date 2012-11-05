@@ -8,7 +8,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-<title>AT&T Sample Payment Application - Subscription
+<title>AT&amp;T Sample Payment Application - Subscription
     Application</title>
 <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
 <link rel="stylesheet" type="text/css" href="style/common.css"/ >
@@ -54,6 +54,7 @@ String getSubscriptionDetails = request.getParameter("getSubscriptionDetails");
 String refundSubscription = request.getParameter("refundSubscription");
 String cancelSubscription = request.getParameter("cancelSubscription");
 String refundReasonText = "User did not like product";
+String cancelReasonText = "Cancelling subscription";
 String refreshNotifications = request.getParameter("refreshNotifications");
 
 String trxId = (String) session.getAttribute("trxId");
@@ -310,7 +311,7 @@ if(request.getParameter("getTransactionType") != null)
 								name="getTransactionType" value="1" checked /> Merchant
 								Subscription ID:</td>
 							<td></td>
-							<td class="cell" align="left"><%=merchantTrxId%></td>
+							<td class="cell" align="left"><%=trxId%></td>
 						</tr>
 						<tr>
 							<td class="cell" align="left"><input type="radio"
@@ -355,6 +356,7 @@ if(getTransactionType==2)
 if(getTransactionType==3)
     url = FQDN + "/rest/3/Commerce/Payment/Subscriptions/SubscriptionId/" + trxId;
 HttpClient client = new HttpClient();
+
 GetMethod method = new GetMethod(url);  
 method.addRequestHeader("Authorization","Bearer " + accessToken);
 method.addRequestHeader("Accept","application/json");
@@ -369,14 +371,16 @@ if(statusCode==200) {
     session.setAttribute("merchantTrxId", merchantTrxId);
     merchantSubscriptionId = jsonResponse.getString("MerchantSubscriptionId");
     session.setAttribute("merchantSubscriptionId", merchantSubscriptionId);
+	subscriptionId = jsonResponse.getString("SubscriptionId");
+    session.setAttribute("subscriptionId", subscriptionId);
     JSONArray parameters = jsonResponse.names();
     PrintWriter outWrite = new PrintWriter(new BufferedWriter(new FileWriter(application.getRealPath("/transactionData/" + merchantTrxId + ".txt"))), false);
-    String toSave = trxId + "\n" + merchantTrxId + "\n" + authCode + "\n" + consumerId + "\n" + MerchantSubscriptionIdList;
+    String toSave = trxId + "\n" + merchantTrxId + "\n" + authCode + "\n" + consumerId + "\n" + MerchantSubscriptionIdList + "\n" + subscriptionId;
     outWrite.write(toSave);
     outWrite.close();
     %>
 	<div class="successWide">
-		<strong>SUCCESS</strong> <%=method.getResponseBodyAsString()%><br />
+		<strong>SUCCESS</strong><br />
 
 	</div>
 	<br />
@@ -434,13 +438,13 @@ method.releaseConnection();
 				border="0">
 				<thead>
 					<tr>
+						<th style="width: 240px" class="cell" align="left"><strong>Merchant
+								Subscription ID</strong>
+						</th>
 						<th style="width: 150px" class="cell" align="right"><strong>Consumer
 								ID</strong>
 						</th>
 						<th style="width: 50px" class="cell"></th>
-						<th style="width: 240px" class="cell" align="left"><strong>Merchant
-								Subscription ID</strong>
-						</th>
 						<td><div class="warning">
 								<strong>WARNING:</strong><br /> You must use Get Subscription
 								Status to get the Consumer ID before you can get details.
@@ -453,6 +457,7 @@ method.releaseConnection();
 if(true) {
     String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestTransactions.jsp";
     HttpClient client = new HttpClient();
+
     GetMethod method = new GetMethod(url);  
     int statusCode = client.executeMethod(method); 
     if(statusCode==200) {
@@ -516,6 +521,7 @@ if(true) {
 	<%
     String url = FQDN + "/rest/3/Commerce/Payment/Subscriptions/" + MerchantSubscriptionIdList + "/Detail/" + consumerId;  
     HttpClient client = new HttpClient();
+
     GetMethod method = new GetMethod(url);  
     method.addRequestHeader("Authorization","Bearer " + accessToken);
     method.addRequestHeader("Accept","application/json");
@@ -602,6 +608,7 @@ if(true) {
 if(true) {
     String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestTransactions.jsp";
     HttpClient client = new HttpClient();
+
     GetMethod method = new GetMethod(url);  
     int statusCode = client.executeMethod(method); 
     if(statusCode==200) {
@@ -613,10 +620,10 @@ if(true) {
                 if(i==0) {
                     %>
 					<tr>
-						<td class="cell" align="right">
+						<td class="cell" align="left">
 							<% if(transaction.getString("transactionId").length() > 5)
 							{ %> <input type="radio" name="trxIdRefund"
-							value="<%=transaction.getString("transactionId")%>" checked /><%=transaction.getString("transactionId")%>
+							value="<%=transaction.getString("SubscriptionId")%>" checked /><%=transaction.getString("SubscriptionId")%>
 						</td>
 						<td></td>
 						<td class="cell" align="left"><%=transaction.getString("MerchantSubscriptionIdList")%></td>
@@ -626,10 +633,10 @@ if(true) {
                 } else {
                     %>
 					<tr>
-						<td class="cell" align="right">
+						<td class="cell" align="left">
 							<% if(transaction.getString("transactionId").length() > 5)
 							{ %> <input type="radio" name="trxIdRefund"
-							value="<%=transaction.getString("transactionId")%>" /><%=transaction.getString("transactionId")%>
+							value="<%=transaction.getString("SubscriptionId")%>" /><%=transaction.getString("SubscriptionId")%>
 						</td>
 						<td></td>
 						<td class="cell" align="left"><%=transaction.getString("MerchantSubscriptionIdList")%></td>
@@ -681,21 +688,24 @@ if(true) {
 	trxId = request.getParameter("trxIdRefund"); // Gets value for the checked radio button
     String url = FQDN + "/rest/3/Commerce/Payment/Transactions/" + trxId;  
     HttpClient client = new HttpClient();
-    PutMethod method = new PutMethod(url);  
+	PutMethod method = new PutMethod(url);  
     method.addRequestHeader("Authorization", "Bearer " + accessToken);
     method.addRequestHeader("Content-Type","application/json");
     method.addRequestHeader("Accept","application/json");
     JSONObject bodyObject = new JSONObject();
     String reasonCode = "1";
 	String status = "";
-	if (refundSubscription !=null)
+	if (refundSubscription !=null) {
 		status = "Refunded";
-	else if (cancelSubscription !=null)
+    	bodyObject.put("RefundReasonText",refundReasonText);
+	} else if (cancelSubscription !=null) {
 		status = "SubscriptionCancelled";
+    	bodyObject.put("RefundReasonText",cancelReasonText);
+	}
 	
 	bodyObject.put("TransactionOperationStatus",status);
     bodyObject.put("RefundReasonCode",Double.parseDouble(reasonCode));
-    bodyObject.put("RefundReasonText",refundReasonText);
+    
     method.setRequestBody(bodyObject.toString()); 
     int statusCode = client.executeMethod(method);	
     if(statusCode ==200) {
@@ -845,6 +855,7 @@ String transactionId = "";
 
 		String url1 = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestNotifications.jsp";
 		HttpClient client1 = new HttpClient();
+
 		GetMethod method1 = new GetMethod(url1);  
 		int statusCode2 = client1.executeMethod(method1); 
 		JSONObject jsonResponse1 = new JSONObject(method1.getResponseBodyAsString());
@@ -866,6 +877,7 @@ String transactionId = "";
             	
 				String url = FQDN + "/rest/3/Commerce/Payment/Notifications/" + not;		//Builds the Get Request
                 HttpClient clients = new HttpClient();
+				
 				GetMethod methods = new GetMethod(url);
             	methods.addRequestHeader("Authorization", "Bearer " + accessToken);
                 methods.addRequestHeader("Accept", "application/json");
@@ -889,6 +901,7 @@ String transactionId = "";
 					outWrite.close();
 
 					HttpClient client2 = new HttpClient(); 		//Acknowledge the notification
+
 					PutMethod method2 = new PutMethod(url);
 					method2.addRequestHeader("Authorization", "Bearer " + accessToken);
 					method2.addRequestHeader("Content-Type", "application/json");

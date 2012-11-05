@@ -27,14 +27,13 @@ $message = $jsonresponse["Message"];
 $votes = array();
 
 if ( file_exists( $db1_filename) ){
-            $voters = unserialize(file_get_contents($db1_filename));
+            $votes = unserialize(file_get_contents($db1_filename));
+	    if (!is_array($votes)) {
+	    	$votes = array('');
+	    }
             array_push($votes,$jsonresponse);
             $fp = fopen($db1_filename, 'w') or die("I could not open $db1_filename.");
             fwrite($fp, serialize($votes));
-           
-            
-            
-           
    }
 
 $fp = fopen($db_filename, 'w+') or die("I could not open $filename.");

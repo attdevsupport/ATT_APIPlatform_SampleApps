@@ -12,7 +12,7 @@ This application demonstrates the usage of Device Capabilities API of AT&T platf
 The application allows an AT&T subscriber to retrieve the device specific information 
 about the mobile device.
 
-This file describes how to set up, configure and run the PHP Applications of the
+This file describes how to set up, configure and run the PHP Application of the
 AT&T API Platform sample applications. It covers all steps required to register the
 application on DevConnect and, based on the generated API keys and secrets, 
 create and run one's own full-fledged sample applications.
@@ -20,7 +20,7 @@ create and run one's own full-fledged sample applications.
   1. Configuration
   2. Installation
   3. Parameters
-
+  4. Running the application
 
 1. Configuration
 
@@ -38,8 +38,8 @@ create and run one's own full-fledged sample applications.
   URL that the oAuth provider will redirect users to when he/she successfully
   authenticates and authorizes your application.
 
-NOTE: You MUST select Device Capability in the list of services under field 
-'Services' in order to use this sample application code. 
+  NOTE: You MUST select Device Capability in the list of services under field 
+  'Services' in order to use this sample application code. 
 
   Having your application registered, you will get back an important pair of data:
   an API key and Secret key. They are necessary to get your applications working with
@@ -59,42 +59,61 @@ NOTE: You MUST select Device Capability in the list of services under field
 
 2. Installation
 
-Requirements:
-Apache web server
-PHP 5.2+
-Apache and php configured , on most Linux systems if installed using packages this will be done automatically 
+   Requirements:
+     Apache web server 
+     PHP 5.2+
+     PHP CURL extension	
+     Apache and PHP configured. The package manager on most Linux systems should automatically 
+     configure Apache/PHP upon installation.
 
-Installation:
-Copy the sample application  folder to apache web root folder, for example /var/www/html 
+   Installation:
+     Install Apache, PHP, and PHP CURL extension according to their respective documentation.
+     Copy the sample application folder to Apache web root folder, for example /var/www/html.
  
-
-
 
 3. Parameters
    
-Each sample application contains a config file. It holds configurable parameters
-described in an easy to read format. Please populate the following parameters in
-config.php as specified below:
+  Each sample application contains a config file. It holds configurable parameters
+  described in an easy to read format. Please populate the following parameters in
+  config.php as specified below:
 
-1) apiKey               : This is mandatory parameter, set the value as per your
-			  registered appliaction 'API key' field value.
+  1) API_KEY              : This is a mandatory parameter. Set the value as per your
+			    registered application 'API key' field value.
 
-2) secretKey     	: This is mandatory parameter, set the value as per your
-			  registered appliaction 'Secret key' field value.
+  2) SECRET_KEY     	  : This is a mandatory parameter. Set the value as per your
+			    registered application 'Secret key' field value.
 
-3) endPoint		: This is mandatory parameter, set it to the end point URI of
-			  AT&T Service.
+  3) FQDN		  : https://api.att.com
 
-4) scope		: DC(Scope of the ATT service that will be invoked by the
-			  Application)
+  4) SCOPE		  : DC (Scope used for access token)
 
-5) AccessTokenUrl	: Url to get accesstoken
+  5) POSTAUTH_URL	  : URL for displaying error/device capabilities. Should be set to 
+                            the index page. For example, http://<hostname>/app1/index.php
 
-6) authorizeRedirectUri : This is mandatory key and value should be equal to  DC Service 
-			  registered application 'OAuth Redirect URL'
-7)AUTHURL            : Url to get AuthCode
+  6) REDIRECT-URL         : URL where oAuth provider will redirect to. Needs to be exactly 
+                            the same as one used while  application in DevConnect. Set to
+                            dirname(POSTAUTH_URL) . '/oauth/callback/callback.php'
 
+  7) AUTH_CODE_URL        : URL for getting authorization code. Should be set to
+                            FQDN . '/oauth/authorize?scope='. SCOPE .'&client_id=' 
+                            . API_KEY . '&redirect_uri=' . REDIRECT_URL
+
+  8) ACCESSTOK_URL        : URL for getting access token. Should be set to
+                            FQDN . '/oauth/token'
+
+  9) GETDCURL             : URL for getting device capabilities. Should be set to
+                            FQDN . '/rest/2/Devices/Info' 
+
+  10) SESSION_TOKEN_INDEX : Index in session array for storing access token. Should be set to 
+                            "devicecapabilities_access_token"
 
 Note: If your application is promoted from Sandbox environment to Production
 environment and you decide to use production application settings, you must update
 parameters 1-2 as per production application details.
+
+4. Running the application
+
+  After the sample application folder has been copied to the Apache web root folder, you need to start Apache. 
+
+  Once Apache has been started, use a web browser and open the the web page to where you copied the sample application folder.
+  For example, http://localhost/app1/index.php

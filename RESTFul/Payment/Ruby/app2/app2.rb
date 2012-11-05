@@ -20,7 +20,7 @@ set :port, settings.port
 
 SCOPE = 'PAYMENT'
 
-['/','/newSubscription','/getSubscriptionStatus','/getSubscriptionDetails','/refundSubscription', '/cancelSubscription', '/refreshNotifications', '/acknowledgeNotifications', '/callbackSubscription'].each do |path|
+['/','/newSubscription','/getSubscriptionStatus','/getSubscriptionDetails','/refundSubscription', '/refreshNotifications', '/acknowledgeNotifications', '/callbackSubscription'].each do |path|
   before path do
     read_recent_notifications
     read_recent_items
@@ -49,11 +49,12 @@ post '/getSubscriptionDetails' do
 end
 
 post '/refundSubscription' do
-  refund_subscription
-end
-
-post '/cancelSubscription' do
-  cancel_subscription
+  if params[:refundSubscription] != nil
+    refund_subscription
+  elsif params[:cancelSubscription] != nil
+    cancel_subscription
+  end
+  return erb :app2
 end
 
 get '/refreshNotifications' do
@@ -338,6 +339,3 @@ def subscription_listener
 ensure
   return erb :app2
 end
-
-
-

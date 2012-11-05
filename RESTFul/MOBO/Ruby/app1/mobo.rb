@@ -23,19 +23,18 @@ set :port, settings.port
 
 # perform the API call
 def send_messages
-    
-if params[:f1] != nil || params[:f2] != nil || params[:f3] != nil || params[:f4] != nil || params[:f5] != nil || params[:groupCheckBox] != "false" then
- 
+  if params[:f1] != nil || params[:f2] != nil || params[:f3] != nil || params[:f4] != nil || params[:f5] != nil || params[:groupCheckBox] != "false" then
     addresses = ''
     invalidaddresses = ''
+
     params[:address].each do |p|
-    if (p.match('^\d{10}$'))
-     addresses += 'Addresses=tel:' + p + '&'
-    elsif (p.scan('/^[^@]*@[^@]*\.[^@]*$/'))
-      addresses += 'Addresses=' + p + '&'
-    else
-      invalidaddresses += p
-    end
+      if (p.match('^\d{10}$'))
+        addresses += 'Addresses=tel:' + p + '&'
+      elsif (p.scan('/^[^@]*@[^@]*\.[^@]*$/'))
+        addresses += 'Addresses=' + p + '&'
+      else
+        invalidaddresses += p
+      end
     end
        
     att_idx = 0
@@ -92,27 +91,26 @@ if params[:f1] != nil || params[:f2] != nil || params[:f3] != nil || params[:f4]
       session[:mms_error_id] = @mms_send_error
     end
     
-else
-
+  else
     addresses = ''
     invalidaddresses = ''
     params[:address].each do |p|
-    if (p.match('^\d{8}$'))
-      addresses += 'Addresses=short:' + p + '&'
-    elsif (p.match('^\d{10}$'))
-      addresses += 'Addresses=tel:' + p + '&'
-    elsif (p.scan('/^[^@]*@[^@]*\.[^@]*$/'))
-      addresses += 'Addresses=' + p + '&'
-    else
-      invalidaddresses += p
-    end
+      if (p.match('^\d{8}$'))
+        addresses += 'Addresses=short:' + p + '&'
+      elsif (p.match('^\d{10}$'))
+        addresses += 'Addresses=tel:' + p + '&'
+      elsif (p.scan('/^[^@]*@[^@]*\.[^@]*$/'))
+        addresses += 'Addresses=' + p + '&'
+      else
+        invalidaddresses += p
+      end
     end
     
     if params[:address].length > 0
       result = "#{addresses}" + 'Subject='+ "#{params[:subject]}" + '&Text='+ "#{params[:message]}" + '&Group=false'
     end
     
-    RestClient.post "#{settings.FQDN}/rest/1/MyMessages", "#{result}", :Authorization => "Bearer #{session[:mobo_access_token]}", :Content_Type => 'application/x-www-form-urlencoded' do |response, request, code, &block|
+    RestClient.post "#{settings.FQDN}/rest/1/MyMessages", "#{result}", :Authorization => "Bearer #{session[:mobo_access_token]}", :Accept => 'application/json', :Content_Type => 'application/x-www-form-urlencoded' do |response, request, code, &block|
       @smsresp = response
     end
     
@@ -123,8 +121,8 @@ else
       @sms_send_error = @smsresp
       session[:sms_error_id] = @sms_send_error   
     end
-    end
-    erb :mobo
+  end
+  erb :mobo
 end
 
 
@@ -140,26 +138,42 @@ get '/auth/callback' do
 end
 
 get '/sendMessages' do
-  session[:address] = params[:address]
-  session[:message] = params[:message]
-  session[:subject] = params[:subject]
   if session[:sms_id] != nil then
-     @sms_id = session[:sms_id]
+    @sms_id = session[:sms_id]
   elsif session[:mms_id] != nil then
-     @mms_id = session[:mms_id]
+    @mms_id = session[:mms_id]
   elsif session[:sms_error_id] != nil then
-     @sms_send_error = session[:sms_error_id]
+    @sms_send_error = session[:sms_error_id]
   elsif session[:mms_error_id] != nil then
-     @mms_send_error = session[:mms_error_id]
+    @mms_send_error = session[:mms_error_id]
+  end
+  if session[:address] != nil || session[:message] != nil || session[:subject] != nil then
+    #restore parameters
+    params[:address] = session[:address] if session[:address] != nil
+    params[:message] = session[:message] if session[:message] != nil
+    params[:subject] = session[:subject] if session[:subject] != nil
+    #clear session variables
+    session[:address] = nil
+    session[:message] = nil
+    session[:subject] = nil
+    prepare_and_send
   end
   erb :mobo
 end
 
 post '/submit' do
   if session[:mobo_access_token].nil? then
+    #save parameters
+    session[:address] = params[:address] if params[:address] != nil
+    session[:message] = params[:message] if params[:message] != nil
+    session[:subject] = params[:subject] if params[:subject] != nil
     redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=MOBO&redirect_uri=#{settings.redirect_url}"
   else
+    prepare_and_send
+  end
+end
 
+def prepare_and_send
   if params[:groupCheckBox].nil?
     params[:groupCheckBox] = "false"
   end
@@ -168,10 +182,10 @@ post '/submit' do
   session[:mms_id] = nil
   session[:sms_error_id] = nil
   session[:mms_error_id] = nil
-  
+
   addresses = params[:address].strip.split ","
   params[:entered_address] = params[:address]
-  
+
   params[:address] = Array.new
   addresses.each do |address|
     a = parse_address(address)
@@ -179,14 +193,12 @@ post '/submit' do
       params[:address] << a
     end
   end
-  
+
   if params[:address].length > 0
     send_messages
-    
   else
     @error = 'Please enter in a valid phone number'
-    return erb :mobo   
-  end
+    return erb :mobo
   end
 end
 

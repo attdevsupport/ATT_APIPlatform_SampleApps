@@ -5,12 +5,17 @@
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-AT&T API Platform Samples - CCS app 1
+AT&T API Platform Samples - CMS app 1
  ------------------------------
 
-This file describes how to set up, configure and run the Ruby applications using AT&T API Platform services. 
-It covers all steps required to register the application on DevConnect and, based on the generated API keys and secrets, 
-create and run one's own full-fledged sample applications.
+This application demonstrates the usage of Call Management API of AT&T platform. 
+The application provides operations to support the creation of outgoing call session
+and signals to existing sessions. Incoming call sessison will be created automatically
+in the call environment.
+
+This file describes how to set up, configure and run the Ruby applications using AT&T 
+API Platform services. It covers all steps required to register the application on DevConnect
+and, based on the generated API keys and secrets, create and run one's own full-fledged sample applications.
 
   1. Configuration
   2. Installation
@@ -20,19 +25,27 @@ create and run one's own full-fledged sample applications.
 
 1. Configuration
 
-  Configuration consists of a few steps necessary to get an application registered on DevConnect with the proper services and endpoints, depending on the type of client-side application (autonomous/non-autonomous). 
+  Configuration consists of a few steps necessary to get an application registered on DevConnect with the proper
+  services and endpoints, depending on the type of client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login with your valid username and password. Next, choose "My Apps" from the bar at the top of the page and click the "Setup a New Application" button. 
+  To register an application, go to https://devconnect-api.att.com/ and login with your valid username and password.
+  Next, choose "My Apps" from the bar at the top of the page and click the "Setup a New Application" button. 
 
   Fill in the form, in particular all fields marked as "required". 
 
-  Be careful while filling in the "OAuth Redirect URL" field. It should contain the URL that the oAuth provider will redirect users to when he/she successfully authenticates and authorizes your application.
+  Be careful while filling in the "OAuth Redirect URL" field. It should contain the URL that the oAuth provider will 
+  redirect users to when he/she successfully authenticates and authorizes your application.
 
-  NOTE: You MUST select Call Management in the list of services under field 'Services' in order to use this sample application code. 
+  NOTE: You MUST select Call Management in the list of services under field 'Services' in order to use this sample 
+  application code. 
 
-  Having your application registered, you will get back an important pair of data: an API key and Secret key. They are necessary to get your applications working with the AT&T Platform APIs. See 'Adjusting parameters' below to learn how to use these keys.
+  Having your application registered, you will get back an important pair of data: an API key and Secret key. They are 
+  necessary to get your applications working with the AT&T Platform APIs. See 'Adjusting parameters' below to learn how 
+  to use these keys.
 
-  Initially your newly registered application is restricted to the "Sandbox" environment only. To move it to production, you may promote it by clicking the "Promote to production" button. Notice that you will get a different API key and secret, so these values in your application should be adjusted accordingly.
+  Initially your newly registered application is restricted to the "Sandbox" environment only. To move it to production, 
+  you may promote it by clicking the "Promote to production" button. Notice that you will get a different API key and secret, 
+  so these values in your application should be adjusted accordingly.
 
   Depending on the kind of authentication used, an application may be based on either the Autonomous Client or the Web-Server 
   Client OAuth flow (see https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow or
@@ -48,22 +61,22 @@ create and run one's own full-fledged sample applications.
      - sinatra (http://www.sinatrarb.com/) 
        used to construct a simple web application and manage URLs within.
 
-  	 - eventmachine
-  
-	 To ensure installation of the sinatra-contrib gem you must first install the gem eventmachine. Sinatra-contrib has a dependency on eventmachine. EventMachine enables programs to easily interface with other programs using TCP/IP, especially if custom protocols are required.
+     - eventmachine
+	 To ensure installation of the sinatra-contrib gem you must first install the gem eventmachine. 
+         Sinatra-contrib has a dependency on eventmachine. EventMachine enables programs to easily 
+          interface with other programs using TCP/IP, especially if custom protocols are required.
 
      - sinatra-contrib 
-       Additional set of useful helpers, including ones used to read    settings from external files.
+       Additional set of useful helpers, including ones used to read settings from external files.
 
      - Also make sure you have rest-client and json gems installed. 
-
    	To install these gems open up a terminal window and invoke:
 
      - gem install sinatra eventmachine sinatra-contrib rest-client json
+	If you are experiencing any additional difficulties installing gems, particularly sinatra-contrib,
+        it may prove useful to install the ruby gem thin. This can be installed in the terminal by invoking:
 
-	If you are experiencing any additional difficulties installing gems, particularly sinatra-contrib, it may prove useful to install the ruby gem thin. This can be installed in the terminal by invoking:
-
-	 - gem install thin
+     - gem install thin
 
    Having them installed, you are almost ready to run the sample applications.
 
@@ -72,8 +85,9 @@ create and run one's own full-fledged sample applications.
 
    In case multiple applications need to be run at the same time, you need to consider using different port numbers.
 
-   By default sinatra uses port number 4567 and only one running application may use this port. In case you want to run one more sinatra-based application, you need to change its port number, eg. to 4568. This way you may have each application running on a unique port.
-
+   By default sinatra uses port number 4567 and only one running application may use this port. In case you want to run one
+   more sinatra-based application, you need to change its port number, eg. to 4568. This way you may have each application 
+   running on a unique port.
 
 
 3. Parameters

@@ -101,6 +101,7 @@ if($signPayload!=null) {
   $_SESSION["pay2_payload"]=$payload;
   $url = "$FQDN/Security/Notary/Rest/1/SignedPayload";
   $headers = array(
+                   'Content-Type: application/json',
 		   'Accept: application/json',
 		   'client_id: '.$api_key,
 		   'client_secret: '.$secret_key

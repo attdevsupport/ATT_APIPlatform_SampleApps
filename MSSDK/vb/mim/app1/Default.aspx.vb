@@ -208,17 +208,17 @@ Partial Public Class MIM_App1
                 End If
             End If
         Catch te As TokenExpiredException
-            Me.DrawPanelForFailure(ContentPanelStatus, te.Message)
+            Me.DrawPanelForFailure(statusPanel, te.Message)
         Catch ur As UnauthorizedRequest
-            Me.DrawPanelForFailure(ContentPanelStatus, ur.Message)
+            Me.DrawPanelForFailure(statusPanel, ur.Message)
         Catch ie As InvalidResponseException
-            Me.DrawPanelForFailure(ContentPanelStatus, ie.Body)
+            Me.DrawPanelForFailure(statusPanel, ie.Body)
         Catch are As ArgumentNullException
-            Me.DrawPanelForFailure(ContentPanelStatus, are.Message)
+            Me.DrawPanelForFailure(statusPanel, are.Message)
         Catch ae As ArgumentException
-            Me.DrawPanelForFailure(ContentPanelStatus, ae.Message)
+            Me.DrawPanelForFailure(statusPanel, ae.Message)
         Catch ex As Exception
-            Me.DrawPanelForFailure(ContentPanelStatus, ex.Message)
+            Me.DrawPanelForFailure(statusPanel, ex.Message)
         End Try
     End Sub
 

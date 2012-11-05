@@ -13,32 +13,32 @@
         <!-- open HEADER -->
         <div id="header">
             <div>
-                <div class="hcRight">
-                    <asp:Label ID="lblServerTime" runat="server"></asp:Label>
-                </div>
                 <div class="hcLeft">
                     Server Time:</div>
+                <div class="hcRight">
+                    <asp:Label ID="lblServerTime" runat="server" Text="Label"></asp:Label>
+                </div>
             </div>
             <div>
+                <div class="hcLeft">
+                    Client Time:</div>
                 <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">                        
+                    <script language="JavaScript" type="text/javascript">
                         var myDate = new Date();
                         document.write(myDate);
                     </script>
                 </div>
-                <div class="hcLeft">
-                    Client Time:</div>
             </div>
             <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">                        
-                    document.write("" + navigator.userAgent);
-                    </script>
-                </div>
                 <div class="hcLeft">
                     User Agent:</div>
+                <div class="hcRight">
+                    <script language="JavaScript" type="text/javascript">
+                        document.write("" + navigator.userAgent);
+                    </script>
+                </div>
             </div>
-            <br clear="all" />
+            <br style="clear: both;" />
         </div>
         <!-- close HEADER -->
         <div>

@@ -15,6 +15,7 @@ String merchantTransactionId = "";
 String transactionAuthCode = "";
 String consumerId = "";
 String MerchantSubscriptionIdList = "";
+String SubscriptionId = "";
 
 File directory = new File(application.getRealPath("/transactionData/")); 
 File[] files = directory.listFiles();
@@ -39,6 +40,8 @@ if(directory.listFiles().length>0) {
             transactionAuthCode = inFile1.readLine();
             consumerId = inFile1.readLine();
     		MerchantSubscriptionIdList = inFile1.readLine();
+    		SubscriptionId = inFile1.readLine();
+    		
             if(transactionId==null || transactionId.equalsIgnoreCase("null"))
                 transactionId = "";
             if(transactionId.indexOf(194)!=-1)
@@ -60,12 +63,17 @@ if(directory.listFiles().length>0) {
                 MerchantSubscriptionIdList = "";
             if(MerchantSubscriptionIdList.indexOf(194)!=-1)
                 MerchantSubscriptionIdList = MerchantSubscriptionIdList.substring(0, MerchantSubscriptionIdList.length()-2);	
-			
+
+			if(SubscriptionId==null || SubscriptionId.equalsIgnoreCase("null"))
+				SubscriptionId = "";
+            if(SubscriptionId.indexOf(194)!=-1)
+            	SubscriptionId = SubscriptionId.substring(0, SubscriptionId.length()-2);	
+            
             inFile1.close();
             if((i==directory.listFiles().length-1) || (i==5)) {
-                  %>{"transactionId":"<%=transactionId%>","merchantTransactionId":"<%=merchantTransactionId%>","transactionAuthCode":"<%=transactionAuthCode%>","consumerId":"<%=consumerId%>","MerchantSubscriptionIdList":"<%=MerchantSubscriptionIdList%>"}]}<%
+                  %>{"transactionId":"<%=transactionId%>","merchantTransactionId":"<%=merchantTransactionId%>","transactionAuthCode":"<%=transactionAuthCode%>","consumerId":"<%=consumerId%>","MerchantSubscriptionIdList":"<%=MerchantSubscriptionIdList%>","SubscriptionId":"<%=SubscriptionId%>"}]}<%
             } else {
-                  %>{"transactionId":"<%=transactionId%>","merchantTransactionId":"<%=merchantTransactionId%>","transactionAuthCode":"<%=transactionAuthCode%>","consumerId":"<%=consumerId%>","MerchantSubscriptionIdList":"<%=MerchantSubscriptionIdList%>"},<%
+                  %>{"transactionId":"<%=transactionId%>","merchantTransactionId":"<%=merchantTransactionId%>","transactionAuthCode":"<%=transactionAuthCode%>","consumerId":"<%=consumerId%>","MerchantSubscriptionIdList":"<%=MerchantSubscriptionIdList%>","SubscriptionId":"<%=SubscriptionId%>"},<%
             }
         i += 1;
         if(i==6)

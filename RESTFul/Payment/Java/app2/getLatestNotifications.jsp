@@ -47,4 +47,9 @@ if(directory.listFiles().length>0) {
         i += 1;
     }
 }
+else
+{
+%>
+]}
+<%}
 %>

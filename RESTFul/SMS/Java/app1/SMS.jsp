@@ -1,4 +1,3 @@
-
 <%
 	//Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
 	//TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
@@ -113,22 +112,35 @@
 				</table>
 
 			</div>
-			<div id="extra">
-
-				<table>
-					<tbody>
-						<tr>
-							<td><br />
-							<br />
-							<br />
-							<br />
-							<br />
+			<div class="extra">
+            <table border="0">
+                <tbody>
+                    <tr>
+                        <td width="20%" valign="top">
+                            &nbsp;
+                        </td>
+                        <td>
+                            <div id="extraleft">
+                                <div class="warning">
+                                <strong>Note:</strong><br />
+                                All Messages will be sent from first short code of a registered application<br />
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="20%" valign="bottom">
 							<button type="submit" name="sendSms">Send SMS Message</button></td>
-						</tr>
-					</tbody>
-				</table>
-
-			</div>
+                        <td class="cell">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
 			<br clear="all" />
 			<div align="center"></div>
 		</form>
@@ -349,8 +361,9 @@
 					String url = FQDN + "/rest/sms/2/messaging/inbox";
 					HttpClient client = new HttpClient();
 					GetMethod method = new GetMethod(url);
-					method.setQueryString("access_token=" + accessToken
-							+ "&RegistrationID=" + getReceivedSms);
+					method.addRequestHeader("Authorization", "Bearer "
+							+ accessToken);
+					method.setQueryString("RegistrationID=" + getReceivedSms);
 					method.addRequestHeader("Accept", "application/json");
 					session.setAttribute("registrationID", getReceivedSms);
 					//Send the request, parse based on HTTP status code

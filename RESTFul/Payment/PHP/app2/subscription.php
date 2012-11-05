@@ -38,6 +38,7 @@ $newSubscription = $_REQUEST["newSubscription"];
 $getSubscriptionStatus = $_REQUEST["getSubscriptionStatus"];
 $getSubscriptionDetails = $_REQUEST["getSubscriptionDetails"];
 $refundSubscription = $_REQUEST["refundSubscription"];
+$cancelSubscription = isset($_REQUEST['cancelSubscription']) ? $_REQUEST['cancelSubscription'] : null;
 $TransactionOperationStatus = "Refunded";
 $merchantSunscriptionIdList = $_REQUEST["merSubscriptionIdList"];
 if($mercantSubscriptionIdList == null || $merchantSubscriptionIdList == "")
@@ -720,14 +721,6 @@ if($_REQUEST["signedPayload"]!=null && $_REQUEST["signature"]!=null){
 
         $responseCode=curl_getinfo($request,CURLINFO_HTTP_CODE);
 
-        if($responseCode==200) {
-
-            $jsonResponse = json_decode($response,true);
-
-            echo $jsonResponse;
-
-        }
-
     }
 
 
@@ -802,6 +795,7 @@ if($cancelSubscription!=null) {
                 </thead>
                 <tbody>
                     <?php
+	            $jsonResponse = json_decode($response,true);
                     foreach ( $jsonResponse as $parameter => $value ){ ?>
                     <tr>
                         <td align="right" class="cell"><?php echo $parameter; ?></td>
@@ -823,8 +817,6 @@ if($cancelSubscription!=null) {
             <?php
         }
     }
-        ?>
-
         ?>
 
     </div>
@@ -873,7 +865,7 @@ if($cancelSubscription!=null) {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="cell"><button type="submit" name="cancelSubscription">Cancel Subscription</button>
+                <td class="cell"><button type="submit" name="cancelSubscription" value="cancelSubscription">Cancel Subscription</button>
                 </td>
             </tr>
             <tr>

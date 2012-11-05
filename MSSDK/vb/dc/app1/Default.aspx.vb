@@ -48,6 +48,8 @@ Partial Public Class DC_App1
     ''' <param name="e"></param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
         ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        Dim currentServerTime As DateTime = DateTime.UtcNow
+        serverTimeLabel.Text = (String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC")
         Dim ableToReadConfigFile As Boolean = Me.ReadConfigFile()
         If Not ableToReadConfigFile Then
             tbDeviceCapabError.Visible = True

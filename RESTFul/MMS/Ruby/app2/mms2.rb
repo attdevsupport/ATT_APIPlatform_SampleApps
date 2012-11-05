@@ -80,19 +80,17 @@ def send_messages
   mimeContent = "--#{split}\n" + contents.join("--#{split}\n") + "--#{split}--\n"
 
   # send
-  RestClient.post "#{settings.FQDN}/rest/mms/2/messaging/outbox?", "#{mimeContent}", :Authorization => "Bearer #{@access_token}",
+  response = RestClient.post "#{settings.FQDN}/rest/mms/2/messaging/outbox?", "#{mimeContent}", :Authorization => "Bearer #{@access_token}",
   :Accept => 'application/json',
-    :Content_Type => 'multipart/related; boundary="' + split + '"' do |response, request, result, &block|
-  @r = response
-  end
+    :Content_Type => 'multipart/related; boundary="' + split + '"'
 
-  if @r.code == 201
-    @result = JSON.parse @r
+    @result = JSON.parse response
     session[:mms2_id] = @result['Id']
-  else
-    @send_error = @r
-  end
- erb :mms2
+
+  rescue => e
+    @error = e.message
+  ensure
+    return erb :mms2
 end
 
 def check_status
@@ -131,9 +129,14 @@ get '/' do
 end
 
 post '/submit' do
- 
-  addresses = params[:address].strip.split ","
+
   session[:mms2_entered_address] = params[:address]
+  if session[:mms2_entered_address].match('^\d{3}-\d{3}-\d{4}$')
+    session[:mms2_entered_address].gsub! '-', ''
+    send_messages
+  else
+
+  addresses = params[:address].strip.split ","
   
   session[:mms2_address] = Array.new
   addresses.each do |address|
@@ -143,12 +146,14 @@ post '/submit' do
     end
   end
 
-  if session[:mms2_address].length > 0
-    send_messages
-  else
-    @error = 'Please enter in a valid phone number'
-    return erb :mms2
+    if session[:mms2_address].length > 0
+      send_messages
+    else
+      @error = 'Please enter in a valid phone number'
+      return erb :mms2
+    end
   end
+  return erb :mms2
 end
 
 post '/checkStatus' do

@@ -204,7 +204,7 @@ String encodedAttachment = new String(Base64.encodeBase64(attachmentBody.getByte
         
 		client.addRequestBody(mPart);
 		String responze = client.invoke(com.att.rest.HttpMethod.POST, accessToken);
-		if (client.getHttpResponseCode() == 200){
+		if (client.getHttpResponseCode() == 200 || client.getHttpResponseCode() == 201){
 			JSONObject rpcObject = new JSONObject(responze);
 			wapId = rpcObject.getString("id");
 			session.setAttribute("mmsId", wapId);

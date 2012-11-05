@@ -9,7 +9,7 @@
 
 String clientIdAut = "";
 String clientSecretAut =  "";
-String FQDN = "https://api-uat.bf.pacer.sl.attcompute.com";
+String FQDN = "https://api.att.com";
 
 //Sample call control scripts location
 String scriptPath = "/scripts/";

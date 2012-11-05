@@ -250,7 +250,20 @@ document.write("" + navigator.userAgent);
   <table>
   <tbody>
   <tr>
-  	<td><br /><br /><br /><br /><br /><button type="submit" name="sendSms" value="Send SMS Message">Send SMS Message</button></td>
+    <td width="20%" valign="top">
+    &nbsp;
+    </td>
+    <td>
+      <div id="extraleft">
+        <div class="warning">
+          <strong>Note:</strong><br />
+          All Messages will be sent from first short code of a registered application<br />
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+  	<td><br /><br /><br /><br /><br /><button type="submit" name="sendSms" value="Send SMS Message">Send SMS</button></td>
   </tr>
   </tbody>
   </table>

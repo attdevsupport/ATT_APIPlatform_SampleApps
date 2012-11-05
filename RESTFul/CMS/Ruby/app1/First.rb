@@ -1,380 +1,294 @@
-if numberToDial == "undefined"
-
-    messageToPlay = "http://wdev.code-api-att.com:8181/Tropo/music.mp3"
-    say "Welcome to the A T and T. Call Management Services Sample Application."
-	
-	result20 = ask "Press a digit to listen what you pressed or Press pound to skip", 
-	{
-		:choices => "[1 DIGITS]",
-		:terminator => '#',
-		:timeout => 5.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-		:onChoice => lambda { |event|
-			say "Thank you for entering"
-		},
-		:onBadChoice => lambda { |event|
-			say "I am sorry, not able to get the digit"
-		}
-	}
-	
-	if result20 != ""
-	{
-		say result20
-	}
-	
-	result21 = ask "Press a digit to join 1337 conferencing or Press pound to skip", 
-	{
-		:choices => "[1 DIGITS]",
-		:terminator => '#',
-		:timeout => 5.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-		:onChoice => lambda { |event|
-			say "Thank you for joining conferenceing, to quit press star at any time"
-		}
-		conference "1337", 
-		{
-			:terminator => "*",
-			:playTones => true,
-			:onChoice => lambda { |event|
-				say "Disconnecting from conference"
-		}
-	}
-	
-	result22 = ask "Press a digit to log the header value or Press pound to skip", 
-	{
-        :choices => "[1 DIGITS]",
-		:terminator => '#',
-		:timeout => 5.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-        	:onChoice => lambda { |event|
-			if $currentCall.getHeader("to")
-				say "Logged to header value"
-				log "Your header value is " + currentCall.getHeader("to")
-			else
-				say "Could not find to header value"
-				log "Your header value was not found"
-			end
-        }
-	}
-	
-	result23 = ask "Press a ten digit phone number to send sms to the requested number or Press pound to skip", 
-	{
-        	:choices => "[1 DIGITS]",
-		:terminator => '#',
-		:timeout => 15.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-        	:onChoice => lambda { |event|
-            	say "Sending message to"
-        }
-    }
-
-    if result23 != ""
-    {
-        numbertest = result23.value
-        say numbertest
-        message "Message from AT&T Call Control Service Sample Application", 
-		{
-            :to => numbertest,
-            :network => "SMS"
-        }
-    }
-    
-	result24 = ask "Press  ten digit phone number for which you are calling to reject this call or Press pound to skip", 
-	{
-        :choices => "[1 DIGITS]",
-		:terminator => '#',
-		:timeout => 120.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-        :onChoice => lambda { |event|
-        }
-    }
-	
-    if result24 != ""
-    {
-        numbertest = result24
-        if callerID == numbertest
-		{
-            say "your calls will be rejected"
-            say "Thank you, for using A T and T Call management Sample Application Demo.  Good Bye"
-            reject
-        }
-        else
-        {
-            say "number not matched for reject feature"
-            say "the current call id is"
-            say $currentCall.callerID
-            say "and you entered is "
-            say numbertest
-        }
-    }
-	
-	result25 = ask "enter 10 digit phone number to transfer the call or Press pound to skip",
-	{
-        :choices => "[10 DIGITS]",
-		:terminator => '#',
-		:timeout => 120.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-        :onChoice => lambda { |event|
-			say "transfering to "
-		}
-    }
-	
-    if result25 != ""
-    {
-        numbertest = result25
-        say numbertest
-        transfer [numbertest, "sip:12345678912@221.122.54.86"], {
-            :playvalue => messageToPlay,
-			:terminator => '*',
-			:onTimeout => lambda { |event|
-				say "Sorry, but nobody answered"
-			}
-	}
-	
-	result27 = ask "Press  ten digit phone number for which you are calling to wait this call or Press pound to skip", 
-	{
-		:choices => "[10 DIGITS]",
-		:terminator => '#',
-		:timeout => 120.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-        :onChoice => lambda { |event|
-		}
-		
-    if result27 != ""
-    {
-        numbertest = result27
-        callerID = $currentCall.callerID
-        if callerID == numbertest 
-		{
-            say "entered number matched with the current call caller id"
-            say "your calls will be kept for three seconds wait"
-            wait(3000)
-        }
-        else
-        {
-            say "number not matched for wait feature"
-            say " the current call id is"
-            say $currentCall.callerID
-            say "and you entered is "
-            say numbertest
-        }
-    }
-	
-	result29 = ask "Press a digit to test the signalling or Press pound to skip", 
-	{
-        :choices => "[1 DIGITS]",
-		:terminator => '#',
-		:timeout => 5.0,
-		:mode => "dtmf",
-		:interdigitTimeout => 5,
-			:onChoice => lambda { |event|
-				say "Waiting for exit signal"
-				say messageToPlay,
-				{
-					:allowSignals => "exit",
-					:onSignal => lambda { |event|
-						say "Received exit signal, hence music is paused.  Enjoy the music again."
-				}
-			}
-			
-			say "Waiting for stopHold signal"
-			say messageToPlay, 
-			{
-				:allowSignals => "stopHold",
-				:onSignal => lambda { |event|
-					say "Received stop hold signal, hence music is paused. Enjoy the music again."
-				}
-			}
-			
-			say "Waiting for dequeue signal"
-			say messageToPlay, 
-			{
-				:allowSignals => "dequeue",
-				:onSignal => lambda { |event|
-					say "Received dequeue signal, hence music is stopped."
-				}
-			}
-		}
-    }
-
-    say "Thank you, for using A T and T. Call Management Service Sample Application Demo. Good Bye" 
-    hangup
+# Utility method for saying individual characters in a string
+sayNumber = lambda { |text|
+	text.split("").each do |c|
+    say c
+  end	
 }
-else
-{
-    call numberToDial
-    say "Welcome to the A T and T. Call Management Services Sample Application."
-	switch feature
-	{
-	
-	case 'answer':
-        say "thank you for using answering script function"
-		break
-	case 'ask':
-	
-        result9 = ask "Press four or five digits and Press pound when finished", 
-		{
-            :choices => "[4-5 DIGITS]",
-            :terminator => '#',
-			:timeout => 90.0,
-			:mode => "dtmf",
-			:interdigitTimeout => 5,
-			:onChoice => lambda { |event|
-                say "Thank you for entering"
-            },
-            :onBadChoice => lambda { |event|
-                say "I am sorry, not able to get the four or five digits"
-            }
-        }
-        if result9 != ""
-        {
-            say result9
-        }
-        break
-	case 'call':
-        say "thank you for using calling script function"
-		break
-	case 'conference':
-        say "Thank you for joining conferenceing"
-		say "1337"
-        say "and to quit press star at any time"
-        conference "1337", 
-		{
-            :terminator => '*',
+
+messageToPlay = "http://wdev.code-api-att.com:8181/Tropo/music.mp3"
+
+if (defined? $numberToDial).nil?
+  say "Welcome to the A T and T Call Management sample application demo."
+
+  result20 = ask("Press a digit to listen to what you press or press pound to skip.",
+    {
+      :choices => "[1 DIGITS]",
+      :terminator => "#",
+      :timeout => 5.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 5,
+      :onChoice => lambda { |event|
+        say "Thank you for entering"
+      },
+      :onBadChoice => lambda { |event|
+        say "Sorry, I am not able to get the digit."
+      }
+    })
+ 
+  if result20.value != ""
+    say result20.value
+  end
+
+  result21 = ask("Press a digit to join 1337 conferencing or press pound to skip.",
+    { 
+      :choices => "[1 DIGITS]",
+      :terminator => "#",
+      :timeout => 5.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 5,
+      :onChoice => lambda { |event|
+        say "Thank you for joining 1337 conferencing. To quit, press star at any time."
+        conference("1337", 
+          {
+            :terminator => "*",
             :playTones => true,
-            :onChoice => lambda { |event|
-                say "Disconnecting from conference"
+            :onChoice => lambda { |event| 
+              say "Disconnecting from conference."
             }
-        }
-        break
-	case 'getHeader':
-        if $currentCall.getHeader("to") 
-		{
-            say "Logged to header value"
-            log "Your header value is " + $currentCall.getHeader("to")
-        }
-        else 
-		{
-            say "could not find to header value"
-            log("Your header value was not found"
-        }
-        break
-	case 'hangup':
-		say "thank you for using hang script function"
-		break
-	case 'log':
-        if $currentCall.getHeader("to")
-		{
-            say "Logged to header value"
-            log "Your header value is " + $currentCall.getHeader("to")
-        }
-        else 
-		{
-            say "could not find to header value"
-            log "Your header value was not found"
-        }
-        break
-	case 'message':
-		say "Sending message to"
-	    say featurenumber
-	    message "Message from AT&T Call Control Service Sample Application", 
-		{
-	        :to => featurenumber,
-	        :network => "SMS"
-	    }
-	    break
-	case 'reject':
-        callerID = $currentCall.callerID
-        if callerID == featurenumber
-		{
-            say "your calls will be rejected"
-            say "Thank you, for using A T and T Call management Sample Application Demo.  Good Bye"
-            reject
-        }
-        else
-        {
-            say "present id is"
-            say $currentCall.callerID
-            say "rejectnumber is "
-            say featurenumber
-            say "number not matched for reject feature"
-        }
-        break
-	case 'say':
-		say "thank you for using saying script function"
-		break
-	case 'transfer':
-        say "transfering to "
-        say featurenumber
-        transfer [featurenumber, "sip:12345678912@221.122.54.86"], 
-		{
-            :playvalue => messageToPlay,
-            :terminator => '*'
-            :onTimeout => lambda { |event|
-                say "Sorry, but nobody answered"
-            }
-        }
-        break
-	case 'wait':
-        callerID = $currentCall.callerID
-        if callerID == featurenumber
-		{
-            say "your calls will be kept for three seconds wait"
-            wait(3000)
-        }
-        else
-		{
-			say "present id is"
-			say $currentCall.callerID
-			say "requested id is"
-			say featurenumber
-			say "number not matched for wait feature"
-        }
-        break
-	}
-
-    result4 = ask "Press a digit to test the signalling or Press pound to skip", 
-	{
-        :choices => "[1 DIGITS]",
-        :terminator => '#',
-        :timeout => 5.0,
-        :mode => "dtmf",
-        :interdigitTimeout => 5,
-        :onChoice => lambda { |event|
-			say "Waiting for exit signal"
-			say messageToPlay, 
-			{
-				:allowSignals => "exit",
-				:onSignal => function (event) {
-					say "Received exit signal, hence music is paused.  Enjoy the music again."
-            }
-        }
-			say "Waiting for stopHold signal"
-			say messageToPlay, 
-			{
-				:allowSignals => "stopHold",
-				:onSignal => lambda { |event|
-					say "Received stop hold signal, hence music is paused. Enjoy the music again."
-			}
-        }
-        say "Waiting for dequeue signal"
-        say messageToPlay, 
-		{
-			:allowSignals => "dequeue",
-			:onSignal => lambda { |event|
-				say "Received dequeue signal, hence music is stopped."
-            }
-        }
-        },
+          })
+      }
     }
+  )
 
-    say "Thank you, for using A T and T. Call Management Service Sample Application Demo.  Good Bye"
-    hangup
-}
+  result24 = ask("Enter a ten digit phone number from which you are calling to reject this call or press pound to skip.",
+    {
+      :choices => "[10 DIGITS]",
+      :terminator => '#',
+      :timeout => 120.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 10,
+      :onChoice => lambda { |event|
+      }
+    }
+  )
+  
+  if result24.value != ""
+    numbertest = result24.value
+    strippedCID = $currentCall.callerID[2..-1] 
+    if strippedCID .eql? numbertest
+      say "Your calls will be rejected."
+      say "Thank you for using A T and T Call Management sample application demo. Goodbye."
+      reject
+    else
+      say "Number not matched for reject feature."
+      say "The current caller I D is "
+      sayNumber.call strippedCID
+      say " and the number you entered is"
+      sayNumber.call numbertest
+    end
+  end
+
+  result25 = ask("Enter a 10 digit phone number to transfer the call or press pound to skip.",
+    {
+      :choices => "[10 DIGITS]",
+      :terminator => "#",
+      :timeout => 120.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 10,
+      :onChoice => lambda { |event| 
+      }
+    })
+
+  if result25.value != ""
+    numbertest = result25.value
+    transfernumb = "+1" + numbertest
+    say "Transfering to "
+    
+    sayNumber.call numbertest
+  
+    transfer(transfernumb, 
+      {
+        :playvalue => messageToPlay,
+        :terminator => "*",
+        :onCallFailure => lambda { |event|
+          say "Unable to transfer. Call failed."
+        },
+        :onTimeout => lambda { |event|
+          say "Unable to transfer. Nobody answered."
+        }
+      }
+    )
+  end 
+
+  result27 = ask("Enter the ten digit phone number from which you are calling to wait this call or press pound to skip.", 
+    {
+      :choices => "[10 DIGITS]", 
+      :terminator => "#",
+      :timeout => 120.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 10,
+      :onChoice => lambda { |event| 
+      }
+    })
+ 
+  if result27.value != ""
+    numbertest = result27.value
+    strippedCID = $currentCall.callerID[2..-1] 
+    if strippedCID .eql? numbertest
+      say "Entered number matched with current caller I D."
+      say "Will now set the call to wait three seconds."
+      wait(3000)
+    else
+      say "Number not matched for wait feature."
+      say "The current caller I D is "
+      
+      sat " and the number you entered is"
+      sayNumber.call numbertest
+    end
+  end
+  
+  result29 = ask("Press a digit to test the signaling or press pound to skip.",
+    {
+      :choices => "[1 DIGITS]",
+      :terminator => "#",
+      :timeout => 5.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 5,
+      :onChoice => lambda { |event|
+        say "Waiting for exit signal"
+        say(messageToPlay, 
+        {
+          :allowSignals => "exit",
+          :onSignal => lambda { |event1|
+            say "Received exit signal, hence the music is paused. Enjoy the music again."
+          }
+        })
+        say "Waiting for stopHold signal"
+        say(messageToPlay, 
+        {
+          :allowSignals => "stopHold",
+          :onSignal => lambda { |event2| 
+            say "Received stop hold signal, hence the music is paused. Enjoy the music again."
+          }
+        })
+        say "Waiting for deueue signal"
+        say(messageToPlay, 
+        {
+          :allowSignals => "dequeue",
+          :onSignal => lambda { |event3| 
+            say "Received dequeue signal, hence the music is stopped."
+          }
+        })
+      }
+    })
+
+  say "Thank you for using A T and T Call Management sample application demo. Goodbye."
+  hangup
+else
+  call $numberToDial
+  say "Welcome to the A T and T Call Management sample application demo."
+  case
+    when ($feature .eql? "ask")
+      say "The ask feature has been selected."
+      result9 = ask("Press four or five digits and press pound when finished.", 
+        {
+          :choices => "[4-5 DIGITS]",
+          :terminator => "#",
+          :timeout => 90.0,
+          :mode => "dtmf",
+          :interdigitTimeout => 5,
+          :onChoice => lambda { |event|
+            say "Thank you for entering"
+          },
+          :onBadChoice => lambda { |event|
+            say "Sorry, I am not able to get the four or five digits you pressed."
+          }
+        }
+      )
+      if result9.value != ""
+        sayNumber.call result9.value
+      end
+    when ($feature .eql? "conference")
+      say "Thank you for joining 1337 conferencing. To quit, press star at any time."
+      conference("1337",
+        {
+          :terminator => "*",
+          :playTones => true,
+          :onChoice => lambda { |event|
+            say "Disconnecting from conference."
+          }
+        }
+      )
+    when ($feature .eql? "reject")
+      callID = $currentCall.callerID
+      if callID .eql? $featurenumber
+        say "Your calls will be rejected."
+        say "Thank you for using A T and T Call Management application demo. Goodbye."
+        reject
+        hangup
+      else
+        say "Number not matched for reject feature."
+        say "The present number is"
+        sayNumber.call callID 
+        say "and requested number is"
+        sayNumber.call $featurenumber 
+      end
+    when ($feature .eql? "transfer")
+      say "Transfering to"
+      sayNumber.call $featurenumber
+      transfer($featurenumber,
+        {
+          :playvalue => messageToPlay,
+          :terminator => "*",
+          :onCallFailure => lambda { |event|
+            say "Unable to transfer. Call failed."
+          },
+          :onTimeout => lambda { |event|
+            say "Unable to transfer. Nobody answered."
+          }
+        }
+      )
+    when ($feature .eql? "wait")
+      callID = $currentCall.callerID
+      if callID .eql? $featurenumber 
+        say "Present number matched with requested number."
+        say "Will now set the call to wait three seconds."
+        wait(3000)
+      else
+        say "Number not matched for wait feature."
+        say "The present number is"
+        sayNumber.call callID 
+        say "and the requested number is"
+        sayNumber.call $featurenumber 
+      end
+  end
+
+  result4 = ask("Press a digit to test the signaling or press pound to skip.",
+    {
+      :choices => "[1 DIGITS]",
+      :terminator => "#",
+      :timeout => 5.0,
+      :mode => "dtmf",
+      :interdigitTimeout => 5,
+      :onChoice => lambda { |event|
+        say "Waiting for exit signal"
+        say(messageToPlay,
+        {
+          :allowSignals => "exit",
+          :onSignal => lambda { |event1|
+            say "Received exit signal, hence the music is paused. Enjoy the music again."
+          }
+        })
+        say "Waiting for stopHold signal"
+        say(messageToPlay,
+        {
+          :allowSignals => "stopHold",
+          :onSignal => lambda { |event2|
+            say "Received stop hold signal, hence the music is paused. Enjoy the music again."
+          }
+        })
+        say "Waiting for dequeue signal"
+        say(messageToPlay,
+        {
+          :allowSignals => "dequeue",
+          :onSignal => lambda { |event3|
+            say "Received dequeue signal, hence the music is stopped."
+          }
+        })
+      }
+    })
+
+  say "Thank you for using the A T and T Call Management sample application demo. Goodbye."
+  hangup
+
+end

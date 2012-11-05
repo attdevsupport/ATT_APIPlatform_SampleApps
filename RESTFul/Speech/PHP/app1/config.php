@@ -8,10 +8,13 @@ For more information contact developer.support@att.com
     $api_key = "";
     $secret_key = "";
     $FQDN = "https://api.att.com";
+    $endpoint = $FQDN."/rest/2/SpeechToText";
     $scope = "SPEECH";
     $oauth_file = "speechoauthtoken.php";
-    $speech_context_config = "";
-    $x_arg = "";   
+    $refreshTokenExpiresIn = "";
+    $default_file = "default.wav";
+    $speech_context_config = "Questions and Answers,Generic,TV,BusinessSearch,Websearch,SMS,Voicemail";
+    $x_arg = "ClientApp=NoteTaker, ClientVersion=1.0.1,DeviceType=iPhone4";  
 
 ?>
 

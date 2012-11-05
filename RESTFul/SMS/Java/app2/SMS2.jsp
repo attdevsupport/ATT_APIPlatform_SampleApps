@@ -125,8 +125,6 @@ document.write("" + navigator.userAgent);
 
 <%
 
-if(getReceivedSms!=null)
-{
 	String dateTime = "";
 	String messageId = "";
 	String message = "";
@@ -173,7 +171,7 @@ if(getReceivedSms!=null)
 			break;
 		}
       }  
- } %>   
+ %>   
   </tbody></table>
 
 

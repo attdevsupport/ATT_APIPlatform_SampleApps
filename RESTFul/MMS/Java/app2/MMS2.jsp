@@ -185,7 +185,20 @@ if(request.getParameter("sendMms")!=null) {
 		   String responze ="";
             List addresses = new java.util.ArrayList();
             for(String a : address) {
-                addresses.add("\"tel:" + a + "\"");
+	    			if (a == null) continue;
+				if ((a.indexOf("-")==3) && (a.length()==12))
+					 a = "tel:" + a.substring(0,3) + a.substring(4,7) + a.substring(8,12);
+				else if((a.indexOf(":")==3) && (a.length()==14))
+						a = a; 
+				else if((a.indexOf("-")==-1) && (a.length()==10))
+						a = "tel:" + a;
+				else if((a.indexOf("-")==-1) && (a.length()==11))
+						a = "tel:" + a.substring(1);
+				else if((a.indexOf("-")==-1) && (a.indexOf("+")==0) && (a.length()==12))
+						a = "tel:" + a.substring(2);
+				
+				a = "\"" + a + "\"";
+                addresses.add(a);
             }
             if(addresses.size()!=1) {
                 requestObject.put("Address", addresses);
@@ -267,8 +280,8 @@ if(request.getParameter("sendMms")!=null) {
     	   String url = FQDN + "/rest/mms/2/messaging/outbox/" + mmsId;
            HttpClient client = new HttpClient();
            GetMethod method = new GetMethod(url);  
-           method.setQueryString("access_token=" + accessToken + "&id=" + mmsId);
            method.addRequestHeader("Accept","application/" + responseFormat);
+		   method.addRequestHeader("Authorization","Bearer " + accessToken);
            int statusCode = client.executeMethod(method); 
            if(statusCode==200) {
               	JSONObject jsonResponse = new JSONObject(method.getResponseBodyAsString());

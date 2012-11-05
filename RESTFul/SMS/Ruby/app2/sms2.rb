@@ -30,17 +30,9 @@ get '/' do
   session[:batch1] ||= 0
   session[:batch2] ||= 0
   session[:batch3] ||= 0
+  
+  loadTallys
 
-  File.open 'tally1.txt', 'r+' do |f|
-    session[:batch1] = f.read.to_i
-  end
-  File.open 'tally2.txt', 'r+' do |f|
-    session[:batch2] = f.read.to_i
-  end
-  File.open 'tally3.txt', 'r+' do |f|
-    session[:batch3]= f.read.to_i
-  end
-  @received_total = session[:batch1]+session[:batch2]+session[:batch3]
   erb :sms2
 end
 
@@ -58,46 +50,66 @@ get '/clear' do
   redirect '/'
 end
 
+#update our tallys from the current votes
+def loadTallys
+  File.open 'tally1.txt', 'r+' do |f|
+    session[:batch1] = f.read.to_i
+  end
+  File.open 'tally2.txt', 'r+' do |f|
+    session[:batch2] = f.read.to_i
+  end
+  File.open 'tally3.txt', 'r+' do |f|
+    session[:batch3]= f.read.to_i
+  end
+  @received_total = session[:batch1]+session[:batch2]+session[:batch3]
+end
+
 def receive_sms
   @votes = Array.new
-  File.open settings.votes_file, 'r' do |f| 
-    while (line = f.gets)
-      a = line.split
-      n = Hash.new
-      n[:date_time] = a[0]
-      n[:message_id] = a[1] 
-      n[:message] = a[2]
-      n[:sender] = a[3]
-      n[:destination] = a[4]
-      
-      @invalid_messages = []
-      
-      text = n[:message]
-      if text.downcase.eql? 'football'
-         session[:batch1] = session[:batch1]+1
-         @votes.push n
-      elsif text.downcase.eql? 'baseball' 
-         session[:batch2] = session[:batch2]+1
-         @votes.push n
-      elsif text.downcase.eql? 'basketball' 
-         session[:batch3] = session[:batch3]+1
-         @votes.push n
-      else 
-         @invalid_messages.push n
-      end
-      
-      @received_total = session[:batch1]+session[:batch2]+session[:batch3]
+  if File.exists? settings.votes_file 
+    File.open settings.votes_file, 'r' do |f| 
+      while (line = f.gets) do
+        a = line.split
+        n = Hash.new
+        n[:date_time] = a[0]
+        n[:message_id] = a[1] 
+        n[:message] = a[2]
+        n[:sender] = a[3]
+        n[:destination] = a[4]
+        
+        @invalid_messages = []
+        
+        text = n[:message]
+        if text.downcase.eql? 'football'
+           session[:batch1] = session[:batch1]+1
+           @votes.push n
+        elsif text.downcase.eql? 'baseball' 
+           session[:batch2] = session[:batch2]+1
+           @votes.push n
+        elsif text.downcase.eql? 'basketball' 
+           session[:batch3] = session[:batch3]+1
+           @votes.push n
+        else 
+           @invalid_messages.push n
+        end
+        
+        @received_total = session[:batch1]+session[:batch2]+session[:batch3]
 
-      File.open 'tally1.txt', 'w' do |f|
-        f.write(session[:batch1])
-      end
-      File.open 'tally2.txt', 'w' do |f|
-        f.write(session[:batch2])
-      end
-      File.open 'tally3.txt', 'w' do |f|
-        f.write(session[:batch3])
+        File.open 'tally1.txt', 'w' do |fi|
+          fi.write(session[:batch1])
+        end
+        File.open 'tally2.txt', 'w' do |fi|
+          fi.write(session[:batch2])
+        end
+        File.open 'tally3.txt', 'w' do |fi|
+          fi.write(session[:batch3])
+        end
       end
     end
+  #files has been read so delete, such that we don't keep history
+  File.delete settings.votes_file if File.exists? settings.votes_file
+  else 
+    loadTallys
   end
   rescue => e
   @received_error = e.response
@@ -119,7 +131,8 @@ def sms_listener
   @sender = sms_list['SenderAddress']
   @destination = sms_list['DestinationAddress']
   
-  File.open("#{settings.mosms_file_dir}/vote_data", 'w+') { |f| f.puts @date_time + ' ' + @message_id + ' ' + @message + ' ' + @sender + ' ' + @destination }
+  #Append sms to file
+  File.open("#{settings.mosms_file_dir}/vote_data", 'a+') { |f| f.puts @date_time + ' ' + @message_id + ' ' + @message + ' ' + @sender + ' ' + @destination }
   
   ensure
   return erb :sms2

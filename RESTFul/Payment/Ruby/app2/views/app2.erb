@@ -278,64 +278,64 @@ For more information contact developer.support@att.com -->
                     Feature 4: Refund Subscription</h2>
             </div>
         </div>
-        <form method="post" name="refundSubscription" action="/refundSubscription">
         <div class="navigation" align="center">
-            <table style="width: 750px" cellpadding="1" cellspacing="1" border="0">
-                <thead>
-                    <tr>
-                        <th style="width: 150px" class="cell" align="left">
-                            <strong>Subscription ID</strong>
-                        </th>
-                        <th style="width: 100px" class="cell">
-                        </th>
-                        <th style="width: 240px" class="cell" align="left">
-                            <strong>Merchant Subscription ID</strong>
-                        </th>
-                        <td>
-                            <div class="warning">
-                                <strong>WARNING:</strong><br />
-                                You must use Get Subscription Status to get the Subscription ID before you can refund
-                                it.
-                            </div>
-                        </td>
-                    </tr>
-                </thead>
-                <tbody>
-				<% @subscriptions.each do |t| %>                       
-					<tr>
-						<td class="cell" align="left">
-							<input type="radio" name="trxId" value="<%= t[:subscription_id] %>" checked="checked" />
-								<%= t[:subscription_id] %></td>
+			<form method="post" name="refundSubscription" action="/refundSubscription">
+						<table style="width: 750px" cellpadding="1" cellspacing="1" border="0">
+							<thead>
+								<tr>
+									<th style="width: 150px" class="cell" align="left">
+									<strong>Subscription ID</strong>
+								</th>
+									<th style="width: 100px" class="cell">
+								</th>
+									<th style="width: 240px" class="cell" align="left">
+									<strong>Merchant Subscription ID</strong>
+								</th>
+								<td>
+									<div class="warning">
+											<strong>WARNING:</strong><br />
+											You must use Get Subscription Status to get the Subscription ID before you can refund
+											it.
+									</div>
+								</td>
+								</tr>
+							</thead>
+						<tbody>
+							<% @subscriptions.each do |t| %>                       
+								<tr>
+									<td class="cell" align="left">
+										<input type="radio" name="trxId" value="<%= t[:subscription_id] %>" checked="checked" />
+											<%= t[:subscription_id] %></td>
+										<td></td>
+									<td class="cell" align="left"><%= t[:merchant_subscription_id] %></td>
+								</tr>
+							<% end %>
+						<tr>
 							<td></td>
-						<td class="cell" align="left"><%= t[:merchant_subscription_id] %></td>
-					</tr>
-				<% end %>
-					<tr>
-                        			<td></td>
-                        			<td></td>
-                        			<td></td>
-						<form method="post" name="cancelSubscription" action="/cancelSubscription">
-                        			<td class="cell">
-                            			<button type="submit" name="cancelSubscription">
-                                				Cancel Subscription</button>
-                        			</td>
-						</form>
+							<td></td>
+							<td></td>
+								<td class="cell">
+									<button type="submit" name="cancelSubscription">
+										Cancel Subscription
+									</button>
+								</td>
+							</tr>
+							<tr>
+							<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+								<td class="cell">
+									<button type="submit" name="refundSubscription">
+										Refund Subscription
+									</button>
+								</td>
 						</tr>
-						<tr>
-						<tr>
-						<td></td>
-						<td></td>
-						<td></td>
-						<form method="post" name="refundSubscription" action="/refundSubscription">
-						<td class="cell">
-							<button  type="submit" name="refundSubscription">
-								Refund Subscription
-						</button></td>
-					</tr>
-			</tbody>
-            </table>
+					</tbody>
+				</table>
+			</form>
         </div>
-		</form>
+		
 		<br clear="all" />
 		<% if @subscription_refund %>
 			<div class="successWide">
@@ -364,12 +364,14 @@ For more information contact developer.support@att.com -->
 				</table>
 			</div>
 		<% end %>
+		
 		<% if @refund_error %>
 			<div class="errorWide">
 				<strong>ERROR:</strong><br />
 				<%= @refund_error %>
 			</div><br/>
 		<% end %>
+		
         <div class="wrapper">
             <div class="content">
                 <h2>
@@ -435,5 +437,3 @@ For more information contact developer.support@att.com -->
     </div>
 </body>
 </html>
-
-

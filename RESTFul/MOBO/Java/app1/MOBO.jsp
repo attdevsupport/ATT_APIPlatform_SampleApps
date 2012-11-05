@@ -1,3 +1,4 @@
+
 <%
 	//Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
 //TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
@@ -25,286 +26,234 @@
 </style>
 </head>
 <body>
-	<%@ page language="java" session="true" %>
+	<%@ page language="java" session="true"%>
 	<%@ page contentType="text/html; charset=iso-8859-1" language="java"%>
-	<%@ page import="com.sun.jersey.multipart.file.*"%>
-	<%@ page import="com.sun.jersey.multipart.BodyPart"%>
-	<%@ page import="com.sun.jersey.multipart.MultiPart"%>
-	<%@ page import="com.sun.jersey.api.client.Client"%>
-	<%@ page import="com.sun.jersey.api.client.ClientResponse"%>
-	<%@ page import="com.sun.jersey.api.client.WebResource"%>
-	<%@ page import="com.sun.jersey.api.client.config.ClientConfig"%>
-	<%@ page import="com.sun.jersey.api.client.config.DefaultClientConfig"%>
-	<%@ page import="com.sun.jersey.core.util.StringKeyIgnoreCaseMultivaluedMap"%>
-	<%@ page import="com.sun.jersey.multipart.MultiPartMediaTypes"%>
-	<%@ page import="javax.mail.internet.MimeMultipart"%>
-	<%@ page import="javax.mail.internet.MimeBodyPart"%>
-	<%@ page import="java.io.*"%>
-	<%@ page import="java.util.List"%>
-	<%@ page import="com.att.rest.*"%>
-	<%@ page import="java.net.*"%>
-	<%@ page import="javax.ws.rs.core.*"%>
 	<%@ page import="org.apache.commons.fileupload.*"%>
-	<%@ page import="java.util.List,java.util.Iterator"%>
+	<%@ page import="java.util.*"%>
+	<%@page import="java.util.regex.Matcher"%>
+	<%@page import="java.util.regex.Pattern"%>
+	<%@ page import="java.io.*"%>
 	<%@ page import="org.json.*"%>
-	<%@ page import="org.w3c.dom.*"%>
-	<%@ page import="javax.xml.parsers.*"%>
-	<%@ page import="javax.xml.transform.*"%>
-	<%@ page import="javax.xml.transform.stream.*"%>
-	<%@ page import="javax.xml.transform.dom.*"%>
-	<%@ page import="org.apache.commons.httpclient.*"%>
-	<%@ page import="org.apache.commons.httpclient.methods.*"%>
-	<%@ page import="java.util.HashSet"%>
-	<%@page import="java.util.regex.Matcher"%>  
-	<%@page import="java.util.regex.Pattern"%>  
+	<%@ page import="java.net.*"%>
+	<%@page import="org.apache.http.HttpHost"%>
+	<%@page import="org.apache.http.HttpResponse"%>
+	<%@page import="org.apache.http.client.methods.HttpPost"%>
+	<%@page import="org.apache.http.entity.mime.FormBodyPart"%>
+	<%@page import="org.apache.http.entity.mime.HttpMultipartMode"%>
+	<%@page import="org.apache.http.entity.mime.MultipartEntity"%>
+	<%@page import="org.apache.http.entity.mime.content.FileBody"%>
+	<%@page import="org.apache.http.entity.mime.content.StringBody"%>
+	<%@page import="org.apache.http.impl.client.DefaultHttpClient"%>
+	<%@ page import="java.nio.charset.Charset"%>
+
 	<%@ include file="config.jsp"%>
 	<%
-		final String scope = "MOBO";
 		final String contentBodyFormat = "FORM-ENCODED"; 
-		final String responseFormat = "json";
-		final String requestFormat = "json";
-		final String endpoint = FQDN + "/rest/1/MyMessages";
-		final String postOauth = "MOBO.jsp?sendMessageButton=true";
-		final String priority = "HIGH";
-		String accessToken =  "";
-		int statusCode = 0;
-		RestClient client;
-		String responze = "";
-		String ID = "";
+			final String responseFormat = "json";
+			final String requestFormat = "json";
+			final String endpoint = FQDN + "/rest/1/MyMessages";
+			final String priority = "HIGH";
+			String accessToken =  "";
+			int statusCode = 0;
+			String responze = "";
+			String ID = "";
+			accessToken = (String) session.getAttribute("accessToken");
 
-		List addresses = new java.util.ArrayList();
-		List badAddresses = new java.util.ArrayList();
-		int numShort = 0;
+			List<String> addresses = new java.util.ArrayList<String>();
+			List badAddresses = new java.util.ArrayList();
+			List<String> files = new ArrayList<String>();
+			
+			int numShort = 0;
 
-
-		String sendMessageButton = request.getParameter("sendMessageButton");        
-		boolean sendMsgBtnClicked = false;
-		boolean groupBoxError = false;
-
-		String phoneTextBox = "";
-		if (session.getAttribute("phoneTextBox") != null )
-		{
-			phoneTextBox = (String)session.getAttribute("phoneTextBox") ;	
-		}
-
-		String subjectTextBox = session.getAttribute("subjectTextBox") != null  ? (String)session.getAttribute("subjectTextBox") : "";
-		String messageTextBox =session.getAttribute("messageTextBox") != null  ? (String)session.getAttribute("messageTextBox") : "";
-		String groupCheckBox  = session.getAttribute("groupCheckBox") != null  ? (String)session.getAttribute("groupCheckBox") : "";
-		String fileName =session.getAttribute("fileName") != null  ? (String) session.getAttribute("fileName") : "";
-		//
-		if (phoneTextBox == null)
-		{
-			phoneTextBox =  request.getParameter("phoneTextBox") != null ? (String)  request.getParameter("phoneTextBox") : "";
-			messageTextBox =  request.getParameter("messageTextBox") != null ? (String)  request.getParameter("messageTextBox") : "";
-			groupCheckBox =  request.getParameter("groupCheckBox") != null ? (String)  request.getParameter("groupCheckBox") : "";
-			fileName =  request.getParameter("fileName") != null ? (String)  request.getParameter("fileName") : "";
-		}
-
-		if(sendMessageButton != null) 
-		{
-		  sendMsgBtnClicked = true;
-		}
-
-		//If Send MMS button was clicked, do this to get some parameters from the form.
-		if( sendMsgBtnClicked) 
-		{ 
-			try
-			{
-		        DiskFileUpload fu = new DiskFileUpload();
-		        List fileItems = fu.parseRequest(request);
-		        Iterator itr = fileItems.iterator();
-		        while(itr.hasNext()) 
-		        {
-			       FileItem fi = (FileItem)itr.next();
-			       if(!fi.isFormField()) 
-			 	   {
-						if (fi.getName() != "" )
-						{
-							File fNew= new File(application.getRealPath("/"), fi.getName());
-							if (fileName == "") 
-							{
-								fileName = fi.getName();
-							}	 
-							else 
-							{
-						        fileName = fileName + "," + fi.getName();
-							}
-						    if(!(fi.getName().equalsIgnoreCase("")))
-						    {
-						    	fi.write(fNew);
-						    }
-						    session.setAttribute("fileName",fileName);
-						}
-
-				   } else {
-				       session.setAttribute(fi.getFieldName(),fi.getString().trim());
-				   }
-				}
-		    }
-		    catch(Exception e)
-		    {
-		    } 
-
-			//check for access token		    
-		    accessToken = request.getParameter("access_token");
-			if(accessToken==null || accessToken == "null"){
-				accessToken = (String)session.getAttribute("accessToken");
-				session.setAttribute("accessToken", accessToken);
-			}
-			if((accessToken==null) || (!scope.equalsIgnoreCase("MOBO")) && (!scope.equalsIgnoreCase("SMS,MMS,WAP,DC,TL,PAYMENT,MOBO"))) {
-				session.setAttribute("scope", "MOBO");
-				session.setAttribute("clientId", clientIdWeb);
-				session.setAttribute("clientSecret", clientSecretWeb);
-				session.setAttribute("postOauth", postOauth);
-				session.setAttribute("redirectUri", redirectUri);
-
-				phoneTextBox = (String) session.getAttribute("phoneTextBox");
-				subjectTextBox = (String) session.getAttribute("subjectTextBox");
-				messageTextBox = (String) session.getAttribute("messageTextBox");
-				groupCheckBox  = (String) session.getAttribute("groupCheckBox");
-				fileName = (String) session.getAttribute("fileName");
-
-				String params = "";
-				if (subjectTextBox !=  null) params += "&subjectTextBox=" + subjectTextBox;
-				if (phoneTextBox !=  null) params += "&phoneTextBox=" + phoneTextBox;
-				if (groupCheckBox !=  null) params += "&groupCheckBox="+ groupCheckBox;
-				if (messageTextBox !=  null) params += "&messageTextBox="+ messageTextBox;
-				if (fileName !=  null) params += "&fileName="+ fileName;
-				params = response.encodeURL(params);
-				out.println("params:" + params);
-				System.out.println("params:" + params);
-				response.sendRedirect("oauth.jsp?getExtCode=yes"+ params);
-			}   
-
-			phoneTextBox = (String) session.getAttribute("phoneTextBox");
-			//if we get redirected input parameters could be null
-			if (phoneTextBox != null)
-			{
-				phoneTextBox = phoneTextBox.trim();
-				subjectTextBox = (String) session.getAttribute("subjectTextBox");
-				messageTextBox = (String) session.getAttribute("messageTextBox");
-				groupCheckBox  = (String) session.getAttribute("groupCheckBox");
-
-				fileName = (String) session.getAttribute("fileName");
-
-				//Parse the phone addresses
-				String [] address = phoneTextBox.split(",");
-				for(String a : address) 
+			String sendMessageButton = request.getParameter("sendMessageButton");        
+			boolean groupBoxError = false;
+			String phoneTextBox = "";
+			String subjectTextBox = "";
+			String messageTextBox = "";
+			String groupCheckBox  = "";
+			
+			//If Send MMS button was clicked, do this to get some parameters from the form.
+			if( sendMessageButton != null) 
+			{ 
+				try
 				{
-					if(a.length() >= 10)
-					{	
-						 String expression = "[+]?[0-15]*[0-9]+$";  
-						 CharSequence inputStr = a;  
-						 Pattern pattern = Pattern.compile(expression);  
-						 Matcher matcher = pattern.matcher(inputStr);  
-						 if(matcher.matches()){  
-							a = "tel:"+a;
-							addresses.add(a);
-						 }		  
+					        DiskFileUpload fu = new DiskFileUpload();
+					        List fileItems = fu.parseRequest(request);
+					        Iterator itr = fileItems.iterator();
+					        session.setAttribute("files",files);
+					        
+					        while(itr.hasNext()) 
+					        {
+				       FileItem fi = (FileItem)itr.next();
+				       if(!fi.isFormField()) 
+				 	   {
+							if (fi.getName() != "" )
+							{
+								File fNew= new File(application.getRealPath("/"), fi.getName());
+							    files.add(fNew.getAbsolutePath());
+							    //files.add(fNew.getName());
+							    if(!(fi.getName().equalsIgnoreCase("")))
+							    {
+							    	fi.write(fNew);
+							    }
+							}
+					   } else {
+					       session.setAttribute(fi.getFieldName(),fi.getString().trim());
+					   }
 					}
-					else if((a.length()>2) && (a.length()<=8))
-					{
-						String expression = "[0-15]*[0-9]+$";  
-						CharSequence inputStr = a;  
-						Pattern pattern = Pattern.compile(expression);  
-						Matcher matcher = pattern.matcher(inputStr);  
-						if(matcher.matches()){  
-							a = "short:"+a;
-							addresses.add(a);
-						 }
-					}
-					else if(a.contains("@"))
-					{
-						a =a;
-						addresses.add(a);
-					}
-					else
-					{
-						badAddresses.add(a);
-					}
-				}		
-			}
-			else
-			{
-				sendMsgBtnClicked = false;	
-				phoneTextBox = "";
-				subjectTextBox = "";
-				messageTextBox = "";
-				groupCheckBox = "";
-				fileName = "";
-			}
-		} 
-	%>
-	<%
-		String requestBody = "";
-		MultiPart mPart;
-		MediaType contentBodyType = null;
-		if( sendMsgBtnClicked ) 
-		{
-			  JSONArray numbers = new JSONArray(addresses);
-			  JSONObject requestObject = new JSONObject();
-			  requestObject.put("Addresses", numbers);	//numbers
-			  requestObject.put("Text", messageTextBox.trim());
-			  requestObject.put("Subject", subjectTextBox.trim());
+			    }
+			    catch(Exception e)
+			    {
+			    } 
 
-			  if (groupCheckBox != null && groupCheckBox.equals("on")) 
-			  {
-				   requestObject.put("Group", "true");
-			  }
-			  else
-			  {
-				   requestObject.put("Group", "false");
-			  }	
-			  requestBody += requestObject.toString();
-		  //Check whether attachments are present
-		  //if present do multipart/related or else single body part
-			if (fileName != null && fileName != "")
+		phoneTextBox = (String) session.getAttribute("phoneTextBox") == null ? "" : (String) session.getAttribute("phoneTextBox");
+		subjectTextBox = (String) session.getAttribute("subjectTextBox") == null ? "" : (String) session.getAttribute("subjectTextBox");
+		messageTextBox = (String) session.getAttribute("messageTextBox") == null ? "" : (String) session.getAttribute("messageTextBox");
+		groupCheckBox  = (String) session.getAttribute("groupCheckBox") == null ? "" : (String) session.getAttribute("groupCheckBox");
+		
+		//if we get redirected input parameters could be null
+		if (phoneTextBox != null)
+		{
+			phoneTextBox = phoneTextBox.trim();
+			//Parse the phone addresses
+			String [] address = phoneTextBox.split(",");
+			if (address == null || address.length == 0) {
+				address = new String[] { phoneTextBox };
+			}
+			for(String a : address) 
 			{
-				client = new RestClient(endpoint, new MediaType ("multipart","related"), MediaType.APPLICATION_JSON_TYPE);
+				if(a.length() >= 10)
+				{	
+					 String expression = "[+]?[0-15]*[0-9]+$";  
+					 CharSequence inputStr = a;  
+					 Pattern pattern = Pattern.compile(expression);  
+					 Matcher matcher = pattern.matcher(inputStr);  
+					 if(matcher.matches()){  
+						a = "tel:"+a;
+						addresses.add(a);
+					 }		  
+				}
+				else if((a.length()>2) && (a.length()<=8))
+				{
+					String expression = "[0-15]*[0-9]+$";  
+					CharSequence inputStr = a;  
+					Pattern pattern = Pattern.compile(expression);  
+					Matcher matcher = pattern.matcher(inputStr);  
+					if(matcher.matches()){  
+						a = "short:"+a;
+						addresses.add(a);
+					 }
+				}
+				else if(a.contains("@"))
+				{
+					a =a;
+					addresses.add(a);
+				}
+				else
+				{
+					badAddresses.add(a);
+				}
+			}		
+		}
+			String requestBody = "";
+			if (accessToken == null)
+			{
+			        	getServletContext().getRequestDispatcher("/oauth.jsp").forward(request, response);
 			}
 			else
 			{
-				client = new RestClient(endpoint, new MediaType ("application", "json"), MediaType.APPLICATION_JSON_TYPE);
-			}
-			if ((fileName != null && fileName != "")) {
-				mPart = new MultiPart(new MediaType ("multipart","related"));
-				MultiPart mPart1 = mPart.bodyPart(new BodyPart(requestBody,MediaType.APPLICATION_JSON_TYPE));
-				mPart.getBodyParts().get(0).getHeaders().add("Content-Transfer-Encoding", "8bit");
-				mPart.getBodyParts().get(0).getHeaders().add("Content-Disposition","form-data; name=\"root-fields\"");
-				mPart.getBodyParts().get(0).getHeaders().add("Content-ID", "<startpart>");
-				String[] attachments = fileName.split(",");
-				MediaType[] medTyp = new MediaType[attachments.length];
-				ServletContext context = getServletContext();
-				for (int i = 0; i < attachments.length; i++) {
-					java.util.Map<String, String> conttypeattr = new java.util.HashMap<String, String>();
-					conttypeattr.put("name", attachments[i]);
-					//media type
-					FileDataBodyPart fIlE = new FileDataBodyPart();
-					MediaType media = fIlE.getPredictor().getMediaTypeFromFileName("/" + attachments[i]);
-					medTyp[i] = new MediaType(media.getType(),media.getSubtype(), conttypeattr);
-					//
-					int hdrIndex = i + 1;
-					mPart1 = mPart1.bodyPart(new BodyPart(context.getResourceAsStream("/" + attachments[i]),medTyp[i]));
-					mPart1.getBodyParts().get(hdrIndex).getHeaders().add("Content-Disposition","form-data; name=\"file" + i	+ "\"; filename=\""	+ attachments[i] + "\"");
-					mPart1.getBodyParts().get(hdrIndex).getHeaders().add("Content-Transfer-Encoding", "binary");
-					mPart1.getBodyParts().get(hdrIndex).getHeaders().add("Content-ID", attachments[i]);
-					mPart1.getBodyParts().get(hdrIndex).getHeaders().add("Content-Location", attachments[i]);
+				  JSONArray numbers = new JSONArray(addresses);
+				  JSONObject requestObject = new JSONObject();
+				  requestObject.put("Addresses", numbers);	//numbers
+				  requestObject.put("Text", messageTextBox.trim());
+				  requestObject.put("Subject", subjectTextBox.trim());
+			
+				  if (groupCheckBox != null && groupCheckBox.equals("on")) 
+				  {
+					   requestObject.put("Group", "true");
+				  }
+				  else
+				  {
+					   requestObject.put("Group", "false");
+				  }	
+				  requestBody += requestObject.toString();
+				  
+			  	//Check whether attachments are present
+			  	//if present do multipart/related or else single body part
+				files = (List<String>) session.getAttribute("files");
+				DefaultHttpClient mclient = new DefaultHttpClient();
+
+				HttpPost post = new HttpPost(endpoint);
+				post.addHeader("Authorization", "BEARER "+ accessToken);
+				post.addHeader("Content-Type", "multipart/form-data; type=\"application/x-www-form-urlencoded\"; start=\"<startpart>\"; boundary=\"foo\"");
+				MultipartEntity entity = new MultipartEntity(HttpMultipartMode.STRICT, "foo", Charset.forName("UTF-8"));
+
+				StringBuilder sbuilder = new StringBuilder();
+				sbuilder.append("Addresses=");
+				if (addresses.size() > 0) {
+					sbuilder.append(URLEncoder.encode(addresses.get(0), "UTF-8"));
 				}
-				client.addRequestBody(mPart);
+
+				for (int i = 1; i < addresses.size(); ++i) {
+					sbuilder.append(URLEncoder.encode("," + addresses.get(i), "UTF-8"));
+				}	
+
+				sbuilder.append("&Text=");
+				sbuilder.append(URLEncoder.encode(messageTextBox.trim(), "UTF-8"));
+				
+				sbuilder.append("&Subject=");
+				sbuilder.append(URLEncoder.encode(subjectTextBox.trim(), "UTF-8"));
+
+				String groupValue = "false";
+				if (groupCheckBox != null && groupCheckBox.equals("on")) {
+		   					groupValue = "true";
+				}
+				sbuilder.append("&Group=");
+				sbuilder.append(groupValue);
+				
+				String sMsg = sbuilder.toString(); 
+				
+				StringBody sbody = new StringBody(sMsg, "application/x-www-form-urlencoded",
+	        			Charset.forName("UTF-8"));
+				FormBodyPart stringBodyPart = new FormBodyPart("root-fields", sbody);
+				stringBodyPart.addField("Content-ID", "<startpart>");
+				entity.addPart(stringBodyPart);
+
+				if (files != null) {
+					for (int i = 0; i < files.size(); ++i) {
+						final String fname = files.get(i);
+						String type = URLConnection.guessContentTypeFromStream(new FileInputStream(fname));
+						if (type == null){
+							type = URLConnection.guessContentTypeFromName(fname);
+						}
+						if (type == null) type="application/octet-stream";
+						FileBody fb = new FileBody(new File(fname), type, "UTF-8");
+						FormBodyPart fileBodyPart = new FormBodyPart(fb.getFilename(), fb);
+						fileBodyPart.addField("Content-ID", "<fileattachment" + i + ">");
+						fileBodyPart.addField("Content-Location", fb.getFilename());
+						entity.addPart(fileBodyPart);
+					}
+				}
+
+				post.setEntity(entity);
+				HttpResponse responseBody = mclient.execute(post);
+				statusCode = responseBody.getStatusLine().getStatusCode();
+				responze = org.apache.http.util.EntityUtils.toString(responseBody.getEntity());
+				
+				//remove the files
+				if (files != null)
+				{
+					for (String file: files) {
+							new File(file).delete();
+					}
+				}
+				//clean up input parameters from the session
+				session.removeAttribute("phoneTextBox");
+				session.removeAttribute("messageTextBox");
+				session.removeAttribute("subjectTextBox");
+				session.removeAttribute("groupCheckBox");
 			}
-			else 
-			{
-			    client.addRequestBody(requestBody);				 
 			}
-			responze = client.invoke(com.att.rest.HttpMethod.POST,accessToken);		
-			statusCode = client.getHttpResponseCode();
-			//clean up input parameters from the session
-			session.removeAttribute("phoneTextBox");
-			session.removeAttribute("messageTextBox");
-			session.removeAttribute("subjectTextBox");
-			session.removeAttribute("groupCheckBox");
-			session.removeAttribute("fileName");
-		}
 	%>
 	<div id="container">
 		<!-- open HEADER -->
@@ -369,7 +318,8 @@
 						</tr>
 						<tr>
 							<td valign="top" class="label">Group:</td>
-							<td class="cell"><input name="groupCheckBox" type="checkbox" id="phoneTextBox"/></td>
+							<td class="cell"><input name="groupCheckBox" type="checkbox"
+								id="phoneTextBox" /></td>
 						</tr>
 					</tbody>
 				</table>
@@ -421,39 +371,34 @@
 			</div>
 			<br clear="all" />
 		</form>
-		<%	
-		    if (sendMsgBtnClicked)
-		    {
-					if (statusCode ==200 || statusCode == 201) 
-					{
-						JSONObject rpcObject = new JSONObject(responze);
-						ID = rpcObject.getString("Id");
-						groupCheckBox = null;
-					%>
-						<div class="successWide">
-						<strong>SUCCESS</strong><br /> <strong>Message ID: <%=ID%></strong>
-						</div>
-						<br />
-					<%
-					}
-					else if (groupBoxError)
-					{
-					%>
-						<div class="errorWide">
-						<strong>ERROR:</strong><br /> <strong>Cant select group and short</strong>
-						</div>
-						<br />
-					<%
-					}
-					else
-					{
-					%>
-						<div class="errorWide">
-						<strong>ERROR:</strong><br /> <strong><%=responze%></strong>
-						</div>
-						<br />
-					<%
-					}
+		<%
+			if (sendMessageButton != null) {
+				if (statusCode == 200 || statusCode == 201) {
+					JSONObject rpcObject = new JSONObject(responze);
+					ID = rpcObject.getString("Id");
+					groupCheckBox = null;
+		%>
+		<div class="successWide">
+			<strong>SUCCESS</strong><br /> <strong>Message ID: <%=ID%></strong>
+		</div>
+		<br />
+		<%
+			} else if (groupBoxError) {
+		%>
+		<div class="errorWide">
+			<strong>ERROR:</strong><br /> <strong>Cant select group and
+				short</strong>
+		</div>
+		<br />
+		<%
+			} else {
+		%>
+		<div class="errorWide">
+			<strong>ERROR:</strong><br /> <strong><%=responze%></strong>
+		</div>
+		<br />
+		<%
+			}
 			}
 		%>
 		<div align="center">
@@ -477,6 +422,6 @@
 					href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
 				<br> For more information contact <a
 					href="mailto:developer.support@att.com">developer.support@att.com</a>
-		</div>		
+		</div>
 </body>
 </html>

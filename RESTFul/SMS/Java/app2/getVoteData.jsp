@@ -28,8 +28,9 @@ int baseballVotes =0;
 int basketballVotes =0;
 
 %>{"voteList":[<%
-
-if(directory.listFiles().length>0) {
+if (directory.listFiles().length == 0) {
+    	%>]}<%
+} else if(directory.listFiles().length>0) {
     int i = 0;
 	   for(File voteFile : files){  
           String voteFileName = voteFile.getName(); 
@@ -73,8 +74,18 @@ if(directory.listFiles().length>0) {
         if(i==10)
             break;
     }
-	
 
+	while (directory.listFiles().length > 0) {
+		File f = directory.listFiles()[0];
+		f.delete();
+	}
+	
+	RandomAccessFile totalVotes = new RandomAccessFile(application.getRealPath("/VoteTotals/voteTotals.txt"),"r");
+	footballVotes += Integer.parseInt(totalVotes.readLine());
+	baseballVotes += Integer.parseInt(totalVotes.readLine());
+	basketballVotes += Integer.parseInt(totalVotes.readLine());
+	totalVotes.close();
+	
 	PrintWriter outWrite = new PrintWriter(new BufferedWriter(new FileWriter(application.getRealPath("/VoteTotals/voteTotals.txt"))), false);
 	outWrite.println(footballVotes);
 	outWrite.println(baseballVotes);

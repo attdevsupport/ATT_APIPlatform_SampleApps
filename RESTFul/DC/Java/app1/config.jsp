@@ -17,7 +17,7 @@ String secret_key = "";
 String scope = "DC";
 
 //API Host name
-String FQDN = "https://api-uat.bf.pacer.sl.attcompute.com";
+String FQDN = "https://api.att.com";
 
 //Device Capabilities
 String getdc_url = "/rest/2/Devices/Info";

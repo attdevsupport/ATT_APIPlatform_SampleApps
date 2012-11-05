@@ -11,10 +11,9 @@ include ("config.php");
 include ($oauth_file);
 
 session_start();
-$getReceivedSms = $_REQUEST["getReceivedSms"];   
 ?>
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
-<title>AT&T Sample SMS Application - SMS app 2 - Voting</title>
+<title>AT&amp;T Sample SMS Application - SMS app 2 - Voting</title>
 	<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
     <link rel="stylesheet" type="text/css" href="common.css"/ >
 
@@ -47,7 +46,7 @@ document.write("" + navigator.userAgent);
 <div id="wrapper">
 <div id="content">
 
-  <h1>AT&T Sample SMS Application - SMS app 2 - Voting</h1>
+  <h1>AT&amp;T Sample SMS Application - SMS app 2 - Voting</h1>
 <h2>Feature 1: Calculate Votes sent via SMS to <?php echo $short_code ?> with text "Football", "Basketball", or "Baseball"</h2>
 
 </div>
@@ -97,10 +96,6 @@ document.write("" + navigator.userAgent);
              fclose($footBallFileHandle);
              fclose($baseBallFileHandle);
              fclose($basketBallFileHandle);
-
-
-	       //        	print "Receive SMS Messages : <br/>";
-                $invalidMsg=false;
 		
 		   $responses = unserialize(file_get_contents($db3_filename));
 			foreach($responses as $response) {
@@ -123,9 +118,6 @@ document.write("" + navigator.userAgent);
                             $validmsg = true;
 				$totalVotes+= 1;
                         }
-                        else{
-                            $invalidMsg=true;
-                        }
 		    }
                     $footBallFileHandle = fopen($footBallFile,'w');
                     $baseBallFileHandle = fopen($baseBallFile,'w');
@@ -134,9 +126,8 @@ document.write("" + navigator.userAgent);
                     fputs($baseBallFileHandle, $baseBallTotalCount);
                     fputs($basketBallFileHandle, $basketBallTotalCount);
                     fclose($footBallFileHandle);
-                    fclose($baseBallBallFileHandle);
+                    fclose($baseBallFileHandle);
                     fclose($basketBallFileHandle);
-                 
              }
 $totalVotes = $footBallTotalCount +  $baseBallTotalCount + $basketBallTotalCount;
  
@@ -185,64 +176,13 @@ $totalVotes = $footBallTotalCount +  $baseBallTotalCount + $basketBallTotalCount
 	</tr>
 	</tbody>
 	</table> </form>
-<?php
-	if($getReceivedSms != null) {
-
- ?>
 </div>
 <br clear="all" />
 <div align="center">
 </div>
-
 <?php
- if($invalidMsg)
-{
-
-        foreach($responses as $response) {
-            if((strtolower($response["Message"])!="football") && (strtolower($response["Message"])!="baseball") && (strtolower($response["Message"])!="basketball")){
-                ?>
-                <table style="width: 750px" cellpadding="1" cellspacing="1" border="0">
-<thead>
-    <tr>
-<th class="cell" align="left"><strong>DateTime</strong></th>
-        
-<th class="cell" align="left"><strong>SenderAddress</strong></th>
-<th class="cell" align="left"><strong>Message</strong></th>
-<th class="cell" align="left"><strong>DestinationAddress</strong></th>      
-<th class="cell" align="left"><strong>MessageId</strong></th>
-
-
-
-</td>
-	</tr>
-</thead>
-<tbody>
-<tr>
-                        <td class="cell" align="left" style="background: #fcc">
-	                  <?php echo $response["DateTime"];?>
-
-			     </td>
-                         <td class="cell" align="left" style="background: #fcc">
-                         <?php echo $response["SenderAddress"];?>
-</td>
-
-                        </td>
-                        <td class="cell" align="left" style="background: #fcc"><?php echo $response["Message"];?></td>
-                        <td class="cell" align="left" style="background: #fcc"><?php echo $response["DestinationAddress"];?></td>
-                        <td class="cell" align="left" style="background: #fcc"><?php echo $response["MessageId"];?></td>
-                      </tr>  
-
-    </table>
-    <?php
-} 
-}
-}
-
-if($validmsg) {
-foreach($responses as $response) {
-            if((strtolower($response["Message"])=="football") || (strtolower($response["Message"])=="baseball") || (strtolower($response["Message"])=="basketball")){
-                ?>
-               
+if (sizeof($responses) > 0) {
+?>
 <table style="width: 750px" cellpadding="1" cellspacing="1" border="0">
 <thead>
     <tr>
@@ -260,8 +200,6 @@ foreach($responses as $response) {
 </thead>
 <tbody><?php
 foreach($responses as $response) {
-
-
 ?>
 <tr>
                         <td class="cell" align="left">
@@ -277,15 +215,16 @@ foreach($responses as $response) {
                         <td class="cell" align="left"><?php echo $response["DestinationAddress"];?></td>
                         <td class="cell" align="left"><?php echo $response["MessageId"];?></td>
                       </tr>
-</table>  
 <?php 
-
- }
- } }
-} }
-foreach($responses as $response) {
- $fp = fopen($db3_filename, 'w+') or die("I could not open $db3_filename.");
-            unset($response["DateTime"], $response["SenderAddress"], $response["Message"], $response["DestinationAddress"], $response["MessageId"]);}
+}?>
+</tbody>
+</table>
+<?php
+}
+$fp = fopen($db3_filename, 'w') or die("could not open $db3_filename");
+$votes = array();
+fwrite($fp, serialize($votes));
+fclose($fp);
 ?></div>
 <div id="footer">
 

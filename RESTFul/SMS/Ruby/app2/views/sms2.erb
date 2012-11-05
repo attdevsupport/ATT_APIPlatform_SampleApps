@@ -104,7 +104,6 @@ For more information contact developer.support@att.com -->
         <br clear="all"/>
         <div align="center">
         <% if @votes && !@votes.empty?  %>
-        <% @votes.each do |n| %>
         <table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
             <thead>
                 <tr>
@@ -125,6 +124,7 @@ For more information contact developer.support@att.com -->
                     </th><th></th>
                 </tr>
             </thead>
+        <% @votes.each do |n| %>
             <tbody>                      
         		<tr>
 			    	<td style="width: 250px" td class="cell" align="left"><%= n[:date_time] %></td><td></td>
