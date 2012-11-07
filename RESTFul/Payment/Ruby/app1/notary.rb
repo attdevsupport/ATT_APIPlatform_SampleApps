@@ -17,6 +17,7 @@ enable :sessions
 config_file 'configNotary.yml'
 
 set :port, settings.port
+set :protection, :except => :frame_options
 
 set :notary_result, Hash.new
 set :notary_payload, ''

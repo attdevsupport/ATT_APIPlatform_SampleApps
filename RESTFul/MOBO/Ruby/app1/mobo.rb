@@ -20,6 +20,7 @@ SCOPE = 'MOBO'
 config_file 'config.yml'
 
 set :port, settings.port
+set :protection, :except => :frame_options
 
 # perform the API call
 def send_messages

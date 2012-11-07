@@ -19,6 +19,7 @@ enable :sessions
 config_file 'config.yml'
 
 set :port, settings.port
+set :protection, :except => :frame_options
 
 SCOPE = 'SPEECH'
 

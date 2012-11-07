@@ -19,6 +19,7 @@ SCOPE = 'TL'
 config_file 'config.yml'
 
 set :port, settings.port
+set :protection, :except => :frame_options
 
 def authorize
   # obtain an access token if necessary
