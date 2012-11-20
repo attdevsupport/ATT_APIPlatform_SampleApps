@@ -57,6 +57,13 @@ def get_access_token
   end
 end
 
+#Add P3P headers for proper IE support.
+[ '/','/auth/callback', '/GetDeviceCapabilities' ].each do |path|
+  before path do
+    headers "P3P" => "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\""
+  end
+end
+
 get '/auth/callback' do
   get_access_token
 end

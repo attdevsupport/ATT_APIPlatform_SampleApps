@@ -7,6 +7,7 @@ For more information contact developer.support@att.com
 
 <?php
 header("Content-Type: text/html; charset=ISO-8859-1");
+header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 require_once("config.php");
 
 session_start();

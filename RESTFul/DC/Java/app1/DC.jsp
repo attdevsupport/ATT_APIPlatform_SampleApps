@@ -4,6 +4,9 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.a
 Copyright 2011 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
+<%
+response.addHeader("P3P", "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
+%>
 <%@ page contentType="text/html; charset=iso-8859-1" language="java" %>
 <%@ page import="com.att.api.dc.handler.DCHandler" %>
 <%@ page import="com.att.api.dc.model.DeviceInfo" %>
