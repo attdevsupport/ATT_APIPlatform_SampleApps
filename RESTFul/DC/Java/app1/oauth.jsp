@@ -30,17 +30,11 @@
 	String getRefreshToken = request.getParameter("getRefreshToken");
 	if (getRefreshToken==null) getRefreshToken="";
 
-	//For the first time, we dont have access token, so we redirect to authenticate client id
-	if((session.getAttribute("accessToken") == null && request.getParameter("error_description") == null && code.length() == 0)) 
-   	{
-   		response.sendRedirect(FQDN + "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&redirect_uri=" + redirectURL);
-   	}
 	//Second time, if client id is valid we should now have the code parameter on the url. Use the code get the access token and set the token in session
-   	else if(!code.equalsIgnoreCase("")) 
+   	if(!code.equalsIgnoreCase("")) 
    	{
-
         String url = FQDN + "/oauth/token";   
-        HttpClient client = new HttpClient();
+        HttpClient client = new HttpClient(); 
         PostMethod method = new PostMethod(url); 
         String b = "client_id=" + client_id + "&client_secret=" + secret_key + "&grant_type=authorization_code&code=" + code;
         method.addRequestHeader("Accept","application/json");
@@ -84,7 +78,6 @@
 			session.setAttribute("errorResponse",accessTokenError);
 		}
         method.releaseConnection();
-		response.sendRedirect("dc.jsp");
     }
     //Refresh token scenario
     else if(!getRefreshToken.equalsIgnoreCase("")) 
@@ -94,23 +87,16 @@
 	    PostMethod method = new PostMethod(url); 
 	    String b = "client_id=" + client_id + "&client_secret=" + secret_key + "&grant_type=refresh_token&refresh_token=" + refreshToken;
 	    method.addRequestHeader("Content-Type","application/x-www-form-urlencoded");
-           method.setRequestBody(b);
+        method.setRequestBody(b);
 	    int statusCode = client.executeMethod(method);    
 	    if(statusCode==200)
 	    { 
 		   	String accessToken = method.getResponseBodyAsString().substring(18,50);
 		   	session.setAttribute("accessToken", accessToken);
-		   	String postOauth = (String) session.getAttribute("postOauth");
-		   	if(postOauth!= null) 
-		   	{
-		   		session.setAttribute("postOauth", null);
-		   		response.sendRedirect(postOauth);
-		   	}
 	    }
 	    method.releaseConnection();
-		response.sendRedirect("dc.jsp");
     }
-    else 
+    else if (request.getParameter("error") != null || request.getParameter("error_description") != null)
     {
 		String error = (String) request.getParameter("error");
 		String errorResponse = "";
@@ -124,6 +110,5 @@
 			errorResponse = errorDescription;
 		}
 		session.setAttribute("errorResponse",errorResponse);
-		response.sendRedirect("dc.jsp");
     }
 %>

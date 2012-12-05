@@ -5,6 +5,12 @@
 	//For more information contact developer.support@att.com
 %>
 
+<%!
+public String escape(String str) {
+        return org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(str);
+}
+%>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -100,13 +106,13 @@
 						<tr>
 							<td width="20%" valign="top" class="label">Phone:</td>
 							<td class="cell"><input maxlength="16" size="12"
-								name="address" value="<%=address%>" style="width: 90%">
+								name="address" value="<%=escape(address)%>" style="width: 90%">
 							</td>
 						</tr>
 						<tr>
 							<td valign="top" class="label">Message:</td>
 							<td class="cell"><textarea rows="4" name="message"
-									style="width: 90%"><%=message%></textarea></td>
+									style="width: 90%"><%=escape(message)%></textarea></td>
 						</tr>
 					</tbody>
 				</table>
@@ -195,7 +201,7 @@
 						%>
 							<div class="successWide">
 								<strong>SUCCESS:</strong><br /> <strong>Message ID:</strong>
-								<%=smsId%>
+								<%=escape(smsId)%>
 							</div>
 							<br />
 							<%
@@ -203,7 +209,7 @@
 							%>
 							<div class="errorWide">
 								<strong>ERROR:</strong><br />
-								<%=method.getResponseBodyAsString()%>
+								<%=escape(method.getResponseBodyAsString())%>
 							</div>
 							<br />
 							<%
@@ -221,8 +227,8 @@
 						%>
 						<div class="errorWide">
 							<strong>ERROR:</strong><br /> <strong>Status:</strong>
-							<%=oauthStatusCode%><br />
-							<%=oauthErrorResponse%>
+							<%=escape(oauthStatusCode + "")%><br />
+							<%=escape(oauthErrorResponse)%>
 						</div>
 						<br />
 						<%
@@ -246,7 +252,7 @@
 						<tr>
 							<td width="20%" valign="top" class="label">Message ID:</td>
 							<td class="cell"><input size="12" name="smsId"
-								value="<%=smsId%>" style="width: 90%"></td>
+								value="<%=escape(smsId)%>" style="width: 90%"></td>
 						</tr>
 					</tbody>
 				</table>
@@ -292,9 +298,9 @@
 		%>
 					<div class="successWide">
 						<strong>SUCCESS:</strong><br /> <strong>Status:</strong>
-						<%=deliveryInfo.getString("DeliveryStatus")%><br /> <strong>Resource
+						<%=escape(deliveryInfo.getString("DeliveryStatus"))%><br /> <strong>Resource
 							URL:</strong>
-						<%=deliveryInfoList.getString("ResourceUrl")%>
+						<%=escape(deliveryInfoList.getString("ResourceUrl"))%>
 					</div>
 					<br />
 					<%
@@ -302,8 +308,8 @@
 					%>
 					<div class="errorWide">
 						<strong>ERROR:</strong><br /> <strong>Status:</strong>
-						<%=statusCode%><br />
-						<%=method.getResponseBodyAsString()%>
+						<%=escape("" + statusCode)%><br />
+						<%=escape(method.getResponseBodyAsString())%>
 					</div>
 					<br />
 					<%
@@ -313,8 +319,8 @@
 		%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br /> <strong>Status:</strong>
-			<%=oauthStatusCode%><br />
-			<%=oauthErrorResponse%>
+			<%=escape("" + oauthStatusCode)%><br />
+			<%=escape(oauthErrorResponse)%>
 		</div>
 		<br />
 		<%
@@ -338,13 +344,13 @@
 					<tbody>
 						<tr>
 							<td class="cell"><button type="submit" name="getReceivedSms"
-									value="<%=shortCode1%>">
+									value="<%=escape(shortCode1)%>">
 									Get Messages for Short Code
-									<%=shortCode1%></button>
+									<%=escape(shortCode1)%></button>
 								<button type="submit" name="getReceivedSms"
-									value="<%=shortCode2%>">
+									value="<%=escape(shortCode2)%>">
 									Get Messages for Short Code
-									<%=shortCode2%></button></td>
+									<%=escape(shortCode2)%></button></td>
 						</tr>
 					</tbody>
 				</table>
@@ -383,9 +389,9 @@
 		<div class="successWide">
 			<strong>SUCCESS:</strong><br /> <strong>Messages in this
 				batch:</strong>
-			<%=numberOfMessagesInBatch%><br /> <strong>Messages
+			<%=escape("" + numberOfMessagesInBatch)%><br /> <strong>Messages
 				pending:</strong>
-			<%=numberOfMessagesPending%>
+			<%=escape("" + numberOfMessagesPending)%>
 		</div>
 		<div align="center">
 			<table style="width: 650px" cellpadding="1" cellspacing="1"
@@ -408,9 +414,9 @@
 													messages.getString(i));
 					%>
 					<tr>
-						<td class="cell"><%=msg.getString("MessageId")%></td>
-						<td align="center" class="cell"><%=msg.getString("Message")%></td>
-						<td align="center" class="cell"><%=msg.getString("SenderAddress")%></td>
+						<td class="cell"><%=escape(msg.getString("MessageId"))%></td>
+						<td align="center" class="cell"><%=escape(msg.getString("Message"))%></td>
+						<td align="center" class="cell"><%=escape(msg.getString("SenderAddress"))%></td>
 					</tr>
 					<%
 						}
@@ -425,7 +431,7 @@
 		%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br />
-			<%=method.getResponseBodyAsString()%>
+			<%=escape(method.getResponseBodyAsString())%>
 		</div>
 		<br />
 		<%
@@ -435,8 +441,8 @@
 		%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br /> <strong>Status:</strong>
-			<%=oauthStatusCode%><br />
-			<%=oauthErrorResponse%>
+			<%=escape("" + oauthStatusCode)%><br />
+			<%=escape(oauthErrorResponse)%>
 		</div>
 		<br />
 		<%

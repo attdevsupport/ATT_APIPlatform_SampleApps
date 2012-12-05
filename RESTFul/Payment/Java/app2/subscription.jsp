@@ -106,7 +106,7 @@ String description = "";
 String merchantProductId = "";
 String trxIdGetDetails = "";
 if(product==1) {
-    amount = "1.99";
+    amount = "0.00";
     description = "Word Game Subscription 1";
     merchantProductId = "WordGameSubscription1";
 } else if(product==2) {
@@ -164,7 +164,7 @@ if(product==1) {
 						<tr>
 							<td width="50%" valign="top" class="label"><input
 								type="radio" name="product" value="1" checked> Subscribe
-								for $1.99 per month:</td>
+								for $0.00 per month:</td>
 							</td>
 						</tr>
 						<tr>
@@ -212,7 +212,15 @@ String toSave = trxId + "\n" + merchantTrxId + "\n" + authCode;
 outWrite.write(toSave);
 outWrite.close();
 
-String forNotary = "notary.jsp?signPayload=true&return=subscription.jsp&payload="+
+String forNotary = (String) request.getAttribute("baseURL");
+String sReturn = "subscription.jsp";
+if (forNotary == null) {
+	forNotary = "";
+} else {
+	forNotary += "/";
+	sReturn = forNotary + "/" + sReturn; 
+}
+forNotary += "notary.jsp?signPayload=true&return=" + sReturn + "&payload="+
 "{\"Amount\":" + amount + ","+
 "\"Category\":1, \"Channel\":\"MOBILE_WEB\","+
 "\"Description\":\"" + description + "\","+
@@ -455,7 +463,14 @@ method.releaseConnection();
 				<tbody>
 					<%
 if(true) {
-    String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestTransactions.jsp";
+    String baseURL1 = (String) request.getAttribute("baseURL");
+        if (baseURL1 == null) {
+           baseURL1 = request.getRequestURL().toString();
+           baseURL1 = baseURL1.substring(0, baseURL1.lastIndexOf("/"));
+        }
+    
+    String url = baseURL1 + "/getLatestTransactions.jsp";
+
     HttpClient client = new HttpClient();
 
     GetMethod method = new GetMethod(url);  
@@ -606,7 +621,13 @@ if(true) {
 				<tbody>
 					<%
 if(true) {
-    String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestTransactions.jsp";
+    String baseURL1 = (String) request.getAttribute("baseURL");
+    if (baseURL1 == null) {
+        baseURL1 = request.getRequestURL().toString();
+        baseURL1 = baseURL1.substring(0, baseURL1.lastIndexOf("/"));
+    }
+    String url = baseURL1 + "/getLatestTransactions.jsp";
+    
     HttpClient client = new HttpClient();
 
     GetMethod method = new GetMethod(url);  
@@ -852,8 +873,13 @@ if(true)
 
 String notificationType = "";
 String transactionId = "";
+                String baseURL1 = (String) request.getAttribute("baseURL");
+                if (baseURL1 == null) {
+                        baseURL1 = request.getRequestURL().toString();
+                        baseURL1 = baseURL1.substring(0, baseURL1.lastIndexOf("/"));
+                }
+                String url1 = baseURL1 + "/getLatestNotifications.jsp";
 
-		String url1 = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestNotifications.jsp";
 		HttpClient client1 = new HttpClient();
 
 		GetMethod method1 = new GetMethod(url1);  

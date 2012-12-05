@@ -40,7 +40,7 @@ public enum AccessTokenType
 
 /// <summary>
 /// This application allows the user to send SMS and MMS on behalf of subscriber, 
-/// with subscriber’s consent, using the MOBO API.
+/// with subscriber’s consent, using the IMMN API.
 /// </summary>
 public partial class Mobo_App1 : System.Web.UI.Page
 {
@@ -856,7 +856,7 @@ public partial class Mobo_App1 : System.Web.UI.Page
         this.scope = ConfigurationManager.AppSettings["scope"];
         if (string.IsNullOrEmpty(this.scope))
         {
-            this.scope = "MOBO";
+            this.scope = "IMMN";
         }
 
         if (string.IsNullOrEmpty(ConfigurationManager.AppSettings["max_addresses"]))
@@ -1036,7 +1036,7 @@ public partial class Mobo_App1 : System.Web.UI.Page
 
             if (type == AccessTokenType.Authorization_Code)
             {
-                oauthParameters = "client_id=" + this.apiKey + "&client_secret=" + this.secretKey + "&code=" + this.authCode + "&grant_type=authorization_code&scope=MOBO";
+                oauthParameters = "client_id=" + this.apiKey + "&client_secret=" + this.secretKey + "&code=" + this.authCode + "&grant_type=authorization_code&scope=IMMN";
             }
             else
             {
@@ -1146,7 +1146,7 @@ public class AccessTokenResponse
 }
 
 /// <summary>
-/// Response from Mobo api
+/// Response from IMMN api
 /// </summary>
 public class MsgResponseId
 {

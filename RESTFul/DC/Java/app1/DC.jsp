@@ -8,10 +8,10 @@ For more information contact developer.support@att.com
 response.addHeader("P3P", "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
 %>
 <%@ page contentType="text/html; charset=iso-8859-1" language="java" %>
-<%@ page import="com.att.api.dc.handler.DCHandler" %>
+<%@ page import="com.att.api.dc.handler.DCHandler" %> 
 <%@ page import="com.att.api.dc.model.DeviceInfo" %>
 <%@ page import="com.att.api.util.DateUtil" %>
-<%@ include file="config.jsp" %>
+<%@ include file="oauth.jsp" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
@@ -40,11 +40,10 @@ response.addHeader("P3P", "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi
 			deviceInfo.setErrorResponse(errorResponse);
 			session.removeAttribute("errorResponse");
 		}
-		else
+		else if(code.length() == 0) 
 		{
-%>	
-		<jsp:forward page="oauth.jsp" />
-	    <%
+			//For the first time, we dont have access token, so we redirect to authenticate client id
+		   	response.sendRedirect(FQDN + "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&redirect_uri=" + redirectURL);
 	    }
 	 }
 %>	 
@@ -109,7 +108,7 @@ response.addHeader("P3P", "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi
         </div>
         <br clear="all" />
         <%
-        if (deviceInfo.isStatus())
+        if (deviceInfo != null && deviceInfo.isStatus())
         {
         %>
 	        <div class="successWide" id="tb_dc_output" visible="false">
@@ -246,7 +245,7 @@ response.addHeader("P3P", "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi
 	        </div>
         <%
         }
-        else
+        else if (deviceInfo != null && !deviceInfo.isStatus())
         {
         %>
 	        <div id="tbDeviceCapabError" runat="server" cellspacing="1" class="errorWide" visible="false">

@@ -58,7 +58,7 @@ $amount = "";
 $description = "";
 $merchantProductId = "";
 if($product==1) {
-    $amount = "0.99";
+    $amount = "0.00";
     $description = "Word Game 1";
     $merchantProductId = "WordGame1";
 } else if($product==2) {
@@ -272,7 +272,7 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td class="cell"><input type="radio" name="product" value="1" checked>
-    <td valign="top" class="label">Buy product 1 for $0.99</td>
+    <td valign="top" class="label">Buy product 1 for $0.00</td>
     </td>
   </tr>
   <tr>

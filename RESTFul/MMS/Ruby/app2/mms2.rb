@@ -10,6 +10,7 @@ require 'rest_client'
 require 'base64'
 require 'sinatra'
 require 'sinatra/config_file'
+require 'cgi'
 require File.join(File.dirname(__FILE__), 'common.rb')
 
 enable :sessions
@@ -131,13 +132,15 @@ end
 
 post '/submit' do
 
-  session[:mms2_entered_address] = params[:address]
+	filtered_addresses = CGI.escapeHTML(params[:address])
+
+  session[:mms2_entered_address] = filtered_addresses
   if session[:mms2_entered_address].match('^\d{3}-\d{3}-\d{4}$')
     session[:mms2_entered_address].gsub! '-', ''
     send_messages
   else
 
-  addresses = params[:address].strip.split ","
+  addresses = filtered_addresses.strip.split ","
   
   session[:mms2_address] = Array.new
   addresses.each do |address|

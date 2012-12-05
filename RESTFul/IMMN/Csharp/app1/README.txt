@@ -4,11 +4,11 @@
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-  AT&T API Samples - MOBO app 1
+  AT&T API Samples - IMMN app 1
  --------------------------------
 
 This application allows the user to send SMS and MMS on behalf of subscriber, 
-with subscriber’s consent, using the MOBO API.
+with subscriber’s consent, using the IMMN API.
 
 This file describes how to set up, configure and run the C# Applications of the 
 AT&T API Platform Restful sample applications. 
@@ -34,7 +34,7 @@ sample applications.
 
   Fill in the form, in particular all fields marked as "required".
 
-NOTE: You MUST select "Messaging On Behalf Of" in the list of services under field 'Services' in 
+NOTE: You MUST select "In App Messaging from Mobile Number" (IMMN) in the list of services under field 'Services' in 
 order to use this sample application code. 
 
   Having your application registered, you will get back an important pair of data: 
@@ -80,11 +80,11 @@ web.config as specified below:
 3) endPoint		 : This is mandatory parameter, set it to the end point URI 
                            of AT&T Service.
 
-4) scope		 : MOBO (Scope of the ATT service that will be invoked by 
+4) scope		 : IMMN (Scope of the ATT service that will be invoked by 
                            the Application)
 
 5) authorize_redirect_uri: This is mandatory key and value should be equal
-         		   to MOBO Service registered application 'OAuth Redirect URL'
+         		   to IMMN Service registered application 'OAuth Redirect URL'
 
 6) refreshTokenExpiresIn : This is optional key, which specifies the expiry time of 
 			   refresh token in Hrs. Default value is 24Hrs.

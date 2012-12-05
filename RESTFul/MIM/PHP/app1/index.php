@@ -267,7 +267,7 @@ $indexCrsrTextBoxresponse = $jsonresponse->MessageHeadersList->IndexCursor;
                             Header Count:
                         </td>
                         <td class="cell" align="left">
-                            <span id="lblHeaderCount" class="label"><?php echo $headerCntTextBox ; ?></span>
+                            <span id="lblHeaderCount" class="label"><?php echo htmlspecialchars($headerCntTextBox) ; ?></span>
                         </td>
                     </tr>
                     <tr>
@@ -275,7 +275,7 @@ $indexCrsrTextBoxresponse = $jsonresponse->MessageHeadersList->IndexCursor;
                             Index Cursor:
                         </td>
                         <td class="cell" align="left">
-                            <span id="lblIndexCursor" class="label"><?php echo $indexCrsrTextBoxresponse ; ?></span>
+                            <span id="lblIndexCursor" class="label"><?php echo htmlspecialchars($indexCrsrTextBoxresponse); ?></span>
                         </td>
                     </tr>
                     <tr>
@@ -326,30 +326,30 @@ $indexCrsrTextBoxresponse = $jsonresponse->MessageHeadersList->IndexCursor;
                                     </tr>
                                     <tr style="color: #000066;">
                                         <td class="style3">
-                                         <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->MessageId;?>   
+                                         <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->MessageId);?>   
                                         </td>
                                          <td class="style3"></td><td class="style3"></td><td class="style3"></td>
                                         <td class="style3">
-                                        <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->From;?>  
+                                        <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->From);?>  
                                         </td>
                                          <td class="style3">
                                           <?php for($a = 0; $a <= $headerCntTextBox; $a++) {
-                                         echo $jsonresponse->MessageHeadersList->Headers[$i]->To[$a]." "; }?>
+                                         echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->To[$a])." "; }?>
                                         </td>
                                         <td class="style3">
-                                         <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->Received;?>   
+                                         <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->Received);?>   
                                         </td>
                                         <td class="style3">
-                                        <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->Text;?>   
+                                        <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->Text);?>   
                                         </td>
                                         <td class="style3">
-                                        <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->Favorite;?>
+                                        <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->Favorite);?>
                                         </td>
                                         <td class="style3">
-                                        <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->Read;?>
+                                        <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->Read);?>
                                         </td>
                                         <td class="style3">
-                                        <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->Type;?>
+                                        <?php echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->Type);?>
                                         </td>
                                         <td class="style3">
                                           <?php echo $jsonresponse->MessageHeadersList->Headers[$i]->Direction;?>  
@@ -360,13 +360,13 @@ $indexCrsrTextBoxresponse = $jsonresponse->MessageHeadersList->IndexCursor;
                                          <tr style="color: #000066;">
                                     	<td class="style3"></td>
                                     	<td class="style3"><?php
-                                         echo $jsonresponse->MessageHeadersList->Headers[$i]->MmsContent[$j]->PartNumber." "; ?>
+                                         echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->MmsContent[$j]->PartNumber)." "; ?>
                                         </td>
                                          <td class="style3"><?php
-                                        echo $jsonresponse->MessageHeadersList->Headers[$i]->MmsContent[$j]->ContentType." "; ?>
+                                        echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->MmsContent[$j]->ContentType)." "; ?>
                                         </td>
                                         <td class="style3"><?php
-                                         echo $jsonresponse->MessageHeadersList->Headers[$i]->MmsContent[$j]->ContentName." "; ?>
+                                         echo htmlspecialchars($jsonresponse->MessageHeadersList->Headers[$i]->MmsContent[$j]->ContentName)." "; ?>
 
                                         </td><td class="style3"></td><td class="style3"></td><td class="style3"></td><td class="style3"></td>
                                         <td class="style3"></td><td class="style3"></td><td class="style3"></td><td class="style3"></td>
@@ -384,7 +384,7 @@ $indexCrsrTextBoxresponse = $jsonresponse->MessageHeadersList->IndexCursor;
 <?php
 }else{ ?><div class="errorWide">
             <strong>ERROR:</strong><br />
-             <?php echo $mim_response ?><br />
+             <?php echo htmlspecialchars($mim_response) ?><br />
             </div><?php
 }
 
@@ -484,7 +484,7 @@ if($responseCode == '200') {
 <div class="successWide">
 <strong>SUCCESS:</strong><br />
 <?php if($content == "TEXT") {
-echo $mim2_response; } ?>
+echo htmlspecialchars($mim2_response); } ?>
 </div>
         <br />
         <br />
@@ -495,7 +495,7 @@ echo $mim2_response; } ?>
 
             <div id="smilpanel">
 	
-                <textarea name="TextBox1" rows="2" cols="20" id="TextBox1" disabled="disabled" class="aspNetDisabled" style="height:100px;width:500px;"><?php echo $mim2_response;?></textarea>
+                <textarea name="TextBox1" rows="2" cols="20" id="TextBox1" disabled="disabled" class="aspNetDisabled" style="height:100px;width:500px;"><?php echo htmlspecialchars($mim2_response);?></textarea>
 <?php  } if($content == "IMAGE") {
  
 ?>
@@ -507,7 +507,7 @@ echo $mim2_response; } ?>
 }
 }else {?><div class="errorWide">
             <strong>ERROR:</strong><br />
-             <?php echo $mim2_response ?><br />
+             <?php echo htmlspecialchars($mim2_response) ?><br />
             </div><?php
 
 }

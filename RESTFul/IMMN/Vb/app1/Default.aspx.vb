@@ -519,7 +519,7 @@ Partial Public Class Mobo_App1
 
         Me.scope = ConfigurationManager.AppSettings("scope")
         If String.IsNullOrEmpty(Me.scope) Then
-            Me.scope = "MOBO"
+            Me.scope = "IMMN"
         End If
 
         If String.IsNullOrEmpty(ConfigurationManager.AppSettings("max_addresses")) Then
@@ -660,7 +660,7 @@ Partial Public Class Mobo_App1
             Dim oauthParameters As String = String.Empty
 
             If type = AccessTokenType.Authorization_Code Then
-                oauthParameters = "client_id=" + Me.apiKey + "&client_secret=" + Me.secretKey + "&code=" + Me.authCode + "&grant_type=authorization_code&scope=MOBO"
+                oauthParameters = "client_id=" + Me.apiKey + "&client_secret=" + Me.secretKey + "&code=" + Me.authCode + "&grant_type=authorization_code&scope=IMMN"
             Else
                 oauthParameters = "grant_type=refresh_token&client_id=" + Me.apiKey + "&client_secret=" + Me.secretKey + "&refresh_token=" + Me.refreshToken
             End If
@@ -981,7 +981,7 @@ Public Class AccessTokenResponse
 End Class
 
 ''' <summary>
-''' Response from Mobo api
+''' Response from IMMN api
 ''' </summary>
 Public Class MsgResponseId
     ''' <summary>

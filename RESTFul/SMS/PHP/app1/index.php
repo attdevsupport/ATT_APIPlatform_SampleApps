@@ -235,12 +235,12 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo $address; ?>" style="width: 90%" ></input>
+    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo htmlspecialchars($address); ?>" style="width: 90%" ></input>
     </td>
   </tr>
   <tr>
     <td valign="top" class="label">Message:</td>
-    <td class="cell"><textarea rows="4" name="message" style="width: 90%" ><?php echo $smsMsg; ?></textarea>
+    <td class="cell"><textarea rows="4" name="message" style="width: 90%" ><?php echo htmlspecialchars($smsMsg); ?></textarea>
     </td></tr>
   </tbody></table>
 
@@ -296,7 +296,7 @@ document.write("" + navigator.userAgent);
       $address = "tel:" . $address;
 	
 	// Form the URL to send SMS 
-      $sendSMS_RequestBody = '{"Address":"'.$address.'","Message":"'.$smsMsg.'"}';//post data
+      $sendSMS_RequestBody = json_encode(array('Address' => $address, 'Message' => $smsMsg));
       $sendSMS_Url = "$FQDN/rest/sms/2/messaging/outbox?";
 	  $authorization = 'Authorization: Bearer '.$accessToken;
 	 $content = "Content-Type: application/json";
@@ -333,7 +333,7 @@ document.write("" + navigator.userAgent);
 
 		<div class="success">
                 <strong>SUCCESS:</strong><br />
-               <strong> Message ID</strong> <?php echo $msgdata; ?>
+               <strong> Message ID</strong> <?php echo htmlspecialchars($msgdata); ?>
                 </div>
 
 	<?php } 
@@ -346,7 +346,7 @@ document.write("" + navigator.userAgent);
                 <div class="errorWide">
                 <strong>ERROR:</strong><br />
 			
-                <?php echo $errormsg  ?>
+                <?php echo htmlspecialchars($errormsg)  ?>
                 </div>
 
 	<?php }
@@ -369,7 +369,7 @@ Feature 2: Get Delivery Status</h2>
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Message ID:</td>
-    <td class="cell"><input maxlength="20" size="12" name="id" value="<?php echo $smsID; ?>" style="width: 90%">
+    <td class="cell"><input maxlength="20" size="12" name="id" value="<?php echo htmlspecialchars($smsID); ?>" style="width: 90%">
     </td>
   </tr>
   </tbody></table>
@@ -441,8 +441,8 @@ Feature 2: Get Delivery Status</h2>
 	  ?>
 	    <div class="successWide">
 	       <strong>SUCCESS:</strong><br />
-	       <strong>Status:</strong><?php echo $deliveryStatus; ?><br />
-               <strong>Resource URL:</strong><?php echo $resourceURL; ?>
+	       <strong>Status:</strong><?php echo htmlspecialchars($deliveryStatus); ?><br />
+               <strong>Resource URL:</strong><?php echo htmlspecialchars($resourceURL); ?>
             </div>
           <?php
 	}
@@ -453,7 +453,7 @@ Feature 2: Get Delivery Status</h2>
 	  ?>
 		<div class="errorWide">
                 <strong>ERROR:</strong><br />
-                <?php  echo $errormsg ;  ?>
+                <?php  echo htmlspecialchars($errormsg) ;  ?>
                 </div>
 
 		
@@ -477,8 +477,8 @@ Feature 2: Get Delivery Status</h2>
   <tbody>
   <tr>
     <td class="cell">
-     <button type="submit" name="receiveSms" value="<?php echo $short_code; ?>">Get Messages for Short Code <?php echo $short_code ?></button>
-     <button type="submit" name="receiveSms" value="<?php echo $short_code2; ?>">Get Messages for Short Code <?php echo $short_code2 ?></button>
+     <button type="submit" name="receiveSms" value="<?php echo htmlspecialchars($short_code); ?>">Get Messages for Short Code <?php echo htmlspecialchars($short_code) ?></button>
+     <button type="submit" name="receiveSms" value="<?php echo htmlspecialchars($short_code2); ?>">Get Messages for Short Code <?php echo htmlspecialchars($short_code2) ?></button>
     </td>
   </tr>
   </tbody>
@@ -544,8 +544,8 @@ Feature 2: Get Delivery Status</h2>
 		  ?>
 		    <div class="successWide">
                     <strong>SUCCESS:</strong><br />
-		       <strong>Messages in this batch: </strong><?php echo $noOfReceivedSMSMsg; ?><br />
-		       <strong>Messages pending: </strong><?php echo $noOfPendingMsg; ?>
+		       <strong>Messages in this batch: </strong><?php echo htmlspecialchars($noOfReceivedSMSMsg); ?><br />
+		       <strong>Messages pending: </strong><?php echo htmlspecialchars($noOfPendingMsg); ?>
                     </div>
                     <div align="center"><table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
                     <thead>
@@ -560,9 +560,9 @@ Feature 2: Get Delivery Status</h2>
 		    foreach($smsMsgList["InboundSmsMessage"] as $smsTag=>$val) {
 		    ?>
                     <tr>
-		    <td class="cell"><?php echo $val["MessageId"] ?></td>
-		    <td align="center" class="cell"><?php echo $val["Message"] ?></td>
-                    <td align="center" class="cell"><?php echo $val["SenderAddress"] ?></td>
+		    <td class="cell"><?php echo htmlspecialchars($val["MessageId"]) ?></td>
+		    <td align="center" class="cell"><?php echo htmlspecialchars($val["Message"]) ?></td>
+                    <td align="center" class="cell"><?php echo htmlspecialchars($val["SenderAddress"]) ?></td>
                     </tr>
 		    <?php
 		  }
@@ -579,7 +579,7 @@ Feature 2: Get Delivery Status</h2>
                ?>
 		<div class="errorWide">
                 <strong>ERROR:</strong><br />
-                <?php  echo $errormsg ;  ?>
+                <?php  echo htmlspecialchars($errormsg) ;  ?>
                 </div>
 
         <?php }

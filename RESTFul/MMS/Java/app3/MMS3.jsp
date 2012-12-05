@@ -62,7 +62,13 @@ document.write("" + navigator.userAgent);
 String senderAddress = "";
 String date = "";
 String text = "";
-String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getImageData.jsp";
+String baseURL = (String) request.getAttribute("baseURL");
+if (baseURL == null) {
+    baseURL = request.getRequestURL().toString();
+    baseURL = baseURL.substring(0, baseURL.lastIndexOf("/"));
+}
+String url = baseURL + "/getImageData.jsp";
+
 HttpClient client = new HttpClient();
 GetMethod method = new GetMethod(url);  
 int statusCode = client.executeMethod(method); 

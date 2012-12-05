@@ -34,7 +34,7 @@ if($payload==null || $payload ==''){
       $payload = $_SESSION["pay1_payload"];
  }
 if($payload==null || $payload ==''){
-  $payload = "{\"Amount\":0.99,\n \"Category\":2,\n \"Channel\":".
+  $payload = "{\"Amount\":0.00,\n \"Category\":2,\n \"Channel\":".
 "\"MOBILE_WEB\",\n\"Description\":\"5 puzzles per month plan\",\n".
 "\"MerchantTransactionId\":\"user573transaction1377\",\n \"MerchantProductId\":\"SudokuMthlyPlan5\",\n".
 "\"MerchantApplicationId\":\"Sudoku\",\n".
@@ -101,6 +101,7 @@ if($signPayload!=null) {
   $_SESSION["pay1_payload"]=$payload;
   $url = "$FQDN/Security/Notary/Rest/1/SignedPayload";
   $headers = array(
+                   'Content-Type: application/json',
 		   'Accept: application/json',
 		   'client_id: '.$api_key,
 		   'client_secret: '.$secret_key

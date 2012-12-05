@@ -43,7 +43,7 @@ pre {
     if(payload==null || payload.equalsIgnoreCase("null"))
         payload = (String) session.getAttribute("payload");
     if(payload==null || payload.equalsIgnoreCase("null"))
-        payload = "{\"Amount\":0.99,\n \"Category\":2,\n \"Channel\":"+
+        payload = "{\"Amount\":0.00,\n \"Category\":2,\n \"Channel\":"+
 "\"MOBILE_WEB\",\n\"Description\":\"5 puzzles per month plan\",\n"+
 "\"MerchantTransactionId\":\"user573transaction1377\",\n \"MerchantProductId\":\"SudokuMthlyPlan5\",\n"+
 "\"MerchantApplicationId\":\"Sudoku\",\n"+

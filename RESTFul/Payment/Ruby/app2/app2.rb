@@ -127,7 +127,7 @@ def new_subscription
   
   # prepare payload
   data = {
-    :Amount => params[:product] == "1" ? 1.99 : 3.99,
+    :Amount => params[:product] == "1" ? 0.00 : 3.99,
     :Category => 1,
     :Channel => 'MOBILE_WEB',
     :Description => 'Word game 1',

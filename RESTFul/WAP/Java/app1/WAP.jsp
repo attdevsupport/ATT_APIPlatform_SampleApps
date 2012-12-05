@@ -5,6 +5,12 @@
 //For more information contact developer.support@att.com
 %>
 
+<%!
+public String escape(String str) {
+        return org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(str);
+}
+%>
+	
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
     <title>AT&T Sample Application - WAPPush</title>
@@ -104,12 +110,12 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input maxlength="16" size="12" name="address" value="<%=address%>" style="width: 90%">
+    <td class="cell"><input maxlength="16" size="12" name="address" value="<%=escape(address)%>" style="width: 90%">
     </td>
   </tr>
   <tr>
     <td width="20%" valign="top" class="label">URL:</td>
-    <td class="cell"><input size="18" name="url" value="<%=url%>" style="width: 90%">
+    <td class="cell"><input size="18" name="url" value="<%=escape(url)%>" style="width: 90%">
     </td>
   </tr>
   <tr>
@@ -130,7 +136,7 @@ At this time, AT&T only supports Service Type: Service Indication due to securit
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Alert Text:</td>
-    <td class="cell"><textarea rows="4" name="subject" style="width: 90%"><%=subject%></textarea></td>
+    <td class="cell"><textarea rows="4" name="subject" style="width: 90%"><%=escape(subject)%></textarea></td>
   </tr>
   </tbody></table>
   <table>
@@ -212,7 +218,7 @@ String encodedAttachment = new String(Base64.encodeBase64(attachmentBody.getByte
 	       	%>
                 <div class="successWide">
                 <strong>SUCCESS:</strong><br />
-                <strong>Message ID:</strong> <%=wapId%>
+                <strong>Message ID:</strong> <%=escape(wapId)%>
               
                 </div>
 			<%
@@ -220,7 +226,7 @@ String encodedAttachment = new String(Base64.encodeBase64(attachmentBody.getByte
 	    	%>
                 <div class="errorWide">
                 <strong>ERROR:</strong><br />
-                <%=responze%>
+                <%=escape(responze)%>
                 </div>
 			<%
 		}

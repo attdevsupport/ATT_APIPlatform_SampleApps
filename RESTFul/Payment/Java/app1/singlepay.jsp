@@ -78,7 +78,7 @@ String amount = "";
 String description = "";
 String merchantProductId = "";
 if(product==1) {
-    amount = "0.99";
+    amount = "0.00";
     description = "Word Game 1";
     merchantProductId = "WordGame1";
 } else if(product==2) {
@@ -128,7 +128,7 @@ document.write("" + navigator.userAgent);
 <table border="0" width="100%">
   <tbody>
   <tr>
-    <td width="50%" valign="top" class="label"><input type="radio" name="product" value="1" checked> Buy product 1 for $0.99:</td>
+    <td width="50%" valign="top" class="label"><input type="radio" name="product" value="1" checked> Buy product 1 for $0.00:</td>
     </tr>
   <tr>
     <td width="50%" valign="top" class="label"><input type="radio" name="product" value="2"> Buy product 2 for $2.99:</td>
@@ -163,7 +163,15 @@ String toSave = trxId + "\n" + merchantTrxId + "\n" + authCode + "\n" + consumer
 outWrite.write(toSave);
 outWrite.close();
 
-String forNotary = "notary.jsp?signPayload=true&return=singlepay.jsp&payload={\"Amount\":" + amount + ", \"Category\":1, \"Channel\":"+
+String forNotary = (String) request.getAttribute("baseURL");
+String sReturn = "singlepay.jsp";
+if (forNotary == null) {
+	forNotary = "";
+} else {
+	forNotary += "/";
+	sReturn = forNotary + "/" + sReturn; 
+}
+forNotary += "notary.jsp?signPayload=true&return=" + sReturn + "&payload={\"Amount\":" + amount + ", \"Category\":1, \"Channel\":"+
 "\"MOBILE_WEB\",\"Description\":\"" + description + "\","+
 "\"MerchantTransactionId\":\"" + merchantTrxId + "\", \"MerchantProductId\":\"" + merchantProductId + "\","+
 "\"MerchantPaymentRedirectUrl\":"+
@@ -193,26 +201,6 @@ session.setAttribute("authCode", authCode);
 if(request.getParameter("signedPayload")!=null && request.getParameter("signature")!=null){
     response.sendRedirect(FQDN + "/rest/3/Commerce/Payment/Transactions?clientid=" + clientIdAut + "&SignedPaymentDetail=" + request.getParameter("signedPayload") + "&Signature=" + request.getParameter("signature"));
 }
-
-if(request.getParameter("getTransactionType") != null)
-	{
-		int getTransactionType = Integer.parseInt(request.getParameter("getTransactionType"));
-		String url = "";
-		if(getTransactionType==1)
-			url = FQDN + "/rest/3/Commerce/Payment/Subscriptions/MerchantTransactionId/" + merchantTrxId;   
-		if(getTransactionType==2)
-			url = FQDN + "/rest/3/Commerce/Payment/Subscriptions/SubscriptionAuthCode/" + authCode;
-		if(getTransactionType==3)
-			url = FQDN + "/rest/3/Commerce/Payment/Subscriptions/SubscriptionId/" + trxId;
-		HttpClient client = new HttpClient();
-		GetMethod method = new GetMethod(url);  
-		method.addRequestHeader("Authorization","Bearer " + accessToken);
-		method.addRequestHeader("Accept","application/json");
-		int statusCode = client.executeMethod(method);   
-		JSONObject jsonResponse = new JSONObject(method.getResponseBodyAsString());
-		trxId = jsonResponse.getString("SubscriptionId");
-		session.setAttribute("trxId", trxId);
-	}	
 
 %>
 
@@ -365,7 +353,13 @@ You must use Get Transaction Status to get the Transaction ID before you can ref
   <tbody>
 <%
 if(true) {
-    String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestTransactions.jsp";
+    String baseURL = (String) request.getAttribute("baseURL");
+    if (baseURL == null) {
+        baseURL = request.getRequestURL().toString();
+        baseURL = baseURL.substring(0, baseURL.lastIndexOf("/"));
+    }
+    String url = baseURL + "/getLatestTransactions.jsp";
+
     HttpClient client = new HttpClient();
     GetMethod method = new GetMethod(url);
     int statusCode = client.executeMethod(method);
@@ -556,7 +550,7 @@ if(true)
     <td></td>
     <td></td>
     <td class="cell"><button type="submit" name="refreshNotifications" value="refreshNotifications">Refresh</button>
-    </td
+    </td>
   </tr>
   </tbody></table>
 
@@ -572,15 +566,19 @@ if(true)
 String notificationType = "";
 String transactionId = "";
 
-		String url1 = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getLatestNotifications.jsp";
+		String baseURL1 = (String) request.getAttribute("baseURL");
+	   	if (baseURL1 == null) {	
+			baseURL1 = request.getRequestURL().toString();
+			baseURL1 = baseURL1.substring(0, baseURL1.lastIndexOf("/"));
+		}
+		String url1 = baseURL1 + "/getLatestNotifications.jsp";
+	
 		HttpClient client1 = new HttpClient();
 		GetMethod method1 = new GetMethod(url1);  
 		int statusCode2 = client1.executeMethod(method1); 
 		JSONObject jsonResponse1 = new JSONObject(method1.getResponseBodyAsString());
 		JSONArray notificationList = new JSONArray(jsonResponse1.getString("notificationList"));
-		String totalNumberOfNotifications = jsonResponse1.getString("totalNumberOfNotifications");
-        System.out.println("method1.getResponseBodyAsString()"+method1.getResponseBodyAsString());
-      
+		String totalNumberOfNotifications = jsonResponse1.getString("totalNumberOfNotifications");      
         method1.releaseConnection();
 
 
@@ -597,7 +595,6 @@ String transactionId = "";
 				String url = FQDN + "/rest/3/Commerce/Payment/Notifications/" + not;		//Builds the Get Request
                 HttpClient clients = new HttpClient();
 				GetMethod methods = new GetMethod(url);
-                System.out.println("accessToken"+accessToken);
             	methods.addRequestHeader("Authorization", "Bearer " + accessToken);
                 methods.addRequestHeader("Accept", "application/json");
         		int statusCode = clients.executeMethod(methods);

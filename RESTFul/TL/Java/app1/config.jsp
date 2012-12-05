@@ -6,8 +6,9 @@
 %>
 
 <%
-String clientIdWeb = "";
-String clientSecretWeb = "";
-String FQDN = "https://api.att.com";
+String scope = "TL";
+String clientIdAut = "";
+String clientSecretAut = "";
+String FQDN = "https://api-uat.bf.pacer.sl.attcompute.com";
 String redirectUri = "";
 %>
