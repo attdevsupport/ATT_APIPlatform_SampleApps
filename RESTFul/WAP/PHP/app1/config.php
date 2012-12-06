@@ -11,8 +11,8 @@ For more information contact developer.support@att.com
     $short_code = "";
     $FQDN = "https://api.att.com";
     $scope = "WAP";
-    $oauth_file = "wapoauthtoken.php";
-    $default_address = "";
+    $oauth_file = "/tmp/wapoauthtoken.php";
+    $default_address = "425-802-8620";
     $default_subject = "This is a sample WAP Push message.";
     $default_url = "http://developer.att.com";
 ?>

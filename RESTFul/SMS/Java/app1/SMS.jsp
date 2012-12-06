@@ -5,12 +5,6 @@
 	//For more information contact developer.support@att.com
 %>
 
-<%!
-public String escape(String str) {
-        return org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(str);
-}
-%>
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -106,13 +100,13 @@ public String escape(String str) {
 						<tr>
 							<td width="20%" valign="top" class="label">Phone:</td>
 							<td class="cell"><input maxlength="16" size="12"
-								name="address" value="<%=escape(address)%>" style="width: 90%">
+								name="address" value="<%=address%>" style="width: 90%">
 							</td>
 						</tr>
 						<tr>
 							<td valign="top" class="label">Message:</td>
 							<td class="cell"><textarea rows="4" name="message"
-									style="width: 90%"><%=escape(message)%></textarea></td>
+									style="width: 90%"><%=message%></textarea></td>
 						</tr>
 					</tbody>
 				</table>
@@ -201,7 +195,7 @@ public String escape(String str) {
 						%>
 							<div class="successWide">
 								<strong>SUCCESS:</strong><br /> <strong>Message ID:</strong>
-								<%=escape(smsId)%>
+								<%=smsId%>
 							</div>
 							<br />
 							<%
@@ -209,7 +203,7 @@ public String escape(String str) {
 							%>
 							<div class="errorWide">
 								<strong>ERROR:</strong><br />
-								<%=escape(method.getResponseBodyAsString())%>
+								<%=method.getResponseBodyAsString()%>
 							</div>
 							<br />
 							<%
@@ -227,8 +221,8 @@ public String escape(String str) {
 						%>
 						<div class="errorWide">
 							<strong>ERROR:</strong><br /> <strong>Status:</strong>
-							<%=escape(oauthStatusCode + "")%><br />
-							<%=escape(oauthErrorResponse)%>
+							<%=oauthStatusCode%><br />
+							<%=oauthErrorResponse%>
 						</div>
 						<br />
 						<%
@@ -252,7 +246,7 @@ public String escape(String str) {
 						<tr>
 							<td width="20%" valign="top" class="label">Message ID:</td>
 							<td class="cell"><input size="12" name="smsId"
-								value="<%=escape(smsId)%>" style="width: 90%"></td>
+								value="<%=smsId%>" style="width: 90%"></td>
 						</tr>
 					</tbody>
 				</table>
@@ -298,9 +292,9 @@ public String escape(String str) {
 		%>
 					<div class="successWide">
 						<strong>SUCCESS:</strong><br /> <strong>Status:</strong>
-						<%=escape(deliveryInfo.getString("DeliveryStatus"))%><br /> <strong>Resource
+						<%=deliveryInfo.getString("DeliveryStatus")%><br /> <strong>Resource
 							URL:</strong>
-						<%=escape(deliveryInfoList.getString("ResourceUrl"))%>
+						<%=deliveryInfoList.getString("ResourceUrl")%>
 					</div>
 					<br />
 					<%
@@ -308,8 +302,8 @@ public String escape(String str) {
 					%>
 					<div class="errorWide">
 						<strong>ERROR:</strong><br /> <strong>Status:</strong>
-						<%=escape("" + statusCode)%><br />
-						<%=escape(method.getResponseBodyAsString())%>
+						<%=statusCode%><br />
+						<%=method.getResponseBodyAsString()%>
 					</div>
 					<br />
 					<%
@@ -319,8 +313,8 @@ public String escape(String str) {
 		%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br /> <strong>Status:</strong>
-			<%=escape("" + oauthStatusCode)%><br />
-			<%=escape(oauthErrorResponse)%>
+			<%=oauthStatusCode%><br />
+			<%=oauthErrorResponse%>
 		</div>
 		<br />
 		<%
@@ -344,13 +338,13 @@ public String escape(String str) {
 					<tbody>
 						<tr>
 							<td class="cell"><button type="submit" name="getReceivedSms"
-									value="<%=escape(shortCode1)%>">
+									value="<%=shortCode1%>">
 									Get Messages for Short Code
-									<%=escape(shortCode1)%></button>
+									<%=shortCode1%></button>
 								<button type="submit" name="getReceivedSms"
-									value="<%=escape(shortCode2)%>">
+									value="<%=shortCode2%>">
 									Get Messages for Short Code
-									<%=escape(shortCode2)%></button></td>
+									<%=shortCode2%></button></td>
 						</tr>
 					</tbody>
 				</table>
@@ -389,9 +383,9 @@ public String escape(String str) {
 		<div class="successWide">
 			<strong>SUCCESS:</strong><br /> <strong>Messages in this
 				batch:</strong>
-			<%=escape("" + numberOfMessagesInBatch)%><br /> <strong>Messages
+			<%=numberOfMessagesInBatch%><br /> <strong>Messages
 				pending:</strong>
-			<%=escape("" + numberOfMessagesPending)%>
+			<%=numberOfMessagesPending%>
 		</div>
 		<div align="center">
 			<table style="width: 650px" cellpadding="1" cellspacing="1"
@@ -414,9 +408,9 @@ public String escape(String str) {
 													messages.getString(i));
 					%>
 					<tr>
-						<td class="cell"><%=escape(msg.getString("MessageId"))%></td>
-						<td align="center" class="cell"><%=escape(msg.getString("Message"))%></td>
-						<td align="center" class="cell"><%=escape(msg.getString("SenderAddress"))%></td>
+						<td class="cell"><%=msg.getString("MessageId")%></td>
+						<td align="center" class="cell"><%=msg.getString("Message")%></td>
+						<td align="center" class="cell"><%=msg.getString("SenderAddress")%></td>
 					</tr>
 					<%
 						}
@@ -431,7 +425,7 @@ public String escape(String str) {
 		%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br />
-			<%=escape(method.getResponseBodyAsString())%>
+			<%=method.getResponseBodyAsString()%>
 		</div>
 		<br />
 		<%
@@ -441,8 +435,8 @@ public String escape(String str) {
 		%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br /> <strong>Status:</strong>
-			<%=escape("" + oauthStatusCode)%><br />
-			<%=escape(oauthErrorResponse)%>
+			<%=oauthStatusCode%><br />
+			<%=oauthErrorResponse%>
 		</div>
 		<br />
 		<%

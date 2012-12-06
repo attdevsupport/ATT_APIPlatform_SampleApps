@@ -11,6 +11,6 @@ For more information contact developer.support@att.com
     $short_code = "";
     $FQDN = "https://api.att.com";
     $scope = "MMS";
-    $oauth_file = "mms2oauthtoken.php";
+    $oauth_file = "/tmp/mms2oauthtoken.php";
     $default_subject = "Use this code for 15% off this week!";
 ?>

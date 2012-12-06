@@ -930,7 +930,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.transactionTimeString = string.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (Radio_TransactionProductType.SelectedIndex == 0)
         {
-            this.amount = "0.00";
+            this.amount = "0.99";
         }
         else if (Radio_TransactionProductType.SelectedIndex == 1)
         {

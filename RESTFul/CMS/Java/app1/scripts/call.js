@@ -1,5 +1,5 @@
 
-if (typeof numberToDial === 'undefined')
+if (typeof feature == 'undefined')
 {
 	if (typeof messageToPlay == 'undefined')
 		var messageToPlay = "http://wdev.code-api-att.com:8181/Tropo/music.mp3";
@@ -221,18 +221,6 @@ else
             say( result9.value);
         }
         break;
-        case 'message':
-          if ( typeof featurenumber === 'undefined') {
-              say("Feature number is not provided as part of create session A P I request");
-          } else {
-              say("Sending message to");
-              say("<speak><say-as interpret-as = 'vxml:digits'>" + featurenumber + "</say-as></speak>");
-                  message("Message from AT&T Call Control Service Sample Application", {
-                            to: featurenumber,
-                            network: "SMS"
-                        });
-          }
-          break;
 	case 'call':
         say("thank you for using calling script function");
 		break;

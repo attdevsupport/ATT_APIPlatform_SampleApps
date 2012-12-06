@@ -11,8 +11,8 @@ For more information contact developer.support@att.com
     $short_code = "";
     $short_code2 = "";
     $FQDN = "https://api.att.com";
-    $oauth_file = "";
+    $oauth_file = "/tmp/smsoauthtoken.php";
     $scope = "SMS";
-    $default_address = "";
+    $default_address = "425-802-8620";
     $default_smsMsg = "simple message to myself";
 ?>

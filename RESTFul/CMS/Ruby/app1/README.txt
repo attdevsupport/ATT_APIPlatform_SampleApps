@@ -116,11 +116,11 @@ and, based on the generated API keys and secrets, create and run one's own full-
 
   To run the application, open up a terminal window and type:
 
-    ruby ./cms.rb
+    ruby ./ccs.rb
 
   or
 
-    ./cms.rb
+    ./ccs.rb
 
   Your application becomes available in a web browser, so you may visit: http://localhost:4567/ to see it working.
 

@@ -7,10 +7,10 @@ For more information contact developer.support@att.com
 
 <?php
     $api_key = "";
-    $secret_key = "";
+   $secret_key = "";
     $FQDN = "https://api.att.com";
-    $oauth_file = "cmsoauthtoken.php";
-    $scope = "CMS";
+    $oauth_file = "ccsoauthtoken.php";
+    $scope = "CCS";
     $callcontrol_file = "callcontrolscript.php";
     $number = "";
 ?>

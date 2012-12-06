@@ -10,6 +10,6 @@ For more information contact developer.support@att.com
     $secret_key = "";
     $short_code = "";
     $FQDN = "https://api.att.com";
-    $oauth_file = "sms2oauthtoken.php";
+    $oauth_file = "/tmp/sms2oauthtoken.php";
     $scope = "SMS";
 ?>

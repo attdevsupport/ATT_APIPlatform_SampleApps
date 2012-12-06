@@ -11,7 +11,6 @@ require 'rest_client'
 require 'base64'
 require 'sinatra'
 require 'sinatra/config_file'
-require 'cgi'
 require File.join(File.dirname(__FILE__), 'common.rb')
 
 enable :sessions
@@ -80,19 +79,19 @@ get '/' do
 end
 
 post '/submit' do
-  a = parse_address(CGI.escapeHTML(params[:address]))
+  a = parse_address(params[:address])
 
   unless a
     @error = 'Phone number format not recognized, try xxx-xxx-xxxx or xxxxxxxxxx'
     return erb :wap
   else
-    session[:wap_entered_address] = CGI.escapeHTML(params[:address])
-    session[:wap_entered_alert] = CGI.escapeHTML(params[:alert])
-    session[:wap_entered_url] = CGI.escapeHTML(params[:url])
+    session[:wap_entered_address] = params[:address]
+    session[:wap_entered_alert] = params[:alert]
+    session[:wap_entered_url] = params[:url]
     session[:wap_address] = a
 
-    session[:wap_alert] = CGI.escapeHTML(params[:alert].strip)
-    session[:wap_url] = CGI.escapeHTML(params[:url].strip)
+    session[:wap_alert] = params[:alert].strip
+    session[:wap_url] = params[:url].strip
 
     obtain_tokens(settings.FQDN, settings.api_key, settings.secret_key, Scope, settings.tokens_file)
     wapPush

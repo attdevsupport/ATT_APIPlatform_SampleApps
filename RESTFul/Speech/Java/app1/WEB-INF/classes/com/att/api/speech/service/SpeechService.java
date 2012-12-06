@@ -39,7 +39,7 @@ public class SpeechService {
 
 		chunked = false;
 	}
-
+	
 	/**
 	 * If the server returned a successful response, this method parses the
 	 * response and returns a {@link SpeechResponse} object.
@@ -55,27 +55,20 @@ public class SpeechService {
 		try {
 			JSONObject object = new JSONObject(result);
 			JSONObject recognition = object.getJSONObject("Recognition");
+			JSONArray nBest = recognition.getJSONArray("NBest");
 			SpeechResponse sp = new SpeechResponse();
 			sp.addAttribute("ResponseID", recognition.getString("ResponseId"));
-			final String jStatus = recognition.getString("Status");
-
-			sp.addAttribute("Status", jStatus);
-
-			if (jStatus.equals("OK")) {
-				JSONArray nBest = recognition.getJSONArray("NBest");
-				final String[] names = { "Hypothesis", "LanguageId", "Confidence", "Grade",
-						"ResultText", "Words", "WordScores" };
-				for (int i = 0; i < nBest.length(); ++i) {
-					JSONObject nBestObject = (JSONObject) nBest.get(i);
-					for (final String name : names) {
-						String value = nBestObject.getString(name);
-						if (value != null) {
-							sp.addAttribute(name, value);
-						}
+			final String[] names = { "Hypothesis", "LanguageId", "Confidence", "Grade",
+					"ResultText", "Words", "WordScores" };
+			for (int i = 0; i < nBest.length(); ++i) {
+				JSONObject nBestObject = (JSONObject) nBest.get(i);
+				for (final String name : names) {
+					String value = nBestObject.getString(name);
+					if (value != null) {
+						sp.addAttribute(name, value);
 					}
 				}
 			}
-
 			return sp;
 		} catch (java.text.ParseException e) {
 			return new SpeechResponse("Server responded with an unexpected reply.");

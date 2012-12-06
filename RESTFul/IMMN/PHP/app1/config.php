@@ -9,6 +9,6 @@ For more information contact developer.support@att.com
     $api_key = "";
     $secret_key = "";
     $FQDN = "https://api.att.com";
-    $authorize_redirect_uri = "localhost/IMMN/PHP/app1/index.php";
-    $scope = "IMMN";
+    $authorize_redirect_uri = "localhost/MOBO/PHP/app1/index.php";
+    $scope = "MOBO";
 ?>

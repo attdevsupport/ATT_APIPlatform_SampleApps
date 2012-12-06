@@ -5,7 +5,7 @@
 //For more information contact developer.support@att.com
 %>
 
-  AT&T API Platform Samples - IMMN app 1
+  AT&T API Platform Samples - MOBO app 1
  ------------------------------
 
 This file describes how to set-up, configure and run the Java Applications using AT&T API Platform services. 
@@ -30,10 +30,10 @@ create and run one's own full-fledged sample applications.
 
   Be careful while filling in the "OAuth Redirect URL" field. It should contain the URL that the oAuth provider will redirect
   users to when he/she successfully authenticates and authorizes your application. For this application, it should point to 
-  the index.jsp file inside this application folder. For example, if running on a local machine in a default Tomcat installation, 
-  your OAuth Redirect URL might be http://localhost:8080/SampleApp/index.jsp
+  the oauth.jsp file inside this application folder. For example, if running on a local machine in a default Tomcat installation, 
+  your OAuth Redirect URL might be http://localhost:8080/SampleApp/oauth.jsp
 
-NOTE: You MUST select IMMN in the list of services under field 'Services' in order to use this sample application code. 
+NOTE: You MUST select MOBO in the list of services under field 'Services' in order to use this sample application code. 
 
   Having your application registered, you will get back an important pair of data: an API key and Secret key. They are 
   necessary to get your applications working with the AT&T API Platform services. See 'Adjusting parameters' below to learn how to use 
@@ -66,11 +66,11 @@ Please populate the following parameters in config.jsp as specified below:
 
 1) clientIdWeb                        : {set the value as per your registered appliaction 'API key' field value} 
 
-2) clientSecretWeb     	  	      : {set the value as per your registered appliaction 'Secret key' field value} 
+2) clientSecretWeb     	  		      : {set the value as per your registered appliaction 'Secret key' field value} 
 
-3) FQDN			  	      : https://api.att.com
+3) FQDN			  	                  : https://api.att.com
 
-4) redirectUri			      : http://localhost:8080/IMMN/index.jsp
+4) redirectUri						: http://localhost:8080/MOBO/oauth.jsp
 
 Note: If your application is promoted from Sandbox environment to Production environment and you decide to use production 
 application settings, you must update parameters 1-2 as per production application details.
@@ -85,5 +85,5 @@ application settings, you must update parameters 1-2 as per production applicati
   Depending on your security settings in Apache Tomcat, you might need to enable write access to the OauthStorage.jsp file.
 
   Once you start tomcat, typically using the command "<your-tomcat-root-folder>/bin/startup.sh", your application becomes available 
-  in a web browser, so you may visit: http://localhost:8080/SampleApp/IMMN.jsp to see it working.
+  in a web browser, so you may visit: http://localhost:8080/SampleApp/MOBO.jsp to see it working.
 

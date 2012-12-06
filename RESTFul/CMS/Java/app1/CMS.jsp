@@ -8,15 +8,6 @@ For more information contact developer.support@att.com
 <%@ page import="com.att.api.cc.model.CallControlResponse"%>
 <%@ page import="com.att.api.util.DateUtil"%>
 <%@ include file="getToken.jsp"%>
-
-<%!
-public String escape(String str) {
-	return org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(str);
-}
-%>
-
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -99,7 +90,7 @@ public String escape(String str) {
 							<td class="cell" style="width: 60%"><input
 								name="txtNumberToDial" type="text" id="txtNumberToDial"
 								title="telephone number or sip address"
-								value="<%=escape(model.getNumberToDial())%>" /></td>
+								value="<%=model.getNumberToDial()%>" /></td>
 						</tr>
 						<tr>
 							<td class="style4">Script Function:</td>
@@ -114,9 +105,6 @@ public String escape(String str) {
 									<option
 										<%=model.isSelected(request, "lstTemplate", "conference")%>
 										value="conference">conference</option>
-									<option
-										<%=model.isSelected(request, "lstTemplate", "message")%>
-										value="message">message</option>
 									<option <%=model.isSelected(request, "lstTemplate", "reject")%>
 										value="reject">reject</option>
 									<option
@@ -130,7 +118,7 @@ public String escape(String str) {
 							<td class="style4">Number parameter for Script Function:</td>
 							<td class="cell" style="width: 60%"><input
 								name="txtNumberForFeature" type="text"
-								value="<%=escape(model.getFeaturedNumber())%>" id="txtNumberForFeature"
+								value="<%=model.getFeaturedNumber()%>" id="txtNumberForFeature"
 								title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from" />
 							</td>
 						</tr>
@@ -138,7 +126,7 @@ public String escape(String str) {
 							<td class="style4">Message To Play:</td>
 							<td class="cell" style="width: 60%"><input
 								name="txtMessageToPlay" type="text"
-								value="<%=escape(model.getMessageToPlay())%>" id="txtMessageToPlay"
+								value="<%=model.getMessageToPlay()%>" id="txtMessageToPlay"
 								title="enter long message or mp3 audio url, this is used as music on hold for transfer and signals" />
 							</td>
 						</tr>
@@ -149,7 +137,7 @@ public String escape(String str) {
 									id="txtCreateSession" disabled="disabled"
 									class="aspNetDisabled"
 									title="Create Session will trigger an outbound call from application to &lt;Make call to> number."
-									style="height: 141px; width: 400px;"><%=escape(model.getOutboundScriptText())%></textarea></td>
+									style="height: 141px; width: 400px;"><%=model.getOutboundScriptText()%></textarea></td>
 						</tr>
 						<tr>
 							<td class="style4"></td>
@@ -186,15 +174,6 @@ public String escape(String str) {
 						conference.<br /> After quitting the conference, user is asked to
 						press digit to activiate music on hold <strong>Message to
 							Play</strong> to handle the signal (feature 2);
-						<%
-							} else if (selectedScript.equals("message")) {
-						%>
-						For
-					        <strong>message()</strong> script function, user is played
-						back <strong>"Number parameter for Script Function"</strong>
-						number and an SMS Message is sent to that number.<br/>
-					        User is asked to press digit to activate music on hold
-					        <strong>Message to Play</strong> to handle the signal (feature 2)
 						<%
 							} else if (selectedScript.equals("reject")) {
 						%>

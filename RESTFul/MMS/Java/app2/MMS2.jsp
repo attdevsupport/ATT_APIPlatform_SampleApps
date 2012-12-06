@@ -5,12 +5,6 @@
 //For more information contact developer.support@att.com
 %>
 
-<%!
-public String escape(String str) {
-        return org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(str);
-}
-%>
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -116,12 +110,12 @@ String mmsId = (String) session.getAttribute("mmsId");
 						<tr>
 							<td width="20%" valign="top" class="label">Phone:</td>
 							<td class="cell"><input size="20" name="address"
-								value="<%=escape(readAddresses)%>" style="width: 90%">
+								value="<%=readAddresses%>" style="width: 90%">
 							</td>
 						</tr>
 						<tr>
 							<td valign="top" class="label">Subject:</td>
-							<td class="cell"><%=escape(subject)%></td>
+							<td class="cell"><%=subject%></td>
 						</tr>
 					</tbody>
 				</table>
@@ -234,7 +228,7 @@ if(request.getParameter("sendMms")!=null) {
       		%>
 		<div class="successWide">
 			<strong>SUCCESS:</strong><br /> <strong>Message ID:</strong>
-			<%=escape(mmsId)%>
+			<%=mmsId%>
 		</div>
 		<br />
 		<%
@@ -242,7 +236,7 @@ if(request.getParameter("sendMms")!=null) {
 	    %>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br />
-			<%=escape(responze)%>
+			<%=responze%>
 		</div>
 		<br />
 		<%
@@ -314,8 +308,8 @@ if(request.getParameter("sendMms")!=null) {
                     deliveryInfo = new JSONObject(deliveryInfoArray.getString(j));
                     %>
 					<tr>
-						<td class="cell" align="center"><%=escape(deliveryInfo.getString("Address"))%></td>
-						<td class="cell" align="center"><%=escape(deliveryInfo.getString("DeliveryStatus"))%></td>
+						<td class="cell" align="center"><%=deliveryInfo.getString("Address")%></td>
+						<td class="cell" align="center"><%=deliveryInfo.getString("DeliveryStatus")%></td>
 					</tr>
 					<%
                 }
@@ -329,7 +323,7 @@ if(request.getParameter("sendMms")!=null) {
            	%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br />
-			<%=escape(method.getResponseBodyAsString())%>
+			<%=method.getResponseBodyAsString()%>
 		</div>
 		<%
            }

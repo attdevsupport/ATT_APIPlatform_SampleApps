@@ -88,7 +88,7 @@ create and run one's own full-fledged sample applications.
 
   4) $oauth_file         : File containing authorization and refresh tokens 
 
-  5) $scope              : Scope used when requested access token. Set to CMS. 
+  5) $scope              : Scope used when requested access token. Set to CCS. 
 
   6) $callcontrol_file   : Contains path to call control file. Default: callcontrolscript.php
 

@@ -7,7 +7,7 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
-    <title>AT&amp;T Sample Application - TL Service Application</title>
+    <title>AT&T Sample Application - TL Service Application</title>
     <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
     <link rel="stylesheet" type="text/css" href="style/common.css"/ >
     <script type="text/javascript" src="js/helper.js">
@@ -18,37 +18,16 @@
 <%@ page import="org.apache.commons.httpclient.*"%>
 <%@ page import="org.apache.commons.httpclient.methods.*"%>
 <%@ page import="org.json.JSONObject"%>
-<%@ include file="oauth.jsp" %>
+<%@ include file="config.jsp" %>
 <%
+String scope = "TL";
+
+
 String requestedAccuracy = request.getParameter("requestedAccuracy");
 String acceptableAccuracy = request.getParameter("acceptableAccuracy");
 String tolerance = request.getParameter("tolerance");
-String accessToken = (String) session.getAttribute("accessToken");
-
-if (requestedAccuracy == null) 
-{
-	requestedAccuracy = (String) session.getAttribute("requestedAccuracy");
-}
-else
-{
-	session.setAttribute("requestedAccuracy",requestedAccuracy);	
-}
-
-if (acceptableAccuracy == null) {
-	acceptableAccuracy = (String) session.getAttribute("acceptableAccuracy");
-}
-else
-{
-	session.setAttribute("acceptableAccuracy",acceptableAccuracy);	
-}
-
-if (tolerance == null) {
-	tolerance = (String) session.getAttribute("tolerance");
-}
-else
-{
-	session.setAttribute("tolerance",tolerance);	
-}
+String getDeviceLocation = request.getParameter("getDeviceLocation");
+String postOauth = "TL.jsp?getDeviceLocation=true&requestedAccuracy=" + requestedAccuracy + "&acceptableAccuracy=" + acceptableAccuracy + "&tolerance=" + tolerance;
 %>
 
 <div id="container">
@@ -79,7 +58,7 @@ document.write("" + navigator.userAgent);
 <div id="wrapper">
 <div id="content">
 
-<h1>AT&amp;T Sample Application - TL</h1>
+<h1>AT&T Sample Application - TL</h1>
 <h2>Feature 1: Map of Device Location</h2>
 
 </div>
@@ -122,62 +101,54 @@ document.write("" + navigator.userAgent);
 </form>
 
 <%  
-if(getDeviceLocation!=null) 
-{
-	if((accessToken == null && request.getParameter("error_description") == null && code.length() == 0)) 
-   	{
-		response.sendRedirect(FQDN + "/oauth/authorize?client_id=" + clientIdAut + "&scope=" + scope + "&redirect_uri=" + redirectUri);
-   	}
-	else if (accessToken != null)
-	{
-	    String url = FQDN + "/2/devices/location";    
-	    HttpClient client = new HttpClient();
-	    GetMethod method = new GetMethod(url);  
-	    method.setQueryString("requestedAccuracy=" + requestedAccuracy +"&acceptableAccuracy=" + acceptableAccuracy + "&tolerance=" + tolerance);
-	    method.addRequestHeader("Accept","application/json");
-	    method.addRequestHeader("Authorization","Bearer " + accessToken);
-	    Long start = System.currentTimeMillis();
-	    int statusCode = client.executeMethod(method);    
-	    Long end = System.currentTimeMillis();
-	    Long elapsed = (end-start)/1000;
-	    if(statusCode==200 || statusCode==201) {
-	    JSONObject rpcObject = new JSONObject(method.getResponseBodyAsString());
-	    %>
-	            <div class="successWide">
-	            <strong>SUCCESS:</strong><br />
-	            <strong>Latitude:</strong> <%=rpcObject.getString("latitude")%><br />
-	            <strong>Longitude:</strong> <%=rpcObject.getString("longitude")%><br />
-	            <strong>Accuracy:</strong> <%=rpcObject.getString("accuracy")%><br />
-	            <strong>Response Time:</strong> <%=elapsed%> seconds
-	            </div>
-	            <br /><br />
-	            
-	            <div align="center">
-	            <iframe width="600" height="400" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
-	    src="http://maps.google.com/?q=<%=rpcObject.getString("latitude")%>+<%=rpcObject.getString("longitude")%>&output=embed"></iframe><br /></div><%
-	    } else {
-	    %>
-	            <div class="errorWide">
-	            <strong>ERROR:</strong><br />
-	            <%=method.getResponseBodyAsString()%>
-	            </div><br/>
-		<%
-	    }
-	    method.releaseConnection();
-	    session.removeAttribute("requestedAccuracy");
-	    session.removeAttribute("acceptableAccuracy");
-	    session.removeAttribute("tolerance");
-  	}
-	else if (request.getParameter("error_description") != null)
-	{
-	%>
-		<div class="errorWide">
-		<strong>ERROR:</strong><br />
-		<%=request.getParameter("error_description")%>
-		</div><br/>
-<% 		
-	}
+if(getDeviceLocation!=null) {
+    String accessToken = request.getParameter("access_token");
+    if(accessToken==null || accessToken == "null"){
+accessToken = (String)session.getAttribute("accessToken");
+    session.setAttribute("accessToken", accessToken);}
+if((accessToken==null) || (!scope.equalsIgnoreCase("TL")) && (!scope.equalsIgnoreCase("SMS,MMS,WAP,DC,TL,PAYMENT"))) {
+session.setAttribute("scope", "TL");
+session.setAttribute("clientId", clientIdWeb);
+session.setAttribute("clientSecret", clientSecretWeb);
+session.setAttribute("postOauth", postOauth);
+session.setAttribute("redirectUri", redirectUri);
+response.sendRedirect("oauth.jsp?getExtCode=yes");
 }
+    String url = FQDN + "/2/devices/location";    
+    HttpClient client = new HttpClient();
+    GetMethod method = new GetMethod(url);  
+    method.setQueryString("requestedAccuracy=" + requestedAccuracy + "&access_token=" + accessToken + "&acceptableAccuracy=" + acceptableAccuracy + "&tolerance=" + tolerance);
+    method.addRequestHeader("Accept","application/json");
+    method.addRequestHeader("Authorization","Bearer " + accessToken);
+    Long start = System.currentTimeMillis();
+    int statusCode = client.executeMethod(method);    
+    Long end = System.currentTimeMillis();
+    Long elapsed = (end-start)/1000;
+    if(statusCode==200 || statusCode==201) {
+    JSONObject rpcObject = new JSONObject(method.getResponseBodyAsString());
+    %>
+            <div class="successWide">
+            <strong>SUCCESS:</strong><br />
+            <strong>Latitude:</strong> <%=rpcObject.getString("latitude")%><br />
+            <strong>Longitude:</strong> <%=rpcObject.getString("longitude")%><br />
+            <strong>Accuracy:</strong> <%=rpcObject.getString("accuracy")%><br />
+            <strong>Response Time:</strong> <%=elapsed%> seconds
+            </div>
+            <br /><br />
+            
+            <div align="center">
+            <iframe width="600" height="400" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
+    src="http://maps.google.com/?q=<%=rpcObject.getString("latitude")%>+<%=rpcObject.getString("longitude")%>&output=embed"></iframe><br /></div><%
+    } else {
+    %>
+            <div class="errorWide">
+            <strong>ERROR:</strong><br />
+            <%=method.getResponseBodyAsString()%>
+            </div><br/>
+<%
+    }
+    method.releaseConnection();
+  } 
 %>
 
 <div id="footer">

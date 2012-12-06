@@ -6,7 +6,7 @@
 %>
 
 <%
-String scope = "IMMN";
+String scope = "MOBO";
 String clientIdAut = "";
 String clientSecretAut = "";
 String FQDN = "https://api-uat.bf.pacer.sl.attcompute.com";

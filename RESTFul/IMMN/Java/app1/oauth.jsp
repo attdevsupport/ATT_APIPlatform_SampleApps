@@ -20,8 +20,7 @@
 	String accessTokenError = "";
 	String code = request.getParameter("code");
 	if(code==null) code="";
-	String sendMessageButton = request.getParameter("sendMessageButton");        
-
+	
 	String refreshToken = request.getParameter("refreshToken");
 	if (refreshToken==null) 
 		refreshToken=(String) session.getAttribute("refreshToken");
@@ -29,12 +28,17 @@
 		refreshToken="";
 	String getRefreshToken = request.getParameter("getRefreshToken");
 	if (getRefreshToken==null) getRefreshToken="";
+	//For the first time, we dont have access token, so we redirect to authenticate client id
+	if((session.getAttribute("accessToken") == null && request.getParameter("error_description") == null && code.length() == 0)) 
+   	{
+		response.sendRedirect(FQDN + "/oauth/authorize?client_id=" + clientIdAut + "&scope=" + scope + "&redirect_uri=" + redirectUri);
+   	}
 	//Second time, if client id is valid we should now have the code parameter on the url. Use the code get the access token and set the token in session
-   	if(!code.equalsIgnoreCase("")) 
+   	else if(!code.equalsIgnoreCase("")) 
    	{
 
         String url = FQDN + "/oauth/token";   
-        HttpClient client = new HttpClient();
+        HttpClient client = new HttpClient(); 
         PostMethod method = new PostMethod(url); 
         String b = "client_id=" + clientIdAut + "&client_secret=" + clientSecretAut + "&grant_type=authorization_code&code=" + code;
         method.addRequestHeader("Accept","application/json");
@@ -57,6 +61,7 @@
             if(postOauth!= null) 
             {
            	session.setAttribute("postOauth", null);
+           	response.sendRedirect(postOauth);
             }
         }
 	    else
@@ -66,7 +71,7 @@
 			session.setAttribute("errorResponse",accessTokenError);
 		}
         method.releaseConnection();
-        sendMessageButton = "true";
+        response.sendRedirect("MOBO.jsp?sendMessageButton=true");
     }
     //Refresh token scenario
     else if(!getRefreshToken.equalsIgnoreCase("")) 
@@ -86,10 +91,11 @@
 		   	if(postOauth!= null) 
 		   	{
 		   		session.setAttribute("postOauth", null);
+		   		response.sendRedirect(postOauth);
 		   	}
 	    }
 	    method.releaseConnection();
-        sendMessageButton = "true";
+        response.sendRedirect("MOBO.jsp?sendMessageButton=true");
     }
     else if (request.getParameter("error") != null)
     {
@@ -105,6 +111,6 @@
 			errorResponse = errorDescription;
 		}
 		session.setAttribute("errorResponse",errorResponse);
-        sendMessageButton = "true";
+        response.sendRedirect("MOBO.jsp?sendMessageButton=true");
     }
 %>

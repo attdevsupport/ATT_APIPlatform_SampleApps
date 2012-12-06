@@ -144,7 +144,7 @@ For more information contact developer.support@att.com
         </form>
 			<br clear="all" />
 				<div align="center">
-				<% if @result %>
+				<% unless @result.nil? %>
 					<div class="successWide" align="left">
 						<strong>SUCCESS:</strong>
 						<br />
@@ -158,18 +158,13 @@ For more information contact developer.support@att.com
 							</tr>
 						</thead>
 						<tbody>
+							<%
+							nbest = @result['Recognition']['NBest'];
+							nbest.each do |key, val| %>
 							<tr>
 							    <td class="cell" align="center"><em>ResponseId</em></td>
 								<td class="cell" align="center"><em><%= @result['Recognition']['ResponseId'] %></em></td>
 							</tr>
-							<tr>
-							    <td class="cell" align="center"><em>Status</em></td>
-								<td class="cell" align="center"><em><%= @result['Recognition']['Status'] %></em></td>
-							</tr>
-							<%
-							if @result['Recognition']['Status'].eql? "OK" then
-							  nbest = @result['Recognition']['NBest']
-							  nbest.each do |key, val| %>
 							<tr>
 							    <td class="cell" align="center"><em>Hypothesis</em></td>
 								<td class="cell" align="center"><em><%= key['Hypothesis'] %></em></td>
@@ -198,12 +193,12 @@ For more information contact developer.support@att.com
 							    <td class="cell" align="center"><em>WordScores</em></td>
 								<td class="cell" align="center"><em><%= key['WordScores'].join(", ") %></em></td>
 							</tr>
-							<% end end %>
+							<% end %>
 						</tbody>
 					</table>
 				<% end %>
 				</div>
-				<% if @error %>
+				<% unless @error.nil? %>
 					<div class="errorWide">
 						<strong>ERROR:</strong>
 						<br />

@@ -14,21 +14,12 @@
 <%@ page import="org.json.JSONObject"%>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.net.URLDecoder" %>
-<%@ include file="config.jsp" %>
+<%@ include file="config.jsp"%>
 <%
-	
 	Long currentTime = System.currentTimeMillis();
 	String accessTokenError = "";
 	String code = request.getParameter("code");
 	if(code==null) code="";
-	
-	String getMsgHeadersButton = request.getParameter("getMsgHeadersButton");
-	String msgContent = request.getParameter("msgContent");
-	if (getMsgHeadersButton != null) session.setAttribute("getMsgHeadersButton", getMsgHeadersButton);
-	if (msgContent != null) session.setAttribute("msgContent", msgContent);
-
-	if (getMsgHeadersButton == null) getMsgHeadersButton = (String) session.getAttribute("getMsgHeadersButton");
-	if (msgContent == null) msgContent = (String) session.getAttribute("msgContent");
 	
 	String refreshToken = request.getParameter("refreshToken");
 	if (refreshToken==null) 
@@ -38,9 +29,13 @@
 	String getRefreshToken = request.getParameter("getRefreshToken");
 	if (getRefreshToken==null) getRefreshToken="";
 
-	if(session.getAttribute("accessToken") == null) {
+	//For the first time, we dont have access token, so we redirect to authenticate client id
+	if((session.getAttribute("accessToken") == null && request.getParameter("error_description") == null && code.length() == 0)) 
+   	{
+   		response.sendRedirect(FQDN + "/oauth/authorize?client_id=" + clientIdAut + "&scope=" + scope + "&redirect_uri=" + redirectUri);
+   	}
 	//Second time, if client id is valid we should now have the code parameter on the url. Use the code get the access token and set the token in session
-   	if(!code.equalsIgnoreCase("")) 
+   	else if(!code.equalsIgnoreCase("")) 
    	{
 
         String url = FQDN + "/oauth/token";   
@@ -52,25 +47,32 @@
         method.setRequestEntity(new StringRequestEntity(b));
         int statusCode = client.executeMethod(method);    
         if(statusCode==200)
-	{ 
-		JSONObject rpcObject = new JSONObject(method.getResponseBodyAsString());
+        { 
+           	JSONObject rpcObject = new JSONObject(method.getResponseBodyAsString());
            	String accessToken = rpcObject.getString("access_token");
 
            	refreshToken = rpcObject.getString("refresh_token");
-		session.setAttribute("refreshToken", refreshToken);
+           	session.setAttribute("refreshToken", refreshToken);
             session.setAttribute("accessToken", accessToken);
 
             String expires_in = rpcObject.getString("expires_in");
             method.releaseConnection();
+	
+            String postOauth = (String) session.getAttribute("postOauth");
+            if(postOauth!= null) 
+            {
+           	session.setAttribute("postOauth", null);
+           	response.sendRedirect(postOauth);
+            }
         }
-	else
-	{
-		accessTokenError = method.getResponseBodyAsString();
-		if (accessTokenError == null || accessTokenError.length() == 0) accessTokenError = "" + statusCode;
-		
-		session.setAttribute("errorResponse",accessTokenError);
-	}
+	    else
+		{
+			accessTokenError = method.getResponseBodyAsString();
+		       if (accessTokenError == null || accessTokenError.length() == 0) accessTokenError = "" + statusCode;
+			session.setAttribute("errorResponse",accessTokenError);
+		}
         method.releaseConnection();
+		response.sendRedirect("MIM.jsp?" + session.getAttribute("requestType"));
     }
     //Refresh token scenario
     else if(!getRefreshToken.equalsIgnoreCase("")) 
@@ -87,8 +89,14 @@
 		   	String accessToken = method.getResponseBodyAsString().substring(18,50);
 		   	session.setAttribute("accessToken", accessToken);
 		   	String postOauth = (String) session.getAttribute("postOauth");
+		   	if(postOauth!= null) 
+		   	{
+		   		session.setAttribute("postOauth", null);
+		   		response.sendRedirect(postOauth);
+		   	}
 	    }
 	    method.releaseConnection();
+		response.sendRedirect("MIM.jsp?" + session.getAttribute("requestType"));
     }
     else if (request.getParameter("error") != null)
     {
@@ -104,6 +112,6 @@
 			errorResponse = errorDescription;
 		}
 		session.setAttribute("errorResponse",errorResponse);
-    }
+		response.sendRedirect("MIM.jsp?" + session.getAttribute("requestType"));
     }
 %>

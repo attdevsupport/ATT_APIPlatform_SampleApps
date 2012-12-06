@@ -51,7 +51,7 @@ function GetAccessToken($FQDN,$api_key,$secret_key,$scope,$authCode){
     {
       $jsonObj = json_decode($accessTok_response);
       $access_token = $jsonObj->{'access_token'};//fetch the access token from the response.
-      $_SESSION["access_token_index"]=$access_token;//store the access token in to session.
+      $_SESSION["dc1_mobo_access_token"]=$access_token;//store the access token in to session.
 
     }
   else{
@@ -81,12 +81,12 @@ $addresses = $_SESSION["phoneTextBox"];
 
 
 /* Extract the session variables */  
-$access_token = $_SESSION["access_token_index"];
+$access_token = $_SESSION["dc1_mobo_access_token"];
 
 if ($_REQUEST["sendMessageButton"]) {
 
 
-  $_SESSION["sendMsgIndex"] = true;
+  $_SESSION["dc1_mobo"] = true;
 
 
   $messageTextBox=$_POST['messageTextBox'];
@@ -111,7 +111,7 @@ $_SESSION["FileUpload5"] = $FileUpload5;
  }  
 
   
-if ($_SESSION["sendMsgIndex"]) {
+if ($_SESSION["dc1_mobo"]) {
   
   if($access_token == null || $access_token == '') {
     $authCode = $_GET["code"];
@@ -119,14 +119,14 @@ if ($_SESSION["sendMsgIndex"]) {
       getAuthCode( $FQDN,$api_key,$secret_key,$scope,$authorize_redirect_uri);
     }else{
       $access_token = GetAccessToken($FQDN,$api_key,$secret_key,$scope,$authCode);
-      $_SESSION["access_token_index"] =  $access_token;
+      $_SESSION["dc1_mobo_access_token"] =  $access_token;
     }
   }
  }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
-	<title>AT&T Sample IMMN Application 1 &#8211; Basic IMMN Service Application</title>
+	<title>AT&T Sample Mobo Application 1 &#8211; Basic Mobo Service Application</title>
 	<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"/>
     <link rel="stylesheet" type="text/css" href="style/common.css"/>
     <style type="text/css">
@@ -175,7 +175,7 @@ if ($_SESSION["sendMsgIndex"]) {
 <div id="wrapper">
 <div id="content">
 
-<h1>AT&T Sample IMMN Application 1 Basic IMMN Service Application</h1>
+<h1>AT&T Sample Mobo Application 1 – Basic Mobo Service Application</h1>
 <h2>Feature 1: Send Message</h2>
 
 </div>
@@ -276,9 +276,9 @@ total size of all attachments cannot exceed 600 KB.
 <?php
 
 
-if ($_SESSION["sendMsgIndex"] && $access_token != null && $access_token != '') {
+if ($_SESSION["dc1_mobo"] && $access_token != null && $access_token != '') {
 
-	  $_SESSION["sendMsgIndex"]=false;
+	  $_SESSION["dc1_mobo"]=false;
 
 if(isset($_POST['groupCheckBox'])) {
 $group = "true";
@@ -378,7 +378,7 @@ if($group == "true" && $addresslength == 1) {
 
       // Form the HTTP headers
       $header = "POST $FQDN/rest/1/MyMessages? HTTP/1.0\r\n";
-      $header .= "Authorization: BEARER ".$_SESSION["access_token_index"]."\r\n"; 
+      $header .= "Authorization: BEARER ".$_SESSION["dc1_mobo_access_token"]."\r\n"; 
       $header .= "Content-Type: multipart/form-data; type=\"application/x-www-form-urlencoded\"; start=\"$startpart\"; boundary=\"$boundary\"\r\n";
       $header .= "MIME-Version: 1.0\r\n";
       $header .= "Host: $server\r\n";
@@ -422,7 +422,7 @@ if($group == "true" && $addresslength == 1) {
 	    ?>
 	    <div class="errorWide">
 	    <strong>ERROR:</strong><br />
-	    <?php echo htmlspecialchars($sendMMS_response)  ?>
+	    <?php echo $sendMMS_response  ?>
 	    </div>
 
 	<?php }
@@ -469,29 +469,29 @@ if($group == "true" && $addresslength == 1) {
 
 
 // Form the URL to send SMS
-        $APIReq_RequestBody = $addresses_url.'Subject='.urlencode($_SESSION["subjectTextBox"]).'&Text='.urlencode($_SESSION["messageTextBox"]).'&Group=false'; 
+        $moboSMS_RequestBody = $addresses_url.'Subject='.urlencode($_SESSION["subjectTextBox"]).'&Text='.urlencode($_SESSION["messageTextBox"]).'&Group=false'; 
 
-      $APIReq_Url = "$FQDN/rest/1/MyMessages?";
-	  $authorization = 'Authorization: Bearer '.$_SESSION["access_token_index"];
+      $moboSMS_Url = "$FQDN/rest/1/MyMessages?";
+	  $authorization = 'Authorization: Bearer '.$_SESSION["dc1_mobo_access_token"];
 	 $content = "Content-Type: application/x-www-form-urlencoded";
 
       
 
 	//Invoke the URL
-	$APIReq = curl_init();
+	$moboSMS = curl_init();
 	
-	curl_setopt($APIReq, CURLOPT_URL, $APIReq_Url);
-	curl_setopt($APIReq, CURLOPT_POST, 1);
-	curl_setopt($APIReq, CURLOPT_HEADER, 0);
-	curl_setopt($APIReq, CURLINFO_HEADER_OUT, 0);
-	curl_setopt($APIReq, CURLOPT_HTTPHEADER, array($authorization, $content));
-	curl_setopt($APIReq, CURLOPT_POSTFIELDS, $APIReq_RequestBody);
-	curl_setopt($APIReq, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($APIReq, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($moboSMS, CURLOPT_URL, $moboSMS_Url);
+	curl_setopt($moboSMS, CURLOPT_POST, 1);
+	curl_setopt($moboSMS, CURLOPT_HEADER, 0);
+	curl_setopt($moboSMS, CURLINFO_HEADER_OUT, 0);
+	curl_setopt($moboSMS, CURLOPT_HTTPHEADER, array($authorization, $content));
+	curl_setopt($moboSMS, CURLOPT_POSTFIELDS, $moboSMS_RequestBody);
+	curl_setopt($moboSMS, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($moboSMS, CURLOPT_SSL_VERIFYPEER, false);
 	
 	
-	$APIReq_response = curl_exec($APIReq);
-	$responseCode=curl_getinfo($APIReq,CURLINFO_HTTP_CODE);
+	$moboSMS_response = curl_exec($moboSMS);
+	$responseCode=curl_getinfo($moboSMS,CURLINFO_HTTP_CODE);
 
         /*
 	  If URL invocation is successful print success msg along with sms ID,
@@ -499,7 +499,7 @@ if($group == "true" && $addresslength == 1) {
 	*/
 	if($responseCode==200 || $responseCode ==201 || $responseCode==300)
 	{
-		$jsonObj = json_decode($APIReq_response);
+		$jsonObj = json_decode($moboSMS_response);
 		$smsID = $jsonObj->{'Id'};//if the SMS send successfully ,then will get a SMS id.
 		$_SESSION["sms1_smsID"] = $smsID;
 ?>
@@ -516,7 +516,7 @@ if($group == "true" && $addresslength == 1) {
 	    ?>
 	    <div class="errorWide">
 	    <strong>ERROR:</strong><br />
-	    <?php echo htmlspecialchars($APIReq_response)  ?>
+	    <?php echo $moboSMS_response  ?>
 	    </div>
 
 	<?php }
@@ -530,7 +530,7 @@ if(!empty($invalid_addresses )){
 	<strong>ERROR: Invalid numbers</strong><br />
 	<?php 
 	foreach ( $invalid_addresses as $invalid_address ){
-	  echo htmlspecialchars($invalid_address) . "<br/>";
+	  echo $invalid_address."<br/>";
 	}  
 
 
@@ -538,6 +538,15 @@ if(!empty($invalid_addresses )){
 	} 
 }
 }
+
+
+
+
+
+	  
+	  
+
+
 
 ?>
 

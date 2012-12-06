@@ -94,8 +94,6 @@ public partial class Speech_App1 : System.Web.UI.Page
         this.ReadConfigFile();
 
         this.deleteFile = false;
-
-        this.ResetDisplay();
     }
 
     /// <summary>
@@ -697,68 +695,31 @@ public partial class Speech_App1 : System.Web.UI.Page
     }
 
     /// <summary>
-    /// Reset Display of success response
-    /// </summary>
-    private void ResetDisplay()
-    {
-        lblResponseId.Text = string.Empty;
-        lblStatus.Text = string.Empty;
-        lblHypothesis.Text = string.Empty;
-        lblLanguageId.Text = string.Empty;
-        lblResultText.Text = string.Empty;
-        lblGrade.Text = string.Empty;
-        lblConfidence.Text = string.Empty;
-        lblWords.Text = string.Empty;
-        lblWordScores.Text = string.Empty;
-        hypoRow.Visible = true;
-        langRow.Visible = true;
-        confRow.Visible = true;
-        gradeRow.Visible = true;
-        resultRow.Visible = true;
-        wordsRow.Visible = true;
-        wordScoresRow.Visible = true;
-    }
-
-    /// <summary>
     /// Displays the result onto the page
     /// </summary>
     /// <param name="speechResponse">SpeechResponse received from api</param>
     private void DisplayResult(SpeechResponse speechResponse)
     {
         lblResponseId.Text = speechResponse.Recognition.ResponseId;
-        lblStatus.Text = speechResponse.Recognition.Status;
-        if ((speechResponse.Recognition.NBest != null) && (speechResponse.Recognition.NBest.Count > 0))
+        foreach (NBest nbest in speechResponse.Recognition.NBest)
         {
-            foreach (NBest nbest in speechResponse.Recognition.NBest)
+            lblHypothesis.Text = nbest.Hypothesis;
+            lblLanguageId.Text = nbest.LanguageId;
+            lblResultText.Text = nbest.ResultText;
+            lblGrade.Text = nbest.Grade;
+            lblConfidence.Text = nbest.Confidence.ToString();
+
+            string strText = "[";
+            foreach (string word in nbest.Words)
             {
-                lblHypothesis.Text = nbest.Hypothesis;
-                lblLanguageId.Text = nbest.LanguageId;
-                lblResultText.Text = nbest.ResultText;
-                lblGrade.Text = nbest.Grade;
-                lblConfidence.Text = nbest.Confidence.ToString();
-
-                string strText = "[";
-                foreach (string word in nbest.Words)
-                {
-                    strText += "\"" + word + "\", ";
-                }
-                strText = strText.Substring(0, strText.LastIndexOf(","));
-                strText = strText + "]";
-
-                lblWords.Text = nbest.Words != null ? strText : string.Empty;
-
-                lblWordScores.Text = "[" + string.Join(", ", nbest.WordScores.ToArray()) + "]";
+                strText += "\"" + word + "\", ";
             }
-        }
-        else
-        {
-            hypoRow.Visible = false;
-            langRow.Visible = false;
-            confRow.Visible = false;
-            gradeRow.Visible = false;
-            resultRow.Visible = false;
-            wordsRow.Visible = false;
-            wordScoresRow.Visible = false;
+            strText = strText.Substring(0, strText.LastIndexOf(","));
+            strText = strText + "]";
+
+            lblWords.Text = nbest.Words != null ? strText : string.Empty;
+
+            lblWordScores.Text = "[" + string.Join(", ", nbest.WordScores.ToArray()) + "]";
         }
     }
 
@@ -825,11 +786,6 @@ public class Recognition
     /// Gets or sets NBest Complex structure that holds the results of the transcription. Supports multiple transcriptions.
     /// </summary>
     public List<NBest> NBest { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Status of the transcription.
-    /// </summary>
-    public string Status { get; set; }
 }
 
 /// <summary>

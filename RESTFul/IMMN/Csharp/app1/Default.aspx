@@ -10,7 +10,7 @@ For more information contact developer.support@att.com
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-    <title>AT&amp;T IMMN Service Application</title>
+    <title>AT&amp;T Sample Mobo Application 1- Sample Mobo Service Application</title>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <link rel="stylesheet" type="text/css" href="style/common.css" />
 </head>
@@ -51,7 +51,7 @@ For more information contact developer.support@att.com
         <div>
             <div class="content">
                 <h1>
-                    AT&amp;T IMMN Service Sample Application</h1>
+                    AT&amp;T Sample Mobo Application 1 - Basic Mobo Service Application</h1>
                 <h2>
                     Feature 1: Send Message</h2>
             </div>

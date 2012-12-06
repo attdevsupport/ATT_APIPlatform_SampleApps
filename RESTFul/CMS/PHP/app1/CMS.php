@@ -116,7 +116,7 @@ $template = getVar('template');
                         Make call to:
                     </td>
                     <td class="cell" style="width: 60%">
-                        <input type="text" name="txtNumberToDial" value="<?php echo htmlspecialchars($numberToDial);?>" title="telephone number or sip address"/>
+                        <input type="text" name="txtNumberToDial" value="<?php echo $numberToDial;?>" title="telephone number or sip address"/>
                     </td>
                 </tr>
                 <tr>
@@ -139,7 +139,6 @@ $template = getVar('template');
                                 <option value="conference"  <?php if($template == "conference") { $txt="selected='selected'"; echo $txt; }?>>conference</option>
                                 <option value="reject" <?php if($template == "reject") { $txt="selected='selected'"; echo $txt; }?>>reject</option>
                                 <option value="transfer" <?php if($template == "transfer") { $txt="selected='selected'"; echo $txt; }?>>transfer</option>
-				<option value="message" <?php if($template == "message") { $txt="selected='selected'"; echo $txt; }?>>message</option>
                                 <option value="wait" <?php if($template == "wait") { $txt="selected='selected'"; echo $txt; }?>>wait</option>
                             </select>
 
@@ -152,14 +151,14 @@ $template = getVar('template');
         <td class="style4">
             Number parameter for Script Function:</td>
         <td class="cell" style="width: 60%">
-            <input type="text" name="txtNumber" value="<?php echo htmlspecialchars($txtNumber);?>" title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
+            <input type="text" name="txtNumber" value="<?php echo $txtNumber;?>" title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
         </td>
     </tr>
     <tr>
         <td class="style4">
             Message To Play:</td>
         <td class="cell" style="width: 60%">
-            <input type="text" name="txtMessageToPlay" value="<?php echo htmlspecialchars($messageToPlay);?>" title="enter long message or mp3 audio url, this is used as music on hold"/>
+            <input type="text" name="txtMessageToPlay" value="<?php echo $messageToPlay;?>" title="enter long message or mp3 audio url, this is used as music on hold"/>
         </td>
     </tr>
     <tr>
@@ -167,7 +166,7 @@ $template = getVar('template');
             Script Source Code:</td>
         <td class="cell" style="width: 60%">
             <textarea name="description" rows="2" cols="20" id="txtCreateSession" disabled="disabled" value="This script answers the incoming call with the welcome message, and requests user to enter 4 or 5 digit pin with # as terminator, 90 seconds" style="height:141px;width:655px;">
-                <?php echo htmlspecialchars($file); ?></textarea>
+                <?php echo $file; ?></textarea>
         </td>
     </tr>
     <tr>
@@ -200,14 +199,6 @@ else if($template == "conference") {?>
     conference.<br /> After quitting the conference, user is asked to
     press digit to activiate music on hold <strong>Message to
         Play</strong> to handle the signal (feature 2)<?php }
-else if($template == "message" ) {?>
-    For 
-    <strong>message()</strong> script function, user is played 
-    back <strong>"Number parameter for Script Function"</strong> 
-    number and an SMS Message is sent to that number.<br/> 
-    User is asked to press digit to activate music on hold 
-    <strong>Message to Play</strong> to handle the signal (feature 2)
-<?php }
 else if($template == "reject") {?>
     For
     reject script function, if <strong>Number parameter for
@@ -262,31 +253,30 @@ if (isset ($_POST["btnupload1"])) {
         $accessToken = $fullToken["accessToken"];
 
         // Form the URL to send SMS
-        $CMS_RequestBody = json_encode(array('feature' => $numberToDial, 'numberToDial' => $numberToDial,
-	'featurenumber' => $txtNumber, 'messageToPlay' => $messageToPlay));
+        $CCS_RequestBody = '{"feature":"'.$template.'","numberToDial":"'.$numberToDial.'","featurenumber":"'.$txtNumber.'","messageToPlay":"'.$messageToPlay.'"}';//post data
 
-        $CMS_Url = $FQDN . "/rest/1/Sessions";
+        $CCS_Url = $FQDN . "/rest/1/Sessions";
         $authorization = 'Authorization: Bearer ' . $accessToken;
         $content = "Content-Type: application/json";
 
         //Invoke the URL
-        $CMS = curl_init();
-        curl_setopt($CMS, CURLOPT_URL, $CMS_Url);
-        curl_setopt($CMS, CURLOPT_POST, 1);
-        curl_setopt($CMS, CURLOPT_HEADER, 0);
-        curl_setopt($CMS, CURLINFO_HEADER_OUT, 0);
-        curl_setopt($CMS, CURLOPT_HTTPHEADER, array (
+        $CCS = curl_init();
+        curl_setopt($CCS, CURLOPT_URL, $CCS_Url);
+        curl_setopt($CCS, CURLOPT_POST, 1);
+        curl_setopt($CCS, CURLOPT_HEADER, 0);
+        curl_setopt($CCS, CURLINFO_HEADER_OUT, 0);
+        curl_setopt($CCS, CURLOPT_HTTPHEADER, array (
             $authorization,
             $content
         ));
-        curl_setopt($CMS, CURLOPT_POSTFIELDS, $CMS_RequestBody);
-        curl_setopt($CMS, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($CMS, CURLOPT_SSL_VERIFYPEER, false);
-        $CMS_response = curl_exec($CMS);
-        $responseCode = curl_getinfo($CMS, CURLINFO_HTTP_CODE);
+        curl_setopt($CCS, CURLOPT_POSTFIELDS, $CCS_RequestBody);
+        curl_setopt($CCS, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($CCS, CURLOPT_SSL_VERIFYPEER, false);
+        $CCS_response = curl_exec($CCS);
+        $responseCode = curl_getinfo($CCS, CURLINFO_HTTP_CODE);
 
         if ($responseCode == 200) {
-            $jsonResponse = json_decode($CMS_response, true);
+            $jsonResponse = json_decode($CCS_response, true);
             $id = $jsonResponse["id"];
             $success = $jsonResponse["success"];
             $_SESSION["id"] = $id;
@@ -334,7 +324,7 @@ if (isset ($_POST["btnupload1"])) {
         <br clear="all" />
         <div class="errorWide">
             <strong>ERROR:</strong><?php echo $responseCode; ?><br />
-            <?php echo $CMS_response; ?>
+            <?php echo $CCS_response; ?>
         </div>
             <?php
         }
@@ -412,33 +402,33 @@ if (isset ($_POST["btnupload"])) {
     if($_SESSION["id"] != null) {
 
         // Form the URL to send SMS
-        $CMSsignal_RequestBody = json_encode(array('signal' => $signal)); 
+        $CCSsignal_RequestBody = '{"signal": ".$signal."}'; //post data
 
-        $CMSsignal_Url = $FQDN . "/rest/1/Sessions/" . $_SESSION["id"] . "/Signals";
+        $CCSsignal_Url = $FQDN . "/rest/1/Sessions/" . $_SESSION["id"] . "/Signals";
         $authorization = 'Authorization: Bearer ' . $accessToken;
         $content = "Content-Type: application/json";
 
         //Invoke the URL
-        $CMSsignal = curl_init();
+        $CCSsignal = curl_init();
 
-        curl_setopt($CMSsignal, CURLOPT_URL, $CMSsignal_Url);
-        curl_setopt($CMSsignal, CURLOPT_POST, 1);
-        curl_setopt($CMSsignal, CURLOPT_HEADER, 0);
-        curl_setopt($CMSsignal, CURLINFO_HEADER_OUT, 0);
-        curl_setopt($CMSsignal, CURLOPT_HTTPHEADER, array (
+        curl_setopt($CCSsignal, CURLOPT_URL, $CCSsignal_Url);
+        curl_setopt($CCSsignal, CURLOPT_POST, 1);
+        curl_setopt($CCSsignal, CURLOPT_HEADER, 0);
+        curl_setopt($CCSsignal, CURLINFO_HEADER_OUT, 0);
+        curl_setopt($CCSsignal, CURLOPT_HTTPHEADER, array (
             $authorization,
             $content
         ));
-        curl_setopt($CMSsignal, CURLOPT_POSTFIELDS, $CMSsignal_RequestBody);
-        curl_setopt($CMSsignal, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($CMSsignal, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($CCSsignal, CURLOPT_POSTFIELDS, $CCSsignal_RequestBody);
+        curl_setopt($CCSsignal, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($CCSsignal, CURLOPT_SSL_VERIFYPEER, false);
 
-        $CMSsignal_response = curl_exec($CMSsignal);
+        $CCSsignal_response = curl_exec($CCSsignal);
 
-        $responseCode = curl_getinfo($CMSsignal, CURLINFO_HTTP_CODE);
+        $responseCode = curl_getinfo($CCSsignal, CURLINFO_HTTP_CODE);
 
         if ($responseCode == 200) {
-             $jsonresponse = json_decode($CMSsignal_response, true);
+             $jsonresponse = json_decode($CCSsignal_response, true);
              $status = $jsonresponse["status"];
             ?>
       <br style="clear: both;" />
@@ -468,7 +458,7 @@ if (isset ($_POST["btnupload"])) {
         <br clear="all" />
         <div class="errorWide">
             <strong>ERROR:</strong><?php echo $responseCode; ?><br />
-            <?php echo $CMSsignal_response; ?>
+            <?php echo $CCSsignal_response; ?>
         </div>
             <?php
         }

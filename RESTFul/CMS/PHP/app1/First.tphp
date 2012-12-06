@@ -216,18 +216,6 @@ if (!isset($numberToDial)) {
 				say("number not matched for reject feature");
 			}
 			break;
-		case 'message':
-			if (!isset($featurenumber)) {
-				say("Feature number is not provided as part of create session A P I request");
-			} else {
-				say("Sending message to");
-				say("<speak><say-as interpret-as = 'vxml:digits'>" . $featurenumber . "</say-as></speak>");
-				message("Message from AT&T Call Control Service Sample Application", array( 
-	                    		"to" => $featurenumber,
-	                    		"network" => "SMS"
-	                	));
-			}
-			break;
 		case 'transfer':
 			say("transfering to ");
 			say($featurenumber);

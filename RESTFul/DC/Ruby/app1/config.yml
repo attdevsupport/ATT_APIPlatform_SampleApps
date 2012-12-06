@@ -13,8 +13,3 @@ getdc_url:        https://api.att.com/rest/2/Devices/Info
 auth_code_url:    https://api.att.com/oauth/authorize?
 access_token_url: https://api.att.com/oauth/access_token
 endpoint:         /rest/2/Devices/Info
-
-
-#The url that is hosting the ruby file (include the path to the root page)
-base_url:       http://localhost:4567/base/path  #Do not include a trailing slash
-

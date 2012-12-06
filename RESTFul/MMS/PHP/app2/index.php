@@ -231,12 +231,12 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input  size="12" name="addresses" value="<?php echo htmlspecialchars($addresses); ?>" style="width: 90%">
+    <td class="cell"><input  size="12" name="addresses" value="<?php echo $addresses; ?>" style="width: 90%">
     </td>
   </tr>
   <tr>
     <td valign="top" class="label">Subject:</td>
-    <td class="cell"><?php echo htmlspecialchars($subject); ?></td>
+    <td class="cell"><?php echo $subject; ?></td>
   </tr>
   </tbody></table>
 
@@ -367,7 +367,7 @@ total size of all attachments cannot exceed 600 KB.
 
 	      <div class="successWide">
 		 <strong>SUCCESS:</strong><br />
-		<strong> Message ID</strong> <?php echo htmlspecialchars($mmsID); ?>
+		<strong> Message ID</strong> <?php echo $mmsID; ?>
 		 </div>
 
 	<?php } else {
@@ -376,7 +376,7 @@ total size of all attachments cannot exceed 600 KB.
 	    ?>
 	    <div class="errorWide">
 	    <strong>ERROR:</strong><br />
-	    <?php echo htmlspecialchars($sendMMS_response);  ?>
+	    <?php echo $sendMMS_response;  ?>
 	    </div>
 
 	<?php }
@@ -388,7 +388,7 @@ total size of all attachments cannot exceed 600 KB.
 	<strong>ERROR: Invalid numbers</strong><br />
 	<?php 
 	foreach ( $invalid_addresses as $invalid_address ){
-	  echo htmlspecialchars($invalid_address)."<br/>";
+	  echo $invalid_address."<br/>";
 	}  
 	?>
 	</div>
@@ -412,7 +412,7 @@ Feature 2: Check Delivery Status for each Recipient</h2>
   <tr>
     <td class="cell">
    <button type="submit" name="getMmsDeliveryStatus" value="Get Status">Check Status</button>
-  <input type="hidden" name="mmsID" value="<?php echo htmlspecialchars($mmsID); ?>" />
+  <input type="hidden" name="mmsID" value="<?php echo $mmsID; ?>"><?php echo $_SESSION["mms2_mmsID"];?>
     </td>
   </tr>
   </tbody></table>
@@ -493,8 +493,8 @@ Feature 2: Check Delivery Status for each Recipient</h2>
 	       foreach ( $deliveryInfo as $status ){
 	    ?>
 	    <tr>
-		 <td class="cell" align="center"><?php echo htmlspecialchars($status["Address"]); ?></td>
-		 <td class="cell" align="center"><?php echo htmlspecialchars($status["DeliveryStatus"]); ?></td>
+		 <td class="cell" align="center"><?php echo $status["Address"]; ?></td>
+		 <td class="cell" align="center"><?php echo $status["DeliveryStatus"]; ?></td>
 	    </tr>
            <?php 
 	  }
@@ -510,7 +510,7 @@ Feature 2: Check Delivery Status for each Recipient</h2>
 		?>
                 <div class="errorWide">
                 <strong>ERROR:</strong><br />
-                <?php echo htmlspecialchars($errormsg)  ?>
+                <?php echo $errormsg  ?>
                 </div>
 	<?php }
 	curl_close ($getMMSDelStatus);

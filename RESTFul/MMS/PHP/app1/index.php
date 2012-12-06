@@ -165,11 +165,10 @@ function check_token( $FQDN,$api_key,$secret_key,$scope, $fullToken,$oauth_file)
 
   if ( ($fullToken["updateTime"] == null) || ($fullToken["updateTime"] <= $currentTime)){
     $fullToken=GetAccessToken($FQDN,$api_key,$secret_key,$scope);
-     
     if(  $fullToken["accessToken"] == null ){
-            //echo $fullToken["errorMessage"];
+      //      echo $fullToken["errorMessage"];
     }else{
-            //echo $fullToken["accessToken"];
+      //      echo $fullToken["accessToken"];
       SaveToken( $fullToken,$oauth_file );
     }
   }
@@ -236,12 +235,12 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo htmlspecialchars($address); ?>" style="width: 90%">
+    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo $address; ?>" style="width: 90%">
     </td>
   </tr>
   <tr>
     <td valign="top" class="label">Message:</td>
-    <td class="cell"><textarea rows="4" name="subject" style="width: 90%"><?php echo htmlspecialchars($subject); ?></textarea>
+    <td class="cell"><textarea rows="4" name="subject" style="width: 90%"><?php echo $subject; ?></textarea>
 	</td>
   </tr>
   </tbody>
@@ -306,6 +305,7 @@ if($address==null){?>
       
       $fullToken=check_token($FQDN,$api_key,$secret_key,$scope,$fullToken,$oauth_file);
       $accessToken=$fullToken["accessToken"];
+
       $address =  str_replace("-","",$_POST['address']);
       $address =  str_replace("tel:","",$address);
       $address =  str_replace("+1","",$address);
@@ -384,7 +384,7 @@ if($address==null){?>
 
 	      <div class="success">
 		 <strong>SUCCESS:</strong><br />
-		 <strong>Message ID</strong> <?php echo htmlspecialchars($mmsID); ?>
+		 <strong>Message ID</strong> <?php echo $mmsID; ?>
 		 </div>
 	<?php } else {
 	    
@@ -392,7 +392,7 @@ if($address==null){?>
 	    ?>
 	    <div class="errorWide">
 	    <strong>ERROR:</strong><br />
-	    <?php echo htmlspecialchars($sendMMS_response)  ?>
+	    <?php echo $sendMMS_response  ?>
 	    </div>
 
 	<?php }
@@ -503,7 +503,7 @@ Feature 2: Get Delivery Status</h2>
 		?>
                 <div class="errorWide">
                 <strong>ERROR:</strong><br />
-                <?php echo htmlspecialchars($errormsg)  ?>
+                <?php echo $errormsg  ?>
                 </div>
 	<?php }
 	curl_close ($getMMSDelStatus);

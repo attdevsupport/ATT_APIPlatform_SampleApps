@@ -362,12 +362,6 @@ public partial class CallControl_App1 : System.Web.UI.Page
                     "After quitting the conference, user is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
                 notesLiteral.Text = description;
                     return;
-            case "message":
-                    description +=
-                        "For <strong>message()</strong> script function, user is played back <strong>\"Number parameter for Script Function\"</strong> number and an SMS Message is sent to that number.<br/>" +
-                        "User is asked to press digit to activate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                    notesLiteral.Text = description;
-                    return;
             case "reject":
                     description +=
                     "For <strong>reject()</strong> script function, if <strong>\"Number parameter for Script Function\"</strong> matches with calling id, call will be dropped.<br/>" +

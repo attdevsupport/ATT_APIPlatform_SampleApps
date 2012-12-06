@@ -5,7 +5,7 @@
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-  AT&T API Platform Samples - IMMN App 1
+  AT&T API Platform Samples - MOBO App 1
  --------------------------------------
 
 This file describes how to set up, configure and run the Ruby applications using AT&T API Platform services. 
@@ -31,7 +31,7 @@ create and run one's own full-fledged sample applications.
   Be careful while filling in the "OAuth Redirect URL" field. It should contain the URL that the oAuth provider will redirect
   users to when he/she successfully authenticates and authorizes your application.
 
-  NOTE: You MUST select IMMN in the list of services under field 'Services' in order to use this sample
+  NOTE: You MUST select MOBO in the list of services under field 'Services' in order to use this sample
   application code. 
 
   Having your application registered, you will get back an important pair of data: an API key and Secret key. They are 
@@ -103,11 +103,11 @@ create and run one's own full-fledged sample applications.
 
   To run the application, open up a terminal window and type:
 
-    ruby ./immn.rb
+    ruby ./mobo.rb
 
   or
 
-    ./immn.rb
+    ./mobo.rb
 
   Your application becomes available in a web browser, so you may visit: http://localhost:4567/ to see it working.
 

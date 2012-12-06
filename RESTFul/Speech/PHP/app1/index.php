@@ -236,8 +236,14 @@ $counter = count($speech_context_array);
             curl_setopt($speech_info_request, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($speech_info_request, CURLOPT_SSL_VERIFYHOST, false);
 
+
+
+
+
+
             $speech_info_response = curl_exec($speech_info_request);
             $responseCode=curl_getinfo($speech_info_request,CURLINFO_HTTP_CODE);
+
 
             if($responseCode==200)
             {
@@ -259,17 +265,9 @@ $counter = count($speech_context_array);
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td class="cell" align="center"><em>ResponseId</em></td>
-                        <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->ResponseId ?></em></td>
+                    <td class="cell" align="center"><em>ResponseId</em></td>
+                    <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->ResponseId ?></em></td>
                     </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>Status</em></td>
-                        <td class="cell" align="center">
-                            <em><?php $jStatus = $jsonObj2->Recognition->Status; echo $jStatus; ?></em>
-                        </td>
-                    </tr>
-                    <?php if (strcmp($jStatus, "OK") == 0) { ?>
                     <tr>
                         <td class="cell" align="center"><em>Hypothesis</em></td>
                         <td class="cell" align="center"><em> <?php echo $jsonObj2->Recognition->NBest[0]->Hypothesis ?></em></td>
@@ -298,9 +296,14 @@ $counter = count($speech_context_array);
                         <td class="cell" align="center"><em>WordScores</em></td>
                         <td class="cell" align="center"><em><?php for ($i=0; $i<=$wordscorescounter; $i++) { echo $jsonObj2->Recognition->NBest[0]->WordScores[$i]; echo ' '; }?></em></td>
                     </tr>
-                    <?php } ?>
                     </tbody>
                 </table><?php
+
+
+
+
+
+
             }else{
 
                 $msghead="Error";
