@@ -50,11 +50,6 @@ public partial class DC_App1 : System.Web.UI.Page
     private string endPoint, apiKey, secretKey, authorizeRedirectUri, authCode, scope;
 
     /// <summary>
-    /// Access token file path
-    /// </summary>
-    private string accessTokenFilePath;
-
-    /// <summary>
     /// OAuth access token
     /// </summary>
     private string accessToken;
@@ -68,11 +63,6 @@ public partial class DC_App1 : System.Web.UI.Page
     /// Expirytimes of refresh and access tokens
     /// </summary>
     private string refreshTokenExpiryTime, accessTokenExpiryTime;
-
-    /// <summary>
-    /// No of hours in which refresh token expires.
-    /// </summary>
-    private int refreshTokenExpiresIn;
 
     #endregion
 
@@ -215,22 +205,6 @@ public partial class DC_App1 : System.Web.UI.Page
         if (string.IsNullOrEmpty(this.scope))
         {
             this.scope = "DC";
-        }
-
-        string refreshTokenExpires = ConfigurationManager.AppSettings["refreshTokenExpiresIn"];
-        if (!string.IsNullOrEmpty(refreshTokenExpires))
-        {
-            this.refreshTokenExpiresIn = Convert.ToInt32(refreshTokenExpires);
-        }
-        else
-        {
-            this.refreshTokenExpiresIn = 24;
-        }
-
-        this.accessTokenFilePath = ConfigurationManager.AppSettings["AccessTokenFilePath"];
-        if (string.IsNullOrEmpty(this.accessTokenFilePath))
-        {
-            this.accessTokenFilePath = "DCApp1AccessToken.txt";
         }
 
         return true;

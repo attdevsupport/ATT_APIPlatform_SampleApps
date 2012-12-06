@@ -15,6 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Web.UI;
 using ATT_MSSDK;
 using ATT_MSSDK.DeviceCapabilitiesv2;
+using System.Web;
 #endregion
 
 /// <summary>
@@ -50,6 +51,7 @@ public partial class DC_App1 : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         BypassCertificateError();
+        HttpContext.Current.Response.AddHeader("p3p", "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
         DateTime currentServerTime = DateTime.UtcNow;
         lblServerTime.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
         bool ableToReadConfigFile = this.ReadConfigFile();
@@ -72,6 +74,14 @@ public partial class DC_App1 : System.Web.UI.Page
                         this.requestFactory.GetAuthorizeCredentials(Request["code"]);
                         Session["CSDC_ACCESS_TOKEN"] = this.requestFactory.AuthorizeCredential;
                     }
+                }
+                if (Request.QueryString["error"] != null && Session["mssdk_cs_dc_state"] != null)
+                {
+                    Session["mssdk_cs_dc_state"] = null;
+                    string errorString = Request.Url.Query.Remove(0, 1);
+                    lblErrorMessage.Text = HttpUtility.UrlDecode(errorString);
+                    tbDeviceCapabError.Visible = true;
+                    return;
                 }
             }
 
@@ -127,10 +137,10 @@ public partial class DC_App1 : System.Web.UI.Page
         this.apiKey = ConfigurationManager.AppSettings["apiKey"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
-            lblErrorMessage.Text = "apiKey is not defined in configuration file";            
+            lblErrorMessage.Text = "apiKey is not defined in configuration file";
             return false;
         }
-        
+
         this.secretKey = ConfigurationManager.AppSettings["secretKey"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
@@ -141,11 +151,11 @@ public partial class DC_App1 : System.Web.UI.Page
         this.redirectUrl = ConfigurationManager.AppSettings["redirectUrl"];
         if (string.IsNullOrEmpty(this.redirectUrl))
         {
-            lblErrorMessage.Text = "redirectUrl is not defined in configuration file";            
+            lblErrorMessage.Text = "redirectUrl is not defined in configuration file";
             return false;
         }
 
-        return true;        
+        return true;
     }
 
     /// <summary>
@@ -177,9 +187,10 @@ public partial class DC_App1 : System.Web.UI.Page
 
         if (this.requestFactory.AuthorizeCredential == null)
         {
+            Session["mssdk_cs_dc_state"] = "FetchAuthCode";
             Response.Redirect(this.requestFactory.GetOAuthRedirect().ToString());
         }
-
+        Session["mssdk_cs_dc_state"] = null;
         DeviceCapabilities deviceCapabilities = this.requestFactory.GetDeviceCapabilities();
         this.DisplayDeviceCapabilities(deviceCapabilities);
     }

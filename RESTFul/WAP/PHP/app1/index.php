@@ -44,7 +44,6 @@ function RefreshToken($FQDN,$api_key,$secret_key,$scope,$fullTocken){
 
   //Invoke the URL
   $post_data="client_id=".$api_key."&client_secret=".$secret_key."&refresh_token=".$refreshToken."&grant_type=refresh_token";
-$proxy = "http://proxy.entp.attws.com";
   $accessTok = curl_init();
   curl_setopt($accessTok, CURLOPT_URL, $accessTok_Url);
   curl_setopt($accessTok, CURLOPT_HTTPGET, 1);
@@ -239,12 +238,12 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo $address; ?>" style="width: 90%">
+    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo htmlspecialchars($address); ?>" style="width: 90%">
     </td>
   </tr>
   <tr>
     <td width="20%" valign="top" class="label">URL:</td>
-    <td class="cell"><input  size="12" name="url" value="<?php echo $url; ?>" style="width: 90%">
+    <td class="cell"><input  size="12" name="url" value="<?php echo htmlspecialchars($url); ?>" style="width: 90%">
     </td>
   </tr>
   <tr>
@@ -265,7 +264,7 @@ At this time, AT&T only supports Service Type: Service Indication due to securit
   <tbody>
   <tr>
     <td width="20%" valign="top" class="label">Alert Text:</td>
-    <td class="cell"><textarea rows="4" name="subject" style="width: 90%"><?php echo $subject; ?></textarea></td>
+    <td class="cell"><textarea rows="4" name="subject" style="width: 90%"><?php echo htmlspecialchars($subject); ?></textarea></td>
   </tr>
   </tbody></table>
   <table>
@@ -335,8 +334,8 @@ if( $_SESSION["wap1_address"] == null){?>
       $wap_message .= "<?xml version=\"1.0\"?>\n";
       $wap_message .= "<!DOCTYPE si PUBLIC \"-//WAPFORUM//DTD SI 1.0//EN\" \"http://www.wapforum.org/DTD/si.dtd\">\n";
       $wap_message .= "<si>\n";
-      $wap_message .= "<indication href=\"".$url."\" action=\"signal-medium\" si-id=\"6532\" >\n";
-      $wap_message .= $subject."\n";
+      $wap_message .= "<indication href=\"".htmlspecialchars($url)."\" action=\"signal-medium\" si-id=\"6532\" >\n";
+      $wap_message .= htmlspecialchars($subject)."\n";
       $wap_message .= "</indication>\n";
       $wap_message .= "</si>\n";
 		
@@ -386,7 +385,7 @@ if( $_SESSION["wap1_address"] == null){?>
 	  $msgdata=$jsonObj['id']; ?>
 	    <div class="successWide">
 	       <strong>SUCCESS:</strong><br />
-	       <strong>Message ID:</strong> <?php echo $msgdata; ?>
+	       <strong>Message ID:</strong> <?php echo htmlspecialchars($msgdata); ?>
 	       </div>
 			
 		   <?php } else {
@@ -397,7 +396,7 @@ if( $_SESSION["wap1_address"] == null){?>
 	?>
 	<div class="errorWide">
 	<strong>ERROR:</strong><br />
-	<?php echo $errormsg ?>
+	<?php echo htmlspecialchars($errormsg) ?>
 	</div>
 	<?php 
       }

@@ -60,8 +60,14 @@ document.write("" + navigator.userAgent);
 <form method="post" name="getReceivedSms" action="">
 
 
-<%		
-			String url = request.getRequestURL().toString().substring(0,request.getRequestURL().toString().lastIndexOf("/")) + "/getVoteData.jsp";
+<%	
+                        String baseURL = (String) request.getAttribute("baseURL");
+                        if (baseURL == null) {
+                            baseURL = request.getRequestURL().toString();
+                            baseURL = baseURL.substring(0, baseURL.lastIndexOf("/"));
+                        }
+                        String url = baseURL + "/getVoteData.jsp";
+	
 			HttpClient client = new HttpClient();
 			GetMethod method = new GetMethod(url);  
 			int statusCode = client.executeMethod(method); 

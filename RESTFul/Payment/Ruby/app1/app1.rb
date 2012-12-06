@@ -72,7 +72,7 @@ def new_transaction
   
   # prepare payload
   data = {
-    :Amount => params[:product] == "1" ? 0.99 : 2.99,
+    :Amount => params[:product] == "1" ? 0.00 : 2.99,
     :Category => 1,
     :Channel => 'MOBILE_WEB',
     :Description => 'Word game 1',

@@ -91,6 +91,7 @@ Partial Public Class Speech_App1
         Me.ReadConfigFile()
 
         Me.deleteFile = False
+        Me.ResetDisplay()
     End Sub
 
     ''' <summary>
@@ -611,29 +612,62 @@ Partial Public Class Speech_App1
     End Sub
 
     ''' <summary>
+    ''' Reset Display of success response
+    ''' </summary>
+    Private Sub ResetDisplay()
+        lblResponseId.Text = String.Empty
+        lblStatus.Text = String.Empty
+        lblHypothesis.Text = String.Empty
+        lblLanguageId.Text = String.Empty
+        lblResultText.Text = String.Empty
+        lblGrade.Text = String.Empty
+        lblConfidence.Text = String.Empty
+        lblWords.Text = String.Empty
+        lblWordScores.Text = String.Empty
+        hypoRow.Visible = True
+        langRow.Visible = True
+        confRow.Visible = True
+        gradeRow.Visible = True
+        resultRow.Visible = True
+        wordsRow.Visible = True
+        wordScoresRow.Visible = True
+    End Sub
+
+    ''' <summary>
     ''' Displays the result onto the page
     ''' </summary>
     ''' <param name="speechResponse">SpeechResponse received from api</param>
     Private Sub DisplayResult(speechResponse As SpeechResponse)
         lblResponseId.Text = speechResponse.Recognition.ResponseId
-        For Each nbest As NBest In speechResponse.Recognition.NBest
-            lblHypothesis.Text = nbest.Hypothesis
-            lblLanguageId.Text = nbest.LanguageId
-            lblResultText.Text = nbest.ResultText
-            lblGrade.Text = nbest.Grade
-            lblConfidence.Text = nbest.Confidence.ToString()
+        lblStatus.Text = speechResponse.Recognition.Status
+        If (speechResponse.Recognition.NBest IsNot Nothing) AndAlso (speechResponse.Recognition.NBest.Count > 0) Then
+            For Each nbest As NBest In speechResponse.Recognition.NBest
+                lblHypothesis.Text = nbest.Hypothesis
+                lblLanguageId.Text = nbest.LanguageId
+                lblResultText.Text = nbest.ResultText
+                lblGrade.Text = nbest.Grade
+                lblConfidence.Text = nbest.Confidence.ToString()
 
-            Dim strText As String = "["
-            For Each word As String In nbest.Words
-                strText += """" & word & """, "
+                Dim strText As String = "["
+                For Each word As String In nbest.Words
+                    strText += """" + word + """, "
+                Next
+                strText = strText.Substring(0, strText.LastIndexOf(","))
+                strText = strText + "]"
+
+                lblWords.Text = If(nbest.Words IsNot Nothing, strText, String.Empty)
+
+                lblWordScores.Text = "[" + String.Join(", ", nbest.WordScores.ToArray()) + "]"
             Next
-            strText = strText.Substring(0, strText.LastIndexOf(","))
-            strText = strText & "]"
-
-            lblWords.Text = If(nbest.Words IsNot Nothing, strText, String.Empty)
-
-            lblWordScores.Text = "[" & String.Join(", ", nbest.WordScores.ToArray()) & "]"
-        Next
+        Else
+            hypoRow.Visible = False
+            langRow.Visible = False
+            confRow.Visible = False
+            gradeRow.Visible = False
+            resultRow.Visible = False
+            wordsRow.Visible = False
+            wordScoresRow.Visible = False
+        End If
     End Sub
 
 #End Region
@@ -732,6 +766,19 @@ Public Class Recognition
         End Set
     End Property
     Private m_NBest As List(Of NBest)
+
+    ''' <summary>
+    ''' Gets or sets the Status of the transcription.
+    ''' </summary>
+    Public Property Status() As String
+        Get
+            Return m_Status
+        End Get
+        Set(value As String)
+            m_Status = Value
+        End Set
+    End Property
+    Private m_Status As String
 End Class
 
 ''' <summary>
@@ -746,7 +793,7 @@ Public Class NBest
             Return m_Hypothesis
         End Get
         Set(value As String)
-            m_Hypothesis = Value
+            m_Hypothesis = value
         End Set
     End Property
     Private m_Hypothesis As String
@@ -760,7 +807,7 @@ Public Class NBest
             Return m_LanguageId
         End Get
         Set(value As String)
-            m_LanguageId = Value
+            m_LanguageId = value
         End Set
     End Property
     Private m_LanguageId As String
@@ -773,7 +820,7 @@ Public Class NBest
             Return m_Confidence
         End Get
         Set(value As Double)
-            m_Confidence = Value
+            m_Confidence = value
         End Set
     End Property
     Private m_Confidence As Double
@@ -790,7 +837,7 @@ Public Class NBest
             Return m_Grade
         End Get
         Set(value As String)
-            m_Grade = Value
+            m_Grade = value
         End Set
     End Property
     Private m_Grade As String
@@ -805,7 +852,7 @@ Public Class NBest
             Return m_ResultText
         End Get
         Set(value As String)
-            m_ResultText = Value
+            m_ResultText = value
         End Set
     End Property
     Private m_ResultText As String
@@ -819,7 +866,7 @@ Public Class NBest
             Return m_Words
         End Get
         Set(value As List(Of String))
-            m_Words = Value
+            m_Words = value
         End Set
     End Property
     Private m_Words As List(Of String)
@@ -832,7 +879,7 @@ Public Class NBest
             Return m_WordScores
         End Get
         Set(value As List(Of Double))
-            m_WordScores = Value
+            m_WordScores = value
         End Set
     End Property
     Private m_WordScores As List(Of Double)

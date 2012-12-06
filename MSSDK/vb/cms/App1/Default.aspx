@@ -100,6 +100,7 @@ For more information contact developer.support@att.com
                                 <asp:ListItem Selected="True" Value=""></asp:ListItem>
                                 <asp:ListItem Value="ask">ask</asp:ListItem>
                                 <asp:ListItem Value="conference">conference</asp:ListItem>
+                                <asp:ListItem Value="message">message</asp:ListItem>
                                 <asp:ListItem Value="reject">reject</asp:ListItem>
                                 <asp:ListItem Value="transfer">transfer</asp:ListItem>
                                 <asp:ListItem Value="wait">wait</asp:ListItem>

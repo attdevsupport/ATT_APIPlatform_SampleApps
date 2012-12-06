@@ -114,6 +114,7 @@ Partial Public Class Speech_App1
 
         Dim currentServerTime As DateTime = DateTime.UtcNow
         lblServerTime.Text = [String].Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) & " UTC"
+        Me.ResetDisplay()
     End Sub
 
     ''' <summary>
@@ -235,32 +236,62 @@ Partial Public Class Speech_App1
     End Sub
 
     ''' <summary>
+    ''' Reset Display of success response
+    ''' </summary>
+    Private Sub ResetDisplay()
+        lblResponseId.Text = String.Empty
+        lblStatus.Text = String.Empty
+        lblHypothesis.Text = String.Empty
+        lblLanguageId.Text = String.Empty
+        lblResultText.Text = String.Empty
+        lblGrade.Text = String.Empty
+        lblConfidence.Text = String.Empty
+        lblWords.Text = String.Empty
+        lblWordScores.Text = String.Empty
+        hypoRow.Visible = True
+        langRow.Visible = True
+        confRow.Visible = True
+        gradeRow.Visible = True
+        resultRow.Visible = True
+        wordsRow.Visible = True
+        wordScoresRow.Visible = True
+    End Sub
+
+    ''' <summary>
     ''' Displays the result onto the page
     ''' </summary>
     ''' <param name="speechResponse">SpeechResponse received from api</param>
     Private Sub DisplayResult(speechResponse As SpeechResponse)
         lblResponseId.Text = speechResponse.Recognition.ResponseId
-        For Each nbest As NBest In speechResponse.Recognition.NBest
-            lblHypothesis.Text = nbest.Hypothesis
-            lblLanguageId.Text = nbest.LanguageId
-            lblResultText.Text = nbest.ResultText
-            lblGrade.Text = nbest.Grade
-            lblConfidence.Text = nbest.Confidence.ToString()
-            Dim words As String = "[ "
-            If nbest.Words IsNot Nothing Then
+        lblStatus.Text = speechResponse.Recognition.Status
+        If (speechResponse.Recognition.NBest IsNot Nothing) AndAlso (speechResponse.Recognition.NBest.Count > 0) Then
+            For Each nbest As NBest In speechResponse.Recognition.NBest
+                lblHypothesis.Text = nbest.Hypothesis
+                lblLanguageId.Text = nbest.LanguageId
+                lblResultText.Text = nbest.ResultText
+                lblGrade.Text = nbest.Grade
+                lblConfidence.Text = nbest.Confidence.ToString()
+
+                Dim strText As String = "["
                 For Each word As String In nbest.Words
-                    words += """" & word & """, "
+                    strText += """" + word + """, "
                 Next
-                words = words.Substring(0, words.LastIndexOf(","))
-                words = words & " ]"
-            End If
+                strText = strText.Substring(0, strText.LastIndexOf(","))
+                strText = strText + "]"
 
-            lblWords.Text = If(nbest.Words IsNot Nothing, words, String.Empty)
+                lblWords.Text = If(nbest.Words IsNot Nothing, strText, String.Empty)
 
-            If nbest.WordScores IsNot Nothing Then
-                lblWordScores.Text = "[ " & String.Join(", ", nbest.WordScores.ToArray()) & " ]"
-            End If
-        Next
+                lblWordScores.Text = "[" + String.Join(", ", nbest.WordScores.ToArray()) + "]"
+            Next
+        Else
+            hypoRow.Visible = False
+            langRow.Visible = False
+            confRow.Visible = False
+            gradeRow.Visible = False
+            resultRow.Visible = False
+            wordsRow.Visible = False
+            wordScoresRow.Visible = False
+        End If
     End Sub
 
     ''' <summary>

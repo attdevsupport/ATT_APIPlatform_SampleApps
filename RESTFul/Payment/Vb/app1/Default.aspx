@@ -61,7 +61,7 @@ For more information contact developer.support@att.com
                         <tr>
                             <asp:RadioButtonList ID="Radio_TransactionProductType" runat="server" RepeatDirection="Vertical"
                                 Font-Names="Calibri" Font-Size="Small">
-                                <asp:ListItem Selected="True">Buy product 1 for $0.99</asp:ListItem>
+                                <asp:ListItem Selected="True">Buy product 1 for $0.00</asp:ListItem>
                                 <asp:ListItem>Buy product 2 for $2.99</asp:ListItem>
                             </asp:RadioButtonList>
                             </td>

@@ -15,12 +15,12 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using ATT_MSSDK;
-using ATT_MSSDK.MOBOv1;
+using ATT_MSSDK.IMMNv1;
 #endregion
 
 /* 
  * This Application demonstrates usage of  AT&T MS SDK wrapper library for utilizing the usage of 
- * Message On Behalf Of (MOBO) Api.
+ * In App Messaging from Mobile Number  Api send message.
  * 
  * Pre-requisite:
  * --------------
@@ -28,9 +28,9 @@ using ATT_MSSDK.MOBOv1;
  * of AT&T services to be used by application. AT&T Developer Platform website provides a ClientId
  * and client secret on registering the application.
  * 
- * Steps to be followed by the application to invoke MOBO APIs exposed by MS SDK wrapper library:
+ * Steps to be followed by the application to invoke IMMN APIs exposed by MS SDK wrapper library:
  * --------------------------------------------------------------------------------------------
- * 1. Import ATT_MSSDK and ATT_MSSDK.MOBOv1 NameSpace.
+ * 1. Import ATT_MSSDK and ATT_MSSDK.IMMNv1 NameSpace.
  * 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
  * the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
  * while creating RequestFactory instance.
@@ -45,44 +45,44 @@ using ATT_MSSDK.MOBOv1;
  * 4. Retrive the 'code' query parameter from AT&T platform response and  Invoke GetAuthorizeCredentials() on requestFactory 
  *    by passing 'code' as the argument.
  *     
- * 5. Invoke the MOBO related APIs exposed in the RequestFactory class of MS SDK library.
+ * 5. Invoke the IMMN related APIs exposed in the RequestFactory class of MS SDK library.
  * 
- * For MOBO services MS SDK library provides APIs SendMessage().
+ * For IMMN services MS SDK library provides APIs SendIMMN().
  * These methods returns SendMessageResponse object.
  
  * Sample code for sending message:
  * --------------------------------
-    SendMessageResponse resp = requestFactory.SendMessage(addresses, attachments, text, subject, groupMessage, maxAddressCount);
+    SendMessageResponse resp = requestFactory.SendIMMN(addresses, attachments, text, subject, groupMessage, maxAddressCount);
  *
 */
 
 /// <summary>
 /// This application allows the user to send SMS and MMS on behalf of subscriber, 
-/// with subscriber’s consent, using the MOBO API.
+/// with subscriber’s consent, using the IMMN API.
 /// </summary>
 public partial class MOBO_app1 : System.Web.UI.Page
 {
-    /** \addtogroup MOBO_App1
-     * Description of the application can be referred at \ref MOBO_app1 example
+    /** \addtogroup IMMN_App1
+     * Description of the application can be referred at \ref IMMN_app1 example
      * @{
      */
 
-    /** \example MOBO_app1 mobo\app1\Default.aspx.cs
-     * \n \n This application allows the user to send SMS and MMS on behalf of subscriber, with subscriber's consent, using the MOBO API 
+    /** \example IMMN_app1 immn\app1\Default.aspx.cs
+     * \n \n This application allows the user to send SMS and MMS on behalf of subscriber, with subscriber's consent, using the IMMN API 
      * <ul> 
      * <li>SDK methods showcased by the application:</li>
      * \n \n <b>Send Messages:</b>
      * \n  This method is used to send SMS or MMS to maximum of ten recipients or configured number of recipients. The recipients can be email address, short code or mobile numbers or combination of email address, short code or/and mobile numbers. 
      * These Messages are processed synchronously by the AT&T system and are sent asynchronously to the destination.
      * \n \n Steps followed in the app to invoke the method:
-     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.MOBOv1 NameSpace.</li>
+     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.IMMNv1 NameSpace.</li>
      * <li>Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
      * Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.</li>
      * <li>Invoke GetOAuthRedirect() on requestFactory to get redirectUrl(Url for authorization endpoint of AT&T platform). 
      * Redirect the user to authorization endpoint of AT&T platform for getting user authentication and authorization.
      * \n AT&T displays the login and consent page. After getting the consent from the user, AT&T platform returns 'code' as a query parameter.</li>
      * <li>Retrive the 'code' query parameter from AT&T platform response and  Invoke GetAuthorizeCredentials() on requestFactory by passing 'code' as the argument.</li>
-     * <li>Invoke \c SendMessage() exposed in the \c RequestFactory class of MS SDK library.</li></ul>
+     * <li>Invoke \c SendIMMN() exposed in the \c RequestFactory class of MS SDK library.</li></ul>
      * \n Sample code:
      * <ul>
      * <li>Initializing \c RequestFactory instance:</li>
@@ -103,7 +103,7 @@ public partial class MOBO_app1 : System.Web.UI.Page
      *       }</pre>
      * <li>Sending Message:</li>
      * <pre>
-     *     SendMessageResponse response = requestFactory.SendMessage(addresses, attachments, text, subject, groupMessage, maxAddressCount);</pre></ul>
+     *     SendMessageResponse response = requestFactory.SendIMMN(addresses, attachments, text, subject, groupMessage, maxAddressCount);</pre></ul>
      * <li>For Registration, Installation, Configuration and Execution, refer \ref Application </li> \n
      * \n <li>Additional configuration to be done:</li> \n
      * \n Apart from parameters specified in \ref parameters_sec section, the following parameters need to be specified for this application
@@ -201,7 +201,7 @@ public partial class MOBO_app1 : System.Web.UI.Page
     }
 
     /// <summary>
-    /// Method will be called when the user clicks on send message button. This method calls SendMessage function of Request Factory
+    /// Method will be called when the user clicks on send message button. This method calls SendIMMN function of Request Factory
     /// </summary>
     /// <param name="sender">object pointing to the caller</param>
     /// <param name="e">Event arguments</param>
@@ -288,7 +288,7 @@ public partial class MOBO_app1 : System.Web.UI.Page
     private void InitializeRequestFactory()
     {
         List<RequestFactory.ScopeTypes> scopes = new List<RequestFactory.ScopeTypes>();
-        scopes.Add(RequestFactory.ScopeTypes.MOBO);
+        scopes.Add(RequestFactory.ScopeTypes.IMMN);
 
         this.requestFactory = new RequestFactory(this.endPoint, this.apiKey, this.secretKey, scopes, this.redirectUrl, null);
 
@@ -364,7 +364,7 @@ public partial class MOBO_app1 : System.Web.UI.Page
     }
 
     /// <summary>
-    /// Initiates SendMessage call to Request Factory
+    /// Initiates SendIMMN call to Request Factory
     /// </summary>
     /// <param name="msgToSend">Message object</param>
     private void SendMessage(MessageStructure msgToSend)
@@ -381,7 +381,7 @@ public partial class MOBO_app1 : System.Web.UI.Page
 
         try
         {
-            SendMessageResponse response = this.requestFactory.SendMessage(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group);
+            SendMessageResponse response = this.requestFactory.SendIMMN(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group);
             if (null != response)
             {
                 this.DrawPanelForSuccess(statusPanel, response.Id);

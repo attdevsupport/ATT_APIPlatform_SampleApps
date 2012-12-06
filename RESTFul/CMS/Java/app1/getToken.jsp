@@ -18,7 +18,7 @@
 
 <%
 		//Initialize some variables here, check if relevant variables were passed in, if not then check session, otherwise set default.
-		String scope = "CCS";
+		String scope = "CMS";
 		String accessToken = "";
 		String refreshToken = "";
 		String expires_in = "null";

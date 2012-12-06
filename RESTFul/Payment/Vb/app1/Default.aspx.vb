@@ -803,7 +803,7 @@ Partial Public Class Payment_App1
         Me.transactionTime = DateTime.UtcNow
         Me.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", Me.transactionTime)
         If Radio_TransactionProductType.SelectedIndex = 0 Then
-            Me.amount = "0.99"
+            Me.amount = "0.00"
         ElseIf Radio_TransactionProductType.SelectedIndex = 1 Then
             Me.amount = "2.99"
         End If

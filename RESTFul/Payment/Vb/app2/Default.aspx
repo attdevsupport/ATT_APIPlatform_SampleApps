@@ -57,7 +57,7 @@
                         <td>
                         <asp:RadioButtonList ID="Radio_SubscriptionProductType" runat="server" RepeatDirection="Vertical"
                             Font-Names="Calibri" Font-Size="Small">
-                            <asp:ListItem Selected="True">Subscribe for $1.99 per month</asp:ListItem>
+                            <asp:ListItem Selected="True">Subscribe for $0.00 per month</asp:ListItem>
                             <asp:ListItem>Subscribe for $3.99 per month</asp:ListItem>
                         </asp:RadioButtonList>
                         </td>

@@ -626,7 +626,7 @@ public partial class Payment_App2 : System.Web.UI.Page
         this.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (Radio_SubscriptionProductType.SelectedIndex == 0)
         {
-            this.amount = 1.99;
+            this.amount = 0.00;
         }
         else if (Radio_SubscriptionProductType.SelectedIndex == 1)
         {

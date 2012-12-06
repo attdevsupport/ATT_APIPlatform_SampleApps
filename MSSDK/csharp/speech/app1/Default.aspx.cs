@@ -119,6 +119,8 @@ public partial class Speech_App1 : System.Web.UI.Page
 
         DateTime currentServerTime = DateTime.UtcNow;
         lblServerTime.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
+
+        this.ResetDisplay();
     }
 
     /// <summary>
@@ -268,36 +270,67 @@ public partial class Speech_App1 : System.Web.UI.Page
     }
 
     /// <summary>
+    /// Reset Display of success response
+    /// </summary>
+    private void ResetDisplay()
+    {
+        lblResponseId.Text = string.Empty;
+        lblStatus.Text = string.Empty;
+        lblHypothesis.Text = string.Empty;
+        lblLanguageId.Text = string.Empty;
+        lblResultText.Text = string.Empty;
+        lblGrade.Text = string.Empty;
+        lblConfidence.Text = string.Empty;
+        lblWords.Text = string.Empty;
+        lblWordScores.Text = string.Empty;
+        hypoRow.Visible = true;
+        langRow.Visible = true;
+        confRow.Visible = true;
+        gradeRow.Visible = true;
+        resultRow.Visible = true;
+        wordsRow.Visible = true;
+        wordScoresRow.Visible = true;
+    }
+    /// <summary>
     /// Displays the result onto the page
     /// </summary>
     /// <param name="speechResponse">SpeechResponse received from api</param>
     private void DisplayResult(SpeechResponse speechResponse)
     {
         lblResponseId.Text = speechResponse.Recognition.ResponseId;
-        foreach (NBest nbest in speechResponse.Recognition.NBest)
+        lblStatus.Text = speechResponse.Recognition.Status;
+        if ((speechResponse.Recognition.NBest != null) && (speechResponse.Recognition.NBest.Count > 0))
         {
-            lblHypothesis.Text = nbest.Hypothesis;
-            lblLanguageId.Text = nbest.LanguageId;
-            lblResultText.Text = nbest.ResultText;
-            lblGrade.Text = nbest.Grade;
-            lblConfidence.Text = nbest.Confidence.ToString();
-            string words = "[ ";
-            if (null != nbest.Words)
+            foreach (NBest nbest in speechResponse.Recognition.NBest)
             {
+                lblHypothesis.Text = nbest.Hypothesis;
+                lblLanguageId.Text = nbest.LanguageId;
+                lblResultText.Text = nbest.ResultText;
+                lblGrade.Text = nbest.Grade;
+                lblConfidence.Text = nbest.Confidence.ToString();
+
+                string strText = "[";
                 foreach (string word in nbest.Words)
                 {
-                    words += "\"" + word + "\", ";
+                    strText += "\"" + word + "\", ";
                 }
-                words = words.Substring(0, words.LastIndexOf(","));
-                words = words + " ]";
-            }
+                strText = strText.Substring(0, strText.LastIndexOf(","));
+                strText = strText + "]";
 
-            lblWords.Text = nbest.Words != null ? words : string.Empty;
+                lblWords.Text = nbest.Words != null ? strText : string.Empty;
 
-            if (null != nbest.WordScores)
-            {
-                lblWordScores.Text = "[ " + string.Join(", ", nbest.WordScores.ToArray()) + " ]";
+                lblWordScores.Text = "[" + string.Join(", ", nbest.WordScores.ToArray()) + "]";
             }
+        }
+        else
+        {
+            hypoRow.Visible = false;
+            langRow.Visible = false;
+            confRow.Visible = false;
+            gradeRow.Visible = false;
+            resultRow.Visible = false;
+            wordsRow.Visible = false;
+            wordScoresRow.Visible = false;
         }
     }
 

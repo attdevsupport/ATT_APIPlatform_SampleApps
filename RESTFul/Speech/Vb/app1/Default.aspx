@@ -168,6 +168,16 @@ For more information contact developer.support@att.com
                     </tr>
                     <tr>
                         <td class="cell" align="center">
+                            <i>Status </i>
+                        </td>
+                        <td class="cell" align="center">
+                            <i>
+                                <asp:Label ID="lblStatus" runat="server"></asp:Label>
+                            </i>
+                        </td>
+                    </tr>
+                    <tr id="hypoRow" runat="server">
+                        <td class="cell" align="center">
                             <i>Hypothesis </i>
                         </td>
                         <td class="cell" align="center">
@@ -176,7 +186,7 @@ For more information contact developer.support@att.com
                             </i>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="langRow" runat="server">
                         <td class="cell" align="center">
                             <i>LanguageId </i>
                         </td>
@@ -186,7 +196,7 @@ For more information contact developer.support@att.com
                             </i>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="confRow" runat="server">
                         <td class="cell" align="center">
                             <i>Confidence </i>
                         </td>
@@ -196,7 +206,7 @@ For more information contact developer.support@att.com
                             </i>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="gradeRow" runat="server">
                         <td class="cell" align="center">
                             <i>Grade </i>
                         </td>
@@ -206,7 +216,7 @@ For more information contact developer.support@att.com
                             </i>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="resultRow" runat="server">
                         <td class="cell" align="center">
                             <i>ResultText </i>
                         </td>
@@ -216,7 +226,7 @@ For more information contact developer.support@att.com
                             </i>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="wordsRow" runat="server">
                         <td class="cell" align="center">
                             <i>Words </i>
                         </td>
@@ -226,7 +236,7 @@ For more information contact developer.support@att.com
                             </i>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="wordScoresRow" runat="server">
                         <td class="cell" align="center">
                             <i>WordScores </i>
                         </td>

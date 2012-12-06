@@ -5,6 +5,12 @@
 //For more information contact developer.support@att.com
 %>
 
+<%!
+public String escape(String str) {
+        return org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(str);
+}
+%>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -138,13 +144,13 @@ try{
 						<tr>
 							<td width="20%" valign="top" class="label">Phone:</td>
 							<td class="cell"><input maxlength="16" size="12"
-								name="address" value="<%=address%>" style="width: 90%">
+								name="address" value="<%=escape(address)%>" style="width: 90%">
 							</td>
 						</tr>
 						<tr>
 							<td valign="top" class="label">Message:</td>
 							<td class="cell"><textarea rows="4" name="subject"
-									style="width: 90%"><%=subject%></textarea>
+									style="width: 90%"><%=escape(subject)%></textarea>
 							</td>
 						</tr>
 					</tbody>
@@ -284,7 +290,7 @@ if(invalidAddress==null) {
 	       	%>
 		<div class="successWide">
 			<strong>SUCCESS:</strong><br /> <strong>Message ID:</strong>
-			<%=mmsId%>
+			<%=escape(mmsId)%>
 		</div>
 		<br />
 		<%
@@ -292,7 +298,7 @@ if(invalidAddress==null) {
 	    	%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br />
-			<%=responze%>
+			<%=escape(responze)%>
 		</div>
 		<br />
 		<%
@@ -324,7 +330,7 @@ if(invalidAddress==null) {
 						<tr>
 							<td width="20%" valign="top" class="label">Message ID:</td>
 							<td class="cell"><input size="12" name="mmsId"
-								value="<%=mmsId%>" style="width: 90%">
+								value="<%=escape(mmsId)%>" style="width: 90%">
 							</td>
 						</tr>
 					</tbody>
@@ -377,7 +383,7 @@ if(invalidAddress==null) {
            	%>
 		<div class="errorWide">
 			<strong>ERROR:</strong><br />
-			<%=method.getResponseBodyAsString()%>
+			<%=escape(method.getResponseBodyAsString())%>
 		</div>
 		<br />
 		<%

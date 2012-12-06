@@ -52,16 +52,9 @@
 	<%@ page import="sun.misc.BASE64Encoder"%>
 	<%@ page import="sun.misc.BASE64Decoder"%>
 	<%@ page import="org.apache.commons.codec.binary.Base64"%>
-	<%@ include file="config.jsp"%>
+	<%@ include file="oauth.jsp"%>
 	<%
-	String accessToken = (String) session
-	.getAttribute("accessToken");
-	
-		//Buttons
-	String getMsgHeadersButton = request.getParameter("getMsgHeadersButton");
-	String msgContent = request.getParameter("msgContent");
-
-	String postOauth = "MIM.jsp?getMsgHeadersButton=true";
+	String accessToken = (String) session.getAttribute("accessToken");
 
 	//Fields
 	String HeaderCount = request.getParameter("HeaderCount");
@@ -185,13 +178,13 @@
 				<%
 				if (getMsgHeadersButton != null) 
 				{
-					if (accessToken == null)
+					if((session.getAttribute("accessToken") == null && request.getParameter("error_description") == null && code.length() == 0))
 					{
-						session.setAttribute("requestType","getMsgHeadersButton=true");
-						getServletContext().getRequestDispatcher("/oauth.jsp").forward(request,response);
-					} 
+				        	response.sendRedirect(FQDN + "/oauth/authorize?client_id=" + clientIdAut + "&scope=" + scope + "&redirect_uri=" + redirectUri);
+					}
 					else if (accessToken !=  null)
 					{
+						session.removeAttribute("getMsgHeadersButton");
 						String url = FQDN + "/rest/1/MyMessages";
 						HttpClient client = new HttpClient();
 						GetMethod method = new GetMethod(url);
@@ -403,13 +396,16 @@
 		<%
 			//If Check Delivery Status button was clicked, do this.
 		if (msgContent != null) {
-				if (accessToken == null)
-				{
-					session.setAttribute("requestType","msgContent=true");
-					getServletContext().getRequestDispatcher("/oauth.jsp").forward(request,response);
-				} 
+				if((session.getAttribute("accessToken") == null 
+					&& request.getParameter("error_description") == null 
+					&& code.length() == 0))
+                                {
+                                        	response.sendRedirect(FQDN + "/oauth/authorize?client_id=" 
+						+ clientIdAut + "&scope=" + scope + "&redirect_uri=" + redirectUri);
+                                }
 				else if (accessToken != null)
 				{
+				session.removeAttribute("msgContent");
 				//Initialize the client
 				String url = FQDN + "/rest/1/MyMessages/" + MessageId + "/"
 						+ PartNumber;

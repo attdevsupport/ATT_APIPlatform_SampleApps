@@ -140,11 +140,11 @@ public partial class CallControl_App1 : System.Web.UI.Page
         try
         {
             NameValueCollection parameters = new NameValueCollection();
-            if (string.IsNullOrEmpty(txtNumberToDial.Text))
+            if (!string.IsNullOrEmpty(txtNumberToDial.Text))
                 parameters.Add("numberToDial", txtNumberToDial.Text);
-            if (string.IsNullOrEmpty(txtNumberForFeature.Text))
+            if (!string.IsNullOrEmpty(txtNumberForFeature.Text))
                 parameters.Add("featurenumber", txtNumberForFeature.Text);
-            if (string.IsNullOrEmpty(txtMessageToPlay.Text))
+            if (!string.IsNullOrEmpty(txtMessageToPlay.Text))
                 parameters.Add("messageToPlay", txtMessageToPlay.Text);
             if (lstTemplate.SelectedValue != "")
                 parameters.Add("feature", lstTemplate.SelectedValue.ToString());
@@ -233,6 +233,12 @@ public partial class CallControl_App1 : System.Web.UI.Page
                 description +=
                 "For <strong>conference()</strong> script function, user is prompted to join the conference.<br/>" +
                 "After quitting the conference, user is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
+                notesLiteral.Text = description;
+                return;
+            case "message":
+                description +=
+                    "For <strong>message()</strong> script function, user is played back <strong>\"Number parameter for Script Function\"</strong> number and an SMS Message is sent to that number.<br/>" +
+                    "User is asked to press digit to activate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
                 notesLiteral.Text = description;
                 return;
             case "reject":
@@ -403,14 +409,15 @@ public partial class CallControl_App1 : System.Web.UI.Page
 
         if (null != displayParams)
         {
-            TableRow rowNext = new TableRow();
             TableCell rowNextCellOne = null;
             TableCell rowNextCellTwo = null;
             foreach (string key in displayParams.Keys)
             {
+                TableRow rowNext = new TableRow();
                 rowNextCellOne = new TableCell();
                 rowNextCellOne.Text = key;
                 rowNextCellOne.Font.Bold = true;
+                rowNextCellOne.Width = Unit.Pixel(70);
                 rowNext.Controls.Add(rowNextCellOne);
 
                 rowNextCellTwo = new TableCell();
@@ -422,7 +429,7 @@ public partial class CallControl_App1 : System.Web.UI.Page
         else
         {
             TableRow rowTwo = new TableRow();
-            TableCell rowTwoCellOne = new TableCell();            
+            TableCell rowTwoCellOne = new TableCell();
             rowTwoCellOne.Text = message;
             rowTwo.Controls.Add(rowTwoCellOne);
             table.Controls.Add(rowTwo);

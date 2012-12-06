@@ -129,13 +129,13 @@ Partial Public Class CallControl_App1
     Private Sub CreateSession()
         Try
             Dim parameters As New NameValueCollection()
-            If String.IsNullOrEmpty(txtNumberToDial.Text) Then
+            If Not String.IsNullOrEmpty(txtNumberToDial.Text) Then
                 parameters.Add("numberToDial", txtNumberToDial.Text)
             End If
-            If String.IsNullOrEmpty(txtNumberForFeature.Text) Then
+            If Not String.IsNullOrEmpty(txtNumberForFeature.Text) Then
                 parameters.Add("featurenumber", txtNumberForFeature.Text)
             End If
-            If String.IsNullOrEmpty(txtMessageToPlay.Text) Then
+            If Not String.IsNullOrEmpty(txtMessageToPlay.Text) Then
                 parameters.Add("messageToPlay", txtMessageToPlay.Text)
             End If
             If lstTemplate.SelectedValue <> "" Then
@@ -197,6 +197,10 @@ Partial Public Class CallControl_App1
                 Return
             Case "conference"
                 description += "For <strong>conference()</strong> script function, user is prompted to join the conference.<br/>" + "After quitting the conference, user is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
+                notesLiteral.Text = description
+                Return
+            Case "message"
+                description += "For <strong>message()</strong> script function, user is played back <strong>""Number parameter for Script Function""</strong> number and an SMS Message is sent to that number.<br/>" + "User is asked to press digit to activate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
                 notesLiteral.Text = description
                 Return
             Case "reject"
@@ -339,13 +343,14 @@ Partial Public Class CallControl_App1
         table.Controls.Add(rowOne)
 
         If displayParams IsNot Nothing Then
-            Dim rowNext As New TableRow()
             Dim rowNextCellOne As TableCell = Nothing
             Dim rowNextCellTwo As TableCell = Nothing
             For Each key As String In displayParams.Keys
+                Dim rowNext As New TableRow()
                 rowNextCellOne = New TableCell()
                 rowNextCellOne.Text = key
                 rowNextCellOne.Font.Bold = True
+                rowNextCellOne.Width = Unit.Pixel(70)
                 rowNext.Controls.Add(rowNextCellOne)
 
                 rowNextCellTwo = New TableCell()

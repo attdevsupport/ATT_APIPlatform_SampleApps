@@ -12,7 +12,7 @@ For more information contact developer.support@att.com
     $FQDN = "https://api.att.com";
     $scope = "MMS";
     $attachment_dir = "attachment";
-    $oauth_file = "/tmp/mmsoauthtoken.php";
+    $oauth_file = "mmsoauthtoken.php";
     $default_subject = "simple message to myself";
 
 ?>
