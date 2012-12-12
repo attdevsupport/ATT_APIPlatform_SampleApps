@@ -41,7 +41,7 @@ end
 
 def sign_payload payload
   RestClient.post "#{settings.FQDN}/Security/Notary/Rest/1/SignedPayload", 
-  payload, {:Accept => 'application/json', 'client_id' => settings.api_key, 'client_secret' => settings.secret_key} do |response, request, code, &block|
+  payload, {:Accept => 'application/json', :Content_Type => 'application/json', 'client_id' => settings.api_key, 'client_secret' => settings.secret_key} do |response, request, code, &block|
     @r = response
   end
 

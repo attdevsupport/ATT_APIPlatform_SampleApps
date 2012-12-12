@@ -71,11 +71,11 @@ $description = "";
 $merchantProductId = "";
 $trxIdGetDetails = "";
 if($product==1) {
-    $amount = "0.00";
+    $amount = isset($minTransactionValue) ? $minTransactionValue : "1.99";
     $description = "Word Game Subscription 1";
     $merchantProductId = "WordGameSubscription1";
 } else if($product==2) {
-    $amount = "3.99";
+    $amount = isset($maxTransactionValue) ? $maxTransactionValue : "3.99";
     $description = "Number Game Subscription 1";
     $merchantProductId = "NumberGameSubscription1";
 }
@@ -292,12 +292,16 @@ function check_token( $FQDN,$api_key,$secret_key,$scope, $fullToken,$oauth_file)
             <tbody>
             <tr>
                 <td class="cell"><input type="radio" name="product" value="1" checked>
-                <td valign="top" class="label">Subscribe for $0.00 per month</td>
+                <td valign="top" class="label">
+                Subscribe for $<?php echo isset($minTransactionValue) ? $minTransactionValue : "1.99"; ?> per month
+                </td>
                 </td>
             </tr>
             <tr>
                 <td class="cell"><input type="radio" name="product" value="2">
-                <td valign="top" class="label">Subscribe for $3.99 per month</td>
+                <td valign="top" class="label">
+                Subscribe for $<?php echo isset($maxTransactionValue) ? $maxTransactionValue : "3.99";?> per month
+                </td>
                 </td></tr>
             </tbody></table>
 

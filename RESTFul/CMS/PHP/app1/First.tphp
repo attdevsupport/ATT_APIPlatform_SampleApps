@@ -54,7 +54,7 @@ if (!isset($numberToDial)) {
 				} 
 				));
 
-	$result23 = ask("Press a ten digit phone number to send sms to the requested number or Press pound to skip", array(
+	$result23 = ask("Enter a ten digit phone number to send sms to the requested number or press pound to skip", array(
 				"choices" => "[10 DIGITS]",
 				"terminator" => "#",
 				"timeout" => 120.0,
@@ -68,7 +68,8 @@ if (!isset($numberToDial)) {
 		say($numbertest);
 		message("Message from AT&T Call Control Service Sample Application", array(
 					"to" => $numbertest,
-					"network" => "SMS"
+					"network" => "SMS",
+					"callerID" => $currentCall->calledID
 					));
 	}
 
@@ -224,7 +225,8 @@ if (!isset($numberToDial)) {
 				say("<speak><say-as interpret-as = 'vxml:digits'>" . $featurenumber . "</say-as></speak>");
 				message("Message from AT&T Call Control Service Sample Application", array( 
 	                    		"to" => $featurenumber,
-	                    		"network" => "SMS"
+	                    		"network" => "SMS",
+					"callerID" => $smsCallerID 
 	                	));
 			}
 			break;

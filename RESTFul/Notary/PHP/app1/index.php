@@ -93,6 +93,7 @@ document.write("" + navigator.userAgent);
 	 $url = "$FQDN/Security/Notary/Rest/1/SignedPayload";
 	 $headers = array(
 			  'Accept: application/json',
+                          'Content-Type: application/json',
 			  'client_id: '.$api_key,
 			  'client_secret: '.$secret_key
 		);

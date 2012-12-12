@@ -77,6 +77,11 @@ Please populate the following parameters in config.jsp as specified below:
 
 4) subscriptionRedirect               : http://localhost:8080/SampleApp/subscription.jsp
 
+5) minTransactionValue             : required field listing the minimum price
+
+6) maxTransactionValue             : required field listing the maximum price
+
+
 Note: If your application is promoted from Sandbox environment to Production environment and you decide to use production 
 application settings, you must update parameters 1-2 as per production application details.
 

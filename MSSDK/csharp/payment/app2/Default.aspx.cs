@@ -182,6 +182,11 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// </summary>
     private List<KeyValuePair<string, string>> subsRefundList = new List<KeyValuePair<string, string>>();
 
+    /// <summary>
+    /// Gets or sets the value of transaction amount.
+    /// </summary>
+    private string MinSubscriptionAmount, MaxSubscriptionAmount;
+
     #endregion
 
     #region Payment App1 events
@@ -626,11 +631,11 @@ public partial class Payment_App2 : System.Web.UI.Page
         this.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (Radio_SubscriptionProductType.SelectedIndex == 0)
         {
-            this.amount = 0.00;
+            this.amount = Convert.ToDouble(this.MinSubscriptionAmount);
         }
         else if (Radio_SubscriptionProductType.SelectedIndex == 1)
         {
-            this.amount = 3.99;
+            this.amount = Convert.ToDouble(this.MaxSubscriptionAmount);
         }
 
         this.description = "TrDesc" + this.transactionTimeString;
@@ -936,6 +941,20 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// <returns>true/false; true if able to read from config file and able to instantiate values; else false</returns>
     private bool Initialize()
     {
+        this.MinSubscriptionAmount = ConfigurationManager.AppSettings["MinSubscriptionAmount"];
+        if (string.IsNullOrEmpty(this.MinSubscriptionAmount))
+        {
+            this.MinSubscriptionAmount = "0.00";
+        }
+        lstMinAmount.Text = "Subscribe for " + this.MinSubscriptionAmount + " per month";
+
+        this.MaxSubscriptionAmount = ConfigurationManager.AppSettings["MaxSubscriptionAmount"];
+        if (string.IsNullOrEmpty(this.MaxSubscriptionAmount))
+        {
+            this.MaxSubscriptionAmount = "3.99";
+        }
+        lstMaxAmount.Text = "Subscribe for " + this.MaxSubscriptionAmount + " per month";
+
         this.apiKey = ConfigurationManager.AppSettings["api_key"];
         if (string.IsNullOrEmpty(this.apiKey))
         {

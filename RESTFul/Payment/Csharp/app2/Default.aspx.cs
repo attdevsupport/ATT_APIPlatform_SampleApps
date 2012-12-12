@@ -104,6 +104,11 @@ public partial class Payment_App2 : System.Web.UI.Page
     private int refreshTokenExpiresIn;
 
     /// <summary>
+    /// Gets or sets the value of transaction amount.
+    /// </summary>
+    private string MinSubscriptionAmount, MaxSubscriptionAmount;
+
+    /// <summary>
     /// This function is used to neglect the ssl handshake error with authentication server.
     /// </summary>
     public static void BypassCertificateError()
@@ -841,7 +846,19 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// <returns>true/false; true if able to read all values, false otherwise</returns>
     private bool ReadConfigFile()
     {
-        this.endPoint = ConfigurationManager.AppSettings["endPoint"];
+        this.MinSubscriptionAmount = ConfigurationManager.AppSettings["MinSubscriptionAmount"];
+        if (string.IsNullOrEmpty(this.MinSubscriptionAmount))
+        {
+            this.MinSubscriptionAmount = "0.00";
+        }
+        lstMinAmount.Text = "Subscribe for " +this.MinSubscriptionAmount + " per month";
+
+        this.MaxSubscriptionAmount = ConfigurationManager.AppSettings["MaxSubscriptionAmount"];
+        if (string.IsNullOrEmpty(this.MaxSubscriptionAmount))
+        {
+            this.MaxSubscriptionAmount = "3.99";
+        }
+        lstMaxAmount.Text = "Subscribe for " + this.MaxSubscriptionAmount + " per month";
 
         if (string.IsNullOrEmpty(this.endPoint))
         {
@@ -1358,11 +1375,11 @@ public partial class Payment_App2 : System.Web.UI.Page
         this.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (Radio_SubscriptionProductType.SelectedIndex == 0)
         {
-            this.amount = "0.00";
+            this.amount = this.MinSubscriptionAmount;
         }
         else if (Radio_SubscriptionProductType.SelectedIndex == 1)
         {
-            this.amount = "3.99";
+            this.amount = this.MaxSubscriptionAmount;
         }
 
         Session["sub_tranType"] = Radio_SubscriptionProductType.SelectedIndex.ToString();

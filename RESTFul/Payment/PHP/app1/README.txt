@@ -60,10 +60,12 @@ create and run one's own full-fledged sample applications.
     $api_key                                : Client API key
     $secret_key                             : Client secret key
     $FQDN = "https://api.att.com";          : Endpoint 
-    $oauth_file = "/tmp/paymentoauthtoken.php"; : Oauth Token persistance location,should be writable by apache server  
-    $authorize_redirect_uri = "";	         : Url where oAuth provider will redirect to in case of successful authentication. 
+    $oauth_file = "paymentoauthtoken.php";  : Oauth Token persistance location,should be writable by apache server  
+    $authorize_redirect_uri = "";	    : Url where oAuth provider will redirect to in case of successful authentication. 
                                               Needs to be exactly the same as one used while registering application in DevConnect.
-    $scope = "PAYMENT";                     : Oauth scope ( PAYMENT ) 
+   $minTransactionValue = "0.00"            : required field listing the minimum price
+   $maxTransactionValue = "2.99"            : required field listing the maximum price
+   $scope = "PAYMENT";                      : Oauth scope ( PAYMENT ) 
   
 
 

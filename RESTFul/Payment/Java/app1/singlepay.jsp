@@ -78,11 +78,11 @@ String amount = "";
 String description = "";
 String merchantProductId = "";
 if(product==1) {
-    amount = "0.00";
+    amount = minTransactionValue;
     description = "Word Game 1";
     merchantProductId = "WordGame1";
 } else if(product==2) {
-    amount = "2.99";
+    amount = maxTransactionValue;
     description = "Number Game 1";
     merchantProductId = "NumberGame1";
 }
@@ -128,10 +128,14 @@ document.write("" + navigator.userAgent);
 <table border="0" width="100%">
   <tbody>
   <tr>
-    <td width="50%" valign="top" class="label"><input type="radio" name="product" value="1" checked> Buy product 1 for $0.00:</td>
-    </tr>
-  <tr>
-    <td width="50%" valign="top" class="label"><input type="radio" name="product" value="2"> Buy product 2 for $2.99:</td>
+    <td width="50%" valign="top" class="label"><input type="radio" name="product" value="1" checked>
+    Buy product 1 for $<%=minTransactionValue%>:
+   </td>
+   </tr>
+   <tr>
+    <td width="50%" valign="top" class="label"><input type="radio" name="product" value="2">
+	Buy product 2 for $<%=maxTransactionValue%>:
+    </td>
     </tr>
   </tbody></table>
 
@@ -168,7 +172,6 @@ String sReturn = "singlepay.jsp";
 if (forNotary == null) {
 	forNotary = "";
 } else {
-	forNotary += "/";
 	sReturn = forNotary + "/" + sReturn; 
 }
 forNotary += "notary.jsp?signPayload=true&return=" + sReturn + "&payload={\"Amount\":" + amount + ", \"Category\":1, \"Channel\":"+

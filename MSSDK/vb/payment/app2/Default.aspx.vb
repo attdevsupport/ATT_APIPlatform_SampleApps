@@ -182,6 +182,12 @@ Partial Public Class Payment_App2
     ''' </summary>
     Private subsRefundList As New List(Of KeyValuePair(Of String, String))()
 
+
+    ''' <summary>
+    ''' Gets or sets the value of transaction amount.
+    ''' </summary>
+    Private MinSubscriptionAmount As String, MaxSubscriptionAmount As String
+
 #End Region
 
 #Region "Payment App2 events"
@@ -527,9 +533,9 @@ Partial Public Class Payment_App2
         Me.transactionTime = DateTime.UtcNow
         Me.transactionTimeString = [String].Format("{0:dddMMMddyyyyHHmmss}", Me.transactionTime)
         If Radio_SubscriptionProductType.SelectedIndex = 0 Then
-            Me.amount = 0.0
+            Me.amount = Convert.ToDouble(Me.MinSubscriptionAmount)
         ElseIf Radio_SubscriptionProductType.SelectedIndex = 1 Then
-            Me.amount = 3.99
+            Me.amount = Convert.ToDouble(Me.MaxSubscriptionAmount)
         End If
 
         Me.description = "TrDesc" & Me.transactionTimeString
@@ -802,6 +808,17 @@ Partial Public Class Payment_App2
     ''' </summary>
     ''' <returns>true/false; true if able to read from config file and able to instantiate values; else false</returns>
     Private Function Initialize() As Boolean
+        Me.MinSubscriptionAmount = ConfigurationManager.AppSettings("MinSubscriptionAmount")
+        If String.IsNullOrEmpty(Me.MinSubscriptionAmount) Then
+            Me.MinSubscriptionAmount = "0.00"
+        End If
+        lstMinAmount.Text = "Subscribe for " + Me.MinSubscriptionAmount + " per month"
+
+        Me.MaxSubscriptionAmount = ConfigurationManager.AppSettings("MaxSubscriptionAmount")
+        If String.IsNullOrEmpty(Me.MaxSubscriptionAmount) Then
+            Me.MaxSubscriptionAmount = "3.99"
+        End If
+        lstMaxAmount.Text = "Subscribe for " + Me.MaxSubscriptionAmount + " per month"
         Me.apiKey = ConfigurationManager.AppSettings("api_key")
         If String.IsNullOrEmpty(Me.apiKey) Then
             Me.DrawPanelForFailure(newSubscriptionPanel, "api_key is not defined in config file")
@@ -854,7 +871,7 @@ Partial Public Class Payment_App2
         End If
 
         Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-        scopes.Add(RequestFactory.ScopeTypes.Payment)
+        scopes.Add(requestFactory.ScopeTypes.Payment)
         Me.requestFactory = New RequestFactory(Me.endPoint, Me.apiKey, Me.secretKey, scopes, Nothing, Nothing)
 
         Return True

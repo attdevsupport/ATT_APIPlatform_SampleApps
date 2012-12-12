@@ -151,6 +151,8 @@ public class CallControlHandler {
 			IOException, ParseException {
 
 		JSONObject scriptVars = new JSONObject();
+		if (model.getPhoneNumber().length() >0)
+			scriptVars.put("smsCallerID", model.getPhoneNumber());
 		if (model.getSelectedScriptName().length() > 0)
 			scriptVars.put("feature", model.getSelectedScriptName());
 		if (model.getNumberToDial().length() > 0)

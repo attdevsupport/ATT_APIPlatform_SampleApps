@@ -77,7 +77,8 @@ if (typeof numberToDial === 'undefined')
         say(numbertest);
         message("Message from AT&T Call Control Service Sample Application", {
             to: numbertest,
-            network: "SMS"
+            network: "SMS",
+	    callerID: currentCall.calledID
         });
     }
 
@@ -229,7 +230,8 @@ else
               say("<speak><say-as interpret-as = 'vxml:digits'>" + featurenumber + "</say-as></speak>");
                   message("Message from AT&T Call Control Service Sample Application", {
                             to: featurenumber,
-                            network: "SMS"
+                            network: "SMS",
+			    callerID: smsCallerID
                         });
           }
           break;

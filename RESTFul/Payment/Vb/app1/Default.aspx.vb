@@ -78,6 +78,11 @@ Partial Public Class Payment_App1
     Private refreshTokenExpiresIn As Integer
 
     ''' <summary>
+    ''' Gets or sets the value of transaction amount.
+    ''' </summary>
+    Private MinTransactionAmount As String, MaxTransactionAmount As String
+
+    ''' <summary>
     ''' This function is used to neglect the ssl handshake error with authentication server.
     ''' </summary>
     Function CertificateValidationCallBack( _
@@ -496,6 +501,18 @@ Partial Public Class Payment_App1
     ''' </summary>
     ''' <returns>true/false; true if able to read else false</returns>
     Private Function ReadConfigFile() As Boolean
+        Me.MinTransactionAmount = ConfigurationManager.AppSettings("MinTransactionAmount")
+        If String.IsNullOrEmpty(Me.MinTransactionAmount) Then
+            Me.MinTransactionAmount = "0.00"
+        End If
+        lstMinAmount.Text = "Buy product 1 for $" + Me.MinTransactionAmount
+
+        Me.MaxTransactionAmount = ConfigurationManager.AppSettings("MaxTransactionAmount")
+        If String.IsNullOrEmpty(Me.MaxTransactionAmount) Then
+            Me.MaxTransactionAmount = "2.99"
+        End If
+        lstMaxAmount.Text = "Buy product 2 for $" + Me.MaxTransactionAmount
+
         Me.apiKey = ConfigurationManager.AppSettings("api_key")
         If String.IsNullOrEmpty(Me.apiKey) Then
             Me.DrawPanelForFailure(newTransactionPanel, "api_key is not defined in configuration file")
@@ -803,9 +820,9 @@ Partial Public Class Payment_App1
         Me.transactionTime = DateTime.UtcNow
         Me.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", Me.transactionTime)
         If Radio_TransactionProductType.SelectedIndex = 0 Then
-            Me.amount = "0.00"
+            Me.amount = Convert.ToDouble(Me.MinTransactionAmount)
         ElseIf Radio_TransactionProductType.SelectedIndex = 1 Then
-            Me.amount = "2.99"
+            Me.amount = Convert.ToDouble(Me.MaxTransactionAmount)
         End If
 
         Session("tranType") = Radio_TransactionProductType.SelectedIndex.ToString()

@@ -92,13 +92,20 @@ def create_session
   messageToPlay = session[:txtMessageToPlay] = CGI.escapeHTML(params[:txtMessageToPlay])
   numberVar = session[:txtNumber] = CGI.escapeHTML(params[:txtNumber])
   scriptType = session[:scriptType] = CGI.escapeHTML(params[:scriptType])
+
   
   # Pass the script variable for First.rb in request body.
-  requestbody = '{"feature":"' + scriptType + '","messageToPlay":"' + messageToPlay + '","numberToDial":"' + numberToDial.to_s + '","featurenumber":"' + numberVar.to_s + '"}'
+  requestbody = JSON({
+		'feature' => scriptType, 
+		'messageToPlay' => messageToPlay,
+		'numberToDial' => numberToDial.to_s,
+		'featurenumber' => numberVar.to_s, 
+		'smsCallerID' => settings.phoneNumber.to_s,
+ 	})
   
   # Resource URL for Create Session.
   url = "#{settings.FQDN}/rest/1/Sessions"
-RestClient.post url, "#{requestbody}", :Authorization => "Bearer #{@access_token}", :Content_Type => 'application/json', :Accept => 'application/json' do |response, request, result, &block|
+RestClient.post url, requestbody, :Authorization => "Bearer #{@access_token}", :Content_Type => 'application/json', :Accept => 'application/json' do |response, request, result, &block|
   	@r = response
   end
 

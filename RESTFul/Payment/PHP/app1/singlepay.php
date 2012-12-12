@@ -58,11 +58,11 @@ $amount = "";
 $description = "";
 $merchantProductId = "";
 if($product==1) {
-    $amount = "0.00";
+    $amount = isset($minTransactionValue) ? $minTransactionValue : "0.00";
     $description = "Word Game 1";
     $merchantProductId = "WordGame1";
 } else if($product==2) {
-    $amount = "2.99";
+    $amount = isset($maxTransactionValue) ? $maxTransactionValue : "2.99";
     $description = "Number Game 1";
     $merchantProductId = "NumberGame1";
 }
@@ -272,12 +272,16 @@ document.write("" + navigator.userAgent);
   <tbody>
   <tr>
     <td class="cell"><input type="radio" name="product" value="1" checked>
-    <td valign="top" class="label">Buy product 1 for $0.00</td>
+    <td valign="top" class="label">
+    Buy product 1 for $<?php echo isset($minTransactionValue) ? $minTransactionValue : "0.99"; ?>
+    </td>
     </td>
   </tr>
   <tr>
     <td class="cell"><input type="radio" name="product" value="2">
-    <td valign="top" class="label">Buy product 2 for $2.99</td>
+    <td valign="top" class="label">
+    Buy product 2 for $<?php echo isset($maxTransactionValue) ? $maxTransactionValue : "2.99"; ?>
+    </td>
     </td></tr>
   </tbody></table>
 

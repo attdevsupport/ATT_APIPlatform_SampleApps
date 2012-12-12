@@ -78,6 +78,13 @@ public partial class Payment_App1 : System.Web.UI.Page
     /// </summary>
     private int refreshTokenExpiresIn;
 
+
+    /// <summary>
+    /// Gets or sets the value of transaction amount.
+    /// </summary>
+    private string MinTransactionAmount, MaxTransactionAmount;
+
+
     /// <summary>
     /// This function is used to neglect the ssl handshake error with authentication server.
     /// </summary>
@@ -560,6 +567,20 @@ public partial class Payment_App1 : System.Web.UI.Page
     /// <returns>true/false; true if able to read else false</returns>
     private bool ReadConfigFile()
     {
+        this.MinTransactionAmount = ConfigurationManager.AppSettings["MinTransactionAmount"];
+        if (string.IsNullOrEmpty(this.MinTransactionAmount))
+        {
+            this.MinTransactionAmount = "0.00";
+        }
+        lstMinAmount.Text = "Buy product 1 for $" + this.MinTransactionAmount;
+
+        this.MaxTransactionAmount = ConfigurationManager.AppSettings["MaxTransactionAmount"];
+        if (string.IsNullOrEmpty(this.MaxTransactionAmount))
+        {
+            this.MaxTransactionAmount = "2.99";
+        }
+        lstMaxAmount.Text = "Buy product 2 for $" + this.MaxTransactionAmount;
+
         this.apiKey = ConfigurationManager.AppSettings["api_key"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
@@ -930,11 +951,11 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.transactionTimeString = string.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (Radio_TransactionProductType.SelectedIndex == 0)
         {
-            this.amount = "0.00";
+            this.amount = this.MinTransactionAmount;
         }
         else if (Radio_TransactionProductType.SelectedIndex == 1)
         {
-            this.amount = "2.99";
+            this.amount = this.MaxTransactionAmount;
         }
         
         Session["tranType"] = Radio_TransactionProductType.SelectedIndex.ToString();

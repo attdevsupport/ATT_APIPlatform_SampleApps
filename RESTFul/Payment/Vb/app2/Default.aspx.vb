@@ -103,6 +103,12 @@ Partial Public Class Payment_App2
     ''' </summary>
     Private refreshTokenExpiresIn As Integer
 
+
+    ''' <summary>
+    ''' Gets or sets the value of transaction amount.
+    ''' </summary>
+    Private MinSubscriptionAmount As String, MaxSubscriptionAmount As String
+
     ''' <summary>
     ''' This function is used to neglect the ssl handshake error with authentication server.
     ''' </summary>
@@ -739,6 +745,19 @@ Partial Public Class Payment_App2
     ''' </summary>
     ''' <returns>true/false; true if able to read all values, false otherwise</returns>
     Private Function ReadConfigFile() As Boolean
+
+        Me.MinSubscriptionAmount = ConfigurationManager.AppSettings("MinSubscriptionAmount")
+        If String.IsNullOrEmpty(Me.MinSubscriptionAmount) Then
+            Me.MinSubscriptionAmount = "0.00"
+        End If
+        lstMinAmount.Text = "Subscribe for " + Me.MinSubscriptionAmount + " per month"
+
+        Me.MaxSubscriptionAmount = ConfigurationManager.AppSettings("MaxSubscriptionAmount")
+        If String.IsNullOrEmpty(Me.MaxSubscriptionAmount) Then
+            Me.MaxSubscriptionAmount = "3.99"
+        End If
+        lstMaxAmount.Text = "Subscribe for " + Me.MaxSubscriptionAmount + " per month"
+
         Me.endPoint = ConfigurationManager.AppSettings("endPoint")
 
         If String.IsNullOrEmpty(Me.endPoint) Then
@@ -1189,11 +1208,13 @@ Partial Public Class Payment_App2
     Private Sub ReadTransactionParametersFromConfigurationFile()
         Me.transactionTime = DateTime.UtcNow
         Me.transactionTimeString = [String].Format("{0:dddMMMddyyyyHHmmss}", Me.transactionTime)
+
         If Radio_SubscriptionProductType.SelectedIndex = 0 Then
-            Me.amount = "0.00"
+            Me.amount = Me.MinSubscriptionAmount
         ElseIf Radio_SubscriptionProductType.SelectedIndex = 1 Then
-            Me.amount = "3.99"
+            Me.amount = Me.MaxSubscriptionAmount
         End If
+
 
         Session("sub_tranType") = Radio_SubscriptionProductType.SelectedIndex.ToString()
 

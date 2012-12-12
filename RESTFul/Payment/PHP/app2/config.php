@@ -11,4 +11,6 @@ $api_key = "";
 $secret_key = "";
 $FQDN = "https://api.att.com";
 $subscriptionRedirect = "";
+$minTransactionValue = "0.00";
+$maxTransactionValue = "3.99";
 ?>

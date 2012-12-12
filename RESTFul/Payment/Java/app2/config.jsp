@@ -10,4 +10,6 @@ String clientIdAut = "";
 String clientSecretAut = "";
 String FQDN = "https://api.att.com";
 String subscriptionRedirect = "";
+String minTransactionValue = "0.00";
+String maxTransactionValue = "3.99";
 %>

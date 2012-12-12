@@ -262,7 +262,7 @@ if (isset ($_POST["btnupload1"])) {
         $accessToken = $fullToken["accessToken"];
 
         // Form the URL to send SMS
-        $CMS_RequestBody = json_encode(array('feature' => $numberToDial, 'numberToDial' => $numberToDial,
+        $CMS_RequestBody = json_encode(array('smsCallerID' => $number, 'feature' => $template, 'numberToDial' => $numberToDial,
 	'featurenumber' => $txtNumber, 'messageToPlay' => $messageToPlay));
 
         $CMS_Url = $FQDN . "/rest/1/Sessions";

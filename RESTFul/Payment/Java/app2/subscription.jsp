@@ -106,11 +106,11 @@ String description = "";
 String merchantProductId = "";
 String trxIdGetDetails = "";
 if(product==1) {
-    amount = "0.00";
+    amount = minTransactionValue;
     description = "Word Game Subscription 1";
     merchantProductId = "WordGameSubscription1";
 } else if(product==2) {
-    amount = "3.99";
+    amount = maxTransactionValue;
     description = "Number Game Subscription 2";
     merchantProductId = "NumberGameSubscription1";
 }
@@ -164,13 +164,13 @@ if(product==1) {
 						<tr>
 							<td width="50%" valign="top" class="label"><input
 								type="radio" name="product" value="1" checked> Subscribe
-								for $0.00 per month:</td>
+								for $<%=minTransactionValue%> per month:</td>
 							</td>
 						</tr>
 						<tr>
 							<td width="50%" valign="top" class="label"><input
 								type="radio" name="product" value="2"> Subscribe for
-								$3.99 per month:</td>
+								$<%=maxTransactionValue%> per month:</td>
 							</td>
 						</tr>
 					</tbody>
@@ -217,10 +217,9 @@ String sReturn = "subscription.jsp";
 if (forNotary == null) {
 	forNotary = "";
 } else {
-	forNotary += "/";
 	sReturn = forNotary + "/" + sReturn; 
 }
-forNotary += "notary.jsp?signPayload=true&return=" + sReturn + "&payload="+
+forNotary += "/" + "notary.jsp?signPayload=true&return=" + sReturn + "&payload="+
 "{\"Amount\":" + amount + ","+
 "\"Category\":1, \"Channel\":\"MOBILE_WEB\","+
 "\"Description\":\"" + description + "\","+

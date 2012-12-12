@@ -178,6 +178,11 @@ public partial class Payment_App1 : System.Web.UI.Page
     /// </summary>
     private string refundFilePath;
 
+    /// <summary>
+    /// Gets or sets the value of transaction amount.
+    /// </summary>
+    private string MinTransactionAmount, MaxTransactionAmount;
+
     #endregion
 
     #region Payment Application events
@@ -234,11 +239,11 @@ public partial class Payment_App1 : System.Web.UI.Page
             this.transactionTimeString = string.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
             if (Radio_TransactionProductType.SelectedIndex == 0)
             {
-                this.amount = 0.00;
+                this.amount = Convert.ToDouble(this.MinTransactionAmount);
             }
             else if (Radio_TransactionProductType.SelectedIndex == 1)
             {
-                this.amount = 2.99;
+                this.amount = Convert.ToDouble(this.MaxTransactionAmount);
             }
 
             Session["tranType"] = Radio_TransactionProductType.SelectedIndex.ToString();
@@ -446,6 +451,20 @@ public partial class Payment_App1 : System.Web.UI.Page
     /// <returns>Returns Boolean</returns>
     private bool Initialize()
     {
+        this.MinTransactionAmount = ConfigurationManager.AppSettings["MinTransactionAmount"];
+        if (string.IsNullOrEmpty(this.MinTransactionAmount))
+        {
+            this.MinTransactionAmount = "0.00";
+        }
+        lstMinAmount.Text = "Buy product 1 for $" + this.MinTransactionAmount;
+
+        this.MaxTransactionAmount = ConfigurationManager.AppSettings["MaxTransactionAmount"];
+        if (string.IsNullOrEmpty(this.MaxTransactionAmount))
+        {
+            this.MaxTransactionAmount = "2.99";
+        }
+        lstMaxAmount.Text = "Buy product 2 for $" + this.MaxTransactionAmount;
+
         if (this.requestFactory == null)
         {
             this.apiKey = ConfigurationManager.AppSettings["api_key"];

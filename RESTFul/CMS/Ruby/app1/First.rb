@@ -33,6 +33,7 @@ if (defined? $numberToDial).nil?
 			{
 				:to => number,
 				:network => "SMS",
+				:callerID => $currentCall.calledID 
 			})
 	end
 
@@ -248,15 +249,18 @@ else
 		end
 	when "message"
 		if $featurenumber.nil?
-			say "Feature number is not provided as part of create session A P I request"
+			say "Please enter a number to send a message to and try again."
 		else
 			say "Sending message to"
 			sayNumber.call $featurenumber
+			say "from caller I D"
+			sayNumber.call $smsCallerID
 			message("Message from AT&T Call Control Service Sample Application", {
 					:to => $featurenumber,
-					:network => 'SMS'
+					:network => 'SMS',
+					:callerID => $smsCallerID
 				})
-		end																																																						
+		end
 	when "transfer"
 		say "Transfering to"
 		sayNumber.call $featurenumber
