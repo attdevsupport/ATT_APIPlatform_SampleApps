@@ -174,7 +174,7 @@ if (forNotary == null) {
 } else {
 	sReturn = forNotary + "/" + sReturn; 
 }
-forNotary += "notary.jsp?signPayload=true&return=" + sReturn + "&payload={\"Amount\":" + amount + ", \"Category\":1, \"Channel\":"+
+forNotary += "/" + "notary.jsp?signPayload=true&return=" + sReturn + "&payload={\"Amount\":" + amount + ", \"Category\":1, \"Channel\":"+
 "\"MOBILE_WEB\",\"Description\":\"" + description + "\","+
 "\"MerchantTransactionId\":\"" + merchantTrxId + "\", \"MerchantProductId\":\"" + merchantProductId + "\","+
 "\"MerchantPaymentRedirectUrl\":"+

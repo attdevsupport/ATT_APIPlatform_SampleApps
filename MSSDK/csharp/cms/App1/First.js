@@ -5,9 +5,11 @@
 //
 
 
+
 var welcomeMessage = "Welcome to the A T and T Call Managment Services Sample Application.";
 var goodbyeMessage = "Thank you, for using A T and T. Call Management Service Sample Application Demo.  Good Bye";
 var holdMusic = "";
+var CMSNumber = "";
 
 if (typeof numberToDial === 'undefined') {
 
@@ -15,9 +17,9 @@ if (typeof numberToDial === 'undefined') {
     // Obtain incoming callerId (if number is not blocked), strip out leading characters
     // to result in 10 digit inbound number.
     //
-    var callerID = currentCall.callerID.replace("+1", "");
+    var TempcallerID = currentCall.callerID.replace("+1", "");
 
-    if (callerID == '2044884744') {
+    if (TempcallerID == '') {
         reject();
     }
 
@@ -82,14 +84,14 @@ if (typeof numberToDial === 'undefined') {
         onChoice: function (event) {
             var numbertest = event.value;
             say("You entered " + numbertest);
-            if (callerID == numbertest) {
+            if (TempcallerID == numbertest) {
                 say("Number entered matches. Rejecting your call now.");
                 say(goodbyeMessage);
                 hangup();
             }
             else {
                 say("Numbers do not match. You are calling from ");
-                say("<speak><say-as interpret-as = 'vxml:digits'>" + callerID + "</say-as></speak>");
+                say("<speak><say-as interpret-as = 'vxml:digits'>" + TempcallerID + "</say-as></speak>");
                 say("and the number you entered is ");
                 say("<speak><say-as interpret-as = 'vxml:digits'>" + numbertest + "</say-as></speak>");
             }
@@ -108,7 +110,8 @@ if (typeof numberToDial === 'undefined') {
             say("<speak><say-as interpret-as = 'vxml:digits'>" + numbertest + "</say-as></speak>");
             message("Message from AT&T Call Control Service Sample Application", {
                 to: numbertest,
-                network: "SMS"
+                network: "SMS",
+                callerID: TempcallerID
             });
         }
     });
@@ -146,7 +149,7 @@ if (typeof numberToDial === 'undefined') {
         onChoice: function (event) {
             var numbertest = event.value;
 
-            if (callerID == numbertest) {
+            if (TempcallerID == numbertest) {
                 say("entered number matched with the current call caller id");
                 say("your calls will be kept for three seconds waited");
                 wait(3000);
@@ -154,7 +157,7 @@ if (typeof numberToDial === 'undefined') {
             else {
                 say("number not matched for waited feature");
                 say(" the current call id is");
-                say(callerID);
+                say(TempcallerID);
                 say("and you entered is ");
                 say(numbertest);
             }
@@ -169,21 +172,21 @@ if (typeof numberToDial === 'undefined') {
         interdigitTimeout: 5,
         onChoice: function (event) {
             say("Waiting for exit signal");
-            say(messageToPlay, {
+            say(holdMusic, {
                 allowSignals: "exit",
                 onSignal: function (event) {
                     say("Received exit signal, hence music is paused. Enjoy the music again.");
                 }
             });
             say("Waiting for stopHold signal");
-            say(messageToPlay, {
+            say(holdMusic, {
                 allowSignals: "stopHold",
                 onSignal: function (event) {
                     say("Received stop hold signal, hence music is paused. Enjoy the music again.");
                 }
             });
             say("Waiting for dequeue signal");
-            say(messageToPlay, {
+            say(holdMusic, {
                 allowSignals: "dequeue",
                 onSignal: function (event) {
                     say("Received dequeue signal, hence music is stopped.");
@@ -201,8 +204,15 @@ else {
     // As this is an OUTBOUND call, caller ID is not available and must be manually
     // set to the number we are dialing.
     //
-    var callerID = numberToDial; // currentCall.callerID.replace("+1", "");
-    say("I am calling " + callerID);
+    var TempcallerID = numberToDial; // currentCall.callerID.replace("+1", "");
+    say("I am calling " + TempcallerID);
+
+    if (typeof messageToPlay === 'undefined') {
+        say("The MessageToPlay parameter was not provided. Using default music file.");
+    }
+    else {
+    holdMusic = messageToPlay;
+    }
 
     if (typeof feature !== 'undefined') {
 
@@ -238,7 +248,7 @@ else {
                     say("Feature number is not provided as part of create session A P I request");
                 }
                 else {
-                    if (callerID == featurenumber) {
+                    if (TempcallerID == featurenumber) {
                         say("your calls will be rejected");
                         say("Thank you, for using A T and T Call management Sample Application Demo.  Good Bye");
                         reject();
@@ -258,7 +268,7 @@ else {
                     say("Transferring call to ");
                     say("<speak><say-as interpret-as = 'vxml:digits'>" + featurenumber + "</say-as></speak>");
                     transfer([featurenumber, "sip:12345678912@221.122.54.86"], {
-                        playvalue: messageToPlay,
+                        playvalue: holdMusic,
                         terminator: "*",
                         onTimeout: function (event) {
                             say("Sorry, but nobody answered");
@@ -271,7 +281,7 @@ else {
                     say("Feature number is not provided as part of create session A P I request");
                 }
                 else {
-                    if (callerID == featurenumber) {
+                    if (TempcallerID == featurenumber) {
                         say("Your call will be placed in a waiting state for 3 seconds.");
                         wait(3000);
                     }
@@ -291,16 +301,12 @@ else {
                     say("<speak><say-as interpret-as = 'vxml:digits'>" + featurenumber + "</say-as></speak>");
                     message("Message from AT&T Call Control Service Sample Application", {
                         to: featurenumber,
-                        network: "SMS"
+                    network: "SMS",
+                    callerID: CMSNumber
                     });
                 }
                 break;
         }
-    }
-
-    if (typeof messageToPlay === 'undefined') {
-        say("The MessageToPlay parameter was not provided. Using default music file.");
-        var messageToPlay = holdMusic;
     }
 
     ask("Press a digit to test the signaling or press pound to skip", {
@@ -312,7 +318,7 @@ else {
         onChoice: function (event) {
 
             say("Waiting for exit signal");
-            say(messageToPlay, {
+            say(holdMusic, {
                 allowSignals: "exit",
                 onSignal: function (event) {
                     say("Exit signal received...");
@@ -320,7 +326,7 @@ else {
             });
 
             say("Waiting for stopHold signal");
-            say(messageToPlay, {
+            say(holdMusic, {
                 allowSignals: "stopHold",
                 onSignal: function (event) {
                     say("Stop, Hold Signal received...");
@@ -328,7 +334,7 @@ else {
             });
 
             say("Waiting for dequeue signal");
-            say(messageToPlay, {
+            say(holdMusic, {
                 allowSignals: "dequeue",
                 onSignal: function (event) {
                     say("Dee Queue Signal received.");
