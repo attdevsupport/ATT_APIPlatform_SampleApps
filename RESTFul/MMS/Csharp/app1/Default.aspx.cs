@@ -787,7 +787,7 @@ public partial class MMS_App1 : System.Web.UI.Page
 
         HttpWebRequest mmsRequestObject = (HttpWebRequest)WebRequest.Create(string.Empty + this.endPoint + "/rest/mms/2/messaging/outbox");
         mmsRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);
-        mmsRequestObject.ContentType = "multipart/related;boundary=\"" + boundary + "\"\r\n";
+        mmsRequestObject.ContentType = "multipart/related; type=\"application/x-www-form-urlencoded\"; start=\"<startpart>\"; boundary=\"" + boundary + "\"\r\n";
         mmsRequestObject.Method = "POST";
         mmsRequestObject.KeepAlive = true;
 
@@ -798,9 +798,9 @@ public partial class MMS_App1 : System.Web.UI.Page
 
         string data = string.Empty;
         data += "--" + boundary + "\r\n";
-        data += "Content-Type:application/x-www-form-urlencoded;charset=UTF-8\r\nContent-Transfer-Encoding:8bit\r\nContent-Disposition: form-data; name=\"root-fields\"\r\nContent-ID:<startpart>\r\n\r\n" + sendMMSData + "\r\n";
+        data += "Content-Type: application/x-www-form-urlencoded;charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\nContent-Disposition: form-data; name=\"root-fields\"\r\nContent-ID:<startpart>\r\n\r\n" + sendMMSData;// +"\r\n";
 
-        totalpostBytes = this.FormMIMEParts(boundary, ref data);
+        totalpostBytes = this.FormMIMEParts(boundary, data);
 
         byte[] byteLastBoundary = encoding.GetBytes("\r\n--" + boundary + "--\r\n");
         int totalSize = totalpostBytes.Length + byteLastBoundary.Length;
@@ -848,64 +848,71 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// <param name="boundary">string, boundary data</param>
     /// <param name="data">string, mms message</param>
     /// <returns>returns byte array of files</returns>
-    private byte[] FormMIMEParts(string boundary, ref string data)
+    private byte[] FormMIMEParts(string boundary, string data)
     {
         UTF8Encoding encoding = new UTF8Encoding();
 
         byte[] postBytes = encoding.GetBytes(string.Empty);
         byte[] totalpostBytes = encoding.GetBytes(string.Empty);
 
+        byte[] Head = encoding.GetBytes(data);
+        int totalSizeWithHead = totalpostBytes.Length + Head.Length;
+
+        var totalMSWithHead = new MemoryStream(new byte[totalSizeWithHead], 0, totalSizeWithHead, true, true);
+        totalMSWithHead.Write(totalpostBytes, 0, totalpostBytes.Length);
+        totalMSWithHead.Write(Head, 0, Head.Length);
+        totalpostBytes = totalMSWithHead.GetBuffer();
+
         if (Session["mmsFilePath1"] != null)
         {
-            postBytes = this.GetBytesOfFile(boundary, ref data, Session["mmsFilePath1"].ToString());
-            totalpostBytes = postBytes;
+            postBytes = this.GetBytesOfFile(boundary, Session["mmsFilePath1"].ToString());
+            var msOne = JoinTwoByteArrays(totalpostBytes, postBytes);
+            totalpostBytes = msOne.GetBuffer();
         }
 
         if (Session["mmsFilePath2"] != null)
         {
-            if (Session["mmsFilePath1"] != null)
-            {
-                data = "--" + boundary + "\r\n";
-            }
-            else
-            {
-                data += "--" + boundary + "\r\n";
-            }
 
-            postBytes = this.GetBytesOfFile(boundary, ref data, Session["mmsFilePath2"].ToString());
+            postBytes = this.GetBytesOfFile(boundary, Session["mmsFilePath2"].ToString());
 
             if (Session["mmsFilePath1"] != null)
             {
+                //add boundary
+                byte[] Boundary = encoding.GetBytes("\r\n--" + boundary);
+                int totalSize = totalpostBytes.Length + Boundary.Length;
+
+                var totalMS = new MemoryStream(new byte[totalSize], 0, totalSize, true, true);
+                totalMS.Write(totalpostBytes, 0, totalpostBytes.Length);
+                totalMS.Write(Boundary, 0, Boundary.Length);
                 var ms2 = JoinTwoByteArrays(totalpostBytes, postBytes);
                 totalpostBytes = ms2.GetBuffer();
             }
             else
             {
-                totalpostBytes = postBytes;
+                var msOne = JoinTwoByteArrays(totalpostBytes, postBytes);
+                totalpostBytes = msOne.GetBuffer();
             }
         }
 
         if (Session["mmsFilePath3"] != null)
         {
-            if (Session["mmsFilePath1"] != null || Session["mmsFilePath2"] != null)
-            {
-                data = "--" + boundary + "\r\n";
-            }
-            else
-            {
-                data += "--" + boundary + "\r\n";
-            }
-
-            postBytes = this.GetBytesOfFile(boundary, ref data, Session["mmsFilePath3"].ToString());
+            postBytes = this.GetBytesOfFile(boundary, Session["mmsFilePath3"].ToString());
 
             if (Session["mmsFilePath1"] != null || Session["mmsFilePath2"] != null)
             {
+                //add boundary
+                byte[] Boundary = encoding.GetBytes("\r\n--" + boundary);
+                int totalSize = totalpostBytes.Length + Boundary.Length;
+                var totalMS = new MemoryStream(new byte[totalSize], 0, totalSize, true, true);
+                totalMS.Write(totalpostBytes, 0, totalpostBytes.Length);
+                totalMS.Write(Boundary, 0, Boundary.Length); 
                 var ms2 = JoinTwoByteArrays(totalpostBytes, postBytes);
                 totalpostBytes = ms2.GetBuffer();
             }
             else
             {
-                totalpostBytes = postBytes;
+                var msOne = JoinTwoByteArrays(totalpostBytes, postBytes);
+                totalpostBytes = msOne.GetBuffer();
             }
         }
 
@@ -919,7 +926,7 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// <param name="data">string, mms message</param>
     /// <param name="filePath">string, filepath</param>
     /// <returns>byte[], representation of file in bytes</returns>
-    private byte[] GetBytesOfFile(string boundary, ref string data, string filePath)
+    private byte[] GetBytesOfFile(string boundary, string filePath)
     {
         UTF8Encoding encoding = new UTF8Encoding();
         byte[] postBytes = encoding.GetBytes(string.Empty);
@@ -936,11 +943,11 @@ public partial class MMS_App1 : System.Web.UI.Page
 
             byte[] image = binaryReader.ReadBytes((int)fileStream.Length);
 
-            data += "--" + boundary + "\r\n";
-            data += "Content-Disposition:attachment;filename=\"" + mmsFileName + "\"\r\n";
-            data += "Content-Type:" + attachmentContentType + "\r\n";
-            data += "Content-ID:<" + mmsFileName + ">\r\n";
-            data += "Content-Transfer-Encoding:binary\r\n\r\n";
+            string data = "\r\n--" + boundary + "\r\n";
+            data += "Content-Disposition: attachment; filename=" + mmsFileName + "\r\n";
+            data += "Content-Type: " + attachmentContentType + ";name=" + mmsFileName + "\r\n";
+            data += "Content-ID: " + mmsFileName + "\r\n";
+            data += "Content-Transfer-Encoding: Binary\r\n\r\n";
 
             byte[] firstPart = encoding.GetBytes(data);
             int newSize = firstPart.Length + image.Length;

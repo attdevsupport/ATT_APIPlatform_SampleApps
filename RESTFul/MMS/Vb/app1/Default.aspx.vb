@@ -661,7 +661,7 @@ Partial Public Class MMS_App1
 
         Dim mmsRequestObject As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & Me.endPoint & "/rest/mms/2/messaging/outbox"), HttpWebRequest)
         mmsRequestObject.Headers.Add("Authorization", "Bearer " & Me.accessToken)
-        mmsRequestObject.ContentType = "multipart/form-data; type=""application/x-www-form-urlencoded""; start=""<startpart>""; boundary=""" & boundary & """" & vbCr & vbLf
+        mmsRequestObject.ContentType = "multipart/related; type=""application/x-www-form-urlencoded""; start=""<startpart>""; boundary=""" + boundary + """" & vbCr & vbLf
         mmsRequestObject.Method = "POST"
         mmsRequestObject.KeepAlive = True
 
@@ -672,7 +672,7 @@ Partial Public Class MMS_App1
 
         Dim data As String = String.Empty
         data += "--" & boundary & vbCr & vbLf
-        data += "Content-Type:application/x-www-form-urlencoded;charset=UTF-8" & vbCr & vbLf & "Content-Transfer-Encoding:8bit" & vbCr & vbLf & "Content-ID:<startpart>" & vbCr & vbLf & vbCr & vbLf & sendMMSData & vbCr & vbLf
+        data += "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" & vbCr & vbLf & "Content-Transfer-Encoding: 8bit" & vbCr & vbLf & "Content-Disposition: form-data; name=""root-fields""" & vbCr & vbLf & "Content-ID:<startpart>" & vbCr & vbLf & vbCr & vbLf + sendMMSData
 
         totalpostBytes = Me.FormMIMEParts(boundary, data)
 
@@ -715,48 +715,54 @@ Partial Public Class MMS_App1
     ''' <param name="boundary">string, boundary data</param>
     ''' <param name="data">string, mms message</param>
     ''' <returns>returns byte array of files</returns>
-    Private Function FormMIMEParts(ByVal boundary As String, ByRef data As String) As Byte()
+    Private Function FormMIMEParts(ByVal boundary As String, ByVal data As String) As Byte()
         Dim encoding As New UTF8Encoding()
 
         Dim postBytes As Byte() = encoding.GetBytes(String.Empty)
         Dim totalpostBytes As Byte() = encoding.GetBytes(String.Empty)
 
+        Dim Head As Byte() = encoding.GetBytes(data)
+        Dim totalSizeWithHead As Integer = totalpostBytes.Length + Head.Length
+        Dim totalMSWithHead = New MemoryStream(New Byte(totalSizeWithHead - 1) {}, 0, totalSizeWithHead, True, True)
+        totalMSWithHead.Write(totalpostBytes, 0, totalpostBytes.Length)
+        totalMSWithHead.Write(Head, 0, Head.Length)
+        totalpostBytes = totalMSWithHead.GetBuffer()
+
         If Session("mmsFilePath1") IsNot Nothing Then
-            postBytes = Me.GetBytesOfFile(boundary, data, Session("mmsFilePath1").ToString())
-            totalpostBytes = postBytes
+            postBytes = Me.GetBytesOfFile(boundary, Session("mmsFilePath1").ToString())
+            Dim msOne = JoinTwoByteArrays(totalpostBytes, postBytes)
+            totalpostBytes = msOne.GetBuffer()
         End If
 
         If Session("mmsFilePath2") IsNot Nothing Then
+            postBytes = Me.GetBytesOfFile(boundary, Session("mmsFilePath2").ToString())
             If Session("mmsFilePath1") IsNot Nothing Then
-                data = "--" & boundary & vbCr & vbLf
-            Else
-                data += "--" & boundary & vbCr & vbLf
-            End If
-
-            postBytes = Me.GetBytesOfFile(boundary, data, Session("mmsFilePath2").ToString())
-
-            If Session("mmsFilePath1") IsNot Nothing Then
+                Dim Boundary1 As Byte() = encoding.GetBytes(vbCr & vbLf & "--" & boundary)
+                Dim totalSize As Integer = totalpostBytes.Length + Boundary1.Length
+                Dim totalMS = New MemoryStream(New Byte(totalSize - 1) {}, 0, totalSize, True, True)
+                totalMS.Write(totalpostBytes, 0, totalpostBytes.Length)
+                totalMS.Write(Boundary1, 0, boundary.Length)
                 Dim ms2 = JoinTwoByteArrays(totalpostBytes, postBytes)
                 totalpostBytes = ms2.GetBuffer()
             Else
-                totalpostBytes = postBytes
+                Dim msOne = JoinTwoByteArrays(totalpostBytes, postBytes)
+                totalpostBytes = msOne.GetBuffer()
             End If
         End If
 
         If Session("mmsFilePath3") IsNot Nothing Then
+            postBytes = Me.GetBytesOfFile(boundary, Session("mmsFilePath3").ToString())
             If Session("mmsFilePath1") IsNot Nothing OrElse Session("mmsFilePath2") IsNot Nothing Then
-                data = "--" & boundary & vbCr & vbLf
-            Else
-                data += "--" & boundary & vbCr & vbLf
-            End If
-
-            postBytes = Me.GetBytesOfFile(boundary, data, Session("mmsFilePath3").ToString())
-
-            If Session("mmsFilePath1") IsNot Nothing OrElse Session("mmsFilePath2") IsNot Nothing Then
+                Dim Boundary1 As Byte() = encoding.GetBytes(vbCr & vbLf & "--" + boundary)
+                Dim totalSize As Integer = totalpostBytes.Length + Boundary1.Length
+                Dim totalMS = New MemoryStream(New Byte(totalSize - 1) {}, 0, totalSize, True, True)
+                totalMS.Write(totalpostBytes, 0, totalpostBytes.Length)
+                totalMS.Write(Boundary1, 0, boundary.Length)
                 Dim ms2 = JoinTwoByteArrays(totalpostBytes, postBytes)
                 totalpostBytes = ms2.GetBuffer()
             Else
-                totalpostBytes = postBytes
+                Dim msOne = JoinTwoByteArrays(totalpostBytes, postBytes)
+                totalpostBytes = msOne.GetBuffer()
             End If
         End If
 
@@ -770,7 +776,7 @@ Partial Public Class MMS_App1
     ''' <param name="data">string, mms message</param>
     ''' <param name="filePath">string, filepath</param>
     ''' <returns>byte[], representation of file in bytes</returns>
-    Private Function GetBytesOfFile(ByVal boundary As String, ByRef data As String, ByVal filePath As String) As Byte()
+    Private Function GetBytesOfFile(ByVal boundary As String, ByVal filePath As String) As Byte()
         Dim encoding As New UTF8Encoding()
         Dim postBytes As Byte() = encoding.GetBytes(String.Empty)
         Dim fileStream As FileStream = Nothing
@@ -778,17 +784,17 @@ Partial Public Class MMS_App1
 
         Try
             Dim mmsFileName As String = Path.GetFileName(filePath)
-
+            Dim mmsFileExtension As String = Path.GetExtension(filePath)
+            Dim attachmentContentType As String = MapContentTypeFromExtension(mmsFileExtension)
             fileStream = New FileStream(filePath, FileMode.Open, FileAccess.Read)
             binaryReader = New BinaryReader(fileStream)
 
             Dim image As Byte() = binaryReader.ReadBytes(CInt(fileStream.Length))
-
-            data += "--" & boundary & vbCr & vbLf
-            data += "Content-Disposition:attachment;name=""" & mmsFileName & """" & vbCr & vbLf
-            data += "Content-Type:image/gif" & vbCr & vbLf
-            data += "Content-ID:<" & mmsFileName & ">" & vbCr & vbLf
-            data += "Content-Transfer-Encoding:binary" & vbCr & vbLf & vbCr & vbLf
+            Dim data As String = vbCr & vbLf & "--" + boundary + vbCr & vbLf
+            data += "Content-Disposition: attachment; filename=" + mmsFileName + vbCr & vbLf
+            data += "Content-Type: " + attachmentContentType + ";name=" + mmsFileName + vbCr & vbLf
+            data += "Content-ID: " + mmsFileName + vbCr & vbLf
+            data += "Content-Transfer-Encoding: Binary" & vbCr & vbLf & vbCr & vbLf
 
             Dim firstPart As Byte() = encoding.GetBytes(data)
             Dim newSize As Integer = firstPart.Length + image.Length
@@ -865,6 +871,45 @@ Partial Public Class MMS_App1
             streamReader.Close()
         End Using
     End Sub
+
+    Private Shared Function MapContentTypeFromExtension(extension As String) As String
+        Dim extensionToContentTypeMapping As New Dictionary(Of String, String)() From { _
+         {".jpg", "image/jpeg"}, _
+         {".bmp", "image/bmp"}, _
+         {".mp3", "audio/mp3"}, _
+         {".m4a", "audio/m4a"}, _
+         {".gif", "image/gif"}, _
+         {".3gp", "video/3gpp"}, _
+         {".3g2", "video/3gpp2"}, _
+         {".wmv", "video/x-ms-wmv"}, _
+         {".m4v", "video/x-m4v"}, _
+         {".amr", "audio/amr"}, _
+         {".mp4", "video/mp4"}, _
+         {".avi", "video/x-msvideo"}, _
+         {".mov", "video/quicktime"}, _
+         {".mpeg", "video/mpeg"}, _
+         {".wav", "audio/x-wav"}, _
+         {".aiff", "audio/x-aiff"}, _
+         {".aifc", "audio/x-aifc"}, _
+         {".midi", ".midi"}, _
+         {".au", "audio/basic"}, _
+         {".xwd", "image/x-xwindowdump"}, _
+         {".png", "image/png"}, _
+         {".tiff", "image/tiff"}, _
+         {".ief", "image/ief"}, _
+         {".txt", "text/plain"}, _
+         {".html", "text/html"}, _
+         {".vcf", "text/x-vcard"}, _
+         {".vcs", "text/x-vcalendar"}, _
+         {".mid", "application/x-midi"}, _
+         {".imy", "audio/iMelody"} _
+        }
+        If extensionToContentTypeMapping.ContainsKey(extension) Then
+            Return extensionToContentTypeMapping(extension)
+        Else
+            Throw New ArgumentException("invalid attachment extension")
+        End If
+    End Function
 
     ''' <summary>
     ''' This function adds two byte arrays

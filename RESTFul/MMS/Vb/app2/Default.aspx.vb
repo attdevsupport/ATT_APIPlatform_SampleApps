@@ -716,7 +716,7 @@ Partial Public Class MMS_App2
 
             Dim mmsRequestObject As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & Me.endPoint & "/rest/mms/2/messaging/outbox"), HttpWebRequest)
             mmsRequestObject.Headers.Add("Authorization", "Bearer " & Me.accessToken)
-            mmsRequestObject.ContentType = "multipart/form-data; type=""application/x-www-form-urlencoded""; start=""<startpart>""; boundary=""" & boundary & """" & vbCr & vbLf
+            mmsRequestObject.ContentType = "multipart/related; type=""application/x-www-form-urlencoded""; start=""<startpart>""; boundary=""" + boundary + """" & vbCr & vbLf
             mmsRequestObject.Method = "POST"
             mmsRequestObject.KeepAlive = True
 
@@ -730,12 +730,12 @@ Partial Public Class MMS_App2
             Dim image As Byte() = binaryReader.ReadBytes(CInt(fileStream.Length))
 
             data += "--" & boundary & vbCr & vbLf
-            data += "Content-Type:application/x-www-form-urlencoded;charset=UTF-8" & vbCr & vbLf & "Content-Transfer-Encoding:8bit" & vbCr & vbLf & "Content-ID:<startpart>" & vbCr & vbLf & vbCr & vbLf & sendMMSData & vbCr & vbLf
-            data += "--" & boundary & vbCr & vbLf
-            data += "Content-Disposition:attachment;name=""" & "coupon.jpg" & """" & vbCr & vbLf
-            data += "Content-Type:image/gif" & vbCr & vbLf
-            data += "Content-ID:<" & "coupon.jpg" & ">" & vbCr & vbLf
-            data += "Content-Transfer-Encoding:binary" & vbCr & vbLf & vbCr & vbLf
+            data += "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" & vbCr & vbLf & "Content-Transfer-Encoding: 8bit" & vbCr & vbLf & "Content-Disposition: form-data; name=""root-fields""" & vbCr & vbLf & "Content-ID:<startpart>" & vbCr & vbLf & vbCr & vbLf + sendMMSData
+            data += vbCr & vbLf & "--" + boundary + vbCr & vbLf
+            data += "Content-Disposition: attachment; filename=""coupon.jpg""" & vbCr & vbLf
+            data += "Content-Type: image/gif;name=coupon.jpg" & vbCr & vbLf
+            data += "Content-ID: " + "coupon.jpg" + vbCr & vbLf
+            data += "Content-Transfer-Encoding: Binary" & vbCr & vbLf & vbCr & vbLf
             Dim firstPart As Byte() = encoding.GetBytes(data)
             Dim newSize As Integer = firstPart.Length + image.Length
 

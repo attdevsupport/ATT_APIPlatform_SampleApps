@@ -829,7 +829,7 @@ public partial class MMS_App2 : System.Web.UI.Page
 
             HttpWebRequest mmsRequestObject = (HttpWebRequest)WebRequest.Create(string.Empty + this.endPoint + "/rest/mms/2/messaging/outbox");
             mmsRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);
-            mmsRequestObject.ContentType = "multipart/form-data; type=\"application/x-www-form-urlencoded\"; start=\"<startpart>\"; boundary=\"" + boundary + "\"\r\n";
+            mmsRequestObject.ContentType = "multipart/related; type=\"application/x-www-form-urlencoded\"; start=\"<startpart>\"; boundary=\"" + boundary + "\"\r\n";
             mmsRequestObject.Method = "POST";
             mmsRequestObject.KeepAlive = true;
 
@@ -843,12 +843,12 @@ public partial class MMS_App2 : System.Web.UI.Page
             byte[] image = binaryReader.ReadBytes((int)fileStream.Length);
 
             data += "--" + boundary + "\r\n";
-            data += "Content-Type:application/x-www-form-urlencoded;charset=UTF-8\r\nContent-Transfer-Encoding:8bit\r\nContent-ID:<startpart>\r\n\r\n" + sendMMSData + "\r\n";
-            data += "--" + boundary + "\r\n";
-            data += "Content-Disposition:attachment;name=\"" + "coupon.jpg" + "\"\r\n";
-            data += "Content-Type:image/gif\r\n";
-            data += "Content-ID:<" + "coupon.jpg" + ">\r\n";
-            data += "Content-Transfer-Encoding:binary\r\n\r\n";
+            data += "Content-Type: application/x-www-form-urlencoded;charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\nContent-Disposition: form-data; name=\"root-fields\"\r\nContent-ID:<startpart>\r\n\r\n" + sendMMSData;// +"\r\n";
+            data += "\r\n--" + boundary + "\r\n";
+            data += "Content-Disposition: attachment; filename=\"coupon.jpg\"\r\n";
+            data += "Content-Type: image/gif;name=coupon.jpg\r\n";
+            data += "Content-ID: " + "coupon.jpg" + "\r\n";
+            data += "Content-Transfer-Encoding: Binary\r\n\r\n";
             byte[] firstPart = encoding.GetBytes(data);
             int newSize = firstPart.Length + image.Length;
 
