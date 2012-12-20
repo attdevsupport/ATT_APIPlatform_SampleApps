@@ -5,14 +5,14 @@ message("Message from AT&T Call Control Service Sample Application", {
     to: "1234567890",
     network: "SMS"
 });
-say("Message has been sent to 6177945338");
+say("Message has been sent");
 say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
 hangup();
 */
 
 
 
-call("+14075550100", array(
+call("1234567890", array(
    "network" => "SMS")
 );
 say ("Welcome to the AT&T Call Control Service Sample Application Demo.  This is message script.!");
