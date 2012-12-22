@@ -859,7 +859,7 @@ public partial class Payment_App2 : System.Web.UI.Page
             this.MaxSubscriptionAmount = "3.99";
         }
         lstMaxAmount.Text = "Subscribe for " + this.MaxSubscriptionAmount + " per month";
-
+        this.endPoint = ConfigurationManager.AppSettings["endPoint"];
         if (string.IsNullOrEmpty(this.endPoint))
         {
             this.DrawPanelForFailure(newSubscriptionPanel, "endPoint is not defined in configuration file");
