@@ -1,151 +1,111 @@
-﻿<!-- 
+﻿<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="Speech_App1" %>
+<!DOCTYPE html>
+<!-- 
 Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
 Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
-
-<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="Speech_App1" %>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en">
+<!--<![endif]-->
 <head>
-    <title>AT&amp;T Sample Speech Application - Speech to Text(Generic) Application</title>
+    <title>AT&amp;T Sample Speech Application - Speech to Text (Generic) </title>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" type="text/css" href="style/common.css" />
 </head>
 <body>
-    <form id="form1" runat="server">
-    <div id="container">
-        <!-- open HEADER -->
+    <div id="pageContainer" class="pageContainer">
         <div id="header">
-            <div>
-                <div class="hcRight">
-                    <asp:Label ID="lblServerTime" runat="server"></asp:Label>
-                </div>
-                <div class="hcLeft">
-                    Server Time:</div>
+            <div class="logo" id="top">
             </div>
-            <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        var myDate = new Date();
-                        document.write(myDate);
-                    </script>
-                </div>
-                <div class="hcLeft">
-                    Client Time:</div>
+            <div id="menuButton" class="hide">
+                <a id="jump" href="#nav">Main Navigation</a>
             </div>
-            <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write("" + navigator.userAgent);
-                    </script>
-                </div>
-                <div class="hcLeft">
-                    User Agent:</div>
-            </div>
-            <br clear="all" />
+            <ul class="links" id="nav">
+                <li>
+                    <a href="#" target="_blank">Full Page<img src="images/max.png" alt="" /></a> <span
+                    class="divider">|&nbsp;</span> 
+                </li>
+                <li>
+                    <a id="sourceLink" runat="server" href="<%$ AppSettings:SourceLink %>" target="_blank">
+                    Source<img src="images/source.png" alt="" />
+                    </a>
+                    <span class="divider">|&nbsp;</span>
+                </li>
+                <li>
+                    <a id="downloadLink" runat="server" href="<%$ AppSettings:DownloadLink %>" target="_blank">
+                    Download<img src="images/download.png" alt="" />
+                    </a>
+                    <span class="divider">|&nbsp;</span>
+                </li>
+                <li>
+                    <a id="helpLink" runat="server" href="<%$ AppSettings:HelpLink %>" target="_blank">
+                    Help
+                    </a>
+                </li>
+                <li id="back"><a href="#top">Back to top</a></li>
+            </ul>
         </div>
-        <div>
-            <div class="content">
+        <form id="form1" runat="server">
+        <div class="content">
+            <div class="contentHeading">
                 <h1>
-                    AT&amp;T Sample Speech Application - Speech to Text Application</h1>
-                <h2>
-                    Feature 1: Speech to Text</h2>
+                    AT&amp;T Sample Application - Speech to Text</h1>
+                <div id="introtext">
+                    <div>
+                        <b>Server Time:</b>
+                        <asp:Label ID="lblServerTime" runat="server"></asp:Label>
+                    </div>
+                    <div>
+                        <b>Client Time:</b>
+                        <script language="JavaScript" type="text/javascript">
+                            var myDate = new Date();
+                            document.write(myDate);
+                        </script>
+                    </div>
+                    <div>
+                        <b>User Agent:</b>
+                        <script language="JavaScript" type="text/javascript">
+                            document.write("" + navigator.userAgent);
+                        </script>
+                    </div>
+                </div>
             </div>
-        </div>
-        <br />
-        <br />
-        <div class="navigation">
-            <table border="0" width="100%">
-                <tbody>
-                    <tr>
-                        <td valign="middle" class="label" align="right">
+            <div class="formBox" id="formBox">
+                <div id="formContainer" class="formContainer">
+                    <div id="formData">
+                        <h3>
                             Speech Context:
-                        </td>
-                        <td class="cell">
-                            <asp:DropDownList ID="ddlSpeechContext" runat="server">
-                            </asp:DropDownList>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="middle" class="label" align="right">
+                        </h3>
+                        <asp:DropDownList ID="ddlSpeechContext" runat="server"></asp:DropDownList>
+                        <h3>
                             Audio File:
-                        </td>
-                        <td class="cell">
-                            <asp:FileUpload runat="server" ID="fileUpload1" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                        </td>
-                        <td>
+                        </h3>
+                        <asp:DropDownList ID="ddlAudioFile" runat="server"></asp:DropDownList>
+                        <h3>
                             <asp:CheckBoxList ID="chkChunked" runat="server" CssClass="cell">
-                                <asp:ListItem Text="Send Chunked" />
+                                <asp:ListItem Text=" Send Chunked" />
                             </asp:CheckBoxList>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="middle" class="label" align="right">
+                        </h3>
+                        <h3>
                             X-Args Defined:
-                        </td>
-                        <td class="cell">
-                            <asp:TextBox ID="txtXArgs" runat="server" TextMode="MultiLine" Enabled="False" 
-                                Rows="7" Width="234px"></asp:TextBox>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                        </td>
-                        <td></td>
-                        <td>
-                            <asp:Button runat="server" ID="btnSubmit" Text="Submit" OnClick="BtnSubmit_Click" />
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="extra">
-            <table border="0" width="100%">
-                <tbody>
-                    <tr>
-                        <td />
-                        <td>
-                            <div id="extraleft">
-                                <div class="warning">
-                                    <strong>Note:</strong><br />
-                                    If no file is chosen, a <a href="./default.wav">default.wav</a> file will be loaded
-                                    on submit.<br />
-                                    <strong>Speech file format constraints:</strong>
-                                    <br />
-                                    • 16 bit PCM WAV, single channel, 8 kHz sampling
-                                    <br />
-                                    • 16 bit PCM WAV, single channel, 16 kHz sampling
-                                    <br />
-                                    • AMR (narrowband), 12.2 kbit/s, 8 kHz sampling
-                                    <br />
-                                    • AMR-WB (wideband) is 12.65 kbit/s, 16khz sampling
-                                    <br />
-                                    • OGG - speex encoding, 8kHz sampling
-                                    <br />
-                                    • OGG - speex encoding, 16kHz sampling
-                                </div>
-                            </div>
-                        </td>
-                        <td />
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <br clear="all" />
-        <div align="center">
-            <asp:Panel ID="statusPanel" runat="server" Font-Names="Calibri" Font-Size="XX-Small">
-            </asp:Panel>
-        </div>
-        <div align="center">
-            <asp:Panel ID="resultsPanel" runat="server" BorderWidth="0" Width="80%">
-                <table width="500" cellpadding="1" cellspacing="1" border="0">
+                        </h3>
+                        <asp:TextBox ID="txtXArgs" runat="server" TextMode="MultiLine" Enabled="False" Rows="7"
+                            Width="234px"></asp:TextBox><br />
+                        <asp:Button runat="server" ID="btnSubmit" Text="Submit" OnClick="BtnSubmit_Click" />
+                    </div>
+                </div>
+            </div>
+            <asp:Panel ID="statusPanel" runat="server">
+            </asp:Panel><br clear="all" />
+            <asp:Panel ID="resultsPanel" runat="server" HorizontalAlign="Left">
+                <table width="95%" cellpadding="1" cellspacing="1" border="0">
                     <thead>
                         <tr>
                             <th width="50%" class="label">
@@ -249,27 +209,30 @@ For more information contact developer.support@att.com
                 </table>
             </asp:Panel>
         </div>
-        <br clear="all" />
+        </form>
         <div id="footer">
-            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
-                Powered by AT&amp;T Cloud Architecture</div>
-            <p>
-                &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
-                <br />
-                The Application hosted on this site are working examples intended to be used for
-                reference in creating products to consume AT&amp;T Services and not meant to be
-                used as part of your product. The data in these pages is for test purposes only
-                and intended only for use as a reference in how the services perform.
-                <br />
-                For dewnload of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
-                <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
+            <div id="ft" class="center">
+                <!-- FOOTER BEGIN -->
+                <div>
+                    <div style="float: right; width: 20%; font-size: 9px; text-align: right">
+                        Powered by AT&amp;T Cloud Architecture</div>
+                    <p>
+                        &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                            target="_blank">http://developer.att.com</a>
+                        <br />
+                        The Application hosted on this site are working examples intended to be used for
+                        reference in creating products to consume AT&amp;T Services and not meant to be
+                        used as part of your product. The data in these pages is for test purposes only
+                        and intended only for use as a reference in how the services perform.
+                        <br />
+                        For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
+                            target="_blank">https://devconnect-api.att.com</a>
+                        <br />
+                        For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
+                </div>
+                <!-- FOOTER END -->
+            </div>
         </div>
     </div>
-    <p>
-        &nbsp;</p>
-    </form>
 </body>
 </html>

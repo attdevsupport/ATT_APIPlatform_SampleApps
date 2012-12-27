@@ -2,20 +2,14 @@ package com.att.api.speech.handler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.att.api.speech.model.SpeechResponse;
 import com.att.api.speech.service.SpeechService;
@@ -44,12 +38,14 @@ public class SpeechController extends HttpServlet {
 	 * @throws IOException
 	 *             if the target resource throws this exception
 	 */
-	private void forwardResponse(SpeechResponse speechResponse, HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	private void forwardResponse(SpeechResponse speechResponse,
+			HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		if (speechResponse != null) {
 			request.setAttribute("response", speechResponse);
 		}
-		RequestDispatcher dispatcher = request.getRequestDispatcher("/Speech.jsp");
+		RequestDispatcher dispatcher = request
+				.getRequestDispatcher("/Speech.jsp");
 		dispatcher.forward(request, response);
 	}
 
@@ -72,38 +68,30 @@ public class SpeechController extends HttpServlet {
 	 * @throws Exception
 	 *             if target resource throws this exception
 	 */
-	private File parseRequest(Config cfg, HashMap<String, String> formFieldValues,
-			HttpServletRequest request, HttpServletResponse response) throws IOException,
-			FileUploadException, Exception {
-		DiskFileItemFactory dfiFactory = new DiskFileItemFactory();
-		dfiFactory.setSizeThreshold(cfg.maxUploadFileSize);
-		// DiskFileItemFactory uses system temp directory by default
-
-		ServletFileUpload sfUpload = new ServletFileUpload(dfiFactory);
-
-		@SuppressWarnings("unchecked")
-		List<FileItem> fItems = sfUpload.parseRequest(request);
-
-		Iterator<FileItem> itr = fItems.iterator();
-
+	private File parseRequest(Config cfg,
+			HashMap<String, String> formFieldValues,
+			HttpServletRequest request, HttpServletResponse response)
+			throws IOException, Exception {
+		final Enumeration<String> params = request.getParameterNames();
+		
+		while (params.hasMoreElements()) 
+		{
+			final String name = params.nextElement();
+			final String value = request.getParameter(name);
+			formFieldValues.put(name, value);
+		}
+		
 		File uploadFile = null;
+		String fname = request.getParameter("filename");
+		String directory = request.getSession().getServletContext()
+				.getRealPath("/")
+				+ cfg.audioFolder;
 
-		while (itr.hasNext()) {
-			FileItem fItem = itr.next();
-			if (fItem.isFormField()) {
-				formFieldValues.put(fItem.getFieldName(), fItem.getString());
-			} else {
-				if (fItem.getName() != "") {
-					String filePrefix = "att"; // file prefix used for temp file
-					uploadFile = File.createTempFile(filePrefix, ".tmp");
-					uploadFile.deleteOnExit();
-					fItem.write(uploadFile);
-				}
-			}
+		if (fname != null) {
+			uploadFile = new File(directory, fname);
 		}
 
 		if (uploadFile == null || !uploadFile.isFile()) {
-			String directory = request.getSession().getServletContext().getRealPath("/");
 			uploadFile = new File(directory, cfg.defaultFile);
 		}
 
@@ -133,28 +121,35 @@ public class SpeechController extends HttpServlet {
 			throws IOException, ServletException {
 
 		Config cfg = (Config) request.getSession().getAttribute("cfg");
+		HashMap<String, String> formFieldValues = new HashMap<String, String>();
+		File uploadFile = null;
+		try {
+			uploadFile = parseRequest(cfg, formFieldValues, request,
+					response);
+		} catch (Exception e1) {
+			forwardResponse(new SpeechResponse(e1.getMessage()), request,
+					response);
+			return;
+		}
+		
+		request.getSession().setAttribute("formFields", formFieldValues);
 		if (cfg == null) {
-			forwardResponse(new SpeechResponse("No configuration supplied"), request, response);
+			forwardResponse(new SpeechResponse("No configuration supplied"),
+					request, response);
 			return;
 		}
 		if (cfg.getError() != null) {
-			forwardResponse(new SpeechResponse(cfg.getError()), request, response);
-			return;
-		}
-
-		if (!ServletFileUpload.isMultipartContent(request)) {
-			forwardResponse(new SpeechResponse("The request is not a multipart request."), request,
+			forwardResponse(new SpeechResponse(cfg.getError()), request,
 					response);
 			return;
 		}
 
 		try {
-			HashMap<String, String> formFieldValues = new HashMap<String, String>();
-			File uploadFile = parseRequest(cfg, formFieldValues, request, response);
-			String accessToken = (String) request.getSession().getAttribute("accessToken");
+			String accessToken = (String) request.getSession().getAttribute(
+					"accessToken");
 			if (accessToken == null || accessToken == "") {
-				forwardResponse(new SpeechResponse("Access token has not been set."), request,
-						response);
+				forwardResponse(new SpeechResponse(
+						"Access token has not been set."), request, response);
 				return;
 			}
 
@@ -165,12 +160,12 @@ public class SpeechController extends HttpServlet {
 			if (chunked != null && chunked.equals("Send Chunked")) {
 				speechService.setChunked(true);
 			}
-
-			SpeechResponse speechResponse = speechService.sendRequest(uploadFile, accessToken,
-					context);
+			SpeechResponse speechResponse = speechService.sendRequest(
+					uploadFile, accessToken, context);
 			forwardResponse(speechResponse, request, response);
 		} catch (Exception e) {
-			forwardResponse(new SpeechResponse(e.getMessage()), request, response);
+			forwardResponse(new SpeechResponse(e.getMessage()), request,
+					response);
 		}
 	}
 }

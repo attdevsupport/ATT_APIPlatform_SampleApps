@@ -41,12 +41,7 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// <summary>
     /// variable for having the posted file.
     /// </summary>
-    private string fileToConvert;
-
-    /// <summary>
-    /// Flag for deletion of the temporary file
-    /// </summary>
-    private bool deleteFile;
+    private string SpeechFilesDir;
 
     /// <summary>
     /// Gets or sets the value of refreshTokenExpiresIn
@@ -93,8 +88,6 @@ public partial class Speech_App1 : System.Web.UI.Page
 
         this.ReadConfigFile();
 
-        this.deleteFile = false;
-
         this.ResetDisplay();
     }
 
@@ -108,35 +101,7 @@ public partial class Speech_App1 : System.Web.UI.Page
         try
         {
             resultsPanel.Visible = false;
-
-            if (string.IsNullOrEmpty(fileUpload1.FileName))
-            {
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DefaultFile"]))
-                    this.fileToConvert = Request.MapPath(ConfigurationManager.AppSettings["DefaultFile"]);
-                else
-                {
-                    this.DrawPanelForFailure(statusPanel, "No file selected, and default file is not defined in web.config");
-                    return;
-                }
-            }
-            else
-            {
-                string fileName = fileUpload1.FileName;
-                if (fileName.CompareTo("default.wav") == 0)
-                {
-                    fileName = "1" + fileUpload1.FileName;
-                }
-                fileUpload1.PostedFile.SaveAs(Request.MapPath("") + "/" + fileName);
-                this.fileToConvert = Request.MapPath("").ToString() + "/" + fileName;
-                this.deleteFile = true;
-            }
-
-            bool IsValid = this.IsValidFile(this.fileToConvert);
-
-            if (IsValid == false)
-            {
-                return;
-            }
+            bool IsValid = true;
 
             IsValid = this.ReadAndGetAccessToken();
             if (IsValid == false)
@@ -144,8 +109,14 @@ public partial class Speech_App1 : System.Web.UI.Page
                 this.DrawPanelForFailure(statusPanel, "Unable to get access token");
                 return;
             }
-
-            this.ConvertToSpeech();
+            var chunkValue = false;
+            if (chkChunked.Items.FindByText(" Send Chunked").Selected)
+            {
+                chunkValue = true;
+            }
+            var speechFile = this.SpeechFilesDir + ddlAudioFile.SelectedValue.ToString();
+            this.ConvertToSpeech(this.fqdn + "/rest/2/SpeechToText",
+                this.accessToken, ddlSpeechContext.SelectedValue.ToString(), txtXArgs.Text, speechFile, chunkValue);
         }
         catch (Exception ex)
         {
@@ -206,6 +177,11 @@ public partial class Speech_App1 : System.Web.UI.Page
         {
             this.refreshTokenExpiresIn = 24;
         }
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SpeechFilesDir"]))
+        {
+            this.SpeechFilesDir = Request.MapPath(ConfigurationManager.AppSettings["SpeechFilesDir"]);
+        }
+
         if (!IsPostBack)
         {
             if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SpeechContext"]))
@@ -215,12 +191,23 @@ public partial class Speech_App1 : System.Web.UI.Page
                 {
                     ddlSpeechContext.Items.Add(speechContext);
                 }
-                ddlSpeechContext.Items[0].Selected = true;
+                if (speechContexts.Length > 0)
+                    ddlSpeechContext.Items[0].Selected = true;
             }
             if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["X-Arg"]))
             {
                 xArgsData = HttpUtility.UrlEncode(ConfigurationManager.AppSettings["X-Arg"]);
                 txtXArgs.Text = ConfigurationManager.AppSettings["X-Arg"];
+            }
+            if (!string.IsNullOrEmpty(SpeechFilesDir))
+            {
+                string[] filePaths = Directory.GetFiles(this.SpeechFilesDir);
+                foreach (string filePath in filePaths)
+                {
+                    ddlAudioFile.Items.Add(Path.GetFileName(filePath));
+                }
+                if (filePaths.Length > 0 )
+                    ddlAudioFile.Items[0].Selected = true;
             }
         }
 
@@ -481,11 +468,11 @@ public partial class Speech_App1 : System.Web.UI.Page
         {
             panelParam.Controls.Clear();
         }
-
+        panelParam.CssClass = "successWide";
         Table table = new Table();
-        table.CssClass = "successWide";
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
+        //table.CssClass = "successWide";
+        //table.Font.Name = "Sans-serif";
+        //table.Font.Size = 9;
         TableRow rowOne = new TableRow();
         TableCell rowOneCellOne = new TableCell();
         rowOneCellOne.Font.Bold = true;
@@ -511,11 +498,11 @@ public partial class Speech_App1 : System.Web.UI.Page
         {
             panelParam.Controls.Clear();
         }
-
+        panelParam.CssClass = "errorWide";
         Table table = new Table();
-        table.CssClass = "errorWide";
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
+        //table.CssClass = "errorWide";
+        //table.Font.Name = "Sans-serif";
+        //table.Font.Size = 9;
         TableRow rowOne = new TableRow();
         TableCell rowOneCellOne = new TableCell();
         rowOneCellOne.Font.Bold = true;
@@ -535,30 +522,6 @@ public partial class Speech_App1 : System.Web.UI.Page
     #region Speech Service Functions
 
     /// <summary>
-    /// Verifies whether the given file satisfies the criteria for speech api
-    /// </summary>
-    /// <param name="file">Name of the sound file</param>
-    /// <returns>true/false; true if valid file, else false</returns>
-    private bool IsValidFile(string file)
-    {
-        bool isValid = false;
-
-        // Verify File Extension
-        string extension = System.IO.Path.GetExtension(file);
-
-        if (!string.IsNullOrEmpty(extension) && (extension.Equals(".wav") || extension.Equals(".amr") || extension.Equals(".awb") || extension.Equals(".spx")))
-        {
-            isValid = true;
-        }
-        else
-        {
-            this.DrawPanelForFailure(statusPanel, "Invalid file specified. Valid file formats are .wav and .amr");
-        }
-
-        return isValid;
-    }
-
-    /// <summary>
     /// Content type based on the file extension.
     /// </summary>
     /// <param name="extension">file extension</param>
@@ -567,17 +530,7 @@ public partial class Speech_App1 : System.Web.UI.Page
     {
         Dictionary<string, string> extensionToContentTypeMapping = new Dictionary<string, string>()
             {
-                { ".jpg", "image/jpeg" }, { ".bmp", "image/bmp" }, { ".mp3", "audio/mp3" },
-                { ".m4a", "audio/m4a" }, { ".gif", "image/gif" }, { ".3gp", "video/3gpp" },
-                { ".3g2", "video/3gpp2" }, { ".wmv", "video/x-ms-wmv" }, { ".m4v", "video/x-m4v" },
-                { ".amr", "audio/amr" }, { ".mp4", "video/mp4" }, { ".avi", "video/x-msvideo" },
-                { ".mov", "video/quicktime" }, { ".mpeg", "video/mpeg" }, { ".wav", "audio/wav" },
-                { ".aiff", "audio/x-aiff" }, { ".aifc", "audio/x-aifc" }, { ".midi", ".midi" },
-                { ".au", "audio/basic" }, { ".xwd", "image/x-xwindowdump" }, { ".png", "image/png" },
-                { ".tiff", "image/tiff" }, { ".ief", "image/ief" }, { ".txt", "text/plain" },
-                { ".html", "text/html" }, { ".vcf", "text/x-vcard" }, { ".vcs", "text/x-vcalendar" },
-                { ".mid", "application/x-midi" }, { ".imy", "audio/iMelody" },
-                {".awb", "audio/amr-wb"}, {".spx", "audio/x-speex"}
+                { ".amr", "audio/amr" }, { ".wav", "audio/wav" }, {".awb", "audio/amr-wb"}, {".spx", "audio/x-speex"}
             };
         if (extensionToContentTypeMapping.ContainsKey(extension))
         {
@@ -592,37 +545,33 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// <summary>
     /// This function invokes api SpeechToText to convert the given wav amr file and displays the result.
     /// </summary>
-    private void ConvertToSpeech()
+    private void ConvertToSpeech(string parEndPoint, string parAccessToken, string parXspeechContext, string parXArgs, string parSpeechFilePath, bool parChunked)
     {
         Stream postStream = null;
         FileStream audioFileStream = null;
         try
         {
-            string mmsFilePath = this.fileToConvert;
-            audioFileStream = new FileStream(mmsFilePath, FileMode.Open, FileAccess.Read);
+            audioFileStream = new FileStream(parSpeechFilePath, FileMode.Open, FileAccess.Read);
             BinaryReader reader = new BinaryReader(audioFileStream);
             byte[] binaryData = reader.ReadBytes((int)audioFileStream.Length);
             reader.Close();
             audioFileStream.Close();
             if (null != binaryData)
             {
-                HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(string.Empty + this.fqdn + "/rest/2/SpeechToText");
-                httpRequest.Headers.Add("Authorization", "Bearer " + this.accessToken);
-                httpRequest.Headers.Add("X-SpeechContext", ddlSpeechContext.SelectedValue.ToString());
-                if (!string.IsNullOrEmpty(xArgsData.ToString()))
+                HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(string.Empty + parEndPoint );
+                httpRequest.Headers.Add("Authorization", "Bearer " + parAccessToken);
+                httpRequest.Headers.Add("X-SpeechContext", parXspeechContext);
+                if (!string.IsNullOrEmpty(parXArgs))
                 {
-                    httpRequest.Headers.Add("X-Arg", xArgsData.ToString());
+                    httpRequest.Headers.Add("X-Arg", parXArgs);
                 }
-                string contentType = this.MapContentTypeFromExtension(Path.GetExtension(mmsFilePath));
+                string contentType = this.MapContentTypeFromExtension(Path.GetExtension(parSpeechFilePath));
                 httpRequest.ContentLength = binaryData.Length;
                 httpRequest.ContentType = contentType;
                 httpRequest.Accept = "application/json";
                 httpRequest.Method = "POST";
                 httpRequest.KeepAlive = true;
-                if (chkChunked.Items.FindByText("Send Chunked").Selected)
-                {
-                    httpRequest.SendChunked = true;
-                }
+                httpRequest.SendChunked = parChunked;
                 postStream = httpRequest.GetRequestStream();
                 postStream.Write(binaryData, 0, binaryData.Length);
                 postStream.Close();
@@ -676,7 +625,7 @@ public partial class Speech_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            this.DrawPanelForFailure(statusPanel, errorResponse + Environment.NewLine + we.ToString());
+            this.DrawPanelForFailure(statusPanel, errorResponse);
         }
         catch (Exception ex)
         {
@@ -684,11 +633,6 @@ public partial class Speech_App1 : System.Web.UI.Page
         }
         finally
         {
-            if ((this.deleteFile == true) && (File.Exists(this.fileToConvert)))
-            {
-                File.Delete(this.fileToConvert);
-                this.deleteFile = false;
-            }
             if (null != postStream)
             {
                 postStream.Close();

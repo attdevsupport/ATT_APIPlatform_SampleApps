@@ -3,14 +3,27 @@ package com.att.api.speech.service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,7 +63,8 @@ public class SpeechService {
 	 * @throws IOException
 	 *             if unable to read the passed-in response
 	 */
-	private SpeechResponse parseSuccess(HttpResponse response) throws IOException {
+	private SpeechResponse parseSuccess(HttpResponse response)
+			throws IOException {
 		String result = EntityUtils.toString(response.getEntity());
 		try {
 			JSONObject object = new JSONObject(result);
@@ -63,8 +77,9 @@ public class SpeechService {
 
 			if (jStatus.equals("OK")) {
 				JSONArray nBest = recognition.getJSONArray("NBest");
-				final String[] names = { "Hypothesis", "LanguageId", "Confidence", "Grade",
-						"ResultText", "Words", "WordScores" };
+				final String[] names = { "Hypothesis", "LanguageId",
+						"Confidence", "Grade", "ResultText", "Words",
+						"WordScores" };
 				for (int i = 0; i < nBest.length(); ++i) {
 					JSONObject nBestObject = (JSONObject) nBest.get(i);
 					for (final String name : names) {
@@ -78,7 +93,8 @@ public class SpeechService {
 
 			return sp;
 		} catch (java.text.ParseException e) {
-			return new SpeechResponse("Server responded with an unexpected reply.");
+			return new SpeechResponse(
+					"Server responded with an unexpected reply.");
 		}
 	}
 
@@ -94,7 +110,8 @@ public class SpeechService {
 	 * @throws IOException
 	 *             if unable to read the passed-in response
 	 */
-	private SpeechResponse parseFailure(HttpResponse response) throws ParseException, IOException {
+	private SpeechResponse parseFailure(HttpResponse response)
+			throws ParseException, IOException {
 		String result = null;
 		if (response.getEntity() == null) {
 			result = response.getStatusLine().getReasonPhrase();
@@ -204,11 +221,41 @@ public class SpeechService {
 	 *             if there was an error in the HTTP protocol
 	 * @throws IOException
 	 *             if there was an error reading the server response
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyStoreException
+	 * @throws UnrecoverableKeyException
+	 * @throws KeyManagementException
 	 * @see SpeechResponse
 	 */
-	public SpeechResponse sendRequest(File file, String accessToken, String speechContext)
-			throws ClientProtocolException, IOException {
-		DefaultHttpClient client = new DefaultHttpClient();
+	public SpeechResponse sendRequest(File file, String accessToken,
+			String speechContext) throws ClientProtocolException, IOException,
+			NoSuchAlgorithmException, KeyManagementException,
+			UnrecoverableKeyException, KeyStoreException {
+		SchemeRegistry registry = new SchemeRegistry();
+
+		
+		DefaultHttpClient client = null;
+		if (cfg.trustAllCerts) {
+		// Trust all host certs. Only enable if on testing!
+		SSLSocketFactory socketFactory = new SSLSocketFactory(
+				new TrustStrategy() {
+					public boolean isTrusted(final X509Certificate[] chain,
+							String authType) {
+						return true;
+					}
+
+				}, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+
+		registry.register(new Scheme("http", 80, PlainSocketFactory
+				.getSocketFactory()));
+		registry.register(new Scheme("https", 443, socketFactory));
+		ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(
+				registry);
+		client = new DefaultHttpClient(cm,
+				new DefaultHttpClient().getParams());
+		} else {
+			client = new DefaultHttpClient();
+		}
 
 		String contentType = getMIMEType(file);
 		if (contentType == null) {
@@ -225,11 +272,7 @@ public class SpeechService {
 		hPost.addHeader("Accept", "application/json");
 		hPost.addHeader("X-SpeechContext", speechContext);
 
-		if (!chunked) {
-			fEntity.setChunked(false);
-		} else {
-			fEntity.setChunked(true);
-		}
+		fEntity.setChunked(chunked);
 
 		if (cfg.getXArgHTTPValue() != null && cfg.getXArgHTTPValue() != "") {
 			hPost.addHeader("X-Arg", cfg.getXArgHTTPValue());

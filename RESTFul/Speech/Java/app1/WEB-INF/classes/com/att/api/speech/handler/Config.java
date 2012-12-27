@@ -14,6 +14,11 @@ public class Config {
 	public String clientSecretAuth;
 	public String FQDN;
 	public String endPointURL;
+	public String linkSource;
+	public String linkDownload;
+	public String linkHelp;
+	public String audioFolder;
+	public boolean trustAllCerts;
 
 	public int maxUploadFileSize;
 	public String defaultFile;

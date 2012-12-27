@@ -41,12 +41,7 @@ Partial Public Class Speech_App1
     ''' <summary>
     ''' variable for having the posted file.
     ''' </summary>
-    Private fileToConvert As String
-
-    ''' <summary>
-    ''' Flag for deletion of the temporary file
-    ''' </summary>
-    Private deleteFile As Boolean
+    Private SpeechFilesDir As String
 
     ''' <summary>
     ''' Gets or sets the value of refreshTokenExpiresIn
@@ -90,7 +85,6 @@ Partial Public Class Speech_App1
 
         Me.ReadConfigFile()
 
-        Me.deleteFile = False
         Me.ResetDisplay()
     End Sub
 
@@ -103,36 +97,19 @@ Partial Public Class Speech_App1
         Try
             resultsPanel.Visible = False
 
-            If String.IsNullOrEmpty(fileUpload1.FileName) Then
-                If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("DefaultFile")) Then
-                    Me.fileToConvert = Request.MapPath(ConfigurationManager.AppSettings("DefaultFile"))
-                Else
-                    Me.DrawPanelForFailure(statusPanel, "No file selected, and default file is not defined in web.config")
-                    Return
-                End If
-            Else
-                Dim fileName As String = fileUpload1.FileName
-                If fileName.CompareTo("default.wav") = 0 Then
-                    fileName = "1" + fileUpload1.FileName
-                End If
-                fileUpload1.PostedFile.SaveAs(Request.MapPath("") & "/" & fileName)
-                Me.fileToConvert = Request.MapPath("").ToString() & "/" & fileName
-                Me.deleteFile = True
-            End If
-
-            Dim IsValid As Boolean = Me.IsValidFile(Me.fileToConvert)
-
-            If IsValid = False Then
-                Return
-            End If
+            Dim IsValid As Boolean = True
 
             IsValid = Me.ReadAndGetAccessToken()
             If IsValid = False Then
                 Me.DrawPanelForFailure(statusPanel, "Unable to get access token")
                 Return
             End If
-
-            Me.ConvertToSpeech()
+            Dim chunkValue = False
+            If chkChunked.Items.FindByText(" Send Chunked").Selected Then
+                chunkValue = True
+            End If
+            Dim speechFile = Me.SpeechFilesDir + ddlAudioFile.SelectedValue.ToString()
+            Me.ConvertToSpeech(Me.fqdn + "/rest/2/SpeechToText", Me.accessToken, ddlSpeechContext.SelectedValue.ToString(), txtXArgs.Text, speechFile, chunkValue)
         Catch ex As Exception
             Me.DrawPanelForFailure(statusPanel, ex.Message)
             Return
@@ -182,17 +159,31 @@ Partial Public Class Speech_App1
         Else
             Me.refreshTokenExpiresIn = 24
         End If
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SpeechFilesDir")) Then
+            Me.SpeechFilesDir = Request.MapPath(ConfigurationManager.AppSettings("SpeechFilesDir"))
+        End If
         If Not IsPostBack Then
             If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SpeechContext")) Then
                 Dim speechContexts As String() = ConfigurationManager.AppSettings("SpeechContext").ToString().Split(";"c)
                 For Each speechContext As String In speechContexts
                     ddlSpeechContext.Items.Add(speechContext)
                 Next
-                ddlSpeechContext.Items(0).Selected = True
+                If speechContexts.Length > 0 Then
+                    ddlSpeechContext.Items(0).Selected = True
+                End If
             End If
             If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("X-Arg")) Then
                 xArgsData = HttpUtility.UrlEncode(ConfigurationManager.AppSettings("X-Arg"))
                 txtXArgs.Text = ConfigurationManager.AppSettings("X-Arg")
+            End If
+            If Not String.IsNullOrEmpty(SpeechFilesDir) Then
+                Dim filePaths As String() = Directory.GetFiles(Me.SpeechFilesDir)
+                For Each filePath As String In filePaths
+                    ddlAudioFile.Items.Add(Path.GetFileName(filePath))
+                Next
+                If filePaths.Length > 0 Then
+                    ddlAudioFile.Items(0).Selected = True
+                End If
             End If
         End If
 
@@ -400,11 +391,8 @@ Partial Public Class Speech_App1
         If panelParam.HasControls() Then
             panelParam.Controls.Clear()
         End If
-
+        panelParam.CssClass = "successWide"
         Dim table As New Table()
-        table.CssClass = "successWide"
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
         Dim rowOne As New TableRow()
         Dim rowOneCellOne As New TableCell()
         rowOneCellOne.Font.Bold = True
@@ -428,11 +416,8 @@ Partial Public Class Speech_App1
         If panelParam.HasControls() Then
             panelParam.Controls.Clear()
         End If
-
+        panelParam.CssClass = "errorWide"
         Dim table As New Table()
-        table.CssClass = "errorWide"
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
         Dim rowOne As New TableRow()
         Dim rowOneCellOne As New TableCell()
         rowOneCellOne.Font.Bold = True
@@ -465,61 +450,14 @@ Partial Public Class Speech_App1
     End Function
 
     ''' <summary>
-    ''' Verifies whether the given file satisfies the criteria for speech api
-    ''' </summary>
-    ''' <param name="file">Name of the sound file</param>
-    ''' <returns>true/false; true if valid file, else false</returns>
-    Private Function IsValidFile(file As String) As Boolean
-        Dim isValid As Boolean = False
-
-        ' Verify File Extension
-        Dim extension As String = System.IO.Path.GetExtension(file)
-
-        If Not String.IsNullOrEmpty(extension) AndAlso (extension.Equals(".wav") OrElse extension.Equals(".amr") OrElse extension.Equals(".awb") OrElse extension.Equals(".spx")) Then
-            isValid = True
-        Else
-            Me.DrawPanelForFailure(statusPanel, "Invalid file specified. Valid file formats are .wav and .amr")
-        End If
-
-        Return isValid
-    End Function
-
-    ''' <summary>
     ''' Content type based on the file extension.
     ''' </summary>
     ''' <param name="extension">file extension</param>
     ''' <returns>the Content type mapped to the extension"/> summed memory stream</returns>
     Private Function MapContentTypeFromExtension(extension As String) As String
         Dim extensionToContentTypeMapping As New Dictionary(Of String, String)() From { _
-         {".jpg", "image/jpeg"}, _
-         {".bmp", "image/bmp"}, _
-         {".mp3", "audio/mp3"}, _
-         {".m4a", "audio/m4a"}, _
-         {".gif", "image/gif"}, _
-         {".3gp", "video/3gpp"}, _
-         {".3g2", "video/3gpp2"}, _
-         {".wmv", "video/x-ms-wmv"}, _
-         {".m4v", "video/x-m4v"}, _
          {".amr", "audio/amr"}, _
-         {".mp4", "video/mp4"}, _
-         {".avi", "video/x-msvideo"}, _
-         {".mov", "video/quicktime"}, _
-         {".mpeg", "video/mpeg"}, _
          {".wav", "audio/wav"}, _
-         {".aiff", "audio/x-aiff"}, _
-         {".aifc", "audio/x-aifc"}, _
-         {".midi", ".midi"}, _
-         {".au", "audio/basic"}, _
-         {".xwd", "image/x-xwindowdump"}, _
-         {".png", "image/png"}, _
-         {".tiff", "image/tiff"}, _
-         {".ief", "image/ief"}, _
-         {".txt", "text/plain"}, _
-         {".html", "text/html"}, _
-         {".vcf", "text/x-vcard"}, _
-         {".vcs", "text/x-vcalendar"}, _
-         {".mid", "application/x-midi"}, _
-         {".imy", "audio/iMelody"}, _
          {".awb", "audio/amr-wb"}, _
          {".spx", "audio/x-speex"} _
         }
@@ -533,32 +471,29 @@ Partial Public Class Speech_App1
     ''' <summary>
     ''' This function invokes api SpeechToText to convert the given wav amr file and displays the result.
     ''' </summary>
-    Private Sub ConvertToSpeech()
+    Private Sub ConvertToSpeech(parEndPoint As String, parAccessToken As String, parXspeechContext As String, parXArgs As String, parSpeechFilePath As String, parChunked As Boolean)
         Dim postStream As Stream = Nothing
         Dim audioFileStream As FileStream = Nothing
         Try
-            Dim mmsFilePath As String = Me.fileToConvert
-            audioFileStream = New FileStream(mmsFilePath, FileMode.Open, FileAccess.Read)
+            audioFileStream = New FileStream(parSpeechFilePath, FileMode.Open, FileAccess.Read)
             Dim reader As New BinaryReader(audioFileStream)
             Dim binaryData As Byte() = reader.ReadBytes(CInt(audioFileStream.Length))
             reader.Close()
             audioFileStream.Close()
             If binaryData IsNot Nothing Then
-                Dim httpRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & Me.fqdn & "/rest/2/SpeechToText"), HttpWebRequest)
-                httpRequest.Headers.Add("Authorization", "Bearer " & Me.accessToken)
-                httpRequest.Headers.Add("X-SpeechContext", ddlSpeechContext.SelectedValue.ToString())
-                If Not String.IsNullOrEmpty(xArgsData.ToString()) Then
-                    httpRequest.Headers.Add("X-Arg", xArgsData.ToString())
+                Dim httpRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty + parEndPoint), HttpWebRequest)
+                httpRequest.Headers.Add("Authorization", "Bearer " + parAccessToken)
+                httpRequest.Headers.Add("X-SpeechContext", parXspeechContext)
+                If Not String.IsNullOrEmpty(parXArgs) Then
+                    httpRequest.Headers.Add("X-Arg", parXArgs)
                 End If
-                Dim contentType As String = Me.MapContentTypeFromExtension(Path.GetExtension(mmsFilePath))
+                Dim contentType As String = Me.MapContentTypeFromExtension(Path.GetExtension(parSpeechFilePath))
                 httpRequest.ContentLength = binaryData.Length
                 httpRequest.ContentType = contentType
                 httpRequest.Accept = "application/json"
                 httpRequest.Method = "POST"
                 httpRequest.KeepAlive = True
-                If chkChunked.Items.FindByText("Send Chunked").Selected Then
-                    httpRequest.SendChunked = True
-                End If
+                httpRequest.SendChunked = parChunked
                 postStream = httpRequest.GetRequestStream()
                 postStream.Write(binaryData, 0, binaryData.Length)
                 postStream.Close()
@@ -597,19 +532,16 @@ Partial Public Class Speech_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            Me.DrawPanelForFailure(statusPanel, errorResponse & Environment.NewLine & we.ToString())
+            Me.DrawPanelForFailure(statusPanel, errorResponse)
         Catch ex As Exception
             Me.DrawPanelForFailure(statusPanel, ex.ToString())
         Finally
-            If (Me.deleteFile = True) AndAlso (File.Exists(Me.fileToConvert)) Then
-                File.Delete(Me.fileToConvert)
-                Me.deleteFile = False
-            End If
             If postStream IsNot Nothing Then
                 postStream.Close()
             End If
         End Try
     End Sub
+
 
     ''' <summary>
     ''' Reset Display of success response

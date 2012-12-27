@@ -1,349 +1,223 @@
+<?php
+session_start();
+require __DIR__ . '/src/Sample/SpeechService.php';
+require __DIR__ . '/config.php';
+require __DIR__ . '/lib/Util/Util.php';
+$speechService = new SpeechService();
+$response = $speechService->speechToText();
+?>
+<!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' September 2011
+tLicensed by AT&T under 'Software Development Kit Tools Agreement.' September 2011
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+
 Copyright 2011 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+
 For more information contact developer.support@att.com
 -->
-<?php
-
-header("Content-Type: text/html; charset=ISO-8859-1");
-include("config.php");
-include($oauth_file);
-include("tokens.php");
-error_reporting(0);
-session_start();
-
-$chkChunked = $_REQUEST["chkChunked"];
-$_SESSION["chkChunked"] = $chkChunked;
-$speechcontext = $_REQUEST["speechcontext"];
-$_SESSION["speechcontext"] = $speechcontext;
-$header_array = array();
-
-
-$speech_context_array = preg_split('/,/', $speech_context_config, -1, PREG_SPLIT_NO_EMPTY);
-$counter = count($speech_context_array);
-
-
-
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en">
+<!--<![endif]-->
 <head>
-    <title>AT&amp;T Sample Speech Application - Speech to Text Application
-    </title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
+    <title>AT&amp;T Sample Speech Application - Speech to Text(Generic)</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
 </head>
 <body>
-<div id="container">
-<!-- open HEADER -->
-<div id="header">
-    <div>
-        <div class="hcRight">
-            <?php echo date("D M j G:i:s T Y");?>
-        </div>
-        <div class="hcLeft">
-            Server Time:</div>
-    </div>
-    <div>
-        <div class="hcRight">
-            <script language="JavaScript" type="text/javascript">
-                var myDate = new Date();
-                document.write(myDate);
-            </script>
-        </div>
-        <div class="hcLeft">
-            Client Time:</div>
-    </div>
-    <div>
-        <div class="hcRight">
-            <script language="JavaScript" type="text/javascript">
-                document.write("" + navigator.userAgent);
-            </script>
-        </div>
-        <div class="hcLeft">
-            User Agent:</div>
-    </div>
-    <br clear="all" />
-</div>
-<!-- close HEADER -->
-<div>
-    <div class="content">
-        <h1>
-            AT&amp;T Sample Speech Application - Speech to Text Application</h1>
-        <h2>
-            Feature 1: Speech to Text
-        </h2>
-    </div>
-</div>
-<br />
-<br />
-<form enctype="multipart/form-data" name="SpeechToText" action="" method="post">
-    <div class="navigation">
-        <table border="0" width="100%">
-            <tbody>
-            <tr>
-                <td valign="middle" class="label" align="right">
-                    Speech Context:
-                </td>
-               <td class="cell">
-                    <select name="speechcontext">
-                         <option value = ""></option>
-                        <?php for($i = 0; $i <= $counter-1; $i++) {?>
-                        <option value="<?php echo $speech_context_array[$i];?>"><?php echo $speech_context_array[$i];?></option><br><?php  } ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td width="25%" valign="top" class="label" align="right">
-                    Audio File:
-                </td>
-                <td class="cell">
-                    <input name="f1" type="file"/>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                </td>
-                <td class="cell">
-                    <input type="checkbox" name="chkChunked" value="Send Chunked" />
-                    Send Chunked
-                </td>
-            </tr>
-            <tr>
-                <td valign="middle" class="label" align="right">
-                    X-Arg:
-                </td>
-                <td class="cell">
-                    <input type="text" name="x-arg" style="height: 120px; width: 234px" value="<?php echo $x_arg; ?>" />
-                </td>
-            </tr>
-            <tr>
-                <td>
-                </td>
-                <td></td>
-                <td>
-                    <button type="submit" name="SpeechToText">
-                        Submit</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <div class="extra">
-        <table border="0" width="100%">
-            <tbody>
-            <tr>
-                <td />
-                <td>
-                    <div id="extraleft">
-                        <div class="warning">
-                            <strong>Note:</strong><br />
-                            If no file is chosen, a <a href="./default.wav">default.wav</a> file will be loaded
-                            on submit.<br />
-                            <strong>Speech file format constraints:</strong>
-                            <br />
-                            16 bit PCM WAV, single channel, 8 kHz sampling
-                            <br />
-                            16 bit PCM WAV, single channel, 16 kHz sampling
-                            <br />
-                            AMR (narrowband), 12.2 kbit/s, 8 kHz sampling
-                            <br />
-                            AMR-WB (wideband) is 12.65 kbit/s, 16khz sampling
-                            <br />
-                            OGG - speex encoding, 8kHz sampling
-                            <br />
-                            OGG - speex encoding, 16kHz sampling
-                        </div>
-                    </div>
-                </td>
-                <td />
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</form>
-</form>
-<br clear="all" />
-<div align="center">
-    <?php
-
-    if (isset($_POST['SpeechToText'])) {
-        
-
-        $fullToken["accessToken"]=$accessToken;
-        $fullToken["refreshToken"]=$refreshToken;
-        $fullToken["refreshTime"]=$refreshTime;
-        $fullToken["updateTime"]=$updateTime;
-
-        $fullToken=check_token($FQDN,$api_key,$secret_key,$scope,$fullToken,$oauth_file);
-        $accessToken=$fullToken["accessToken"];
-
-        if($speechcontext == "") {
-             $speechcontext = "Generic";
-        }
-        if($chkChunked == true) {
-            $transfer_encoding = 'Content-Transfer-Encoding: chunked';
-            array_push($header_array, $transfer_encoding);
-        }
-        if($x_arg != null) {
-            
-            $x_arg_header = "X-Arg:".urlencode($x_arg);
-            array_push($header_array, $x_arg_header);
-        }
-
-
-        $filename = $_FILES['f1']['name'];
-        
-
-
-        if($filename == null) {
-            $filename = dirname(__FILE__).'/bostonSeltics.wav';
-            $file_binary = fread(fopen($filename, 'rb'), filesize($filename));
-
-        } else{
-
-            $temp_file = $_FILES['f1']["tmp_name"];
-            $dir = dirname($temp_file);
-            $file_binary = fread(fopen($temp_file, "r"), filesize($temp_file));
-        }
-        $ext = end(explode('.', $filename));
-        $type = 'audio/'.$ext;
-
-
-        if($type == 'audio/wav' || $type == 'audio/amr' || $type =='audio/amr-wb' || $type =='audio/x-speex') {
-         
-
-            $speech_info_url = $FQDN."/rest/2/SpeechToText";
-            $authorization = "Authorization: BEARER ".$accessToken;
-            $accept = "Accept: application/json";
-            $context = "X-Speech-Context:".$speechcontext;
-            
-            $content = "Content-Type:".$type;
-            array_push($header_array, $authorization, $accept, $context, $content);
-
-
-
-
-            $speech_info_request = curl_init();
-            curl_setopt($speech_info_request, CURLOPT_URL, $speech_info_url);
-            curl_setopt($speech_info_request, CURLOPT_HTTPGET, 1);
-            curl_setopt($speech_info_request, CURLOPT_HEADER, 0);
-            curl_setopt($speech_info_request, CURLINFO_HEADER_OUT, 1);
-            curl_setopt($speech_info_request, CURLOPT_HTTPHEADER, $header_array);
-            curl_setopt($speech_info_request, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($speech_info_request, CURLOPT_POSTFIELDS, $file_binary);
-            curl_setopt($speech_info_request, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($speech_info_request, CURLOPT_SSL_VERIFYHOST, false);
-
-            $speech_info_response = curl_exec($speech_info_request);
-            $responseCode=curl_getinfo($speech_info_request,CURLINFO_HTTP_CODE);
-
-            if($responseCode==200)
-            {
-                $jsonObj2 = json_decode($speech_info_response);
-                $wordscounter = count($jsonObj2->Recognition->NBest[0]->Words);
-                $wordscorescounter = count($jsonObj2->Recognition->NBest[0]->WordScores);
-                
-                
-                ?><div class="successWide" align="left">
-                <strong>SUCCESS:</strong>
-                <br />
-                Response parameters listed below.
+    <div id="pageContainer" class="pageContainer">
+        <div id="header">
+            <div class="logo" id="top"></div>
+            <div id="menuButton" class="hide">
+                <a id="jump" href="#nav">Main Navigation</a>
             </div>
-                <table width="500" cellpadding="1" cellspacing="1" border="0">
+            <ul class="links" id="nav">
+                <li>
+                    <a href="#" target="_blank">Full Page<img src="images/max.png" alt="Max" /></a>
+                    <span class="divider"> |&nbsp;</span>
+                </li>
+                <li>
+                    <a href="<?php echo $linkSource; ?>" 
+                        target="_blank">Source<img src="images/source.png" alt="Source" /></a>
+                    <span class="divider"> |&nbsp;</span>
+                </li>
+                <li>
+                    <a href="<?php echo $linkDownload; ?>" 
+                        target="_blank">Download<img src="images/download.png" alt="Link"></a>
+                    <span class="divider">|&nbsp;</span>
+                </li>
+                <li><a href="<?php echo $linkHelp; ?>" target="_blank">Help</a></li>
+                <li id="back"><a href="#top">Back to top</a></li>
+            </ul> <!-- end of links -->
+        </div> <!-- end of header -->
+        <div class="content">
+            <div class="contentHeading">
+                <h1>AT&amp;T Sample Application - Speech to Text</h1>
+                <div id="introtext">
+                    <div><b>Server Time:&nbsp;</b><?php echo Util::getServerTime(); ?></div>
+                    <div>
+                        <b>Client Time:&nbsp;</b>
+                        <script>
+                            document.write("" + new Date());
+                        </script>
+                    </div>
+                    <div>
+                        <b>User Agent:&nbsp;</b>
+                        <script>
+                        document.write("" + navigator.userAgent);
+                        </script>
+                    </div>
+                </div> <!-- end of introtext -->
+            </div><!-- end of contentHeading -->
+            <div class="formBox" id="formBox">
+                <div id="formContainer" class="formContainer">
+                    <form name="SpeechToText" action="index.php" method="post">
+                        <div id="formData"> 
+                        <!-- start context select -->
+                            <h3>Speech Context:</h3>
+                            <select name="context">
+
+                            <?php
+                            $speechContexts = $speechService->getSpeechContexts();
+                            foreach ($speechContexts as $sname) { 
+                            $selected = '';
+                            if ($speechService->isSpeechContextSelected($sname)) $selected = 'selected ';
+                            ?>
+
+                            <option <?php echo $selected; ?>value="<?php echo $sname ?>"><?php echo $sname ?></option>
+                            <?php } ?>
+                            
+                            </select> 
+                        <!-- end context select --> 
+                            
+                        <!-- start audio file select -->
+                            <h3>Audio File:</h3>
+                            <select name="filename">
+                            <?php 
+                            $audioFiles = $speechService->getAudioFiles();
+                            foreach ($audioFiles as $fname) { 
+                            $selected = '';
+                            if ($speechService->isAudioFileSelected($fname)) $selected ='selected ';
+                            ?>
+
+                            <option <?php echo $selected; ?>value="<?php echo $fname ?>"><?php echo $fname ?></option>
+                            <?php } ?>
+
+                            </select> 
+                        <!-- end audio file select -->
+
+                            <div id="chunked">
+                                <br>
+                                <b>Send Chunked:</b>
+				<?php $chked = $speechService->isChunkedSelected() ? ' checked'  : ''; ?>
+
+                                <input name="chkChunked" value="Send Chunked" type="checkbox"<?php echo $chked; ?>>
+                            </div>
+                            <h3>X-Arg:</h3>
+                            <textarea id="x_arg" name="x-arg" readonly="readonly" 
+                                rows="4"><?php echo $x_arg ?></textarea>
+                            <br>
+                            <button type="submit" name="SpeechToText">Submit</button>
+                        </div> <!-- end of formData -->
+                    </form> <!-- end of SpeechToText form -->
+                </div> <!-- end of formContainer -->
+                <?php 
+                $error = $speechService->getError();
+                if ($error) {
+                ?>
+
+                <div class="errorWide">
+                    <strong>ERROR:</strong><br><?php echo htmlspecialchars($error); ?>
+                </div>
+                <?php } else if ($response) { ?>
+
+                <div class="successWide">
+                    <strong>SUCCESS:</strong> <br>Response parameters listed below.
+                </div>
+                <table class="kvp">
                     <thead>
-                    <tr>
-                        <th width="50%" class="label">Parameter</th>
-                        <th width="50%" class="label">Value</th>
-                    </tr>
+                        <tr>
+                            <th class="label">Parameter</th>
+                            <th class="label">Value</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td class="cell" align="center"><em>ResponseId</em></td>
-                        <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->ResponseId ?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>Status</em></td>
-                        <td class="cell" align="center">
-                            <em><?php $jStatus = $jsonObj2->Recognition->Status; echo $jStatus; ?></em>
-                        </td>
-                    </tr>
-                    <?php if (strcmp($jStatus, "OK") == 0) { ?>
-                    <tr>
-                        <td class="cell" align="center"><em>Hypothesis</em></td>
-                        <td class="cell" align="center"><em> <?php echo $jsonObj2->Recognition->NBest[0]->Hypothesis ?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>LanguageId</em></td>
-                        <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->NBest[0]->LanguageId?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>Confidence</em></td>
-                        <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->NBest[0]->Confidence ?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>Grade</em></td>
-                        <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->NBest[0]->Grade?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>ResultText</em></td>
-                        <td class="cell" align="center"><em><?php echo $jsonObj2->Recognition->NBest[0]->ResultText?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>Words</em></td>
-                        <td class="cell" align="center"><em><?php for ($i=0; $i<=$wordscounter; $i++) { echo $jsonObj2->Recognition->NBest[0]->Words[$i]; echo ' '; }?></em></td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center"><em>WordScores</em></td>
-                        <td class="cell" align="center"><em><?php for ($i=0; $i<=$wordscorescounter; $i++) { echo $jsonObj2->Recognition->NBest[0]->WordScores[$i]; echo ' '; }?></em></td>
-                    </tr>
-                    <?php } ?>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'ResponseID'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $response->getResponseId(); ?></em></td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'Status'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $response->getStatus(); ?></em></td>
+                        </tr>
+                            <?php 
+                            $nbest = $response->getNBest();
+                            if ($nbest != NULL) { ?>
+
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'Hypothesis'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $nbest->getHypothesis(); ?></em></td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'LanguageId'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $nbest->getLanguageId(); ?></em></td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'Confidence'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $nbest->getConfidence(); ?></em></td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'Grade'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $nbest->getGrade(); ?></em></td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'ResultText'; ?></em></td>
+                            <td class="cell" align="center"><em><?php echo $nbest->getResultText(); ?></em></td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'Words'; ?></em></td>
+                            <td class="cell" align="center">
+                                <em><?php echo json_encode($nbest->getWords()); ?></em>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="cell" align="center"><em><?php echo 'WordScores'; ?></em></td>
+                            <td class="cell" align="center">
+                                <em><?php echo json_encode($nbest->getWordScores()); ?></em>
+                            </td>
+                        </tr>
+                            <?php } ?>
+
                     </tbody>
-                </table><?php
-            }else{
+                </table>
+                <?php } ?>
 
-                $msghead="Error";
-                $msgdata=curl_error($speech_info_request);
-                $errormsg=$msgdata.$speech_info_response;
-                ?>
-                <div class="errorWide">
-                    <strong>ERROR:</strong><br />
-                    <?php  echo $errormsg?>
-                </div>
-                <?php }
-            curl_close ($speech_info_request);
-        }else{
-            ?>
-            <div class="errorWide">
-                <strong>ERROR:</strong><br />
-                <?php echo "Invalid file specified. Valid file formats are .wav, .amr, .amr-wb and x-speex'"?>
-            </div>
-            <?php }}
-
-
-    ?>
-
-    <br clear="all" />
-    <div id="footer">
-        <div style="float: right; width: 20%; font-size: 9px; text-align: right">
-            Powered by AT&amp;T Cloud Architecture</div>
-        <p>
-            &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                                                                                target="_blank">http://developer.att.com</a>
-            <br />
-            The Application hosted on this site are working examples intended to be used for
-            reference in creating products to consume AT&amp;T Services and not meant to be
-            used as part of your product. The data in these pages is for test purposes only
-            and intended only for use as a reference in how the services perform.
-            <br />
-            For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                                                                     target="_blank">https://devconnect-api.att.com</a>
-            <br />
-            For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
-    </div>
-</div>
-<p>
-    &nbsp;</p>
+            </div> <!-- end of formBox -->
+        </div> <!-- end of content -->
+        <div id="footer">
+            <div id="ft">
+                <div id="powered_by">Powered by AT&amp;T Cloud Architecture</div>
+                <p>
+                The Application hosted on this site are working examples intended to be used for reference in creating 
+                products to consume AT&amp;T Services and not meant to be used as part of your product. The data in 
+                these pages is for test purposes only and intended only for use as a reference in how the services 
+                perform. 
+                <br> <br> 
+                For download of tools and documentation, please go to 
+                <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
+                <br> 
+                For more information contact 
+                <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+                <br> <br>
+                &copy; 2012 AT&amp;T Intellectual Property. All rights reserved.
+                <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+                </p>
+            </div> <!-- end of ft -->
+        </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
 </body>
 </html>

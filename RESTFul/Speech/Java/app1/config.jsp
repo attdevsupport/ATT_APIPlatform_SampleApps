@@ -28,5 +28,13 @@ cfg.xarg.put("ClientVersion", "1.0.0");
 cfg.xarg.put("DeviceType", "SAMSUNG-SGH-I927");
 */
 
+cfg.trustAllCerts = false;
+
+cfg.linkSource = "#";
+cfg.linkDownload = "#";
+cfg.linkHelp = "#";
+
+cfg.audioFolder = "audio/";
+
 session.setAttribute("cfg", cfg);
 %>
