@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="speak">Press to Talk</string>
+    <string name="speak_wait">Please wait</string>
+    <string name="app_name">Simple Speech</string>
+    <string name="app_name_launcher">Simple Speech Examples</string>
+    <string name="app_name_activity">Simple Speech Example using Activity</string>
+    <string name="app_name_service">Simple Speech Example using Service</string>
+    <string name="result"> </string>
+</resources>
