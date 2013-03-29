@@ -17,6 +17,11 @@
 
     <servlet-mapping>
         <servlet-name>PaymentController</servlet-name>
+        <url-pattern>/singlepay.jsp</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>PaymentController</servlet-name>
         <url-pattern>/payment</url-pattern>
     </servlet-mapping>
 

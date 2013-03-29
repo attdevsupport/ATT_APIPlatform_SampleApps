@@ -31,6 +31,11 @@
 
     <servlet-mapping>
         <servlet-name>IMMNController</servlet-name>
+        <url-pattern>/index.jsp</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>IMMNController</servlet-name>
         <url-pattern>/sendMessage</url-pattern>
     </servlet-mapping>
 
