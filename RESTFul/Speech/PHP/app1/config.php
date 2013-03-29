@@ -12,7 +12,7 @@ $secret_key = "";
 $FQDN = "https://api.att.com";
 
 // Mandatory parameter that points to AT&T's Speech API. 
-$endpoint = $FQDN . "/rest/2/SpeechToText";
+$endpoint = $FQDN . "/speech/v3/speechToText";
 
 // Mandatory parameter. Scope to use when requesting access token.
 $scope = "SPEECH";
@@ -22,7 +22,7 @@ $scope = "SPEECH";
 $oauth_file = "oauthtoken.php";
 
 // Optional xarg parameter. Format is comma-seperated key-value pairs. 
-$x_arg = "ClientApp=NoteTaker,ClientVersion=1.0.1,DeviceType=iPhone4";
+$x_arg = "test=123";
 
 // Mandatory. Directory where files to be uploaded are stored.
 $audioFolder = "audio";
@@ -37,7 +37,10 @@ $linkDownload = '#';
 $linkHelp = '#';
 
 // Mandatory. Array of speech contexts to use when sending API request.
-$speech_context_config = array('QuestionAndAnswer','Generic','TV',
-        'BusinessSearch','Websearch', 'SMS','Voicemail');
+$speech_context_config = array('Generic', 'TV', 'BusinessSearch', 'Websearch',
+    'SMS', 'Voicemail', 'QuestionAndAnswer', 'Gaming', 'SocialMedia');
+
+// Currently only supported for gaming
+$xSpeechSubContext = 'Chat';
 
 ?>

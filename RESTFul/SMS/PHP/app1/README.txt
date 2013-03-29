@@ -1,7 +1,7 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
   AT&T API Platform Samples - SMS app1
@@ -46,8 +46,8 @@ create and run one's own full-fledged sample applications.
 
    Requirements:
      Apache web server
-     PHP 5.2+
-     Apache and PHP configured, on most Linux systems if installed using packages this will be done automatically.
+     PHP 5.4+
+     Apache and PHP configured, on most GNU/Linux systems if installed using packages this will be done automatically.
 
    Installation:
      Copy the sample application folder to Apache web root folder, for example /var/www/html.
@@ -55,19 +55,9 @@ create and run one's own full-fledged sample applications.
 
 3. Parameters
 
-   Each application contains a config.php file. It holds the following configurable parameters and defaults 
-   
-    $api_key                                : Client API key
-    $secret_key                             : Client secret key
-    $short_code                             : Short code
-    $short_code2                            : Second short code if configured 
-    $FQDN = "https://api.att.com";          : Endpoint 
-    $oauth_file = "/tmp/smsoauthtoken.php"; : Oauth Token persistance location,should be writable by apache server  
-    $authorize_redirect_uri = "";	        : Url where oAuth provider will redirect to in case of successful authentication. 
-                                              Needs to be exactly the same as one used while registering application in DevConnect.
-    $scope = "SMS";                         : Oauth scope ( SMS ) 
-    $default_address                        : Default phone number 
-    $default_smsMsg                         : Default text message
-
-
+  Each application contains a config.php file. This file holds configurable parameters described in an 
+  easy-to-read format. Please modify the config.php file using the comments specified within the file. 
+  
+  Note: If your application is promoted from Sandbox environment to Production environment and you decide to use
+  production application settings, you must update parameters as per production application details.
 

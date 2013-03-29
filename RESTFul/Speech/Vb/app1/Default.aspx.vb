@@ -1,7 +1,7 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -18,7 +18,7 @@ Imports System.Web.Script.Serialization
 Imports System.Web.UI.WebControls
 Imports System.Collections.Specialized
 Imports System.Web
-
+Imports System.Web.UI.HtmlControls
 #End Region
 
 ''' <summary>
@@ -48,7 +48,10 @@ Partial Public Class Speech_App1
     ''' </summary>
     Private refreshTokenExpiresIn As Integer
 
-    Private xArgsData As String = String.Empty
+
+    Public speechErrorMessage As String = String.Empty
+    Public speechSuccessMessage As String = String.Empty
+    Public speechResponseData As SpeechResponse = Nothing
 
     ''' <summary>
     ''' Access Token Types
@@ -74,18 +77,12 @@ Partial Public Class Speech_App1
     ''' </summary>
     ''' <param name="sender">Button that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
+    Protected Sub Page_Load(sender As Object, e As EventArgs)
         ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-        If Not Page.IsPostBack Then
-            resultsPanel.Visible = False
-        End If
-
-        Dim currentServerTime As DateTime = DateTime.UtcNow
-        lblServerTime.Text = [String].Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) & " UTC"
 
         Me.ReadConfigFile()
 
-        Me.ResetDisplay()
+        Me.setXArgsContent()
     End Sub
 
     ''' <summary>
@@ -95,23 +92,21 @@ Partial Public Class Speech_App1
     ''' <param name="e">eventargs of the button</param>
     Protected Sub BtnSubmit_Click(sender As Object, e As EventArgs)
         Try
-            resultsPanel.Visible = False
-
             Dim IsValid As Boolean = True
 
-            IsValid = Me.ReadAndGetAccessToken()
+            IsValid = Me.ReadAndGetAccessToken(speechErrorMessage)
             If IsValid = False Then
-                Me.DrawPanelForFailure(statusPanel, "Unable to get access token")
+                speechErrorMessage = "Unable to get access token"
                 Return
             End If
             Dim chunkValue = False
-            If chkChunked.Items.FindByText(" Send Chunked").Selected Then
+            If chkChunked.Checked Then
                 chunkValue = True
             End If
-            Dim speechFile = Me.SpeechFilesDir + ddlAudioFile.SelectedValue.ToString()
-            Me.ConvertToSpeech(Me.fqdn + "/rest/2/SpeechToText", Me.accessToken, ddlSpeechContext.SelectedValue.ToString(), txtXArgs.Text, speechFile, chunkValue)
+            Dim speechFile = Me.SpeechFilesDir & audio_file.SelectedValue.ToString()
+            Me.ConvertToSpeech(Me.fqdn & "/speech/v3/speechToText", Me.accessToken, SpeechContext.SelectedValue.ToString(), x_arg.Text, speechFile, chunkValue)
         Catch ex As Exception
-            Me.DrawPanelForFailure(statusPanel, ex.Message)
+            speechErrorMessage = ex.Message
             Return
         End Try
     End Sub
@@ -132,19 +127,19 @@ Partial Public Class Speech_App1
 
         Me.fqdn = ConfigurationManager.AppSettings("FQDN")
         If String.IsNullOrEmpty(Me.fqdn) Then
-            Me.DrawPanelForFailure(statusPanel, "FQDN is not defined in configuration file")
+            speechErrorMessage = "FQDN is not defined in configuration file"
             Return False
         End If
 
         Me.apiKey = ConfigurationManager.AppSettings("api_key")
         If String.IsNullOrEmpty(Me.apiKey) Then
-            Me.DrawPanelForFailure(statusPanel, "api_key is not defined in configuration file")
+            speechErrorMessage = "api_key is not defined in configuration file"
             Return False
         End If
 
         Me.secretKey = ConfigurationManager.AppSettings("secret_key")
         If String.IsNullOrEmpty(Me.secretKey) Then
-            Me.DrawPanelForFailure(statusPanel, "secret_key is not defined in configuration file")
+            speechErrorMessage = "secret_key is not defined in configuration file"
             Return False
         End If
 
@@ -159,30 +154,51 @@ Partial Public Class Speech_App1
         Else
             Me.refreshTokenExpiresIn = 24
         End If
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SourceLink")) Then
+            SourceLink.HRef = ConfigurationManager.AppSettings("SourceLink")
+        Else
+            ' Default value
+            SourceLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("DownloadLink")) Then
+            DownloadLink.HRef = ConfigurationManager.AppSettings("DownloadLink")
+        Else
+            ' Default value
+            DownloadLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("HelpLink")) Then
+            HelpLink.HRef = ConfigurationManager.AppSettings("HelpLink")
+        Else
+            ' Default value
+            HelpLink.HRef = "#"
+        End If
+
         If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SpeechFilesDir")) Then
             Me.SpeechFilesDir = Request.MapPath(ConfigurationManager.AppSettings("SpeechFilesDir"))
         End If
+
         If Not IsPostBack Then
             If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SpeechContext")) Then
                 Dim speechContexts As String() = ConfigurationManager.AppSettings("SpeechContext").ToString().Split(";"c)
-                For Each speechContext As String In speechContexts
-                    ddlSpeechContext.Items.Add(speechContext)
+                For Each speechContext__1 As String In speechContexts
+                    SpeechContext.Items.Add(speechContext__1)
                 Next
                 If speechContexts.Length > 0 Then
-                    ddlSpeechContext.Items(0).Selected = True
+                    SpeechContext.Items(0).Selected = True
                 End If
             End If
-            If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("X-Arg")) Then
-                xArgsData = HttpUtility.UrlEncode(ConfigurationManager.AppSettings("X-Arg"))
-                txtXArgs.Text = ConfigurationManager.AppSettings("X-Arg")
+            If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("X-ArgGeneric")) Then
+                x_arg.Text = ConfigurationManager.AppSettings("X-ArgGeneric")
             End If
             If Not String.IsNullOrEmpty(SpeechFilesDir) Then
                 Dim filePaths As String() = Directory.GetFiles(Me.SpeechFilesDir)
                 For Each filePath As String In filePaths
-                    ddlAudioFile.Items.Add(Path.GetFileName(filePath))
+                    audio_file.Items.Add(Path.GetFileName(filePath))
                 Next
                 If filePaths.Length > 0 Then
-                    ddlAudioFile.Items(0).Selected = True
+                    audio_file.Items(0).Selected = True
                 End If
             End If
         End If
@@ -190,14 +206,38 @@ Partial Public Class Speech_App1
         Return True
     End Function
 
+    Private Sub setXArgsContent()
+        x_subContext.Text = ""
+        If IsPostBack Then
+            If String.Compare(SpeechContext.SelectedValue, "TV") = 0 Then
+                x_arg.Text = ConfigurationManager.AppSettings("X-ArgGeneric") + "," + ConfigurationManager.AppSettings("X-ArgTV")
+            ElseIf String.Compare(SpeechContext.SelectedValue, "SocialMedia") = 0 Then
+                x_arg.Text = ConfigurationManager.AppSettings("X-ArgGeneric") + "," + ConfigurationManager.AppSettings("X-ArgGenericSocialMedia")
+            ElseIf String.Compare(SpeechContext.SelectedValue, "Gaming") = 0 Then
+                x_arg.Text = ConfigurationManager.AppSettings("X-ArgGeneric") + "," + ConfigurationManager.AppSettings("X-ArgGenericGaming")
+                x_subContext.Text = ConfigurationManager.AppSettings("X-SpeechSubContext")
+            End If
+        End If
+    End Sub
+    '
+    '    private string setXArgDataForRequest()
+    '    {
+    '        string xargDataString = string.Empty;
+    '        string[] keyValue = x_arg.Text.Split(',');
+    '        KeyValuePair<string, string> keyvalueSeparated = new KeyValuePair<string, string>();
+    '
+    '        return xargDataString;
+    '    }
+    '    
+
     ''' <summary>
     ''' This function reads the Access Token File and stores the values of access token, expiry seconds
     ''' refresh token, last access token time and refresh token expiry time
-    ''' </summary>
-    ''' <returns>
     ''' This funciton returns true, if access token file and all others attributes read successfully otherwise returns false
-    ''' </returns>
-    Private Function ReadAccessTokenFile() As Boolean
+    ''' </summary>
+    ''' <param name="panelParam">Panel Details</param>
+    ''' <returns>Returns boolean</returns>    
+    Private Function ReadAccessTokenFile(ByRef message As String) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim streamReader As StreamReader = Nothing
         Try
@@ -208,7 +248,7 @@ Partial Public Class Speech_App1
             Me.refreshToken = streamReader.ReadLine()
             Me.refreshTokenExpiryTime = streamReader.ReadLine()
         Catch ex As Exception
-            Me.DrawPanelForFailure(statusPanel, ex.Message)
+            message = ex.Message
             Return False
         Finally
             If streamReader IsNot Nothing Then
@@ -252,189 +292,176 @@ Partial Public Class Speech_App1
     End Function
 
     ''' <summary>
-    ''' Get the access token based on Access Type
+    ''' This function get the access token based on the type parameter type values.
+    ''' If type value is 1, access token is fetch for client credential flow
+    ''' If type value is 2, access token is fetch for client credential flow based on the exisiting refresh token
     ''' </summary>
-    ''' <param name="type">Access Type - either client Credential or Refresh Token</param>
-    ''' <returns>true/false; true - if success on getting access token, else false</returns>
-    Private Function GetAccessToken(type As AccessType) As Boolean
+    ''' <param name="type">Type as integer</param>
+    ''' <param name="panelParam">Panel details</param>
+    ''' <returns>Return boolean</returns>
+    Private Function GetAccessToken(type As AccessType, ByRef message As String) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim postStream As Stream = Nothing
         Dim streamWriter As StreamWriter = Nothing
 
+        ' This is client credential flow
+        If type = AccessType.ClientCredential Then
+            Try
+                Dim currentServerTime As DateTime = DateTime.UtcNow.ToLocalTime()
 
-        Try
-            Dim currentServerTime As DateTime = DateTime.UtcNow.ToLocalTime()
-
-            Dim accessTokenRequest As WebRequest = System.Net.HttpWebRequest.Create(String.Empty & Me.fqdn & "/oauth/token")
-            accessTokenRequest.Method = "POST"
-
-            Dim oauthParameters As String = String.Empty
-            If type = AccessType.ClientCredential Then
-                oauthParameters = "client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&grant_type=client_credentials&scope=" & Me.scope
-            Else
-                oauthParameters = "grant_type=refresh_token&client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&refresh_token=" & Me.refreshToken
-            End If
-            accessTokenRequest.ContentType = "application/x-www-form-urlencoded"
-
-            Dim encoding As New UTF8Encoding()
-            Dim postBytes As Byte() = encoding.GetBytes(oauthParameters)
-            accessTokenRequest.ContentLength = postBytes.Length
-
-            postStream = accessTokenRequest.GetRequestStream()
-            postStream.Write(postBytes, 0, postBytes.Length)
-
-            Dim accessTokenResponse As WebResponse = accessTokenRequest.GetResponse()
-            Using accessTokenResponseStream As New StreamReader(accessTokenResponse.GetResponseStream())
-                Dim jsonAccessToken As String = accessTokenResponseStream.ReadToEnd()
-                Dim deserializeJsonObject As New JavaScriptSerializer()
-
-                Dim deserializedJsonObj As AccessTokenResponse = DirectCast(deserializeJsonObject.Deserialize(jsonAccessToken, GetType(AccessTokenResponse)), AccessTokenResponse)
-                Me.accessToken = deserializedJsonObj.access_token
-                Me.accessTokenExpiryTime = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in)).ToString()
-                Me.refreshToken = deserializedJsonObj.refresh_token
-
-                Dim refreshExpiry As DateTime = currentServerTime.AddHours(Me.refreshTokenExpiresIn)
-
-                If deserializedJsonObj.expires_in.Equals("0") Then
-                    Dim defaultAccessTokenExpiresIn As Integer = 100
-                    ' In Years
-                    Me.accessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongDateString() & " " & currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongTimeString()
+                Dim accessTokenRequest As WebRequest = System.Net.HttpWebRequest.Create(String.Empty & Me.fqdn & "/oauth/token")
+                accessTokenRequest.Method = "POST"
+                Dim oauthParameters As String = String.Empty
+                If type = AccessType.ClientCredential Then
+                    oauthParameters = "client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&grant_type=client_credentials&scope=" & Me.scope
+                Else
+                    oauthParameters = "grant_type=refresh_token&client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&refresh_token=" & Me.refreshToken
                 End If
 
-                Me.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() & " " & refreshExpiry.ToLongTimeString()
+                accessTokenRequest.ContentType = "application/x-www-form-urlencoded"
 
-                fileStream = New FileStream(Request.MapPath(Me.accessTokenFilePath), FileMode.OpenOrCreate, FileAccess.Write)
-                streamWriter = New StreamWriter(fileStream)
-                streamWriter.WriteLine(Me.accessToken)
-                streamWriter.WriteLine(Me.accessTokenExpiryTime)
-                streamWriter.WriteLine(Me.refreshToken)
-                streamWriter.WriteLine(Me.refreshTokenExpiryTime)
+                Dim encoding As New UTF8Encoding()
+                Dim postBytes As Byte() = encoding.GetBytes(oauthParameters)
+                accessTokenRequest.ContentLength = postBytes.Length
 
-                ' Close and clean up the StreamReader
-                accessTokenResponseStream.Close()
-                Return True
-            End Using
-        Catch we As WebException
-            Dim errorResponse As String = String.Empty
+                postStream = accessTokenRequest.GetRequestStream()
+                postStream.Write(postBytes, 0, postBytes.Length)
 
-            Try
-                Using sr2 As New StreamReader(we.Response.GetResponseStream())
-                    errorResponse = sr2.ReadToEnd()
-                    sr2.Close()
+                Dim accessTokenResponse As WebResponse = accessTokenRequest.GetResponse()
+                Using accessTokenResponseStream As New StreamReader(accessTokenResponse.GetResponseStream())
+                    Dim jsonAccessToken As String = accessTokenResponseStream.ReadToEnd().ToString()
+                    Dim deserializeJsonObject As New JavaScriptSerializer()
+
+                    Dim deserializedJsonObj As AccessTokenResponse = DirectCast(deserializeJsonObject.Deserialize(jsonAccessToken, GetType(AccessTokenResponse)), AccessTokenResponse)
+
+                    Me.accessToken = deserializedJsonObj.access_token
+                    Me.accessTokenExpiryTime = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in)).ToString()
+                    Me.refreshToken = deserializedJsonObj.refresh_token
+
+                    Dim refreshExpiry As DateTime = currentServerTime.AddHours(Me.refreshTokenExpiresIn)
+
+                    If deserializedJsonObj.expires_in.Equals("0") Then
+                        Dim defaultAccessTokenExpiresIn As Integer = 100
+                        ' In Yearsint yearsToAdd = 100;
+                        Me.accessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongDateString() & " " & currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongTimeString()
+                    End If
+
+                    Me.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() & " " & refreshExpiry.ToLongTimeString()
+
+                    fileStream = New FileStream(Request.MapPath(Me.accessTokenFilePath), FileMode.OpenOrCreate, FileAccess.Write)
+                    streamWriter = New StreamWriter(fileStream)
+                    streamWriter.WriteLine(Me.accessToken)
+                    streamWriter.WriteLine(Me.accessTokenExpiryTime)
+                    streamWriter.WriteLine(Me.refreshToken)
+                    streamWriter.WriteLine(Me.refreshTokenExpiryTime)
+
+                    ' Close and clean up the StreamReader
+                    accessTokenResponseStream.Close()
+                    Return True
                 End Using
-            Catch
-                errorResponse = "Unable to get response"
+            Catch we As WebException
+                Dim errorResponse As String = String.Empty
+
+                Try
+                    Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                        errorResponse = sr2.ReadToEnd()
+                        sr2.Close()
+                    End Using
+                Catch
+                    errorResponse = "Unable to get response"
+                End Try
+
+                message = errorResponse & Environment.NewLine & we.ToString()
+            Catch ex As Exception
+                message = ex.Message
+                Return False
+            Finally
+                If postStream IsNot Nothing Then
+                    postStream.Close()
+                End If
+
+                If streamWriter IsNot Nothing Then
+                    streamWriter.Close()
+                End If
+
+                If fileStream IsNot Nothing Then
+                    fileStream.Close()
+                End If
             End Try
+        ElseIf type = AccessType.RefreshToken Then
+            Try
+                Dim currentServerTime As DateTime = DateTime.UtcNow.ToLocalTime()
 
-            Me.DrawPanelForFailure(statusPanel, errorResponse & Environment.NewLine & we.ToString())
-        Catch ex As Exception
-            Me.DrawPanelForFailure(statusPanel, ex.Message)
-        Finally
-            If postStream IsNot Nothing Then
-                postStream.Close()
-            End If
+                Dim accessTokenRequest As WebRequest = System.Net.HttpWebRequest.Create(String.Empty & Me.fqdn & "/oauth/token")
+                accessTokenRequest.Method = "POST"
 
-            If streamWriter IsNot Nothing Then
-                streamWriter.Close()
-            End If
+                Dim oauthParameters As String = "grant_type=refresh_token&client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&refresh_token=" & Me.refreshToken
+                accessTokenRequest.ContentType = "application/x-www-form-urlencoded"
 
-            If fileStream IsNot Nothing Then
-                fileStream.Close()
-            End If
-        End Try
+                Dim encoding As New UTF8Encoding()
+                Dim postBytes As Byte() = encoding.GetBytes(oauthParameters)
+                accessTokenRequest.ContentLength = postBytes.Length
+
+                postStream = accessTokenRequest.GetRequestStream()
+                postStream.Write(postBytes, 0, postBytes.Length)
+
+                Dim accessTokenResponse As WebResponse = accessTokenRequest.GetResponse()
+                Using accessTokenResponseStream As New StreamReader(accessTokenResponse.GetResponseStream())
+                    Dim accessTokenJSon As String = accessTokenResponseStream.ReadToEnd().ToString()
+                    Dim deserializeJsonObject As New JavaScriptSerializer()
+
+                    Dim deserializedJsonObj As AccessTokenResponse = DirectCast(deserializeJsonObject.Deserialize(accessTokenJSon, GetType(AccessTokenResponse)), AccessTokenResponse)
+                    Me.accessToken = deserializedJsonObj.access_token.ToString()
+                    Dim accessTokenExpiryTime As DateTime = currentServerTime.AddMilliseconds(Convert.ToDouble(deserializedJsonObj.expires_in.ToString()))
+                    Me.refreshToken = deserializedJsonObj.refresh_token.ToString()
+
+                    fileStream = New FileStream(Request.MapPath(Me.accessTokenFilePath), FileMode.OpenOrCreate, FileAccess.Write)
+                    streamWriter = New StreamWriter(fileStream)
+                    streamWriter.WriteLine(Me.accessToken)
+                    streamWriter.WriteLine(Me.accessTokenExpiryTime)
+                    streamWriter.WriteLine(Me.refreshToken)
+
+                    ' Refresh token valids for 24 hours
+                    Dim refreshExpiry As DateTime = currentServerTime.AddHours(24)
+                    Me.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() & " " & refreshExpiry.ToLongTimeString()
+                    streamWriter.WriteLine(refreshExpiry.ToLongDateString() & " " & refreshExpiry.ToLongTimeString())
+
+                    accessTokenResponseStream.Close()
+                    Return True
+                End Using
+            Catch we As WebException
+                Dim errorResponse As String = String.Empty
+
+                Try
+                    Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                        errorResponse = sr2.ReadToEnd()
+                        sr2.Close()
+                    End Using
+                Catch
+                    errorResponse = "Unable to get response"
+                End Try
+
+                message = errorResponse & Environment.NewLine & we.ToString()
+            Catch ex As Exception
+                message = ex.Message
+                Return False
+            Finally
+                If postStream IsNot Nothing Then
+                    postStream.Close()
+                End If
+
+                If streamWriter IsNot Nothing Then
+                    streamWriter.Close()
+                End If
+
+                If fileStream IsNot Nothing Then
+                    fileStream.Close()
+                End If
+            End Try
+        End If
 
         Return False
     End Function
-
-    ''' <summary>
-    ''' Neglect the ssl handshake error with authentication server 
-    ''' </summary>
-    Private Sub BypassCertificateError()
-        ServicePointManager.ServerCertificateValidationCallback = DirectCast([Delegate].Combine(ServicePointManager.ServerCertificateValidationCallback, Function(sender1 As Object, certificate As X509Certificate, chain As X509Chain, sslPolicyErrors As SslPolicyErrors) True), RemoteCertificateValidationCallback)
-    End Sub
-
-    ''' <summary>
-    ''' Read access token file and validate the access token
-    ''' </summary>
-    ''' <returns>true/false; true if access token is valid, else false</returns>
-    Private Function ReadAndGetAccessToken() As Boolean
-        Dim result As Boolean = True
-
-        If Me.ReadAccessTokenFile() = False Then
-            result = Me.GetAccessToken(AccessType.ClientCredential)
-        Else
-            Dim tokenValidity As String = Me.IsTokenValid()
-            If tokenValidity = "REFRESH_TOKEN" Then
-                result = Me.GetAccessToken(AccessType.RefreshToken)
-            ElseIf String.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") = 0 Then
-                result = Me.GetAccessToken(AccessType.ClientCredential)
-            End If
-        End If
-
-        If String.IsNullOrEmpty(Me.accessToken) Then
-            result = False
-        End If
-
-        Return result
-    End Function
-
-#End Region
-
-#Region "Display status Functions"
-
-    ''' <summary>
-    ''' Display success message
-    ''' </summary>
-    ''' <param name="panelParam">Panel to draw success message</param>
-    ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForSuccess(panelParam As Panel, message As String)
-        If panelParam.HasControls() Then
-            panelParam.Controls.Clear()
-        End If
-        panelParam.CssClass = "successWide"
-        Dim table As New Table()
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "SUCCESS:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellTwo As New TableCell()
-        rowTwoCellTwo.Text = message.ToString()
-        rowTwo.Controls.Add(rowTwoCellTwo)
-        table.Controls.Add(rowTwo)
-        panelParam.Controls.Add(table)
-    End Sub
-
-    ''' <summary>
-    ''' Displays error message
-    ''' </summary>
-    ''' <param name="panelParam">Panel to draw success message</param>
-    ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForFailure(panelParam As Panel, message As String)
-        If panelParam.HasControls() Then
-            panelParam.Controls.Clear()
-        End If
-        panelParam.CssClass = "errorWide"
-        Dim table As New Table()
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "ERROR:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellOne As New TableCell()
-        rowTwoCellOne.Text = message.ToString()
-        rowTwo.Controls.Add(rowTwoCellOne)
-        table.Controls.Add(rowTwo)
-        panelParam.Controls.Add(table)
-    End Sub
-
-#End Region
-
-#Region "Speech Service Functions"
 
     ''' <summary>
     ''' Neglect the ssl handshake error with authentication server
@@ -448,6 +475,47 @@ Partial Public Class Speech_App1
 
         Return True
     End Function
+
+
+    ''' <summary>
+    ''' This function is used to read access token file and validate the access token
+    ''' this function returns true if access token is valid, or else false is returned
+    ''' </summary>
+    ''' <param name="panelParam">Panel Details</param>
+    ''' <returns>Returns Boolean</returns>
+    Private Function ReadAndGetAccessToken(ByRef responseString As String) As Boolean
+        Dim result As Boolean = True
+        If Me.ReadAccessTokenFile(responseString) = False Then
+            result = Me.GetAccessToken(AccessType.ClientCredential, responseString)
+        Else
+            Dim tokenValidity As String = Me.IsTokenValid()
+            If tokenValidity = "REFRESH_TOKEN" Then
+                result = Me.GetAccessToken(AccessType.RefreshToken, responseString)
+            ElseIf String.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") = 0 Then
+                result = Me.GetAccessToken(AccessType.ClientCredential, responseString)
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return False
+        Else
+            Return result
+        End If
+    End Function
+
+#End Region
+
+#Region "Display status Functions"
+
+    Private Sub DrawPanelForSuccess(control As HtmlGenericControl)
+        control.Attributes.Add("class", "successWide")
+        control.InnerHtml = "<strong>SUCCESS:</strong><br/>" & "Response parameters listed below."
+        control.Visible = True
+    End Sub
+
+#End Region
+
+#Region "Speech Service Functions"
 
     ''' <summary>
     ''' Content type based on the file extension.
@@ -481,8 +549,8 @@ Partial Public Class Speech_App1
             reader.Close()
             audioFileStream.Close()
             If binaryData IsNot Nothing Then
-                Dim httpRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty + parEndPoint), HttpWebRequest)
-                httpRequest.Headers.Add("Authorization", "Bearer " + parAccessToken)
+                Dim httpRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & parEndPoint), HttpWebRequest)
+                httpRequest.Headers.Add("Authorization", "Bearer " & parAccessToken)
                 httpRequest.Headers.Add("X-SpeechContext", parXspeechContext)
                 If Not String.IsNullOrEmpty(parXArgs) Then
                     httpRequest.Headers.Add("X-Arg", parXArgs)
@@ -500,25 +568,33 @@ Partial Public Class Speech_App1
 
                 Dim speechResponse As HttpWebResponse = DirectCast(httpRequest.GetResponse(), HttpWebResponse)
                 Using streamReader As New StreamReader(speechResponse.GetResponseStream())
-                    Dim speechResponseData As String = streamReader.ReadToEnd()
-                    If Not String.IsNullOrEmpty(speechResponseData) Then
+                    Dim speechRequestResponse As String = streamReader.ReadToEnd()
+                    'if (string.Compare(SpeechContext.SelectedValue, "TV") == 0)
+                    '                    {
+                    '                        speechErrorMessage = speechRequestResponse;
+                    '                        streamReader.Close();
+                    '                        return;
+                    '                    }
+
+                    If Not String.IsNullOrEmpty(speechRequestResponse) Then
                         Dim deserializeJsonObject As New JavaScriptSerializer()
-                        Dim deserializedJsonObj As SpeechResponse = DirectCast(deserializeJsonObject.Deserialize(speechResponseData, GetType(SpeechResponse)), SpeechResponse)
+                        Dim deserializedJsonObj As SpeechResponse = DirectCast(deserializeJsonObject.Deserialize(speechRequestResponse, GetType(SpeechResponse)), SpeechResponse)
                         If deserializedJsonObj IsNot Nothing Then
-                            resultsPanel.Visible = True
-                            Me.DrawPanelForSuccess(statusPanel, "Response Parameters listed below")
-                            Me.DisplayResult(deserializedJsonObj)
+                            speechResponseData = New SpeechResponse()
+                            speechResponseData = deserializedJsonObj
+                            'speechErrorMessage = speechRequestResponse;
+                            speechSuccessMessage = "true"
                         Else
-                            Me.DrawPanelForFailure(statusPanel, "Empty speech to text response")
+                            speechErrorMessage = "Empty speech to text response"
                         End If
                     Else
-                        Me.DrawPanelForFailure(statusPanel, "Empty speech to text response")
+                        speechErrorMessage = "Empty speech to text response"
                     End If
 
                     streamReader.Close()
                 End Using
             Else
-                Me.DrawPanelForFailure(statusPanel, "Empty speech to text response")
+                speechErrorMessage = "Empty speech to text response"
             End If
         Catch we As WebException
             Dim errorResponse As String = String.Empty
@@ -532,74 +608,14 @@ Partial Public Class Speech_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            Me.DrawPanelForFailure(statusPanel, errorResponse)
+            speechErrorMessage = errorResponse
         Catch ex As Exception
-            Me.DrawPanelForFailure(statusPanel, ex.ToString())
+            speechErrorMessage = ex.ToString()
         Finally
             If postStream IsNot Nothing Then
                 postStream.Close()
             End If
         End Try
-    End Sub
-
-
-    ''' <summary>
-    ''' Reset Display of success response
-    ''' </summary>
-    Private Sub ResetDisplay()
-        lblResponseId.Text = String.Empty
-        lblStatus.Text = String.Empty
-        lblHypothesis.Text = String.Empty
-        lblLanguageId.Text = String.Empty
-        lblResultText.Text = String.Empty
-        lblGrade.Text = String.Empty
-        lblConfidence.Text = String.Empty
-        lblWords.Text = String.Empty
-        lblWordScores.Text = String.Empty
-        hypoRow.Visible = True
-        langRow.Visible = True
-        confRow.Visible = True
-        gradeRow.Visible = True
-        resultRow.Visible = True
-        wordsRow.Visible = True
-        wordScoresRow.Visible = True
-    End Sub
-
-    ''' <summary>
-    ''' Displays the result onto the page
-    ''' </summary>
-    ''' <param name="speechResponse">SpeechResponse received from api</param>
-    Private Sub DisplayResult(speechResponse As SpeechResponse)
-        lblResponseId.Text = speechResponse.Recognition.ResponseId
-        lblStatus.Text = speechResponse.Recognition.Status
-        If (speechResponse.Recognition.NBest IsNot Nothing) AndAlso (speechResponse.Recognition.NBest.Count > 0) Then
-            For Each nbest As NBest In speechResponse.Recognition.NBest
-                lblHypothesis.Text = nbest.Hypothesis
-                lblLanguageId.Text = nbest.LanguageId
-                lblResultText.Text = nbest.ResultText
-                lblGrade.Text = nbest.Grade
-                lblConfidence.Text = nbest.Confidence.ToString()
-
-                Dim strText As String = "["
-                For Each word As String In nbest.Words
-                    strText += """" + word + """, "
-                Next
-                strText = strText.Substring(0, strText.LastIndexOf(","))
-                strText = strText + "]"
-
-                lblWords.Text = If(nbest.Words IsNot Nothing, strText, String.Empty)
-
-                lblWordScores.Text = "[" + String.Join(", ", nbest.WordScores.ToArray()) + "]"
-            Next
-        Else
-            hypoRow.Visible = False
-            langRow.Visible = False
-            confRow.Visible = False
-            gradeRow.Visible = False
-            resultRow.Visible = False
-            wordsRow.Visible = False
-            wordScoresRow.Visible = False
-        End If
     End Sub
 
 #End Region
@@ -711,6 +727,105 @@ Public Class Recognition
         End Set
     End Property
     Private m_Status As String
+
+    '''<summary>
+    ''' Gets or sets the Info
+    ''' </summary>
+    Public Property Info() As SpeechInfo
+        Get
+            Return m_Info
+        End Get
+        Set(value As SpeechInfo)
+            m_Info = Value
+        End Set
+    End Property
+    Private m_Info As SpeechInfo
+End Class
+Public Class SpeechInfo
+    Public Property version() As String
+        Get
+            Return m_version
+        End Get
+        Set(value As String)
+            m_version = Value
+        End Set
+    End Property
+    Private m_version As String
+    Public Property actionType() As String
+        Get
+            Return m_actionType
+        End Get
+        Set(value As String)
+            m_actionType = Value
+        End Set
+    End Property
+    Private m_actionType As String
+    Public Property metrics() As Dictionary(Of String, String)
+        Get
+            Return m_metrics
+        End Get
+        Set(value As Dictionary(Of String, String))
+            m_metrics = Value
+        End Set
+    End Property
+    Private m_metrics As Dictionary(Of String, String)
+    Public Property interpretation() As Dictionary(Of String, String)
+        Get
+            Return m_interpretation
+        End Get
+        Set(value As Dictionary(Of String, String))
+            m_interpretation = Value
+        End Set
+    End Property
+    Private m_interpretation As Dictionary(Of String, String)
+    Public Property recognized() As String
+        Get
+            Return m_recognized
+        End Get
+        Set(value As String)
+            m_recognized = Value
+        End Set
+    End Property
+    Private m_recognized As String
+    Public Property search() As SpeechSearch
+        Get
+            Return m_search
+        End Get
+        Set(value As SpeechSearch)
+            m_search = Value
+        End Set
+    End Property
+    Private m_search As SpeechSearch
+End Class
+
+Public Class SpeechSearch
+    Public Property meta() As Dictionary(Of String, String)
+        Get
+            Return m_meta
+        End Get
+        Set(value As Dictionary(Of String, String))
+            m_meta = Value
+        End Set
+    End Property
+    Private m_meta As Dictionary(Of String, String)
+    Public Property programs() As Dictionary(Of String, String)
+        Get
+            Return m_programs
+        End Get
+        Set(value As Dictionary(Of String, String))
+            m_programs = Value
+        End Set
+    End Property
+    Private m_programs As Dictionary(Of String, String)
+    Public Property showTimes() As Dictionary(Of String, String)
+        Get
+            Return m_showTimes
+        End Get
+        Set(value As Dictionary(Of String, String))
+            m_showTimes = Value
+        End Set
+    End Property
+    Private m_showTimes As Dictionary(Of String, String)
 End Class
 
 ''' <summary>
@@ -725,7 +840,7 @@ Public Class NBest
             Return m_Hypothesis
         End Get
         Set(value As String)
-            m_Hypothesis = value
+            m_Hypothesis = Value
         End Set
     End Property
     Private m_Hypothesis As String
@@ -739,7 +854,7 @@ Public Class NBest
             Return m_LanguageId
         End Get
         Set(value As String)
-            m_LanguageId = value
+            m_LanguageId = Value
         End Set
     End Property
     Private m_LanguageId As String
@@ -752,7 +867,7 @@ Public Class NBest
             Return m_Confidence
         End Get
         Set(value As Double)
-            m_Confidence = value
+            m_Confidence = Value
         End Set
     End Property
     Private m_Confidence As Double
@@ -769,7 +884,7 @@ Public Class NBest
             Return m_Grade
         End Get
         Set(value As String)
-            m_Grade = value
+            m_Grade = Value
         End Set
     End Property
     Private m_Grade As String
@@ -784,7 +899,7 @@ Public Class NBest
             Return m_ResultText
         End Get
         Set(value As String)
-            m_ResultText = value
+            m_ResultText = Value
         End Set
     End Property
     Private m_ResultText As String
@@ -798,7 +913,7 @@ Public Class NBest
             Return m_Words
         End Get
         Set(value As List(Of String))
-            m_Words = value
+            m_Words = Value
         End Set
     End Property
     Private m_Words As List(Of String)
@@ -811,9 +926,19 @@ Public Class NBest
             Return m_WordScores
         End Get
         Set(value As List(Of Double))
-            m_WordScores = value
+            m_WordScores = Value
         End Set
     End Property
     Private m_WordScores As List(Of Double)
+
+    Public Property NluHypothesis() As Dictionary(Of String, String)
+        Get
+            Return m_NluHypothesis
+        End Get
+        Set(value As Dictionary(Of String, String))
+            m_NluHypothesis = Value
+        End Set
+    End Property
+    Private m_NluHypothesis As Dictionary(Of String, String)
 End Class
 #End Region

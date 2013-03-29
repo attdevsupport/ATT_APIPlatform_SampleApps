@@ -1,23 +1,20 @@
-﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+﻿' <copyright file="Default.aspx.cs" company="AT&amp;T">
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
 #Region "References"
-Imports System
-Imports System.Collections.Specialized
+
 Imports System.Configuration
-Imports System.Drawing
 Imports System.IO
 Imports System.Net
 Imports System.Net.Security
 Imports System.Security.Cryptography.X509Certificates
 Imports System.Text
-Imports System.Text.RegularExpressions
 Imports System.Web.Script.Serialization
-Imports System.Web.UI.WebControls
+
 
 #End Region
 
@@ -37,10 +34,10 @@ Partial Public Class CallControl_App1
     ''' <summary>
     ''' Phone numbers registered for Call Control Service.
     ''' </summary>
-    Private phoneNumbers As String
+    Public phoneNumbers As String
 
     ''' <summary>
-    ''' Script location for Call Control Service.
+    ''' Script for Call Control Service.
     ''' </summary>
     Private scriptName As String
 
@@ -49,38 +46,14 @@ Partial Public Class CallControl_App1
     ''' </summary>
     Private refreshTokenExpiresIn As Integer
 
-    ''' <summary>
-    ''' Gets or sets TemplateDescription
-    ''' </summary>
-    Private templateDescription As String() = {"This script answers the incoming call with the welcome and good bye message" + System.Environment.NewLine + System.Environment.NewLine + "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with the welcome message, and requests user to enter 4 or 5 digit pin with # as terminator, 90 seconds" + "timeout and 5 seconds interdigit timeout.  The following message is played after welcome message:" + System.Environment.NewLine + _
-                                               """What's your four or five digit pin? Press pound when finished""" + System.Environment.NewLine + System.Environment.NewLine + "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script makes an outbound call, and plays a music after welcome message and terminates the call with good bye message." + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call, and joins the calling party to the conference after playing welcome message." + _
-                                               "Once calling party press *, calling party will be disconnected from conference after playing good bye message." + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and logs the value of x-contact to the AT&T Call control service debugger" + _
-                                               "before terminating the call with good bye message" + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and drops the call with good bye message" + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and logs the value of caller id to the AT&T Call control service debugger" + _
-                                               "before terminating the call with good bye message" + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and sends a SMS Messsage to +14258028620 " + _
-                                               "before terminating the call with good bye message" + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and checks the calling party number " + _
-                                               "If the calling party is +14258028620, call be will be rejected by playing a message" + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and drops the call with good bye message" + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and transfers the call to +14258028620, if transfer fails" + _
-                                               "call will be terminated after playing good bye messsage" + System.Environment.NewLine + System.Environment.NewLine + _
-                                               "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine, _
-                                               "This script answers the incoming call with welcome message, and holds the call for 3 seconds and then terminates with good bye message" + _
-                                               System.Environment.NewLine + System.Environment.NewLine + "Following is the Java Script Code: " + System.Environment.NewLine + System.Environment.NewLine}
+    Public createSessionSuccessResponse As String = String.Empty
+    Public createSessionErrorResponse As String = String.Empty
+    Public sendSignalSuccessResponse As String = String.Empty
+    Public sendSignalErrorResponse As String = String.Empty
+    Public sessionIdOfCreateSessionResponse As String = String.Empty
+    Public successOfCreateSessionResponse As String = String.Empty
+    Public statusOfSendSignalResponse As String = String.Empty
+
 
     ''' <summary>
     ''' Access Token Types
@@ -123,20 +96,20 @@ Partial Public Class CallControl_App1
     ''' </summary>
     ''' <param name="sender">object that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
+    Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
             ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
 
-            Dim currentServerTime As DateTime = DateTime.UtcNow
-            serverTimeLabel.Text = [String].Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) & " UTC"
-            Me.WriteNote()
             Dim ableToRead As Boolean = Me.ReadConfigFile()
+
             If Not ableToRead Then
                 Return
             End If
-            lblPhoneNumbers.Text = Me.phoneNumbers
+            If Session("VbRestfulsessionId") IsNot Nothing Then
+                sessionIdOfCreateSessionResponse = Session("VbRestfulsessionId").ToString()
+            End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(pnlCreateSession, ex.ToString())
+            createSessionErrorResponse = ex.ToString()
         End Try
     End Sub
 
@@ -148,19 +121,19 @@ Partial Public Class CallControl_App1
     ''' <param name="e">Event that invoked this function</param>
     Protected Sub btnSendSignal_Click(sender As Object, e As EventArgs)
         Try
-            If String.IsNullOrEmpty(lblSessionId.Text) Then
-                Me.DrawPanelForFailure(pnlSendSignal, "Please create a session and then send signal")
+            If String.IsNullOrEmpty(sessionIdOfCreateSessionResponse) Then
+                sendSignalErrorResponse = "Create a session and then send signal"
                 Return
             End If
 
-            Dim ableToGetAccessToken As Boolean = Me.ReadAndGetAccessToken(pnlSendSignal)
+            Dim ableToGetAccessToken As Boolean = Me.ReadAndGetAccessToken(sendSignalErrorResponse)
             If ableToGetAccessToken Then
                 Me.SendSignal()
             Else
-                Me.DrawPanelForFailure(pnlSendSignal, "Unable to get access token")
+                sendSignalErrorResponse = "Unable to get access token"
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(pnlSendSignal, ex.Message)
+            sendSignalErrorResponse = ex.Message
         End Try
     End Sub
 
@@ -172,17 +145,16 @@ Partial Public Class CallControl_App1
     ''' <param name="e">Event that invoked this function</param>
     Protected Sub btnCreateSession_Click(sender As Object, e As EventArgs)
         Try
-            Dim ableToGetAccessToken As Boolean = Me.ReadAndGetAccessToken(pnlCreateSession)
+            Dim ableToGetAccessToken As Boolean = Me.ReadAndGetAccessToken(createSessionErrorResponse)
             If ableToGetAccessToken Then
                 Me.CreateSession()
             Else
-                Me.DrawPanelForFailure(pnlCreateSession, "Unable to get access token")
+                createSessionErrorResponse = "Unable to get access token"
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(pnlCreateSession, ex.Message)
+            createSessionErrorResponse = ex.Message
         End Try
     End Sub
-
 #End Region
 
 #Region "API Invokation Methods"
@@ -193,20 +165,21 @@ Partial Public Class CallControl_App1
     Private Sub CreateSession()
         Try
             Dim createSessionData As New CreateSessionClass()
-            createSessionData.numberToDial = txtNumberToDial.Text.ToString()
-            If lstTemplate.SelectedValue <> "" Then
-                createSessionData.feature = lstTemplate.SelectedValue.ToString()
+            createSessionData.numberToDial = txtNumberToDial.Value
+            If Not String.IsNullOrEmpty(scriptType.Value) Then
+                createSessionData.feature = scriptType.Value.ToString()
             Else
                 createSessionData.feature = String.Empty
             End If
-            createSessionData.messageToPlay = txtMessageToPlay.Text.ToString()
-            createSessionData.featurenumber = txtNumberForFeature.Text.ToString()
+            createSessionData.messageToPlay = txtMessageToPlay.Value.ToString()
+            createSessionData.featurenumber = txtNumber.Value.ToString()
             Dim oSerializer As New System.Web.Script.Serialization.JavaScriptSerializer()
 
             Dim requestParams As String = oSerializer.Serialize(createSessionData)
             Dim createSessionResponse As String
-            Dim createSessionRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty + Me.endPoint + "/rest/1/Sessions"), HttpWebRequest)
-            createSessionRequestObject.Headers.Add("Authorization", "Bearer " + Me.accessToken)
+            Dim createSessionRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/rest/1/Sessions"), HttpWebRequest)
+            createSessionRequestObject.Headers.Add("Authorization", "Bearer " & Me.accessToken)
+
             createSessionRequestObject.Method = "POST"
             createSessionRequestObject.ContentType = "application/json"
             createSessionRequestObject.Accept = "application/json"
@@ -226,16 +199,14 @@ Partial Public Class CallControl_App1
                     Dim deserializeJsonObject As New JavaScriptSerializer()
                     Dim deserializedJsonObj As CreateSessionResponse = DirectCast(deserializeJsonObject.Deserialize(createSessionResponse, GetType(CreateSessionResponse)), CreateSessionResponse)
                     If deserializedJsonObj IsNot Nothing Then
-                        lblSessionId.Text = deserializedJsonObj.id.ToString()
-                        Dim displayParam As New NameValueCollection()
-                        displayParam.Add("id", deserializedJsonObj.id)
-                        displayParam.Add("success", deserializedJsonObj.success.ToString())
-                        Me.DrawPanelForSuccess(pnlCreateSession, displayParam, String.Empty)
+                        sessionIdOfCreateSessionResponse = deserializedJsonObj.id.ToString()
+                        Session("VbRestfulsessionId") = sessionIdOfCreateSessionResponse
+                        successOfCreateSessionResponse = deserializedJsonObj.success.ToString()
                     Else
-                        Me.DrawPanelForFailure(pnlCreateSession, "Got response but not able to deserialize json" & createSessionResponse)
+                        createSessionErrorResponse = "Got response but not able to deserialize json" & createSessionResponse
                     End If
                 Else
-                    Me.DrawPanelForFailure(pnlCreateSession, "Success response but with empty ad")
+                    createSessionErrorResponse = "Success response but with empty ad"
                 End If
 
                 createSessionResponseStream.Close()
@@ -252,9 +223,9 @@ Partial Public Class CallControl_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            Me.DrawPanelForFailure(pnlCreateSession, errorResponse & Environment.NewLine & we.ToString())
+            createSessionErrorResponse = errorResponse & Environment.NewLine & we.ToString()
         Catch ex As Exception
-            Me.DrawPanelForFailure(pnlCreateSession, ex.ToString())
+            createSessionErrorResponse = ex.ToString()
         End Try
     End Sub
 
@@ -264,8 +235,8 @@ Partial Public Class CallControl_App1
     Private Sub SendSignal()
         Try
             Dim sendSignalResponse As String
-            Dim sendSignalRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create((String.Empty & Me.endPoint & "/rest/1/Sessions/") + lblSessionId.Text & "/Signals"), HttpWebRequest)
-            Dim strReq As String = "{""signal"":""" & ddlSignal.SelectedValue.ToString() & """}"
+            Dim sendSignalRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/rest/1/Sessions/" & sessionIdOfCreateSessionResponse & "/Signals"), HttpWebRequest)
+            Dim strReq As String = "{""signal"":""" & signal.Value.ToString() & """}"
             sendSignalRequestObject.Method = "POST"
             sendSignalRequestObject.Headers.Add("Authorization", "Bearer " & Me.accessToken)
             sendSignalRequestObject.ContentType = "application/json"
@@ -286,14 +257,12 @@ Partial Public Class CallControl_App1
                     Dim deserializeJsonObject As New JavaScriptSerializer()
                     Dim deserializedJsonObj As SendSignalResponse = DirectCast(deserializeJsonObject.Deserialize(sendSignalResponse, GetType(SendSignalResponse)), SendSignalResponse)
                     If deserializedJsonObj IsNot Nothing Then
-                        Dim displayParam As New NameValueCollection()
-                        displayParam.Add("status", deserializedJsonObj.status)
-                        Me.DrawPanelForSuccess(pnlSendSignal, displayParam, String.Empty)
+                        statusOfSendSignalResponse = deserializedJsonObj.status
                     Else
-                        Me.DrawPanelForFailure(pnlSendSignal, "Got response but not able to deserialize json " & sendSignalResponse)
+                        sendSignalErrorResponse = "Got response but not able to deserialize json " & sendSignalResponse
                     End If
                 Else
-                    Me.DrawPanelForFailure(pnlSendSignal, "No response from the gateway.")
+                    sendSignalErrorResponse = "No response from the gateway."
                 End If
 
                 sendSignalResponseStream.Close()
@@ -310,49 +279,10 @@ Partial Public Class CallControl_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            Me.DrawPanelForFailure(pnlSendSignal, errorResponse & Environment.NewLine & we.ToString())
+            sendSignalErrorResponse = errorResponse & Environment.NewLine & we.ToString()
         Catch ex As Exception
-            Me.DrawPanelForFailure(pnlSendSignal, ex.ToString())
+            sendSignalErrorResponse = ex.ToString()
         End Try
-    End Sub
-    ''' <summary>
-    ''' This method displays the contents of the note area.
-    ''' </summary>
-    Private Sub WriteNote()
-        Dim description As String = "<strong>Note:</strong> <br/>"
-        Label1.Text = "Create Session will trigger an outbound call from application " + " to <strong>""Make call to""</strong> number."
-        Select Case lstTemplate.SelectedValue
-            Case "ask"
-                description += "For <strong>ask()</strong> script function, user is prompted to enter few digits and entered digits are played back. <br/>" + "User is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case "conference"
-                description += "For <strong>conference()</strong> script function, user is prompted to join the conference.<br/>" + "After quitting the conference, user is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case "message"
-                description += "For <strong>message()</strong> script function, user is played back <strong>""Number parameter for Script Function""</strong> number and an SMS Message is sent to that number.<br/>" + "User is asked to press digit to activate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case "reject"
-                description += "For <strong>reject()</strong> script function, if <strong>""Number parameter for Script Function""</strong> matches with calling id, call will be dropped.<br/>" + "If calling id doesnt match, calling id and <strong>""Number parameter for Script Function""</strong> number are played to User.<br/>" + "User is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case "transfer"
-                description += "For <strong>transfer()</strong> script function, user is played back with <strong>""Number parameter for Script Function""</strong> and call be transferred to that number.<br/>" + "While doing transfer music on hold <strong>""Message to Play""</strong> is played. Once <strong>""Number parameter for Script Function""</strong> number disconnects the call, " + "user is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case "wait"
-                description += "For <strong>wait()</strong> script function, if <strong>""Number parameter for Script Function""</strong> matches with calling id, call will be kept on hold for 3 seconds.<br/>" + "If calling id doesnt match, calling id and <strong>""Number parameter for Script Function""</strong> number are played to User.<br/>" + "User is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case ""
-                description += "User is asked to press digit to activiate music on hold <strong>""Message to Play""</strong> to handle the signal (feature 2)"
-                notesLiteral.Text = description
-                Return
-            Case Else
-                Return
-        End Select
     End Sub
 
     ''' <summary>
@@ -364,9 +294,9 @@ Partial Public Class CallControl_App1
             Dim scrFile As String = Request.MapPath(scriptName)
             streamReader = New StreamReader(scrFile)
             Dim javaScript As String = streamReader.ReadToEnd()
-            txtCreateSession.Text = "Following is the Java Script Code: " & System.Environment.NewLine & javaScript
+            txtCreateSession.Value = "Following is the Java Script Code: " & System.Environment.NewLine & javaScript
         Catch ex As Exception
-            Me.DrawPanelForFailure(pnlCreateSession, ex.Message)
+            createSessionErrorResponse = ex.Message
         Finally
             If streamReader IsNot Nothing Then
                 streamReader.Close()
@@ -385,7 +315,7 @@ Partial Public Class CallControl_App1
     ''' </summary>
     ''' <param name="panelParam">Panel Details</param>
     ''' <returns>Returns boolean</returns>    
-    Private Function ReadAccessTokenFile(panelParam As Panel) As Boolean
+    Private Function ReadAccessTokenFile(ByRef message As String) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim streamReader As StreamReader = Nothing
         Try
@@ -398,7 +328,7 @@ Partial Public Class CallControl_App1
                 Me.refreshTokenExpiryTime = streamReader.ReadLine()
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(panelParam, ex.Message)
+            message = ex.Message
             Return False
         Finally
             If streamReader IsNot Nothing Then
@@ -422,16 +352,16 @@ Partial Public Class CallControl_App1
     ''' </summary>
     ''' <param name="panelParam">Panel Details</param>
     ''' <returns>true/false; true on successfully getting access token, else false</returns>
-    Private Function ReadAndGetAccessToken(panelParam As Panel) As Boolean
+    Private Function ReadAndGetAccessToken(ByRef responseString As String) As Boolean
         Dim result As Boolean = True
-        If Me.ReadAccessTokenFile(panelParam) = False Then
-            result = Me.GetAccessToken(AccessType.ClientCredential, panelParam)
+        If Me.ReadAccessTokenFile(responseString) = False Then
+            result = Me.GetAccessToken(AccessType.ClientCredential, responseString)
         Else
             Dim tokenValidity As String = Me.IsTokenValid()
             If tokenValidity = "REFRESH_TOKEN" Then
-                result = Me.GetAccessToken(AccessType.RefreshToken, panelParam)
+                result = Me.GetAccessToken(AccessType.RefreshToken, responseString)
             ElseIf String.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") = 0 Then
-                result = Me.GetAccessToken(AccessType.ClientCredential, panelParam)
+                result = Me.GetAccessToken(AccessType.ClientCredential, responseString)
             End If
         End If
 
@@ -475,7 +405,7 @@ Partial Public Class CallControl_App1
     ''' If type value is Refresh_Token, access token is fetch for authorization code floww based on the exisiting refresh token</param>
     ''' <param name="panelParam">Panel to display status message</param>
     ''' <returns>true/false; true if success, else false</returns>  
-    Private Function GetAccessToken(type As AccessType, panelParam As Panel) As Boolean
+    Private Function GetAccessToken(type As AccessType, ByRef message As String) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim postStream As Stream = Nothing
         Dim streamWriter As StreamWriter = Nothing
@@ -545,9 +475,9 @@ Partial Public Class CallControl_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            Me.DrawPanelForFailure(panelParam, errorResponse & Environment.NewLine & we.ToString())
+            message = errorResponse & Environment.NewLine & we.ToString()
         Catch ex As Exception
-            Me.DrawPanelForFailure(panelParam, ex.Message)
+            message = ex.Message
             Return False
         Finally
             If postStream IsNot Nothing Then
@@ -573,36 +503,34 @@ Partial Public Class CallControl_App1
     Private Function ReadConfigFile() As Boolean
         Me.endPoint = ConfigurationManager.AppSettings("endPoint")
         If String.IsNullOrEmpty(Me.endPoint) Then
-            Me.DrawPanelForFailure(pnlCreateSession, "endPoint is not defined in configuration file")
+            createSessionErrorResponse = "endPoint is not defined in configuration file"
             Return False
         End If
 
         Me.apiKey = ConfigurationManager.AppSettings("apiKey")
         If String.IsNullOrEmpty(Me.apiKey) Then
-            Me.DrawPanelForFailure(pnlCreateSession, "apiKey is not defined in configuration file")
+            createSessionErrorResponse = "apiKey is not defined in configuration file"
             Return False
         End If
 
         Me.secretKey = ConfigurationManager.AppSettings("secretKey")
         If String.IsNullOrEmpty(Me.secretKey) Then
-            Me.DrawPanelForFailure(pnlCreateSession, "secretKey is not defined in configuration file")
+            createSessionErrorResponse = "secretKey is not defined in configuration file"
             Return False
         End If
 
         Me.phoneNumbers = ConfigurationManager.AppSettings("phoneNumbers")
         If String.IsNullOrEmpty(Me.phoneNumbers) Then
-            Me.DrawPanelForFailure(pnlCreateSession, "phoneNumbers parameter is not defined in configuration file")
+            createSessionErrorResponse = "phoneNumbers parameter is not defined in configuration file"
             Return False
         End If
 
         Me.scriptName = ConfigurationManager.AppSettings("scriptName")
         If String.IsNullOrEmpty(Me.scriptName) Then
-            Me.DrawPanelForFailure(pnlCreateSession, "scriptName parameter is not defined in configuration file")
+            createSessionErrorResponse = "scriptName parameter is not defined in configuration file"
             Return False
         End If
-
-        Me.GetOutboundScriptContent()
-
+        GetOutboundScriptContent()
         Me.scope = ConfigurationManager.AppSettings("scope")
         If String.IsNullOrEmpty(Me.scope) Then
             Me.scope = "CCS"
@@ -620,93 +548,37 @@ Partial Public Class CallControl_App1
             Me.refreshTokenExpiresIn = 24
         End If
 
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SourceLink")) Then
+            SourceLink.HRef = ConfigurationManager.AppSettings("SourceLink")
+        Else
+            ' Default value
+            SourceLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("DownloadLink")) Then
+            DownloadLink.HRef = ConfigurationManager.AppSettings("DownloadLink")
+        Else
+            ' Default value
+            DownloadLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("HelpLink")) Then
+            HelpLink.HRef = ConfigurationManager.AppSettings("HelpLink")
+        Else
+            ' Default value
+            HelpLink.HRef = "#"
+        End If
+
+
         Return True
     End Function
 
 #End Region
 
-#Region "Display Methods"
-
-    ''' <summary>
-    ''' Displays error message
-    ''' </summary>
-    ''' <param name="panelParam">Panel to draw error message</param>
-    ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForFailure(panelParam As Panel, message As String)
-        Dim table As New Table()
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
-        table.BorderStyle = BorderStyle.Outset
-        table.CssClass = "errorWide"
-        table.Width = Unit.Pixel(650)
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "ERROR:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellOne As New TableCell()
-        rowTwoCellOne.Text = message
-        rowTwo.Controls.Add(rowTwoCellOne)
-        table.Controls.Add(rowTwo)
-        table.BorderWidth = 2
-        table.BorderColor = Color.Red
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc")
-        panelParam.Controls.Add(table)
-    End Sub
-
-    ''' <summary>
-    ''' This function is called to draw the table in the panelParam panel for success response.
-    ''' </summary>
-    ''' <param name="panelParam">Panel Details</param>
-    ''' <param name="displayParams">Collection of message parameters to display.</param>
-    ''' <param name="message">Message as string</param>
-    Private Sub DrawPanelForSuccess(panelParam As Panel, displayParams As NameValueCollection, message As String)
-        Dim table As New Table()
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
-        table.BorderStyle = BorderStyle.Outset
-        table.CssClass = "successWide"
-        table.Width = Unit.Pixel(650)
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "SUCCESS:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-
-        If displayParams IsNot Nothing Then
-            Dim rowNextCellOne As TableCell = Nothing
-            Dim rowNextCellTwo As TableCell = Nothing
-            For Each key As String In displayParams.Keys
-                Dim rowNext As New TableRow()
-                rowNextCellOne = New TableCell()
-                rowNextCellOne.Text = key
-                rowNextCellOne.Font.Bold = True
-                rowNextCellOne.Width = Unit.Pixel(70)
-                rowNext.Controls.Add(rowNextCellOne)
-
-                rowNextCellTwo = New TableCell()
-                rowNextCellTwo.Text = displayParams(key)
-                rowNext.Controls.Add(rowNextCellTwo)
-                table.Controls.Add(rowNext)
-            Next
-        Else
-            Dim rowTwo As New TableRow()
-            Dim rowTwoCellOne As New TableCell()
-            rowTwoCellOne.Text = message
-            rowTwo.Controls.Add(rowTwoCellOne)
-            table.Controls.Add(rowTwo)
-        End If
-
-        panelParam.Controls.Add(table)
-    End Sub
-
-#End Region
 End Class
 
 #Region "Data Structures"
+
 ''' <summary>
 ''' Access Token Data Structure
 ''' </summary>
@@ -718,7 +590,7 @@ Public Class CreateSessionClass
         Get
             Return m_numberToDial
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_numberToDial = Value
         End Set
     End Property
@@ -731,7 +603,7 @@ Public Class CreateSessionClass
         Get
             Return m_messageToPlay
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_messageToPlay = Value
         End Set
     End Property
@@ -744,7 +616,7 @@ Public Class CreateSessionClass
         Get
             Return m_featurenumber
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_featurenumber = Value
         End Set
     End Property
@@ -757,7 +629,7 @@ Public Class CreateSessionClass
         Get
             Return m_feature
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_feature = Value
         End Set
     End Property

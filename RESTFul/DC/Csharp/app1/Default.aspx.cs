@@ -1,7 +1,7 @@
 // <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 // TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -17,6 +17,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Web;
+using System.Collections.Generic;
+using System.Collections;
 
 #endregion
 
@@ -53,6 +55,12 @@ public partial class DC_App1 : System.Web.UI.Page
     /// OAuth access token
     /// </summary>
     private string accessToken;
+
+    public int indentLevel = 0;
+    public string tbOutput = string.Empty;
+    public string getDCSuccess = string.Empty;
+    public string getDCError = string.Empty;
+    public Dictionary<string, string> getDCResponse = new Dictionary<string, string>();
 
     /// <summary>
     /// OAuth refresh token
@@ -93,10 +101,6 @@ public partial class DC_App1 : System.Web.UI.Page
         try
         {
             BypassCertificateError();
-            tbDeviceCapabSuccess.Visible = false;
-            tbDeviceCapabilities.Visible = false;
-            tbDeviceCapabError.Visible = false;
-            lblServerTime.Text = DateTime.UtcNow.ToString("ddd MMM dd yyyy hh:mm:ss tt", CultureInfo.InvariantCulture) + " UTC";
 
             bool ableToReadConfig = this.ReadConfigFile();
             if (ableToReadConfig == false)
@@ -110,8 +114,7 @@ public partial class DC_App1 : System.Web.UI.Page
                 {
                     Session["cs_dc_state"] = null;
                     string errorString = Request.Url.Query.Remove(0,1);
-                    lblErrorMessage.Text = HttpUtility.UrlDecode(errorString);
-                    tbDeviceCapabError.Visible = true;
+                    getDCError  = HttpUtility.UrlDecode(errorString);
                     return;
                 }
                 if (Session["Cs_DC_App1_AccessToken"] == null)
@@ -127,8 +130,7 @@ public partial class DC_App1 : System.Web.UI.Page
                         }
                         else
                         {
-                            lblErrorMessage.Text = "Failed to get Access token";
-                            tbDeviceCapabError.Visible = true;
+                            getDCError = "Failed to get Access token";
                         }
 
                     }
@@ -151,8 +153,7 @@ public partial class DC_App1 : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            lblErrorMessage.Text = ex.ToString();
-            tbDeviceCapabError.Visible = true;
+            getDCError = ex.ToString();
         }
     }
 
@@ -172,32 +173,28 @@ public partial class DC_App1 : System.Web.UI.Page
         this.endPoint = ConfigurationManager.AppSettings["endPoint"];
         if (string.IsNullOrEmpty(this.endPoint))
         {
-            lblErrorMessage.Text = "endPoint is not defined in configuration file";
-            tbDeviceCapabError.Visible = true;
+            getDCError = "endPoint is not defined in configuration file";
             return false;
         }
 
         this.apiKey = ConfigurationManager.AppSettings["apiKey"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
-            lblErrorMessage.Text = "apiKey is not defined in configuration file";
-            tbDeviceCapabError.Visible = true;
+            getDCError = "apiKey is not defined in configuration file";
             return false;
         }
 
         this.secretKey = ConfigurationManager.AppSettings["secretKey"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
-            lblErrorMessage.Text = "secretKey is not defined in configuration file";
-            tbDeviceCapabError.Visible = true;
+            getDCError = "secretKey is not defined in configuration file";
             return false;
         }
 
         this.authorizeRedirectUri = ConfigurationManager.AppSettings["authorizeRedirectUri"];
         if (string.IsNullOrEmpty(this.authorizeRedirectUri))
         {
-            lblErrorMessage.Text = "authorizeRedirectUri is not defined in configuration file";
-            tbDeviceCapabError.Visible = true;
+            getDCError = "authorizeRedirectUri is not defined in configuration file";
             return false;
         }
 
@@ -207,6 +204,32 @@ public partial class DC_App1 : System.Web.UI.Page
             this.scope = "DC";
         }
 
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        {
+            SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
+        }
+        else
+        {
+            SourceLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DownloadLink"]))
+        {
+            DownloadLink.HRef = ConfigurationManager.AppSettings["DownloadLink"];
+        }
+        else
+        {
+            DownloadLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["HelpLink"]))
+        {
+            HelpLink.HRef = ConfigurationManager.AppSettings["HelpLink"];
+        }
+        else
+        {
+            HelpLink.HRef = "#"; // Default value
+        }
         return true;
     }
 
@@ -286,13 +309,11 @@ public partial class DC_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            lblErrorMessage.Text = errorResponse + Environment.NewLine + we.Message;
-            tbDeviceCapabError.Visible = true;
+            getDCError = errorResponse + Environment.NewLine + we.Message;
         }
         catch (Exception ex)
         {
-            lblErrorMessage.Text = ex.Message;
-            tbDeviceCapabError.Visible = true;
+            getDCError = ex.Message;
         }
         finally
         {
@@ -340,27 +361,9 @@ public partial class DC_App1 : System.Web.UI.Page
             {
                 string deviceInfo_jsonObj = accessTokenResponseStream.ReadToEnd();
                 JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                DeviceCapabilities deserializedJsonObj = (DeviceCapabilities)deserializeJsonObject.Deserialize(deviceInfo_jsonObj, typeof(DeviceCapabilities));
-                if (deserializedJsonObj != null)
-                {
-                    lblTypeAllocationCode.Text = deserializedJsonObj.DeviceInfo.DeviceId.TypeAllocationCode;
-                    lblName.Text = deserializedJsonObj.DeviceInfo.Capabilities.Name;
-                    lblVendor.Text = deserializedJsonObj.DeviceInfo.Capabilities.Vendor;
-                    lblFirmwareVersion.Text = deserializedJsonObj.DeviceInfo.Capabilities.FirmwareVersion;
-                    lblUAProf.Text = deserializedJsonObj.DeviceInfo.Capabilities.UaProf;
-                    lblMMSCapable.Text = deserializedJsonObj.DeviceInfo.Capabilities.MmsCapable;
-                    lblAGPS.Text = deserializedJsonObj.DeviceInfo.Capabilities.AssistedGps;
-                    lblLocationTechnology.Text = deserializedJsonObj.DeviceInfo.Capabilities.LocationTechnology;
-                    lblDeviceBrowser.Text = deserializedJsonObj.DeviceInfo.Capabilities.DeviceBrowser;
-                    lblWAPPush.Text = deserializedJsonObj.DeviceInfo.Capabilities.WapPushCapable;
-                    tbDeviceCapabSuccess.Visible = true;
-                    tbDeviceCapabilities.Visible = true;
-                }
-                else
-                {
-                    lblErrorMessage.Text = "No response from the platform.";
-                    tbDeviceCapabError.Visible = true;
-                }
+                Dictionary<string, object> dict = deserializeJsonObject.Deserialize<Dictionary<string, object>>(deviceInfo_jsonObj);
+                DisplayDictionary(dict);
+                getDCSuccess = "success";
             }
         }
         catch (WebException we)
@@ -380,17 +383,49 @@ public partial class DC_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            lblErrorMessage.Text = errorResponse + Environment.NewLine + we.Message;
-            tbDeviceCapabError.Visible = true;
+            getDCError = errorResponse + Environment.NewLine + we.Message;
         }
         catch (Exception ex)
         {
-            lblErrorMessage.Text = ex.Message;
-            tbDeviceCapabError.Visible = true;
+            getDCError = ex.Message;
         }
     }
 
     #endregion
+    private void DisplayDictionary(Dictionary<string,object> dict)
+    {
+        foreach (string strKey in dict.Keys)
+        {
+            string strOutput = "".PadLeft(indentLevel * 8) + strKey + ":";
+
+            object o = dict[strKey];
+            if (o is Dictionary<string, object>)
+            {
+                DisplayDictionary((Dictionary<string, object>)o);
+            }
+            else if (o is ArrayList)
+            {
+                foreach (object oChild in ((ArrayList)o))
+                {
+                    if (oChild is string)
+                    {
+                        strOutput = ((string)oChild);
+                        //tbOutput = tbOutput  + strOutput + ",";
+                    }
+                    else if (oChild is Dictionary<string, object>)
+                    {
+                        DisplayDictionary((Dictionary<string, object>)oChild);
+                        //tbOutput = tbOutput  + "\r\n";
+                    }
+                }
+            }
+            else
+            {
+                getDCResponse.Add(strKey.ToString(),o.ToString());
+                //strOutput = o.ToString();
+            }
+        }
+    }
 }
 
 #region Access Token Data Structure
@@ -544,3 +579,4 @@ public class Capabilities
     public string WapPushCapable { get; set; }
 }
 #endregion
+

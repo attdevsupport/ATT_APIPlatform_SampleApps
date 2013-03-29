@@ -1,98 +1,92 @@
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
+<!--
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 
+2013 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
+http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+Property. All rights reserved. http://developer.att.com For more information
+contact developer.support@att.com -->
 -->
 
-  AT&T API Platform Samples - Payment app 1
- ------------------------------
+AT&T API Platform Sample Application
+-------------------------------------
 
-This file describes how to set-up, configure and run the Java Applications using AT&T API Platform services. 
-It covers all steps required to register the application, based on the generated API keys and secrets, 
-create and run one's own full-fledged sample applications.
-
-  1. Configuration
-  2. Installation
-  3. Parameters
-  4. Running the application
+This file describes how to set up, configure, and run the Java Application
+using AT&T's API Platform services. It covers all steps required to register
+the application, and create and run one's own full-fledged sample applications
+based on the generated API keys and secrets.
 
 
 1. Configuration
 
-  Configuration consists of a few steps necessary to get an application registered on DevConnect with the proper services and 
-  endpoints, depending on the type of client-side application (autonomous/non-autonomous). 
+  Configuration consists of a few steps necessary to get an application
+  registered with the proper services and endpoints, depending on the type of
+  client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login with your valid username and password.
-  Next, choose "My Apps" from the bar at the top of the page and click the "Setup a New Application" button. 
+  To register an application, go to https://devconnect-api.att.com/ and login
+  with your valid username and password.  Next, choose "My Apps" from the bar
+  at the top of the page and click the "Setup a New Application" button. 
 
-  Fill in the form, in particular all fields marked as "required".
+  Fill in the form--particularly all fields marked as "required."
 
-  Be careful while filling in the "OAuth Redirect URL" field. It should contain the URL that the oAuth provider will redirect
-  users to when he/she successfully authenticates and authorizes your application. For this application, it should point to 
-  the oauth.jsp file inside this application folder. For example, if running on a local machine in a default Tomcat installation, 
-  your OAuth Redirect URL might be http://localhost:8080/SampleApp/oauth.jsp
+  NOTE: You MUST select the application used in the list of services under 
+  field 'Services' in order to use this sample application code. 
 
-  Also be careful when filling in the "Payment Listener URL" field when setting up your organization profile. This should point 
-  to the paymentlistener.jsp file packaged with this application. This listener URL must be a public URL or IP address that the 
-  gateway will be able to reach. For example, if running this application on a server with IP address 1.2.3.4 in a default Tomcat 
-  instance, your listener URL might be https://1.2.3.4:8080/SampleApp/paymentlistener.jsp
+  Having your application registered, you will get back an important pair of
+  data: an API key and Secret key. They are necessary to get your applications
+  working with the AT&T APIs. See 'Adjusting parameters' below to learn how to
+  use these keys.
 
-NOTE: You MUST select Payment in the list of services under field 'Services' in order to use this sample application code. 
+  Initially your newly registered application is restricted to the "Sandbox"
+  environment only. To move it to production, you may promote it by clicking
+  the "Promote to production" button. Notice that you will get a different API
+  key and secret, so these values in your application should be adjusted
+  accordingly.
 
-  Having your application registered, you will get back an important pair of data: an API key and Secret key. They are 
-  necessary to get your applications working with the AT&T APIs. See 'Adjusting parameters' below to learn how to use 
-  these keys.
-
-  Initially your newly registered application is restricted to the "Sandbox" environment only. To move it to production,
-  you may promote it by clicking the "Promote to production" button. Notice that you will get a different API key and secret,
-  so these values in your application should be adjusted accordingly.
-
-  Depending on the kind of authentication used, an application may be based on either the Autonomous Client or the Web-Server 
-  Client OAuth flow (see https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow or
-  https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow respectively).
+  Depending on the kind of authentication used, an application may be based on
+  either the Autonomous Client or the Web-Server Client OAuth flow (see
+  https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow
+  or
+  https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow
+  respectively).
 
 
 2. Installation
 
 ** Requirements
 
-   To run the examples you need a Java environment and at least Apache Tomcat 6, or another Java web server such as Jetty. 
+  To run the examples, you will need the Java Runtime Environment (JRE), Java
+  Development Kit (JDK), and Apache Maven.
 
 ** Setting up multiple sample applications simultaneously
 
-   In case multiple applications need to be run at the same time, make sure to put each app in a separate folder and 
-   adjust your OAuth Redirect URL accordingly.
+   In case multiple applications need to be run at the same time, make sure to
+   put each app in separate folders.
 
 3. Parameters
    
-Each sample application contains a config.jsp file. It holds configurable parameters described in an easy to read format. 
-Please populate the following parameters in config.jsp as specified below:
+  Each sample application contains an application.properties file. This file
+  is located in the 'src/main/resources/' folder. This file holds configurable
+  parameters described in an easy-to-read format. Please modify the
+  application.properties file using the comments specified within the file. 
 
-1) clientIdAut                        : {set the value as per your registered appliaction 'API key' field value} 
-
-2) clientSecretAut                    : {set the value as per your registered appliaction 'Secret key' field value} 
-
-3) FQDN              	          : https://api.att.com
-
-4) singlepayRedirect 		   : https://1.2.3.4:8080/SampleApp/singlepay.jsp
-
-5) minTransactionValue             : required field listing the minimum price
-
-6) maxTransactionValue             : required field listing the maximum price
-
-Note: If your application is promoted from Sandbox environment to Production environment and you decide to use production 
-application settings, you must update parameters 1-2 as per production application details.
+  Note: If your application is promoted from Sandbox environment to Production
+  environment and you decide to use production application settings, you must
+  update parameters as per production application details.
 
 
 4. Running the application
 
-  To run the application, put the entire contents of the application folder into a separate folder named SampleApp inside the webapps 
-  folder in your Apache Tomcat home directory. If you have specified a different home directory in Tomcat for your web applications, 
-  put it there instead. 
+  The project follows Apache Maven's Standard Directory Layout and can be
+  built using Apache Maven. For information about Apache Maven and for more
+  detailed instructions, consult Apache Maven's documentation.
+  
+  Using a terminal, change the current directory to the root folder of the
+  sample application (the directory should contain pom.xml). Run the following
+  command in order to build and run the application:
+  
+  mvn clean jetty:run
 
-  Depending on your security settings in Apache Tomcat, you might need to enable write access to the OauthStorage.jsp file.
-
-  Once you start tomcat, typically using the command "<your-tomcat-root-folder>/bin/startup.sh", your application becomes available 
-  in a web browser, so you may visit: http://localhost:8080/SampleApp/singlepay.jsp to see it working.
-
+  This command should run the application on port 8080. Make sure no other
+  application is running on port 8080. In order to change the port, consult
+  Jetty's documentation. To connect to the sample application, open a web
+  browser and visit 'http://localhost:8080/<appname>' replacing <appname> with
+  the application's name.

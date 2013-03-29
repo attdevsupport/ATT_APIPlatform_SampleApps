@@ -1,8 +1,8 @@
 
 <%
-	//Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+	//Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 //TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-//Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+//Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 //For more information contact developer.support@att.com
 %>
 
@@ -519,7 +519,7 @@
 					Powered by AT&amp;T Cloud Architecture</div>
 
 				<p>
-					&copy; 2012 AT&amp;T Intellectual Property. All rights reserved. <a
+					&copy; 2013 AT&amp;T Intellectual Property. All rights reserved. <a
 						href="http://developer.att.com/" target="_blank">http://developer.att.com</a><br />
 					The Application hosted on this site are working examples intended
 					to be used for reference in creating products to consume AT&amp;T

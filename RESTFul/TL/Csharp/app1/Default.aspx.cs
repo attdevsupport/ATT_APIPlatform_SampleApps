@@ -1,7 +1,7 @@
 // <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 // TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -69,6 +69,11 @@ public partial class TL_App1 : System.Web.UI.Page
     /// </summary>
     private Table getStatusTable;
 
+    public string getLocationSuccess = string.Empty;
+    public string getLocationError = string.Empty;
+    public TLResponse getLocationResponse;
+    public string responseTime = string.Empty;
+
 #endregion
 
     #region SSL Handshake Error
@@ -100,35 +105,32 @@ public partial class TL_App1 : System.Web.UI.Page
         try
         {
             BypassCertificateError();
-            map_canvas.Visible = false;
-
-            DateTime currentServerTime = DateTime.UtcNow;
-            serverTimeLabel.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
-
             bool ableToRead = this.ReadConfigFile();
             if (!ableToRead)
             {
                 return;
             }
 
-            if (null != Session["tl_session_acceptableAccuracy"])
+            if (!IsPostBack && (Session["CsharpRestTLSelectedValues"] == null))
             {
-                Radio_AcceptedAccuracy.SelectedIndex = Convert.ToInt32(Session["tl_session_acceptableAccuracy"].ToString());
-                Radio_RequestedAccuracy.SelectedIndex = Convert.ToInt32(Session["tl_session_requestedAccuracy"].ToString());
-                Radio_DelayTolerance.SelectedIndex = Convert.ToInt32(Session["tl_session_tolerance"].ToString());
+                RA2.Checked = true;
+                AA3.Checked = true;
+                DT2.Checked = true;
             }
-
             if ((Session["tl_session_appState"] == "GetToken") && (Request["Code"] != null))
             {
                 this.authCode = Request["code"];
                 bool ableToGetToken = this.GetAccessToken(AccessTokenType.Authorization_Code);
+                FetchSelectedValuesFromSessionVariables();
+                Session["CsharpRestTLSelectedValues"] = null;
                 if (ableToGetToken)
                 {
+                    
                     this.GetDeviceLocation();
                 }
                 else
                 {
-                    this.DrawPanelForFailure(tlPanel, "Failed to get Access token");
+                    getLocationError = "Failed to get Access token";
                     this.ResetTokenSessionVariables();
                     this.ResetTokenVariables();
                 }
@@ -136,7 +138,7 @@ public partial class TL_App1 : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(tlPanel, ex.ToString());
+            getLocationError = ex.ToString();
         }
     }
 
@@ -150,10 +152,6 @@ public partial class TL_App1 : System.Web.UI.Page
     {
         try
         {
-            Session["tl_session_acceptableAccuracy"] = Radio_AcceptedAccuracy.SelectedIndex;
-            Session["tl_session_requestedAccuracy"] = Radio_RequestedAccuracy.SelectedIndex;
-            Session["tl_session_tolerance"] = Radio_DelayTolerance.SelectedIndex;
-
             bool ableToGetAccessToken = this.ReadAndGetAccessToken();
             if (ableToGetAccessToken)
             {
@@ -161,15 +159,105 @@ public partial class TL_App1 : System.Web.UI.Page
             }
             else
             {
-                this.DrawPanelForFailure(tlPanel, "Unable to get access token");
+                getLocationError = "Unable to get access token";
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(tlPanel, ex.Message);
+            getLocationError = ex.Message;
         }
     }
 
+    #endregion
+
+    #region session and radio buttons
+
+    public void FetchSelectedValuesFromSessionVariables()
+    {
+        string sessionValue = Session["CsharpRestTLSelectedValues"].ToString();
+
+        string[] selectedValues = sessionValue.Split(';');
+        if ( !string.IsNullOrEmpty(selectedValues[0]))
+        {
+            if (selectedValues[0].CompareTo("AA1") == 0)
+                AA1.Checked = true;
+            else if (selectedValues[0].CompareTo("AA2") == 0)
+                AA2.Checked = true;
+            else if (selectedValues[0].CompareTo("AA3") == 0)
+                AA3.Checked = true;
+        }
+
+        if (!string.IsNullOrEmpty(selectedValues[1]))
+        {
+            if (selectedValues[1].CompareTo("RA1") == 0)
+                RA1.Checked = true;
+            else if (selectedValues[1].CompareTo("RA2") == 0)
+                RA2.Checked = true;
+            else if (selectedValues[1].CompareTo("RA3") == 0)
+                RA3.Checked = true;
+        }
+
+        if (!string.IsNullOrEmpty(selectedValues[2]))
+        {
+            if (selectedValues[2].CompareTo("DT1") == 0)
+                DT1.Checked = true;
+            else if (selectedValues[2].CompareTo("DT2") == 0)
+                DT2.Checked = true;
+            else if (selectedValues[2].CompareTo("DT3") == 0)
+                DT3.Checked = true;
+        }
+    }
+    public void StoreSelectedValuesToSessionVariables()
+    {
+        string selectedValues = string.Empty;
+        if (AA1.Checked)
+            selectedValues = selectedValues + "AA1";
+        else if (AA2.Checked)
+            selectedValues = selectedValues + "AA2";
+        else if (AA3.Checked)
+            selectedValues = selectedValues + "AA3";
+        selectedValues = selectedValues + ";";
+        if (RA1.Checked )
+            selectedValues = selectedValues + "RA1";
+        else if (RA2.Checked)
+            selectedValues = selectedValues + "RA2";
+        else if (RA3.Checked)
+            selectedValues = selectedValues + "RA3";
+        selectedValues = selectedValues + ";";
+        if (DT1.Checked )
+            selectedValues = selectedValues + "DT1";
+        else if (DT2.Checked)
+            selectedValues = selectedValues + "DT2";
+        else if (DT3.Checked)
+            selectedValues = selectedValues + "DT3";
+
+        Session["CsharpRestTLSelectedValues"] = selectedValues;
+    }
+
+    public int getAcceptableAccuracy()
+    {
+        if (AA1.Checked)
+            return Convert.ToInt32(AA1.Value);
+        else if (AA2.Checked)
+            return  Convert.ToInt32(AA2.Value);
+        return  Convert.ToInt32(AA3.Value);
+    }
+    public int getRequestedAccuracry()
+    {
+        if (RA1.Checked)
+            return Convert.ToInt32(RA1.Value);
+        else if (RA2.Checked)
+            return Convert.ToInt32(RA2.Value);
+        return Convert.ToInt32(RA3.Value);
+    }
+    public string getDelayTolerance()
+    {
+        if (DT1.Checked)
+            return DT1.Value;
+        else if (DT2.Checked)
+            return DT2.Value;
+        return DT3.Value;
+    }
     #endregion
 
     #region API Invokation
@@ -181,19 +269,17 @@ public partial class TL_App1 : System.Web.UI.Page
     {
         try
         {
-            int[] definedReqAccuracy = new int[3] { 100, 1000, 10000 };
-            string[] definedTolerance = new string[3] { "NoDelay", "LowDelay", "DelayTolerant" };
 
-            int requestedAccuracy, acceptableAccuracy;
-            string tolerance;
+            int requestedAccuracyVal, acceptableAccuracyVal;
+            string toleranceVal;
 
-            acceptableAccuracy = definedReqAccuracy[Radio_AcceptedAccuracy.SelectedIndex];
-            requestedAccuracy = definedReqAccuracy[Radio_RequestedAccuracy.SelectedIndex];
-            tolerance = definedTolerance[Radio_DelayTolerance.SelectedIndex];
-            
+            acceptableAccuracyVal = getAcceptableAccuracy();
+            requestedAccuracyVal = getRequestedAccuracry();
+            toleranceVal = getDelayTolerance();
+
             string strResult;
 
-            HttpWebRequest webRequest = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/2/devices/location?requestedAccuracy=" + requestedAccuracy + "&acceptableAccuracy=" + acceptableAccuracy + "&tolerance=" + tolerance);
+            HttpWebRequest webRequest = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/2/devices/location?requestedAccuracy=" + requestedAccuracyVal + "&acceptableAccuracy=" + acceptableAccuracyVal + "&tolerance=" + toleranceVal);
             webRequest.Headers.Add("Authorization", "Bearer " + this.accessToken);
             webRequest.Method = "GET";
             
@@ -206,21 +292,9 @@ public partial class TL_App1 : System.Web.UI.Page
             {
                 strResult = responseStream.ReadToEnd();
                 JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                TLResponse deserializedJsonObj = (TLResponse)deserializeJsonObject.Deserialize(strResult, typeof(TLResponse));
-
-                this.DrawPanelForGetLocationResult(string.Empty, string.Empty, true);
-                this.DrawPanelForGetLocationResult("Accuracy:", deserializedJsonObj.accuracy, false);
-                this.DrawPanelForGetLocationResult("Latitude:", deserializedJsonObj.latitude, false);
-                this.DrawPanelForGetLocationResult("Longitude:", deserializedJsonObj.longitude, false);
-                this.DrawPanelForGetLocationResult("TimeStamp:", deserializedJsonObj.timestamp, false);
-                this.DrawPanelForGetLocationResult("Response Time:", tokenSpan.Seconds.ToString() + "seconds", false);
-
-                MapTerminalLocation.Visible = true;
-                map_canvas.Visible = true;
-                StringBuilder googleString = new StringBuilder();
-                googleString.Append("http://maps.google.com/?q=" + deserializedJsonObj.latitude + "+" + deserializedJsonObj.longitude + "&output=embed");
-                MapTerminalLocation.Attributes["src"] = googleString.ToString();
-
+                getLocationResponse = (TLResponse)deserializeJsonObject.Deserialize(strResult, typeof(TLResponse));
+                responseTime = tokenSpan.Seconds.ToString();
+                getLocationSuccess = "Success";
                 responseStream.Close();
             }
         }
@@ -231,14 +305,14 @@ public partial class TL_App1 : System.Web.UI.Page
                 using (Stream stream = we.Response.GetResponseStream())
                 {
                     StreamReader streamReader = new StreamReader(stream);
-                    this.DrawPanelForFailure(tlPanel, streamReader.ReadToEnd());
+                    getLocationError = streamReader.ReadToEnd();
                     streamReader.Close();
                 }
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(tlPanel, ex.Message);
+            getLocationError =  ex.Message;
         }
     }
 
@@ -257,6 +331,7 @@ public partial class TL_App1 : System.Web.UI.Page
         string tokentResult = this.IsTokenValid();
         if (tokentResult.Equals("INVALID_ACCESS_TOKEN"))
         {
+            StoreSelectedValuesToSessionVariables();
             Session["tl_session_appState"] = "GetToken";
             this.GetAuthCode();
         }
@@ -265,7 +340,7 @@ public partial class TL_App1 : System.Web.UI.Page
             bool ableToGetToken = this.GetAccessToken(AccessTokenType.Refresh_Token);
             if (ableToGetToken == false)
             {
-                this.DrawPanelForFailure(tlPanel, "Failed to get Access token");
+                getLocationError = "Failed to get Access token";
                 this.ResetTokenSessionVariables();
                 this.ResetTokenVariables();
                 return false;
@@ -441,7 +516,7 @@ public partial class TL_App1 : System.Web.UI.Page
                 }
                 else
                 {
-                    this.DrawPanelForFailure(tlPanel, "Auth server returned null access token");
+                    getLocationError =  "Auth server returned null access token";
                 }
             }
         }
@@ -452,14 +527,14 @@ public partial class TL_App1 : System.Web.UI.Page
                 using (Stream stream = we.Response.GetResponseStream())
                 {
                     StreamReader streamReader = new StreamReader(stream);
-                    this.DrawPanelForFailure(tlPanel, streamReader.ReadToEnd());
+                    getLocationError = streamReader.ReadToEnd();
                     streamReader.Close();
                 }
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(tlPanel, ex.Message);
+            getLocationError = ex.Message;
         }
         finally
         {
@@ -481,28 +556,28 @@ public partial class TL_App1 : System.Web.UI.Page
         this.endPoint = ConfigurationManager.AppSettings["endPoint"];
         if (string.IsNullOrEmpty(this.endPoint))
         {
-            this.DrawPanelForFailure(tlPanel, "endPoint is not defined in configuration file");
+            getLocationError =  "endPoint is not defined in configuration file";
             return false;
         }
 
         this.apiKey = ConfigurationManager.AppSettings["api_key"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
-            this.DrawPanelForFailure(tlPanel, "api_key is not defined in configuration file");
+            getLocationError = "api_key is not defined in configuration file";
             return false; 
         }
 
         this.secretKey = ConfigurationManager.AppSettings["secret_key"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
-            this.DrawPanelForFailure(tlPanel, "secret_key is not defined in configuration file");
+            getLocationError = "secret_key is not defined in configuration file";
             return false;
         }
 
         this.authorizeRedirectUri = ConfigurationManager.AppSettings["authorize_redirect_uri"];
         if (string.IsNullOrEmpty(this.authorizeRedirectUri))
         {
-            this.DrawPanelForFailure(tlPanel, "authorize_redirect_uri is not defined in configuration file");
+            getLocationError =  "authorize_redirect_uri is not defined in configuration file";
             return false;
         }
 
@@ -522,79 +597,37 @@ public partial class TL_App1 : System.Web.UI.Page
             this.refreshTokenExpiresIn = 24;
         }
 
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        {
+            SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
+        }
+        else
+        {
+            SourceLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DownloadLink"]))
+        {
+            DownloadLink.HRef = ConfigurationManager.AppSettings["DownloadLink"];
+        }
+        else
+        {
+            DownloadLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["HelpLink"]))
+        {
+            HelpLink.HRef = ConfigurationManager.AppSettings["HelpLink"];
+        }
+        else
+        {
+            HelpLink.HRef = "#"; // Default value
+        }
         return true;
     }
 
     #endregion
 
-    #region Display Methods
-
-    /// <summary>
-    /// Displays error message
-    /// </summary>
-    /// <param name="panelParam">Panel to draw error message</param>
-    /// <param name="message">Message to display</param>
-    private void DrawPanelForFailure(Panel panelParam, string message)
-    {
-        Table table = new Table();
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
-        table.BorderStyle = BorderStyle.Outset;
-        table.CssClass = "errorWide";
-        table.Width = Unit.Pixel(650);
-        TableRow rowOne = new TableRow();
-        TableCell rowOneCellOne = new TableCell();
-        rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "ERROR:";
-        rowOne.Controls.Add(rowOneCellOne);
-        table.Controls.Add(rowOne);
-        TableRow rowTwo = new TableRow();
-        TableCell rowTwoCellOne = new TableCell();
-        rowTwoCellOne.Text = message;
-        rowTwo.Controls.Add(rowTwoCellOne);
-        table.Controls.Add(rowTwo);
-        table.BorderWidth = 2;
-        table.BorderColor = Color.Red;
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc");
-        panelParam.Controls.Add(table);
-    }
-
-    /// <summary>
-    /// This method is used to draw table for successful response of get device locations
-    /// </summary>
-    /// <param name="attribute">string, attribute to be displayed</param>
-    /// <param name="value">string, value to be displayed</param>
-    /// <param name="headerFlag">boolean, flag indicating to draw header panel</param>
-    private void DrawPanelForGetLocationResult(string attribute, string value, bool headerFlag)
-    {
-        if (headerFlag == true)
-        {
-            this.getStatusTable = new Table();
-            this.getStatusTable.CssClass = "successWide";
-            TableRow rowOne = new TableRow();
-            TableCell rowOneCellOne = new TableCell();
-            rowOneCellOne.Font.Bold = true;
-            rowOneCellOne.Text = "SUCCESS:";
-            rowOne.Controls.Add(rowOneCellOne);
-            this.getStatusTable.Controls.Add(rowOne);
-            tlPanel.Controls.Add(this.getStatusTable);
-        }
-        else
-        {
-            TableRow row = new TableRow();
-            TableCell cell1 = new TableCell();
-            TableCell cell2 = new TableCell();
-            cell1.Text = attribute.ToString();
-            cell1.Font.Bold = true;
-            cell1.Width = Unit.Pixel(100);
-            row.Controls.Add(cell1);
-            cell2.Text = value.ToString();
-            row.Controls.Add(cell2);
-            this.getStatusTable.Controls.Add(row);
-        }
-    }
-
-    #endregion
 }
 
 #region Data Structures

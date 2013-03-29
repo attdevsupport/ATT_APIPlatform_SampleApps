@@ -1,10 +1,10 @@
+#!/usr/bin/ruby
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
-#!/usr/bin/ruby
 require 'rubygems'
 require 'json'
 require 'base64'
@@ -15,20 +15,85 @@ require File.join(File.dirname(__FILE__), 'common.rb')
 
 enable :sessions
 
-SCOPE = 'IMMN'
-
 config_file 'config.yml'
 
 set :port, settings.port
 set :protection, :except => :frame_options
 
-# perform the API call
+SCOPE = 'MIM,IMMN'
+
+ATTACH_DIR = File.join(File.dirname(__FILE__), 'public/attachments')
+
+RestClient.proxy = settings.proxy
+
+
+def authorize
+	# obtain an access token if necessary
+	if session[:access_token] then
+		redirect "#{settings.base_url}/getMessageHeader"
+	else
+		redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=#{SCOPE}&redirect_uri=#{settings.redirect_url}"
+	end
+end
+
+# perform the API call for getting message headers
+def get_message_header
+  url = "#{settings.FQDN}/rest/1/MyMessages?HeaderCount=#{session[:headerCountTextBox]}"
+
+	RestClient.get url, :Authorization => "Bearer #{session[:access_token]}", :Accept => 'application/json', :Content_Type => 'application/json' do |response, request, code, &block|
+		@r = response
+	end
+
+	if @r.code == 200 || @r.code == 201
+		@get_result = JSON.parse @r
+	else
+		@get_error = @r
+	end
+
+rescue => e
+	@get_error = e.message
+ensure
+	return erb :immn
+end
+
+def get_message_content
+	url = "#{settings.FQDN}/rest/1/MyMessages/" + session[:MessageId] + "/" + session[:PartNumber]
+
+	RestClient.get url, :Authorization => "Bearer #{session[:access_token]}", :Accept => 'application/json', :Content_Type => 'application/json' do |response, request, code, &block|
+		@r = response
+	end
+
+	if @r.code == 200
+		@content_result = @r
+		@headers = @content_result.headers[:content_type]
+		content_string = @headers.split("; ")
+		@image_string = @headers.split("/")
+		@image = @image_string[0]
+		@image_content = content_string[0]
+
+	else
+		@get_error = @r
+	end
+
+rescue => e
+	@get_error = e.message
+ensure
+	return erb :immn
+end
+
+
+#													#
+####  IMMN STARTS HERE ####
+#													#
+
+# perform the API call for sending messages
 def send_messages
-	if params[:f1] != nil || params[:f2] != nil || params[:f3] != nil || params[:f4] != nil || params[:f5] != nil || params[:groupCheckBox] != "false" then
+	if ((params[:attachment] && params[:attachment] != "None") || params[:groupCheckBox] != "false") then
+		attachment = params[:attachment]
 		addresses = ''
 		invalidaddresses = ''
 
-		params[:address].each do |p|
+		params[:Address].each do |p|
 			if (p.match('^\d{10}$'))
 				addresses += 'Addresses=tel:' + p + '&'
 			elsif (p.scan('/^[^@]*@[^@]*\.[^@]*$/'))
@@ -43,59 +108,57 @@ def send_messages
 		@split = "----=_Part_0_#{((rand*10000000) + 10000000).to_i}.#{((Time.new.to_f) * 1000).to_i}"
 		@contents = []
 
-		result = "Content-Type: application/x-www-form-urlencoded; charset=UTF-8"
-		result += "\nContent-Transfer-Encoding: 8bit"
-		result += "\nContent-Disposition: form-data; name=\"root-fields\""
-		result += "\nContent-ID: <startpart>"
-		result += "\n\n"
+		data = "Content-Type: application/x-www-form-urlencoded; charset=UTF-8"
+		data += "\nContent-Transfer-Encoding: 8bit"
+		data += "\nContent-Disposition: form-data; name=\"root-fields\""
+		data += "\nContent-ID: <startpart>"
+		data += "\n\n"
 
-		if params[:address].length > 0
-			result += "#{addresses}" + 'Subject='+ "#{params[:subject]}" + '&Text='+ "#{params[:message]}" + '&Group='"#{params[:groupCheckBox]}"
+		if params[:Address].length > 0
+			data += "#{addresses}" + 'Subject='+ "#{params[:subject]}" + '&Text='+ "#{params[:message]}" + '&Group=true'
 		end
 
-		result += "\n\n"
-		@contents << result
+		data += "\n\n"
+		@contents << data
 
-		[ params[:f1], params[:f2], params[:f3], params[:f4], params[:f5] ].each do |param|
-			if param
-				temp = param[:tempfile]
-				file = File.open(temp.path, "rb")
+		if attachment != "None" then
+			temp = File.join(ATTACH_DIR, attachment)
+			file = File.open(temp, "rb")
 
-				result = "Content-Disposition: form-data; name=\"#{param[:name]}\"; filename=\"#{param[:filename]}\""
-				result += "\nContent-Type: #{param[:type]}"
-				result += "\nContent-ID: #{param[:type]}"
-				result += "\nContent-Transfer-Encoding: binary "
-				@file_contents = File.read(file.path)
-				attachment = @file_contents
+			data = "Content-Disposition: form-data; name=\"#{attachment[:name]}\"; filename=\"#{attachment}\""
+			data += "\nContent-Type: file"
+			data += "\nContent-ID: file"
+			data += "\nContent-Transfer-Encoding: binary "
+			@file_contents = File.read(file.path)
+			attachment = @file_contents
 
-				result += "\n\n#{attachment}"
-				result += "\n"
+			data += "\n\n#{attachment}"
+			data += "\n"
 
-				@contents << result
+			@contents << data
 
-				file.close
-				att_idx += 1
-			end
+			file.close
+			att_idx += 1
 		end
 
 		mimeContent = "--#{@split}\n" + @contents.join("--#{@split}\n") + "--#{@split}--\n"
 
-		RestClient.post "#{settings.FQDN}/rest/1/MyMessages", "#{mimeContent}", :Authorization => "Bearer #{session[:immn_access_token]}", :Accept => 'application/json', :Content_Type => 'multipart/related; type="application/x-www-form-urlencoded"; start="<startpart>"; boundary="' + @split + '"' do |response, request, code, &block|
+		RestClient.post "#{settings.FQDN}/rest/1/MyMessages", "#{mimeContent}", :Authorization => "Bearer #{session[:access_token]}", :Accept => 'application/json', :Content_Type => 'multipart/related; type="application/x-www-form-urlencoded"; start="<startpart>"; boundary="' + @split + '"' do |response, request, code, &block|
 			@mmsresp = response
 		end
 
 		if @mmsresp.code == 200
 			session[:mms_id] = JSON.parse(@mmsresp)["Id"]
-			@mms_id = session[:mms_id]
+			@send_result = session[:mms_id]
 		else
-			@mms_send_error = @mmsresp
-			session[:mms_error_id] = @mms_send_error
+			@send_error = @mmsresp
+			session[:mms_error_id] = @send_error
 		end
 
 	else
 		addresses = ''
 		invalidaddresses = ''
-		params[:address].each do |p|
+		params[:Address].each do |p|
 			if (p.match('^\d{8}$'))
 				addresses += 'Addresses=short:' + p + '&'
 			elsif (p.match('^\d{10}$'))
@@ -107,71 +170,23 @@ def send_messages
 			end
 		end
 
-		if params[:address].length > 0
-			result = "#{addresses}" + 'Subject='+ "#{params[:subject]}" + '&Text='+ "#{params[:message]}" + '&Group=false'
+		if params[:Address].length > 0
+			data = "#{addresses}" + 'Subject='+ "#{params[:subject]}" + '&Text='+ "#{params[:message]}" + '&Group=false'
 		end
 
-		RestClient.post "#{settings.FQDN}/rest/1/MyMessages", "#{result}", :Authorization => "Bearer #{session[:immn_access_token]}", :Accept => 'application/json', :Content_Type => 'application/x-www-form-urlencoded' do |response, request, code, &block|
+		RestClient.post "#{settings.FQDN}/rest/1/MyMessages", "#{data}", :Authorization => "Bearer #{session[:access_token]}", :Accept => 'application/json', :Content_Type => 'application/x-www-form-urlencoded' do |response, request, code, &block|
 			@smsresp = response
 		end
 
 		if @smsresp.code == 200
 			session[:sms_id] = JSON.parse(@smsresp)["Id"]
-			@sms_id = session[:sms_id]
+			@send_result = session[:sms_id]
 		else
-			@sms_send_error = @smsresp
-			session[:sms_error_id] = @sms_send_error   
+			@send_error = @smsresp
+			session[:sms_error_id] = @send_error   
 		end
 	end
 	erb :immn
-end
-
-
-get '/' do
-	#if code is present in params then we're returning from authentication
-	if params[:code] then
-		response = RestClient.post "#{settings.FQDN}/oauth/access_token?", :grant_type => "authorization_code", :client_id => settings.api_key, :client_secret => settings.secret_key, :code => params[:code]
-		from_json = JSON.parse(response.to_str)
-		session[:immn_access_token] = from_json['access_token']
-		redirect "#{settings.base_url}/sendMessages"
-	end
-	erb :immn
-end
-
-get '/sendMessages' do
-	if session[:sms_id] != nil then
-		@sms_id = session[:sms_id]
-	elsif session[:mms_id] != nil then
-		@mms_id = session[:mms_id]
-	elsif session[:sms_error_id] != nil then
-		@sms_send_error = session[:sms_error_id]
-	elsif session[:mms_error_id] != nil then
-		@mms_send_error = session[:mms_error_id]
-	end
-	if session[:address] != nil || session[:message] != nil || session[:subject] != nil then
-		#restore parameters
-		params[:address] = session[:address] if session[:address] != nil
-		params[:message] = session[:message] if session[:message] != nil
-		params[:subject] = session[:subject] if session[:subject] != nil
-		#clear session variables
-		session[:address] = nil
-		session[:message] = nil
-		session[:subject] = nil
-		prepare_and_send
-	end
-	erb :immn
-end
-
-post '/submit' do
-	if session[:immn_access_token].nil? then
-		#save parameters
-		session[:address] = params[:address] if params[:address] != nil
-		session[:message] = params[:message] if params[:message] != nil
-		session[:subject] = params[:subject] if params[:subject] != nil
-		redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=#{SCOPE}&redirect_uri=#{settings.redirect_url}"
-	else
-		prepare_and_send
-	end
 end
 
 def prepare_and_send
@@ -184,22 +199,105 @@ def prepare_and_send
 	session[:sms_error_id] = nil
 	session[:mms_error_id] = nil
 
-	addresses = params[:address].strip.split ","
-	params[:entered_address] = params[:address]
+	addresses = params[:Address].strip.split ","
+	params[:entered_address] = params[:Address]
 
-	params[:address] = Array.new
+	params[:Address] = Array.new
 	addresses.each do |address|
-		a = parse_address(address)
-		if a
-			params[:address] << a
-		end
+			params[:Address] << address
 	end
 
-	if params[:address].length > 0
+	if params[:Address].length > 0
 		send_messages
 	else
-		@error = 'Please enter in a valid phone number'
+		@send_error = 'Please enter in a valid phone number'
 		return erb :immn
 	end
 end
 
+#load all attachments present
+def load_attachments
+	@attachments = Array.new
+	Dir.entries(ATTACH_DIR).sort.each do |x|
+		@attachments.push x unless x.match /\A\.+/
+	end
+end
+
+#																	 #
+#### BEGIN SINATRA URL HANDLING ####
+#																	 #
+
+#before every link, load attachments
+before do
+	load_attachments
+end
+
+get '/' do
+	#if code is present in params then we're returning from authentication
+	if params[:code] then
+		response = RestClient.post "#{settings.FQDN}/oauth/access_token?", :grant_type => "authorization_code", :client_id => settings.api_key, :client_secret => settings.secret_key, :code => params[:code]
+		from_json = JSON.parse(response.to_str)
+		session[:access_token] = from_json['access_token']
+		if session[:sending] then
+			session[:sending] = false
+			redirect "#{settings.base_url}/sendMessage"
+		elsif session[:getting] then
+			session[:getting] = false
+			redirect "#{settings.base_url}/getMessageHeader"
+		end
+	end
+	return erb :immn
+end
+
+get '/sendMessage' do
+	if session[:sms_id] != nil then
+		@send_result = session[:sms_id]
+	elsif session[:mms_id] != nil then
+		@send_result = session[:mms_id]
+	elsif session[:sms_error_id] != nil then
+		@send_error = session[:sms_error_id]
+	elsif session[:mms_error_id] != nil then
+		@send_error = session[:mms_error_id]
+	end
+	#restore parameters
+	params[:Address] = session[:Address] if session[:Address]
+	params[:message] = session[:message] if session[:message]
+	params[:subject] = session[:subject] if session[:subject]
+	#clear session variables
+	session[:Address] = nil
+	session[:message] = nil
+	session[:subject] = nil
+	prepare_and_send
+	erb :immn
+end
+
+post '/submit' do
+	session[:sending] = true
+	if session[:access_token] then
+		prepare_and_send
+	else
+		#save parameters
+		session[:Address] = params[:Address] if params[:Address]
+		session[:message] = params[:message] if params[:message]
+		session[:subject] = params[:subject] if params[:subject]
+		redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=#{SCOPE}&redirect_uri=#{settings.redirect_url}"
+	end
+end
+
+get '/getMessageHeader' do
+	get_message_header
+end
+
+post '/submitGetHeaders' do
+	session[:getting] = true
+	session[:headerCountTextBox] = params[:headerCountTextBox]
+	session[:indexCursorTextBox] = params[:indexCursorTextBox]
+	authorize
+end
+
+post '/submitGetHeaderContent' do
+	session[:getting] = true
+	session[:MessageId] = params[:MessageId]
+	session[:PartNumber] = params[:PartNumber]
+	get_message_content
+end

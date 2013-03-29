@@ -1,195 +1,244 @@
-
-<!-- Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012 
+﻿<!DOCTYPE html>
+<!-- 
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com 
-For more information contact developer.support@att.com -->
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+For more information contact developer.support@att.com
+-->
+<html lang="en">
   <head>
-    <title>AT&amp;T Sample MMS Application 1 - Basic SMS Service Application</title>
-    <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"/>
-    <link rel="stylesheet" type="text/css" href="style/common.css"/>
+    <title>AT&amp;T Sample Application - Multimedia Messaging Service</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="style/common.css" />
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-33466541-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function () {
+          var ga = document.createElement('script');
+          ga.type = 'text/javascript';
+          ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+            : 'http://www')
+          + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
   </head>
-  <body>
-    <div id="container">
-      <div id="header"><!-- open HEADER -->
-        <div>
-          <div id="hcRight">
-           <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %>
-          </div>
-	      <div id="hcLeft">Server Time:</div>
+  <body onload="setup()">
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo">
         </div>
-        <div>
-	      <div id="hcRight">
-            <script language="JavaScript" type="text/javascript">
-              document.write(new Date());
-            </script>
-          </div>
-          <div id="hcLeft">Client Time:</div>
-        </div>
-        <div>
-	      <div id="hcRight">
-            <script language="JavaScript" type="text/javascript">
-              document.write("" + navigator.userAgent);
-            </script>
-          </div>
-	      <div id="hcLeft">User Agent:</div>
-        </div>
-        <br clear="all" />
-      </div><!-- close HEADER -->
-      
-      <div id="wrapper">
-        <div id="content">
-          <h1>AT&amp;T Sample MMS Application 1 - Basic MMS Service Application</h1>
-          <h2>Feature 1: Send MMS Message</h2>
-        </div>
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a></div>
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img alt="fullpage" src="images/max.png" /></a>
+            <span class="divider">|&nbsp;</span> </li>
+          <li><a target="_blank" id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
+            <span class="divider">|&nbsp;</span> </li>
+          <li><a target="_blank" id="DownloadLink">Download<img alt="download" src="images/download.png" /></a>
+            <span class="divider">|&nbsp;</span> </li>
+          <li><a target="_blank" id="HelpLink">Help</a> </li>
+          <li id="back"><a href="#top">Back to top</a></li>
+        </ul>
+        <!-- end of links -->
       </div>
-      
-      <form method="post" name="sendMms" enctype="multipart/form-data" action="/sendMms">
-        <div id="navigation">
-          <table border="0" width="100%">
-            <tbody>
-              <tr>
-                <td width="20%" valign="top" class="label">Phone:</td>
-                <td class="cell"><input maxlength="16" size="12" name="address" value='<%= session[:mms1_address] || settings.phone_number %>' style="width: 90%">
-                </td>
-              </tr>
-              <tr>
-                <td valign="top" class="label">Message:</td>
-                <td class="cell">
-                  <textarea rows="4" name="subject" style="width: 90%"><%= session[:mms1_subject] || "simple message to myself" %></textarea>
-	            </td>
-              </tr>
-            </tbody>
-          </table>          
-        </div>
-        <div id="extra">
-          <div class="warning">
-            <strong>WARNING:</strong><br />
-            total size of all attachments cannot exceed 600 KB.
+      <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>
+            AT&amp;T Sample Application - Multimedia Messaging Service</h1>
+          <div class="border">
           </div>
-          
-          <table border="0" width="100%">
-            <tbody>
-              <tr>
-                <td valign="top" class="label">Attachment 1:</td>
-                <td class="cell"><input name="f1" type="file">
-                </td>
-              </tr>
-              <tr>
-                <td valign="top" class="label">Attachment 2:</td>
-                <td class="cell"><input name="f2" type="file">
-                </td>
-              </tr>
-              <tr>
-                <td valign="top" class="label">Attachment 3:</td>
-                <td class="cell"><input name="f3" type="file">
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <table>
-            <tbody>
-              <tr>
-  	            <td><button type="submit" name="sendMms">Send MMS Message</button></td>
-              </tr>
-            </tbody>
-          </table>          
+          <div id="introtext">
+            <div>
+              <b>Server Time:&nbsp;</b><%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
+            <div>
+              <b>Client Time:</b>
+              <script language="JavaScript" type="text/javascript">
+                var myDate = new Date();
+                document.write(myDate);
+              </script>
+            </div>
+            <div>
+              <b>User Agent:</b>
+              <script language="JavaScript" type="text/javascript">
+                document.write("" + navigator.userAgent);
+              </script>
+            </div>
+          </div>
+          <!-- end of introtext -->
         </div>
-        <br clear="all" />
-        <div align="center"></div>
-      </form>
-
-          <% if @address_valid == false %>
-            <div class="errorWide">
-              <strong>ERROR:</strong><br/>
-              Phone number format not recognized.
-            </div>
-            <br/>
-
-          <% end %>
-
-          <% if @send_error %>
-            <div class="errorWide">
-              <strong>ERROR:</strong>
-              <br />
-              <%= @send_error %>
-            </div>
-          <% end %>
-
-          <% if @mms_id %>
-            <div class="successWide">
-              <strong>SUCCESS:</strong><br>
-              <strong>Message ID:</strong> <%= @mms_id %>
-            </div>
-          <% end %>
-
-    <div id="wrapper">
-        <div id="content">
-          <h2>
-            <br/>
-          Feature 2: Get Delivery Status</h2>            
+        <!-- end of contentHeading -->
+        <div class="lightBorder">
         </div>
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <div id="sendMMS">
+              <h2>
+                Feature 1: Send MMS Message</h2>
+              <form method="post" name="sendMms" action="sendMms">
+                <div class="inputFields">
+                  <label>
+                    <input name="address" id="address" placeholder="Address" value='<%= session[:mms1_address] %>' />
+                  </label>
+                  <label>
+                    Message
+                    <select name="subject" id="subject">
+                      <option value="MMS Sample Message">MMS sample message</option>
+                    </select>
+                  </label>
+                  <label>
+                    Attachment
+                    <select name="attachment" id="attachment">
+                      <% if @attachments %>
+                        <% @attachments.each do |file| %>
+                          <option <%= "selected" if file == session[:selected] %>><%= file %></option>
+                        <% end %>
+                      <% end %>
+                    </select>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True"
+                        title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                    Receive Delivery Status Notification<br />
+                  </label>
+                  <button type="submit" class="submit" name="sendMms">
+                    Send MMS Message
+                  </button>
+                </div><!-- end of inputFields -->
+              </form>
+              <% if @send_error %>
+                <div class="errorWide">
+                  <strong>ERROR: </strong><br />
+                  <%= @send_error %>
+                </div>
+              <% end %>
+              <% if @mms_id %>
+                <div class="successWide">
+                  <strong>SUCCESS: </strong><br />
+                  <strong>Message Id:&nbsp;</strong><%= @mms_id %>
+                </div>
+              <% end %>
+            </div><!-- end of sendMMS -->
+            <div class="lightBorder">
+            </div>
+            <div id="getDeliveryStatus">
+              <h2>Feature 2: Get Delivery Status</h2>
+              <form method="post" name="getStatus" action="getStatus">
+                <div class="inputFields">
+                  <input name="mmsId" placeholder="Message ID" id="mmsId" value="<%= session[:mms_id] %>" />
+                  <button type="submit" class="submit" name="getStatus" id="getStatus">
+                    Get Status
+                  </button>
+                </div><!-- end of inputFields -->
+              </form> 
+              <% if @delivery_error %>
+                <div class="errorWide">
+                  <strong>ERROR: </strong><br />
+                  <%= @delivery_error %>
+                </div>
+              <% elsif @delivery_info %>
+                <div class="successWide">
+                  <strong>SUCCESS: </strong>
+                </div>
+              <% end %>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Message Id</th>
+                    <th>Address</th>
+                    <th>Delivery Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if @delivery_info %>
+                    <% @delivery_info.each do |info| %>
+                      <tr>
+                        <td data-value="Message Id"><%= info['Id'] %></td>
+                        <td data-value="Address"><%= info['Address'] %></td>
+                        <td data-value="Resouce Url"><%= info['DeliveryStatus'] %></td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div><!-- end of getDeliveryStatus -->
+            <div class="lightBorder">
+            </div>
+            <div id="receiveStatusdiv">
+              <h2>Feature 3: Receive Delivery Status</h2>
+              <form method="post" name="refreshStatus" action="refreshStatus">
+                <button type="submit" class="submit" name="receiveStatusBtn" id="receiveStatusBtn">
+                  Refresh Notifications
+                </button>
+              </form>
+                <% if @status_listener %>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Message ID</th>
+                          <th>Address</th>
+                          <th>Delivery Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% @status_listener.each do |status| %>
+                          <% notification = status["deliveryInfoNotification"] %>
+                          <% info = notification["deliveryInfo"] %>
+                          <tr>
+                            <td data-value="Message ID"><%= notification["messageId"] %></td>
+                            <td data-value="Address"><%= info["address"] %></td>
+                            <td data-value="Delivery Status"><%= info["deliveryStatus"] %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                <% end %>
+            </div><!-- end of receiveStatus -->
+            <div class="lightBorder">
+            </div>
+             <div id="webGallery">
+               <h2>Feature 3: Web gallery of MMS photos sent to short code</h2>
+               <p>Photos sent to short code <%= settings.registration_id %> : <%= @images_total || 0 %></p>
+               <% if @images_list %>
+                 <% @images_list.each do |image| %>
+                   <img src="<%= image[:path] %>" width="150" border="0" /><br>
+                   <strong>Sent from:&nbsp;</strong><%= image[:senderAddress] %><br>
+                   <strong>On:&nbsp;</strong><%= image[:date] %><br>
+                   <strong>Text:&nbsp;</strong><%= image[:text] %><br>
+                 <% end %>
+               <% end %>
+             </div> <!-- end of webGallery -->	
+          </div><!-- end of formContainer -->
+        </div><!-- end of formBox -->
+      </div><!-- end of content -->
+      <div class="border">
       </div>
-        
-      <form method="post" enctype="multipart/form-data" action="/getMmsDeliveryStatus">
-        <div id="navigation">
-            
-          <table border="0" width="100%">
-            <tbody>
-              <tr>
-                <td width="20%" valign="top" class="label">Message ID:</td>
-                <td class="cell">
-                  <input maxlength="20" size="12" name="mmsId" value="<%= session[:mms_id] %>" style="width: 90%">
-                </td>
-              </tr>
-            </tbody>
-          </table>
-             
-        </div>
-        <div id="extra">
-          <table border="0" width="100%">
-            <tbody>
-              <tr>
-                <td class="cell"><button type="submit" name="submit">Get Status</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <br clear="all" />
-      </form>
-
-      <% if @delivery_error %>
-        <div class="errorWide">
-          <strong>ERROR:</strong>
-          <br/>
-           <%= @delivery_error %>
-        </div>
-      <% end %>
-
-      <% if @delivery_status %>
-        <div class="successWide">
-          <strong>SUCCESS:</strong><br>
-          <strong>Status:</strong> 
-          <%= @delivery_status %>
-          <br/>
-          <strong>Resource URL:</strong>
-          <%= @delivery_Url %>
-        </div>
-      <% end %>
       <div id="footer">
-	    <div style="float: right; width: 20%; font-size: 9px; text-align: right">Powered by AT&amp;T Cloud Architecture</div>
-        <p>&copy; 2012 AT&amp;T Intellectual Property. All rights reserved.  <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
-        <br/>
-        The Application hosted on this site are working examples intended to be used for reference in creating products to consume AT&amp;T Services and  not meant to be used as part of your product.  The data in these pages is for test purposes only and intended only for use as a reference in how the services perform.
-        <br/>
-        For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
-        <br/>
-        For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-      </div>
-    </div>
-        
+        <div id="powered_by">
+          Powered by AT&amp;T Cloud Architecture</div>
+        <p>
+          The Application hosted on this site are working examples intended to be used for
+          reference in creating products to consume AT&amp;T Services and not meant to be
+          used as part of your product. The data in these pages is for test purposes only
+          and intended only for use as a reference in how the services perform.
+          <br />
+          <br />
+          For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
+              target="_blank">https://devconnect-api.att.com</a>
+          <br />
+          For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+          <br />
+          <br />
+          &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+              target="_blank">http://developer.att.com</a>
+        </p>
+      </div><!-- end of footer -->
+    </div><!-- end of page_container -->
   </body>
 </html>

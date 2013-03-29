@@ -1,8 +1,8 @@
 
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -72,36 +72,15 @@ use this sample application code.
 
 3. Parameters
    
-Each sample application contains a web.config file. It holds configurable parameters
-described in an easy to read format. Please populate the following parameters in
-web.config as specified below:
+  Each sample application contains an web.config file. This file
+  is located in the 'app' folder. This file holds configurable
+  parameters described in an easy-to-read format. Please modify the
+  web.config file using the comments specified within the file. 
 
-1) api_key              : This is mandatory parameter, set the value as per your
-			  registered appliaction 'API key' field value.
-
-2) secret_key     	: This is mandatory parameter, set the value as per your
-			  registered appliaction 'Secret key' field value.
-
-3) endPoint		: This is mandatory parameter, set it to the end point URI of
-			  AT&T Service.
-
-4) scope		: SMS (Scope of the ATT service that will be invoked by the
-			  Application)
-
-5) short_code		: This is mandatory parameter, set the value as per your
-			  registered application 'Short Code' field value.
-
-6) AccessTokenFilePath	: ~\\SMSApp1AccessToken.txt (This is optional parameter, which
-			  points to the file path, where application stores access
-			  token information. If the parameter is not configured, it
-			  will take the default value as ~\\SMSApp1AccessToken.txt.
-			  Give read/write access to this file.)
-
-Note: If your application is promoted from Sandbox environment to Production
-environment and you decide to use production application settings, you must update
-parameters 1-2 as per production application details.
-
-
+  Note: If your application is promoted from Sandbox environment to Production
+  environment and you decide to use production application settings, you must
+  update parameters as per production application details.
+  
 
 4. Running the application
 

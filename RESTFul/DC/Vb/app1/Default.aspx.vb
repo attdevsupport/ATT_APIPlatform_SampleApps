@@ -1,7 +1,7 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -15,6 +15,9 @@ Imports System.Net.Security
 Imports System.Security.Cryptography.X509Certificates
 Imports System.Text
 Imports System.Web.Script.Serialization
+Imports System.Web
+Imports System.Collections.Generic
+Imports System.Collections
 
 #End Region
 
@@ -47,14 +50,15 @@ Partial Public Class DC_App1
     Private endPoint As String, apiKey As String, secretKey As String, authorizeRedirectUri As String, authCode As String, scope As String
 
     ''' <summary>
-    ''' Access token file path
-    ''' </summary>
-    Private accessTokenFilePath As String
-
-    ''' <summary>
     ''' OAuth access token
     ''' </summary>
     Private accessToken As String
+
+    Public indentLevel As Integer = 0
+    Public tbOutput As String = String.Empty
+    Public getDCSuccess As String = String.Empty
+    Public getDCError As String = String.Empty
+    Public getDCResponse As New Dictionary(Of String, String)()
 
     ''' <summary>
     ''' OAuth refresh token
@@ -65,11 +69,6 @@ Partial Public Class DC_App1
     ''' Expirytimes of refresh and access tokens
     ''' </summary>
     Private refreshTokenExpiryTime As String, accessTokenExpiryTime As String
-
-    ''' <summary>
-    ''' No of hours in which refresh token expires.
-    ''' </summary>
-    Private refreshTokenExpiresIn As Integer
 
 #End Region
 
@@ -96,13 +95,9 @@ Partial Public Class DC_App1
     ''' </summary>
     ''' <param name="sender">sender object</param>
     ''' <param name="e">event arguments</param>
-    Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
+    Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
             ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-            tbDeviceCapabSuccess.Visible = False
-            tbDeviceCapabilities.Visible = False
-            tbDeviceCapabError.Visible = False
-            lblServerTime.Text = DateTime.UtcNow.ToString("ddd MMM dd yyyy hh:mm:ss tt", CultureInfo.InvariantCulture) & " UTC"
 
             Dim ableToReadConfig As Boolean = Me.ReadConfigFile()
             If ableToReadConfig = False Then
@@ -113,8 +108,7 @@ Partial Public Class DC_App1
                 If Request.QueryString("error") IsNot Nothing AndAlso Session("vb_dc_state") IsNot Nothing Then
                     Session("vb_dc_state") = Nothing
                     Dim errorString As String = Request.Url.Query.Remove(0, 1)
-                    lblErrorMessage.Text = HttpUtility.UrlDecode(errorString)
-                    tbDeviceCapabError.Visible = True
+                    getDCError = HttpUtility.UrlDecode(errorString)
                     Return
                 End If
                 If Session("Vb_DC_App1_AccessToken") Is Nothing Then
@@ -125,8 +119,7 @@ Partial Public Class DC_App1
                         If GetAccessToken(AccessTokenType.Authorize_Credential) Then
                             GetDeviceInfo()
                         Else
-                            lblErrorMessage.Text = "Failed to get Access token"
-                            tbDeviceCapabError.Visible = True
+                            getDCError = "Failed to get Access token"
 
                         End If
                     Else
@@ -141,8 +134,7 @@ Partial Public Class DC_App1
                 GetAuthCode()
             End If
         Catch ex As Exception
-            lblErrorMessage.Text = ex.ToString()
-            tbDeviceCapabError.Visible = True
+            getDCError = ex.ToString()
         End Try
     End Sub
 
@@ -160,29 +152,25 @@ Partial Public Class DC_App1
     Private Function ReadConfigFile() As Boolean
         Me.endPoint = ConfigurationManager.AppSettings("endPoint")
         If String.IsNullOrEmpty(Me.endPoint) Then
-            lblErrorMessage.Text = "endPoint is not defined in configuration file"
-            tbDeviceCapabError.Visible = True
+            getDCError = "endPoint is not defined in configuration file"
             Return False
         End If
 
         Me.apiKey = ConfigurationManager.AppSettings("apiKey")
         If String.IsNullOrEmpty(Me.apiKey) Then
-            lblErrorMessage.Text = "apiKey is not defined in configuration file"
-            tbDeviceCapabError.Visible = True
+            getDCError = "apiKey is not defined in configuration file"
             Return False
         End If
 
         Me.secretKey = ConfigurationManager.AppSettings("secretKey")
         If String.IsNullOrEmpty(Me.secretKey) Then
-            lblErrorMessage.Text = "secretKey is not defined in configuration file"
-            tbDeviceCapabError.Visible = True
+            getDCError = "secretKey is not defined in configuration file"
             Return False
         End If
 
         Me.authorizeRedirectUri = ConfigurationManager.AppSettings("authorizeRedirectUri")
         If String.IsNullOrEmpty(Me.authorizeRedirectUri) Then
-            lblErrorMessage.Text = "authorizeRedirectUri is not defined in configuration file"
-            tbDeviceCapabError.Visible = True
+            getDCError = "authorizeRedirectUri is not defined in configuration file"
             Return False
         End If
 
@@ -191,24 +179,28 @@ Partial Public Class DC_App1
             Me.scope = "DC"
         End If
 
-        Dim refreshTokenExpires As String = ConfigurationManager.AppSettings("refreshTokenExpiresIn")
-        If Not String.IsNullOrEmpty(refreshTokenExpires) Then
-            Me.refreshTokenExpiresIn = Convert.ToInt32(refreshTokenExpires)
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SourceLink")) Then
+            SourceLink.HRef = ConfigurationManager.AppSettings("SourceLink")
         Else
-            Me.refreshTokenExpiresIn = 24
+            ' Default value
+            SourceLink.HRef = "#"
         End If
 
-        Me.accessTokenFilePath = ConfigurationManager.AppSettings("AccessTokenFilePath")
-        If String.IsNullOrEmpty(Me.accessTokenFilePath) Then
-            Me.accessTokenFilePath = "DCApp1AccessToken.txt"
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("DownloadLink")) Then
+            DownloadLink.HRef = ConfigurationManager.AppSettings("DownloadLink")
+        Else
+            ' Default value
+            DownloadLink.HRef = "#"
         End If
 
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("HelpLink")) Then
+            HelpLink.HRef = ConfigurationManager.AppSettings("HelpLink")
+        Else
+            ' Default value
+            HelpLink.HRef = "#"
+        End If
         Return True
     End Function
-
-
-
-
 
     ''' <summary>
     ''' This method gets access token based on either client credentials mode or refresh token.
@@ -253,14 +245,15 @@ Partial Public Class DC_App1
                 Dim expiryMilliSeconds As Double = Convert.ToDouble(deserializedJsonObj.expires_in)
                 Session("refresh_token") = deserializedJsonObj.refresh_token.ToString()
                 If expiryMilliSeconds = 0 Then
-                    Session("Vb_accessTokenExpireTime") = accessTokenExpireTime.AddYears(100)
+                    Session("accessTokenExpireTime") = accessTokenExpireTime.AddYears(100)
                 Else
-                    Session("Vb_accessTokenExpireTime") = accessTokenExpireTime.AddMilliseconds(expiryMilliSeconds)
+                    Session("accessTokenExpireTime") = accessTokenExpireTime.AddMilliseconds(expiryMilliSeconds)
                 End If
                 Return True
             End Using
         Catch we As WebException
             Dim errorResponse As String = String.Empty
+
             Try
                 Using sr2 As New StreamReader(we.Response.GetResponseStream())
                     errorResponse = sr2.ReadToEnd()
@@ -270,11 +263,9 @@ Partial Public Class DC_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            lblErrorMessage.Text = errorResponse & Environment.NewLine & we.Message
-            tbDeviceCapabError.Visible = True
+            getDCError = errorResponse & Environment.NewLine & we.Message
         Catch ex As Exception
-            lblErrorMessage.Text = ex.Message
-            tbDeviceCapabError.Visible = True
+            getDCError = ex.Message
         Finally
             If postStream IsNot Nothing Then
                 postStream.Close()
@@ -313,24 +304,9 @@ Partial Public Class DC_App1
             Using accessTokenResponseStream As New StreamReader(deviceInfoResponse.GetResponseStream())
                 Dim deviceInfo_jsonObj As String = accessTokenResponseStream.ReadToEnd()
                 Dim deserializeJsonObject As New JavaScriptSerializer()
-                Dim deserializedJsonObj As DeviceCapabilities = DirectCast(deserializeJsonObject.Deserialize(deviceInfo_jsonObj, GetType(DeviceCapabilities)), DeviceCapabilities)
-                If deserializedJsonObj IsNot Nothing Then
-                    lblTypeAllocationCode.Text = deserializedJsonObj.DeviceInfo.DeviceId.TypeAllocationCode
-                    lblName.Text = deserializedJsonObj.DeviceInfo.Capabilities.Name
-                    lblVendor.Text = deserializedJsonObj.DeviceInfo.Capabilities.Vendor
-                    lblFirmwareVersion.Text = deserializedJsonObj.DeviceInfo.Capabilities.FirmwareVersion
-                    lblUAProf.Text = deserializedJsonObj.DeviceInfo.Capabilities.UaProf
-                    lblMMSCapable.Text = deserializedJsonObj.DeviceInfo.Capabilities.MmsCapable
-                    lblAGPS.Text = deserializedJsonObj.DeviceInfo.Capabilities.AssistedGps
-                    lblLocationTechnology.Text = deserializedJsonObj.DeviceInfo.Capabilities.LocationTechnology
-                    lblDeviceBrowser.Text = deserializedJsonObj.DeviceInfo.Capabilities.DeviceBrowser
-                    lblWAPPush.Text = deserializedJsonObj.DeviceInfo.Capabilities.WapPushCapable
-                    tbDeviceCapabSuccess.Visible = True
-                    tbDeviceCapabilities.Visible = True
-                Else
-                    lblErrorMessage.Text = "No response from the platform."
-                    tbDeviceCapabError.Visible = True
-                End If
+                Dim dict As Dictionary(Of String, Object) = deserializeJsonObject.Deserialize(Of Dictionary(Of String, Object))(deviceInfo_jsonObj)
+                DisplayDictionary(dict)
+                getDCSuccess = "success"
             End Using
         Catch we As WebException
             Dim errorResponse As String = String.Empty
@@ -344,15 +320,36 @@ Partial Public Class DC_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            lblErrorMessage.Text = errorResponse & Environment.NewLine & we.Message
-            tbDeviceCapabError.Visible = True
+            getDCError = errorResponse & Environment.NewLine & we.Message
         Catch ex As Exception
-            lblErrorMessage.Text = ex.Message
-            tbDeviceCapabError.Visible = True
+            getDCError = ex.Message
         End Try
     End Sub
 
 #End Region
+    Private Sub DisplayDictionary(dict As Dictionary(Of String, Object))
+        For Each strKey As String In dict.Keys
+            Dim strOutput As String = "".PadLeft(indentLevel * 8) & strKey & ":"
+
+            Dim o As Object = dict(strKey)
+            If TypeOf o Is Dictionary(Of String, Object) Then
+                DisplayDictionary(DirectCast(o, Dictionary(Of String, Object)))
+            ElseIf TypeOf o Is ArrayList Then
+                For Each oChild As Object In DirectCast(o, ArrayList)
+                    If TypeOf oChild Is String Then
+                        'tbOutput = tbOutput  + strOutput + ",";
+                        strOutput = DirectCast(oChild, String)
+                    ElseIf TypeOf oChild Is Dictionary(Of String, Object) Then
+                        'tbOutput = tbOutput  + "\r\n";
+                        DisplayDictionary(DirectCast(oChild, Dictionary(Of String, Object)))
+                    End If
+                Next
+            Else
+                'strOutput = o.ToString();
+                getDCResponse.Add(strKey.ToString(), o.ToString())
+            End If
+        Next
+    End Sub
 End Class
 
 #Region "Access Token Data Structure"

@@ -1,24 +1,21 @@
 // <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 // TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
 #region References
 
 using System;
-using System.Collections.Specialized;
 using System.Configuration;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
-using System.Web.UI.WebControls;
+
 
 #endregion
 
@@ -38,7 +35,7 @@ public partial class CallControl_App1 : System.Web.UI.Page
     /// <summary>
     /// Phone numbers registered for Call Control Service.
     /// </summary>
-    private string phoneNumbers;
+    public string phoneNumbers;
 
     /// <summary>
     /// Script for Call Control Service.
@@ -49,6 +46,15 @@ public partial class CallControl_App1 : System.Web.UI.Page
     /// Gets or sets the value of refreshTokenExpiresIn
     /// </summary>
     private int refreshTokenExpiresIn;
+
+    public string createSessionSuccessResponse = string.Empty;
+    public string createSessionErrorResponse = string.Empty;
+    public string sendSignalSuccessResponse = string.Empty;
+    public string sendSignalErrorResponse = string.Empty;
+    public string sessionIdOfCreateSessionResponse = string.Empty;
+    public string successOfCreateSessionResponse = string.Empty;
+    public string statusOfSendSignalResponse = string.Empty;
+
 
     /// <summary>
     /// Access Token Types
@@ -97,21 +103,20 @@ public partial class CallControl_App1 : System.Web.UI.Page
         {
             BypassCertificateError();
 
-            DateTime currentServerTime = DateTime.UtcNow;
-            serverTimeLabel.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
-            WriteNote();
             bool ableToRead = this.ReadConfigFile();
 
             if (!ableToRead)
             {
                 return;
             }
-
-            lblPhoneNumbers.Text = this.phoneNumbers;            
+            if (Session["CsharpRestfulsessionId"] != null)
+            {
+                sessionIdOfCreateSessionResponse = Session["CsharpRestfulsessionId"].ToString();
+            }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(pnlCreateSession, ex.ToString());
+            createSessionErrorResponse =  ex.ToString();
         }
     }
 
@@ -125,27 +130,27 @@ public partial class CallControl_App1 : System.Web.UI.Page
     {
         try
         {
-            if (string.IsNullOrEmpty(lblSessionId.Text))
+            if (string.IsNullOrEmpty(sessionIdOfCreateSessionResponse))
             {
-                this.DrawPanelForFailure(pnlSendSignal, "Please create a session and then send signal");
+                sendSignalErrorResponse = "Create a session and then send signal";
                 return;
             }
 
-            bool ableToGetAccessToken = this.ReadAndGetAccessToken(pnlSendSignal);
+            bool ableToGetAccessToken = this.ReadAndGetAccessToken(ref sendSignalErrorResponse);
             if (ableToGetAccessToken)
             {
                 this.SendSignal();
             }
             else
             {
-                this.DrawPanelForFailure(pnlSendSignal, "Unable to get access token");
+                sendSignalErrorResponse = "Unable to get access token";
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(pnlSendSignal, ex.Message);
+            sendSignalErrorResponse = ex.Message;
         }
-    }   
+    }
 
     /// <summary>
     /// Event that will be triggered when the user clicks on Create Session button.
@@ -157,22 +162,21 @@ public partial class CallControl_App1 : System.Web.UI.Page
     {
         try
         {
-            bool ableToGetAccessToken = this.ReadAndGetAccessToken(pnlCreateSession);
+            bool ableToGetAccessToken = this.ReadAndGetAccessToken(ref createSessionErrorResponse);
             if (ableToGetAccessToken)
             {
                 this.CreateSession();
             }
             else
             {
-                this.DrawPanelForFailure(pnlCreateSession, "Unable to get access token");
+                createSessionErrorResponse = "Unable to get access token";
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(pnlCreateSession, ex.Message);
+            createSessionErrorResponse = ex.Message;
         }
     }
-
     #endregion
 
     #region API Invokation Methods
@@ -185,13 +189,13 @@ public partial class CallControl_App1 : System.Web.UI.Page
         try
         {
             CreateSessionClass createSessionData = new CreateSessionClass();
-            createSessionData.numberToDial = txtNumberToDial.Text.ToString();
-            if (lstTemplate.SelectedValue != "")
-                createSessionData.feature = lstTemplate.SelectedValue.ToString();
+            createSessionData.numberToDial = txtNumberToDial.Value;
+            if (!string.IsNullOrEmpty(scriptType.Value))
+                createSessionData.feature = scriptType.Value.ToString();
             else
                 createSessionData.feature = string.Empty;
-            createSessionData.messageToPlay = txtMessageToPlay.Text.ToString();
-            createSessionData.featurenumber = txtNumberForFeature.Text.ToString();
+            createSessionData.messageToPlay = txtMessageToPlay.Value.ToString();
+            createSessionData.featurenumber = txtNumber.Value.ToString();
             System.Web.Script.Serialization.JavaScriptSerializer oSerializer = 
                         new System.Web.Script.Serialization.JavaScriptSerializer();
 
@@ -222,20 +226,18 @@ public partial class CallControl_App1 : System.Web.UI.Page
                     CreateSessionResponse deserializedJsonObj = (CreateSessionResponse)deserializeJsonObject.Deserialize(createSessionResponse, typeof(CreateSessionResponse));
                     if (null != deserializedJsonObj)
                     {
-                        lblSessionId.Text = deserializedJsonObj.id.ToString();
-                        NameValueCollection displayParam = new NameValueCollection();
-                        displayParam.Add("id", deserializedJsonObj.id);
-                        displayParam.Add("success", deserializedJsonObj.success.ToString());
-                        this.DrawPanelForSuccess(pnlCreateSession, displayParam, string.Empty);
+                        sessionIdOfCreateSessionResponse = deserializedJsonObj.id.ToString();
+                        Session["CsharpRestfulsessionId"] = sessionIdOfCreateSessionResponse;
+                        successOfCreateSessionResponse = deserializedJsonObj.success.ToString();
                     }
                     else
                     {
-                        this.DrawPanelForFailure(pnlCreateSession, "Got response but not able to deserialize json" + createSessionResponse);
+                        createSessionErrorResponse = "Got response but not able to deserialize json" + createSessionResponse;
                     }
                 }
                 else
                 {
-                    this.DrawPanelForFailure(pnlCreateSession, "Success response but with empty ad");
+                     createSessionErrorResponse =  "Success response but with empty ad";
                 }
 
                 createSessionResponseStream.Close();
@@ -258,11 +260,11 @@ public partial class CallControl_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            this.DrawPanelForFailure(pnlCreateSession, errorResponse + Environment.NewLine + we.ToString());
+             createSessionErrorResponse =  errorResponse + Environment.NewLine + we.ToString();
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(pnlCreateSession, ex.ToString());
+             createSessionErrorResponse =  ex.ToString();
         }
     }
 
@@ -274,8 +276,8 @@ public partial class CallControl_App1 : System.Web.UI.Page
         try
         {
             string sendSignalResponse;
-            HttpWebRequest sendSignalRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/1/Sessions/" + lblSessionId.Text + "/Signals");
-            string strReq = "{\"signal\":\"" + ddlSignal.SelectedValue.ToString() + "\"}";
+            HttpWebRequest sendSignalRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/1/Sessions/" + sessionIdOfCreateSessionResponse + "/Signals");
+            string strReq = "{\"signal\":\"" + signal.Value.ToString() + "\"}";
             sendSignalRequestObject.Method = "POST";
             sendSignalRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);
             sendSignalRequestObject.ContentType = "application/json";
@@ -299,18 +301,16 @@ public partial class CallControl_App1 : System.Web.UI.Page
                     SendSignalResponse deserializedJsonObj = (SendSignalResponse)deserializeJsonObject.Deserialize(sendSignalResponse, typeof(SendSignalResponse));
                     if (null != deserializedJsonObj)
                     {
-                        NameValueCollection displayParam = new NameValueCollection();
-                        displayParam.Add("status", deserializedJsonObj.status);
-                        this.DrawPanelForSuccess(pnlSendSignal, displayParam, string.Empty);
+                        statusOfSendSignalResponse = deserializedJsonObj.status;
                     }
                     else
                     {
-                        this.DrawPanelForFailure(pnlSendSignal, "Got response but not able to deserialize json " + sendSignalResponse);
+                         sendSignalErrorResponse =  "Got response but not able to deserialize json " + sendSignalResponse;
                     }
                 }
                 else
                 {
-                    this.DrawPanelForFailure(pnlSendSignal, "No response from the gateway.");
+                    sendSignalErrorResponse =   "No response from the gateway.";
                 }
 
                 sendSignalResponseStream.Close();
@@ -333,69 +333,11 @@ public partial class CallControl_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            this.DrawPanelForFailure(pnlSendSignal, errorResponse + Environment.NewLine + we.ToString());
+            sendSignalErrorResponse =   errorResponse + Environment.NewLine + we.ToString();
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(pnlSendSignal, ex.ToString());
-        }
-    }
-
-    /// <summary>
-    /// This method displays the contents of the note area.
-    /// </summary>
-    private void WriteNote()
-    {
-        string description = "<strong>Note:</strong> <br/>";
-        Label1.Text = "Create Session will trigger an outbound call from application " + " to <strong>\"Make call to\"</strong> number.";
-        switch (lstTemplate.SelectedValue)
-        {
-            case "ask":
-                description += 
-                    "For <strong>ask()</strong> script function, user is prompted to enter few digits and entered digits are played back. <br/>" +
-                    "User is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                notesLiteral.Text = description;
-                    return;
-            case "conference":
-                    description +=
-                    "For <strong>conference()</strong> script function, user is prompted to join the conference.<br/>" +
-                    "After quitting the conference, user is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                notesLiteral.Text = description;
-                    return;
-            case "message":
-                    description +=
-                        "For <strong>message()</strong> script function, user is played back <strong>\"Number parameter for Script Function\"</strong> number and an SMS Message is sent to that number.<br/>" +
-                        "User is asked to press digit to activate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                    notesLiteral.Text = description;
-                    return;
-            case "reject":
-                    description +=
-                    "For <strong>reject()</strong> script function, if <strong>\"Number parameter for Script Function\"</strong> matches with calling id, call will be dropped.<br/>" +
-                    "If calling id doesnt match, calling id and <strong>\"Number parameter for Script Function\"</strong> number are played to User.<br/>" +
-                    "User is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                    notesLiteral.Text = description;
-                    return;
-            case "transfer":
-                    description +=
-                    "For <strong>transfer()</strong> script function, user is played back with <strong>\"Number parameter for Script Function\"</strong> and call be transferred to that number.<br/>" +
-                    "While doing transfer music on hold <strong>\"Message to Play\"</strong> is played. Once <strong>\"Number parameter for Script Function\"</strong> number disconnects the call, " +
-                    "user is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                    notesLiteral.Text = description;
-                    return;
-            case "wait":
-                    description +=
-                    "For <strong>wait()</strong> script function, if <strong>\"Number parameter for Script Function\"</strong> matches with calling id, call will be kept on hold for 3 seconds.<br/>" +
-                    "If calling id doesnt match, calling id and <strong>\"Number parameter for Script Function\"</strong> number are played to User.<br/>" +
-                    "User is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                    notesLiteral.Text = description;
-                    return;
-            case "":
-                    description +=
-                    "User is asked to press digit to activiate music on hold <strong>\"Message to Play\"</strong> to handle the signal (feature 2)";
-                    notesLiteral.Text = description;
-                    return;
-            default:
-                    return;
+            sendSignalErrorResponse =   ex.ToString();
         }
     }
 
@@ -410,11 +352,11 @@ public partial class CallControl_App1 : System.Web.UI.Page
             string scrFile = Request.MapPath(scriptName);
             streamReader = new StreamReader(scrFile);
             string javaScript = streamReader.ReadToEnd();
-            txtCreateSession.Text = "Following is the Java Script Code: " + System.Environment.NewLine + javaScript;
+            txtCreateSession.Value = "Following is the Java Script Code: " + System.Environment.NewLine + javaScript;
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(pnlCreateSession, ex.Message);
+            createSessionErrorResponse =  ex.Message;
         }
         finally
         {
@@ -436,7 +378,7 @@ public partial class CallControl_App1 : System.Web.UI.Page
     /// </summary>
     /// <param name="panelParam">Panel Details</param>
     /// <returns>Returns boolean</returns>    
-    private bool ReadAccessTokenFile(Panel panelParam)
+    private bool ReadAccessTokenFile(ref string message)
     {
         FileStream fileStream = null;
         StreamReader streamReader = null;
@@ -454,7 +396,7 @@ public partial class CallControl_App1 : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(panelParam, ex.Message);
+            message = ex.Message;
             return false;
         }
         finally
@@ -483,23 +425,23 @@ public partial class CallControl_App1 : System.Web.UI.Page
     /// </summary>
     /// <param name="panelParam">Panel Details</param>
     /// <returns>true/false; true on successfully getting access token, else false</returns>
-    private bool ReadAndGetAccessToken(Panel panelParam)
+    private bool ReadAndGetAccessToken(ref string responseString)
     {
         bool result = true;
-        if (this.ReadAccessTokenFile(panelParam) == false)
+        if (this.ReadAccessTokenFile(ref responseString) == false)
         {
-            result = this.GetAccessToken(AccessType.ClientCredential, panelParam);
+            result = this.GetAccessToken(AccessType.ClientCredential, ref responseString);
         }
         else
         {
             string tokenValidity = this.IsTokenValid();
             if (tokenValidity == "REFRESH_TOKEN")
             {
-                result = this.GetAccessToken(AccessType.RefreshToken, panelParam);
+                result = this.GetAccessToken(AccessType.RefreshToken, ref responseString);
             }
             else if (string.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") == 0)
             {
-                result = this.GetAccessToken(AccessType.ClientCredential, panelParam);
+                result = this.GetAccessToken(AccessType.ClientCredential, ref responseString);
             }
         }
 
@@ -556,7 +498,7 @@ public partial class CallControl_App1 : System.Web.UI.Page
     /// If type value is Refresh_Token, access token is fetch for authorization code floww based on the exisiting refresh token</param>
     /// <param name="panelParam">Panel to display status message</param>
     /// <returns>true/false; true if success, else false</returns>  
-    private bool GetAccessToken(AccessType type, Panel panelParam)
+    private bool GetAccessToken(AccessType type, ref string message)
     {
         FileStream fileStream = null;
         Stream postStream = null;
@@ -638,11 +580,11 @@ public partial class CallControl_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            this.DrawPanelForFailure(panelParam, errorResponse + Environment.NewLine + we.ToString());
+            message =  errorResponse + Environment.NewLine + we.ToString();
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(panelParam, ex.Message);
+            message = ex.Message;
             return false;
         }
         finally
@@ -675,35 +617,35 @@ public partial class CallControl_App1 : System.Web.UI.Page
         this.endPoint = ConfigurationManager.AppSettings["endPoint"];
         if (string.IsNullOrEmpty(this.endPoint))
         {
-            this.DrawPanelForFailure(pnlCreateSession, "endPoint is not defined in configuration file");
+            createSessionErrorResponse = "endPoint is not defined in configuration file";
             return false;
         }
 
         this.apiKey = ConfigurationManager.AppSettings["apiKey"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
-            this.DrawPanelForFailure(pnlCreateSession, "apiKey is not defined in configuration file");
+            createSessionErrorResponse =  "apiKey is not defined in configuration file";
             return false; 
         }
 
         this.secretKey = ConfigurationManager.AppSettings["secretKey"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
-            this.DrawPanelForFailure(pnlCreateSession, "secretKey is not defined in configuration file");
+            createSessionErrorResponse = "secretKey is not defined in configuration file";
             return false;
         }
 
         this.phoneNumbers = ConfigurationManager.AppSettings["phoneNumbers"];
         if (string.IsNullOrEmpty(this.phoneNumbers))
         {
-            this.DrawPanelForFailure(pnlCreateSession, "phoneNumbers parameter is not defined in configuration file");
+            createSessionErrorResponse =  "phoneNumbers parameter is not defined in configuration file";
             return false;
         }
 
         this.scriptName = ConfigurationManager.AppSettings["scriptName"];
         if (string.IsNullOrEmpty(this.scriptName))
         {
-            this.DrawPanelForFailure(pnlCreateSession, "scriptName parameter is not defined in configuration file");
+            createSessionErrorResponse =  "scriptName parameter is not defined in configuration file";
             return false;
         }
         GetOutboundScriptContent();
@@ -729,96 +671,39 @@ public partial class CallControl_App1 : System.Web.UI.Page
             this.refreshTokenExpiresIn = 24;
         }
 
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        {
+            SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
+        }
+        else
+        {
+            SourceLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DownloadLink"]))
+        {
+            DownloadLink.HRef = ConfigurationManager.AppSettings["DownloadLink"];
+        }
+        else
+        {
+            DownloadLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["HelpLink"]))
+        {
+            HelpLink.HRef = ConfigurationManager.AppSettings["HelpLink"];
+        }
+        else
+        {
+            HelpLink.HRef = "#"; // Default value
+        }
+
+
         return true;
     }
 
     #endregion
 
-    #region Display Methods
-
-    /// <summary>
-    /// Displays error message
-    /// </summary>
-    /// <param name="panelParam">Panel to draw error message</param>
-    /// <param name="message">Message to display</param>
-    private void DrawPanelForFailure(Panel panelParam, string message)
-    {
-        Table table = new Table();
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
-        table.BorderStyle = BorderStyle.Outset;
-        table.CssClass = "errorWide";
-        table.Width = Unit.Pixel(650);
-        TableRow rowOne = new TableRow();
-        TableCell rowOneCellOne = new TableCell();
-        rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "ERROR:";
-        rowOne.Controls.Add(rowOneCellOne);
-        table.Controls.Add(rowOne);
-        TableRow rowTwo = new TableRow();
-        TableCell rowTwoCellOne = new TableCell();
-        rowTwoCellOne.Text = message;
-        rowTwo.Controls.Add(rowTwoCellOne);
-        table.Controls.Add(rowTwo);
-        table.BorderWidth = 2;
-        table.BorderColor = Color.Red;
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc");
-        panelParam.Controls.Add(table);
-    }
-
-    /// <summary>
-    /// This function is called to draw the table in the panelParam panel for success response.
-    /// </summary>
-    /// <param name="panelParam">Panel Details</param>
-    /// <param name="displayParams">Collection of message parameters to display.</param>
-    /// <param name="message">Message as string</param>
-    private void DrawPanelForSuccess(Panel panelParam, NameValueCollection displayParams, string message)
-    {
-        Table table = new Table();
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
-        table.BorderStyle = BorderStyle.Outset;
-        table.CssClass = "successWide";
-        table.Width = Unit.Pixel(650);
-        TableRow rowOne = new TableRow();
-        TableCell rowOneCellOne = new TableCell();
-        rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "SUCCESS:";
-        rowOne.Controls.Add(rowOneCellOne);
-        table.Controls.Add(rowOne);
-
-        if (null != displayParams)
-        {
-            TableCell rowNextCellOne = null;
-            TableCell rowNextCellTwo = null;
-            foreach (string key in displayParams.Keys)
-            {
-                TableRow rowNext = new TableRow();
-                rowNextCellOne = new TableCell();
-                rowNextCellOne.Text = key;
-                rowNextCellOne.Font.Bold = true;
-                rowNextCellOne.Width = Unit.Pixel(70);
-                rowNext.Controls.Add(rowNextCellOne);
-
-                rowNextCellTwo = new TableCell();
-                rowNextCellTwo.Text = displayParams[key];
-                rowNext.Controls.Add(rowNextCellTwo);
-                table.Controls.Add(rowNext);
-            }
-        }
-        else
-        {
-            TableRow rowTwo = new TableRow();
-            TableCell rowTwoCellOne = new TableCell();            
-            rowTwoCellOne.Text = message;
-            rowTwo.Controls.Add(rowTwoCellOne);
-            table.Controls.Add(rowTwo);
-        }
-
-        panelParam.Controls.Add(table);
-    }
-
-    #endregion
 }
 
 #region Data Structures

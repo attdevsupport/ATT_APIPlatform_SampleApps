@@ -1,323 +1,198 @@
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
--->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<head>
-    <title>AT&amp;T Sample Application for Call Management </title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
-    <style type="text/css">
-        .style4
-        {
-            font-style: normal;
-            font-variant: normal;
-            font-weight: bold;
-            font-size: 12px;
-            line-height: normal;
-            font-family: Arial, Sans-serif;
-            width: 21%;
-        }
-        .style6
-        {
-            font-style: normal;
-            font-variant: normal;
-            font-weight: bold;
-            font-size: 12px;
-            line-height: normal;
-            font-family: Arial, Sans-serif;
-            width: 25%;
-        }
-    </style>
-</head>
-<body>
-    <div id="container">
-        <!-- open HEADER -->
-        <div id="header">
-            <div>
-                <div class="hcRight">
-                    <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %>
+<!DOCTYPE html>
+
+<html lang="en"> 
+  <head> 
+    <title>AT&amp;T Sample Application - Call Management</title>		
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script src="scripts/utils.js"></script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-33466541-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function () {
+       var ga = document.createElement('script');
+       ga.type = 'text/javascript';
+       ga.async = true;
+       ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+         : 'http://www')
+       + '.google-analytics.com/ga.js';
+       var s = document.getElementsByTagName('script')[0];
+       s.parentNode.insertBefore(ga, s);
+       })();
+     </script>
+  </head>
+  <body>
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo"> 
+        </div>
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a>
+        </div> 
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png"></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.help_link %>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li>
+        </ul> <!-- end of links -->
+      </div> <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>AT&amp;T Sample Application - Call Management</h1>
+          <div class="border"></div>
+          <div id="introtext">
+            <div><b>Server Time:</b><%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
+            <div><b>Client Time:</b> <script>document.write("" + new Date());</script></div>
+            <div><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div>
+          </div> <!-- end of introtext -->
+        </div> <!-- end of contentHeading -->
+
+        <!-- SAMPLE APP CONTENT STARTS HERE! -->
+
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <div id="sendMessages">
+              <h2>Feature 1: Outbound Session from <%= settings.phoneNumber %></h2>
+              <form method="post" action="CreateSession" name="msgContentForm" id="msgContentForm">
+                <div class="inputFields">
+                  <label>
+                    Make call to:
+                    <input type="text" name="txtNumberToDial" value="" placeholder="Address" title="telephone number or sip address"/>
+                  </label>
+                  <label>
+                    Script Function:
+                    <select name="scriptType">
+                      <% SCRIPT_METHODS.each do |m| %>
+                        <option value="<%= m %>" <% if (params[:scriptType] && params[:scriptType] == m)%>selected<%end%>><%= m %></option>
+                    <% end %>
+                    </select>
+                  </label>
+
+                  <label>
+                    Number parameter for Script Function:
+                    <input type="text" name="txtNumber" value="" placeholder="Number" title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
+                  </label>
+
+                  <label>
+                    Message To Play:
+                    <input type="text" name="txtMessageToPlay" value="" placeholder="Message" title="enter long message or mp3 audio url, this is used as music on hold"/>
+                  </label>
+
+                  <div id="scriptText">
+                  <label>
+                    Script Source Code:
+                  </label>
+                    <textarea name="txtCreateSession" rows="2" cols="20" disabled="disabled" id="txtCreateSession" >
+                      <%= @outbound %>
+                    </textarea>
                 </div>
-                <div class="hcLeft">
-                    Server Time:</div>
-            </div>
-            <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write(new Date());
-                    </script>
+
+                  <div>
+                    <button type="submit" class="submit" name="btnCreateSession" >
+                      Create Session</button>
+                  </div>
                 </div>
-                <div class="hcLeft">
-                    Client Time:</div>
-            </div>
-            <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write("" + navigator.userAgent);
-                    </script>
+              </form>
+              <% if @result %>
+                <div class="successWide">
+                  <strong>SUCCESS</strong><br />
+                  <%= "ID: " + @result['id'] %>
+                  <br>
+                  <%= "Success: " + @result['success'].to_s %>
                 </div>
-                <div class="hcLeft">
-                    User Agent:</div>
-            </div>
-            <br clear="all" />
+              <% elsif @error %>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <%= @error %>
+                </div>
+              <% end %>
+
+            </div> <!-- end of Create Session -->
+
+            <div class="lightBorder"></div>
+
+            <div id="sendSignal">
+              <h2>Feature 2: Send Signal to Session</h2>
+              <form method="post" name="sendSignal" action="SendSignal">
+                <div class="inputFields">
+                  <label class="label">
+                    Session ID: <%= session[:cms_id] %>
+                  </label>
+
+                  <label class="label">
+                    Signal to Send:
+                    <select name="signal"> 
+                      <option value="exit" selected="selected">exit</option>
+                      <option value="stopHold">stopHold</option>
+                      <option value="dequeue">dequeue</option>
+                    </select>
+                  </label>
+
+                  <div>
+                    <button type="submit" class="submit" name="btnSendSignal">
+                      Send Signal
+                    </button>
+                  </div>
+
+                </div>	
+              </form>
+              <% if @signal_result %>
+                <div class="successWide">
+                  <strong>SUCCESS</strong><br />
+                  <strong>Status:&nbsp;</strong><%= @signal_result['status'] %>
+                </div>
+              <% end %>
+
+              <% if @signal_error %>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <%= @signal_error %>
+                </div>
+              <% end %>
+            </div> <!-- end of Send Signal -->
+          </div> <!-- end of formContainer -->
+        </div> <!-- end of formBox -->
+
+        <!-- SAMPLE APP CONTENT ENDS HERE! -->
+
+      </div> <!-- end of content -->
+      <div class="border"></div>
+      <div id="footer">
+        <div id="powered_by">
+          Powered by AT&amp;T Cloud Architecture
         </div>
-        <!-- close HEADER -->
-        <div>
-            <div class="content">
-                <h1>
-                    &nbsp;</h1>
-                <h1>
-                    AT&T Sample Application for Call Management</h1>
-                <h2>
-                    Feature 1: Outbound Session from <label for="phonenumber"><%= settings.phoneNumber %></label>
-                </h2>
-            </div>
-        </div>
-		
-        <br clear="all" />
-		
-        <div class="navigation">
-			<form method="post" action="CreateSession">
-				<table>
-					<tbody>
-						<tr>
-							<td class="style4">
-								Make call to:</td>
-							<td class="cell" style="width: 60%">
-								<input type="text" name="txtNumberToDial" value="<%= session[:txtNumberToDial] %>" title="telephone number or sip address"/>
-							</td>
-						</tr>
-										<tr>
-							<td class="style4">
-								Script Function:</td>
-							<td class="cell" style="width: 20%">
-								<select onchange="this.form.submit()" name="scriptType">
-								       <option value="" <% if params[:scriptType] == nil %>selected="selected"<% end %>></option>
-									<option value="ask" <% if params[:scriptType] == "ask" %>selected="selected"<% end %>>ask</option>
-									<option value="conference" <% if params[:scriptType] == "conference" %>selected="selected"<% end %>>conference</option>
-									<option value="message" <% if params[:scriptType] == "message" %>selected="selected"<% end %>>message</option>
-									<option value="reject" <% if params[:scriptType] == "reject" %>selected="selected"<% end %>>reject</option>
-									<option value="transfer" <% if params[:scriptType] == "transfer" %>selected="selected"<% end %>>transfer</option>
-									<option value="wait" <% if params[:scriptType] == "wait" %>selected="selected"<% end %>>wait</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td class="style4">
-								Number parameter for Script Function:</td>
-							<td class="cell" style="width: 60%">
-								<input type="text" name="txtNumber" value="<%= session[:txtNumber] %>" title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
-							</td>
-						</tr>
-						<tr>
-							<td class="style4">
-								Message To Play:</td>
-							<td class="cell" style="width: 60%">
-								<input type="text" name="txtMessageToPlay" value="<%= session[:txtMessageToPlay] %>" title="enter long message or mp3 audio url, this is used as music on hold"/>
-							</td>
-						</tr>
-						<tr>
-							<td class="style4">
-								Script Source Code:</td>
-							<td class="cell" style="width: 60%">
-								<textarea name="txtCreateSession" rows="2" cols="20" style="height:141px;width:400px;" disabled="disabled" id="txtCreateSession" ><%= @outbound %></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td class="style4">
-							</td>
-							<td align="center">
-								<button type="submit" name="btnCreateSession" >
-									Create Session</button><span id="Label1" class="warning" style="display:inline-block;width:200px;">Create Session will trigger an outbound call from application  to <strong>"Make call to"</strong> number.</span>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-			
-				<div class="extra" align="left">
-                    <div class="warning">
-						<div id="notesPanel">
-							<% if params[:scriptType] == nil %>
-								<strong>Note:</strong> <br />
-								User is asked to press digit to activiate music on hold 
-								<strong>Message to Play</strong> to handle the signal (feature 2)"
-								<% elsif params[:scriptType] == "ask" %>
-								Create Session will trigger an outbound call from application to <strong>Make
-								call to</strong> number. <br /> For ask script function, user is prompted
-								to enter few digits and entered digits are played back. <br />
-								User is asked to press digit to activiate music on hold <strong>Message
-								to Play</strong> to handle the signal (feature 2)
-								<% elsif params[:scriptType] == "conference" %>
-								Create Session will trigger an outbound call from
-								application to <strong>Make call to</strong> number. <br /> For
-								conference script function, user is prompted to join the
-								conference.<br /> After quitting the conference, user is asked to
-								press digit to activiate music on hold <strong>Message to
-								Play</strong> to handle the signal (feature 2) 
-								<% elsif params[:scriptType] == "message" %>
-								Create Session will trigger an outbound call from
-								application to <strong>Make call to</strong> number. <br /> For
-								message script function, user is played back <strong>Number
-								parameter for Script Function</strong> number and an SMS Message is sent
-								to that number.<br /> User is asked to press digit to activiate
-								music on hold <strong>Message to Play</strong> to handle the
-								signal (feature 2)
-								<% elsif params[:scriptType] == "reject" %>
-								Create Session will trigger an outbound call from
-								application to <strong>Make call to</strong> number. <br /> For
-								reject script function, if <strong>Number parameter for
-								Script Function</strong> matches with calling id, call will be dropped.<br />
-								If calling id doesnt match, calling id and <strong>Number
-								parameter for Script Function</strong> number are played to User.<br />
-								User is asked to press digit to activiate music on hold <strong>Message
-								to Play</strong> to handle the signal (feature 2) 
-								<% elsif params[:scriptType] == "transfer" %>
-								Create Session will trigger an outbound call from
-								application to <strong>Make call to</strong> number. <br /> For
-								transfer script function, user is played back with <strong>Number
-								parameter for Script Function</strong> and call be transferred to that
-								number.<br /> While doing transfer music on hold <strong>Message
-								to Play</strong> is played. Once <strong>Number parameter for
-								Script Function</strong> number disconnects the call, user is asked to
-								press digit to activiate music on hold <strong>Message to
-								Play</strong> to handle the signal (feature 2) 
-								<% elsif params[:scriptType] == "wait" %>
-								Create Session will trigger an outbound call from
-								application to <strong>Make call to</strong> number. <br /> For
-								wait script function, if <strong>Number parameter for
-								Script Function</strong> matches with calling id, call will be kept on
-								hold for 3 seconds.<br /> If calling id doesnt match, calling id
-								and <strong>Number parameter for Script Function</strong> number
-								are played to User.<br /> User is asked to press digit to
-								activiate music on hold <strong>Message to Play</strong> to handle
-								the signal (feature 2)
-							<% end %>
-						</div>
-					</div>
-				</div>
-			</form>
-				
-        <br style="clear: both;" />
-		
-		<% if @result %>
-			<table class="successWide" style="background-color:#CCFFCC;border-color:DarkGreen;border-width:2px;border-style:Outset;font-family:Sans-serif;font-size:9pt;width:650px;">
-               	<tr>
-                       	<td style="font-weight:bold;">SUCCESS:</td>
-               	</tr><tr>
-                       	<td style="font-weight:normal;width:70px;"><strong>Id 	   </strong><%= @result['id'] %></td>
-               	</tr>
-				<tr>
-                       	<td style="font-weight:normal;width:70px;"><strong>Success </strong><%= @result['success'] %></td>
-               	</tr>
-        	</table>
-		<% end %>
-		
-		<% if @error %>
-			<table class="errorWide" style="background-color:#FCC;border-color:Red;border-width:2px;border-style:Outset;font-family:Sans-serif;font-size:9pt;width:650px;">
-               	<tr>
-                       	<td style="font-weight:bold;">ERROR:</td>
-               	</tr><tr>
-                       	<td style="font-weight:normal;width:70px;"><%= @error %></td>
-               	</tr>
-        	</table>
-		<% end %>
-		
-        <br clear="all" />
-        <div>
-            <div class="content">
-                <h2>
-                    &nbsp;</h2>
-                <h2>
-                    Feature 2: Send Signal to Session</h2>
-            </div>
-        </div>
-        <br />
-        <div class="navigation">
-			<form method="post" name="sendSignal" enctype="multipart/form-data" action="SendSignal">
-				<table style="width: 100%">
-					<tbody>
-						<tr>
-							<td class="style6">
-								<label class="label">
-									Session ID:
-								</label>
-							</td>
-							<td>
-								<label class="cell"><%= session[:cms_id] %><label>
-							</td>
-						</tr>
-						<tr>
-							<td class="style6">
-								<label class="label">
-									Signal to Send:
-								</label>
-							</td>
-							<td>
-								<select name="signal">
-									<option value="exit" selected="selected">exit</option>
-									<option value="stopHold" selected="selected">stopHold</option>
-									<option value="dequeue" selected="selected">dequeue</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-						<td></td>
-						<td align="center">
-								<button type="submit" name="btnupload">
-									Send Signal</button>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</form>
-        </div>
-		
-		<% if @signal_result %>
-			<table class="successWide" style="background-color:#CCFFCC;border-color:DarkGreen;border-width:2px;border-style:Outset;font-family:Sans-serif;font-size:9pt;width:650px;">
-               	<tr>
-                       	<td style="font-weight:bold;">SUCCESS:</td>
-               	</tr><tr>
-                       	<td style="font-weight:normal;width:70px;"><strong>Status</strong><%= @signal_result['status'] %></td>
-               	</tr>
-        	</table>
-		<% end %>
-		
-		<% if @signal_error %>
-			<table class="errorWide" style="background-color:#FCC;border-color:Red;border-width:2px;border-style:Outset;font-family:Sans-serif;font-size:9pt;width:650px;">
-               	<tr>
-                       	<td style="font-weight:bold;">ERROR:</td>
-               	</tr><tr>
-                       	<td style="font-weight:normal;width:70px;"><%= @signal_error %></td>
-               	</tr>
-        	</table>
-		<% end %>
-		
-        <div class="extra">
-        </div>
-        <br style="clear: both;" />
-        <br clear="all" />
-        <div id="footer" align="center">
-            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
-                Powered by AT&amp;T Cloud Architecture</div>
-            <p>
-                © 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
-                <br />
-                The Application hosted on this site are working examples intended to be used for
-                reference in creating products to consume AT&amp;T Services and not meant to be
-                used as part of your product. The data in these pages is for test purposes only
-                and intended only for use as a reference in how the services perform.
-                <br />
-                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
-                <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-            </p>
-        </div>
-    </div>
-</body>
+        <p>
+        The Application hosted on this site are working examples
+        intended to be used for reference in creating products to consume
+        AT&amp;T Services and not meant to be used as part of your
+        product. The data in these pages is for test purposes only and
+        intended only for use as a reference in how the services perform.
+        <br /><br />
+        For download of tools and documentation, please go to 
+        <a href="https://devconnect-api.att.com/" 
+          target="_blank">https://devconnect-api.att.com</a>
+        <br> For more information contact 
+        <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+        <br /><br />
+        &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+        <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        </p>
+      </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
+    <script>setup();</script>
+  </body>
 </html>

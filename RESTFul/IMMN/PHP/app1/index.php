@@ -1,557 +1,287 @@
+<?php
+session_start();
+require __DIR__ . '/config.php';
+require_once __DIR__ . '/src/Sample/IMMNService.php';
+$immnService = new IMMNService();
+$msgHeaders = $immnService->getMessageHeaders();
+$msgBody = $immnService->getMessageBody();
+$immnSend = $immnService->sendMessage();
+?>
+<!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
-
-<?php
-    header("Content-Type: text/html; charset=ISO-8859-1");
-    session_start();
-    include ("config.php");
-	error_reporting(0);
-
-function GetAccessToken($FQDN,$api_key,$secret_key,$scope,$authCode){
-
-  // **********************************************************************
-  // ** code to get access token by passing auth code, client ID and
-  // ** client secret
-  // **********************************************************************
-
-  //Form URL to get the access token
-  $accessTok_Url = "$FQDN/oauth/access_token";
-  //http header values
-  $accessTok_headers = array(
-			     'Content-Type: application/x-www-form-urlencoded'
-			     );
-            
-
-  //Invoke the URL
-  $post_data="client_id=".$api_key."&client_secret=".$secret_key."&code=".$authCode."&grant_type=authorization_code";
-  
- 
-  $accessTok = curl_init();
-  curl_setopt($accessTok, CURLOPT_URL, $accessTok_Url);
-  curl_setopt($accessTok, CURLOPT_HTTPGET, 1);
-  curl_setopt($accessTok, CURLOPT_HEADER, 0);
-  curl_setopt($accessTok, CURLINFO_HEADER_OUT, 0);
-  curl_setopt($accessTok, CURLOPT_HTTPHEADER, $accessTok_headers);
-  curl_setopt($accessTok, CURLOPT_RETURNTRANSFER, 1);
-  curl_setopt($accessTok, CURLOPT_SSL_VERIFYPEER, false);
-  curl_setopt($accessTok, CURLOPT_POST, 1);
-  curl_setopt($accessTok, CURLOPT_POSTFIELDS,$post_data);
-  $accessTok_response = curl_exec($accessTok);
-
-  $responseCode=curl_getinfo($accessTok,CURLINFO_HTTP_CODE);
-  //$currentTime=time();
-   /*If URL invocation is successful fetch the access token and store it in session,
-   else display the error.
-  */
-  if($responseCode==200)
-    {
-      $jsonObj = json_decode($accessTok_response);
-      $access_token = $jsonObj->{'access_token'};//fetch the access token from the response.
-      $_SESSION["access_token_index"]=$access_token;//store the access token in to session.
-
-    }
-  else{
-
-        echo curl_error($accessTok);
- 
-  }
-  curl_close ($accessTok);
-  header("location:index.php");//redirect to the index page.
-  exit;
-
-}
-
-function getAuthCode($FQDN,$api_key,$secret_key,$scope,$authorize_redirect_uri){
-  //Form URL to get the authorization code
-  $authorizeUrl = $FQDN."/oauth/authorize";
-  $authorizeUrl .= "?scope=".$scope;
-  $authorizeUrl .= "&client_id=".$api_key;
-  $authorizeUrl .= "&redirect_uri=".$authorize_redirect_uri;
-
-  header("Location: $authorizeUrl");
-}
-$messageTextBox = $_SESSION["messageTextBox"];
-$subjectTextBox = $_SESSION["subjectTextBox"];
-$addresses = $_SESSION["phoneTextBox"];
-
-
-
-/* Extract the session variables */  
-$access_token = $_SESSION["access_token_index"];
-
-if ($_REQUEST["sendMessageButton"]) {
-
-
-  $_SESSION["sendMsgIndex"] = true;
-
-
-  $messageTextBox=$_POST['messageTextBox'];
-  $_SESSION["messageTextBox"]=$messageTextBox;
-  $subjectTextBox=$_POST['subjectTextBox'];
-  $_SESSION["subjectTextBox"]=$subjectTextBox;
-  $addresses = $_POST['phoneTextBox'];
-  $_SESSION["phoneTextBox"]=$addresses;
-$FileUpload1 = $_POST['FileUpload1'];
-$_SESSION["FileUpload1"] = $_POST['FileUpload1'];
-$FileUpload2 = $_POST['FileUpload2'];
-$_SESSION["FileUpload2"] = $FileUpload2;
-$FileUpload3 = $_REQUEST["FileUpload3"];
-$_SESSION["FileUpload3"] = $FileUpload3;
-$FileUpload4 = $_REQUEST["FileUpload4"];
-$_SESSION["FileUpload4"] = $FileUpload4;
-$FileUpload5 = $_REQUEST["FileUpload5"];
-$_SESSION["FileUpload5"] = $FileUpload5;
-
-  
- 
- }  
-
-  
-if ($_SESSION["sendMsgIndex"]) {
-  
-  if($access_token == null || $access_token == '') {
-    $authCode = $_GET["code"];
-    if ($authCode == null || $authCode == "") {   
-      getAuthCode( $FQDN,$api_key,$secret_key,$scope,$authorize_redirect_uri);
-    }else{
-      $access_token = GetAccessToken($FQDN,$api_key,$secret_key,$scope,$authCode);
-      $_SESSION["access_token_index"] =  $access_token;
-    }
-  }
- }
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
-	<title>AT&T Sample IMMN Application 1 &#8211; Basic IMMN Service Application</title>
-	<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"/>
-    <link rel="stylesheet" type="text/css" href="style/common.css"/>
-    <style type="text/css">
-        .style1
-        {
-            font-style: normal;
-            font-variant: normal;
-            font-weight: bold;
-            font-size: 12px;
-            line-height: normal;
-            font-family: Arial, Sans-serif;
-            width: 92px;
-        }
-    </style>
-    </head>
-<body>
-<div id="container">
-<!-- open HEADER --><div id="header">
-<div>
-    <div id="hcLeft">Server Time:</div>
-       	<div id="hcRight">
-            <span id="serverTimeLabel">Wed, Apr 11, 2012 02:22:37 UTC</span>
-        </div>
-    </div>
-<div>
-    <div id="hcLeft">Client Time:</div>
-	<div id="hcRight">
-        <script language="JavaScript" type="text/javascript">
-            var myDate = new Date();
-            document.write(myDate);
-        </script>
-    </div>
-</div>
-<div>
-    <div id="hcLeft">User Agent:</div>    
-	<div id="hcRight">
-        <script language="JavaScript" type="text/javascript">
-            document.write("" + navigator.userAgent);
-        </script>
-    </div>
-</div>
-
-<br clear="all" />
-</div><!-- close HEADER -->
-
-<div id="wrapper">
-<div id="content">
-
-<h1>AT&T Sample IMMN Application 1 Basic IMMN Service Application</h1>
-<h2>Feature 1: Send Message</h2>
-
-</div>
-</div>
-<br clear="all" />
-<form method="post" action="" id="form1" enctype="multipart/form-data">
-<div class="aspNetHidden">
-<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE0Njg1MzU3NjYPZBYEAgEPDxYCHgRUZXh0BR5XZWQsIEFwciAxMSwgMjAxMiAwMjoyMjozNyBVVENkZAIDDxYCHgdlbmN0eXBlBRNtdWx0aXBhcnQvZm9ybS1kYXRhZGRKqwJESS23JTte7DyE68Cg2Npvy+OhbfvIuIvYPupl3w==" />
-</div>
-
-<div class="aspNetHidden">
-
-	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWBgLarpiPBgKE8IO1CQKqp5K5DgLBpcqdCwLS2tfyDgKd/YaEBF51lEQEv77ck+EeFQ2Pv31ApGDVJCMt+60O1qIFfQEJ" />
-</div>           
-<div id="navigation">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td width="20%" valign="top" class="label">Address:</td>
-    <td class="cell">
-        <input name="phoneTextBox" type="text" id="phoneTextBox" style="width:291px;" />     
-            </td>
-  </tr> 
-  <tr>
-    <td valign="top" class="label">Message:</td>
-    <td class="cell">
-        <textarea name="messageTextBox" rows="2" cols="20" id="messageTextBox" style="height:99px;width:291px;">
-</textarea></td>
-  </tr>
-  <tr>
-    <td valign="top" class="label">Subject:</td>
-    <td class="cell">
-        <textarea name="subjectTextBox" rows="2" cols="20" id="subjectTextBox" style="height:99px;width:291px;">
-</textarea></td>
-  </tr>
-  <tr>
-    <td valign="top" class="label">Group:</td>
-    <td class="cell">
-        <input name="groupCheckBox" type="checkbox" maxlength="30" id="phoneTextBox"/></td>
-  </tr>
-  </tbody>
-</table>
-
-</div>
-
-<div id="extraleft">
-<div class="warning" >
-<strong>WARNING:</strong><br />
-total size of all attachments cannot exceed 600 KB.
-</div>
-</div>
-<div id="extra">
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td valign="bottom" class="style1">Attachment 1:</td>
-    <td class="cell"><input type="file" name="FileUpload1" id="FileUpload1" />
-    </td>
-  </tr>
-  <tr>
-    <td valign="bottom" class="style1">Attachment 2:</td>
-    <td class="cell"><input type="file" name="FileUpload2" id="FileUpload2" />
-    </td>
-  </tr>
-  <tr>
-    <td valign="bottom" class="style1">Attachment 3:</td>
-    <td class="cell"><input type="file" name="FileUpload3" id="FileUpload3" />
-    </td>
-  </tr>
- <tr>
-    <td valign="bottom" class="style1">Attachment 4:</td>
-    <td class="cell"><input type="file" name="FileUpload4" id="FileUpload4" />
-    </td>
-  </tr>
-  <tr>
-    <td valign="bottom" class="style1">Attachment 5:</td>
-    <td class="cell"><input type="file" name="FileUpload5" id="FileUpload5" />
-    </td>
-  </tr>
- 
-  </tbody></table>
-  <table>
-  <tbody>
-  <tr>
-  	<td>
-          <input type="submit" name="sendMessageButton" value="Send Message" id="sendMessageButton" /></td>
-  </tr>
-  </tbody></table></form>
-</div>
-<br clear="all" />
-<div align="center">
-    <div id="sendMessagePanel" style="font-family:Calibri;font-size:XX-Small;">
-	
-    
-</div></div>
-<br clear="all" />
-<?php
-
-
-if ($_SESSION["sendMsgIndex"] && $access_token != null && $access_token != '') {
-
-	  $_SESSION["sendMsgIndex"]=false;
-
-if(isset($_POST['groupCheckBox'])) {
-$group = "true";
-} else{
-   $group = "false";
-}
-
-
-if($group == "true" || !empty($_FILES['FileUpload1']['name']) || !empty($_FILES['FileUpload2']['name']) || !empty($_FILES['FileUpload3']['name']) || !empty($_FILES['FileUpload4']['name']) || !empty($_FILES['FileUpload5']['name'])) {
-
-if($messageTextBox == null) {
-     ?>
-	    <div class="errorWide">
-	    <strong>ERROR:</strong><br />
-	    <?php echo "Specify message to be sent";  ?>
-	    </div>
-<?php
-} else {
-
-	//$addresses = $_POST['phoneTextBox'];      
-      $addresses_url="";
-      $addresses_array=explode(",",$_SESSION["phoneTextBox"]);
-      $invalid_addresses = array();
-      $addresses_second = array();
-      foreach($addresses_array as $address){
-	$clean_addres =  str_replace("-","",$address);
-	$clean_addres =  str_replace("tel:","",$clean_addres);
-	$clean_addres =  str_replace("+1","",$clean_addres);
-	if(preg_match("/\d{10}/",$clean_addres)){
-           $addresses_url.="Addresses=".urlencode("tel:".$clean_addres)."&";
-            array_push($addresses_second,$clean_addres);                       
-	   }else if (preg_match("/^[^@]*@[^@]*\.[^@]*$/", $clean_addres)) {
-           $addresses_url.="Addresses=".urlencode($clean_addres)."&";
-           array_push($addresses_second,$clean_addres); 
-	   }else{
-	  array_push($invalid_addresses,$address);
-	}
-      }
-
-$addresses_url = substr($addresses_url, 0, -1);
-$addresslength = count($addresses_second);
-
-if($group == "true" && $addresslength == 1) {
-     ?>
-	    <div class="errorWide">
-	    <strong>ERROR:</strong><br />
-	    <?php echo "Specify more than one address for Group message.";  ?>
-	    </div>
-<?php
-}else{
-      if ( $addresses_url != "" ){
-     
-    
-      //$subjectTextBox = $_POST['subjectTextBox'];
-	  
-
-      $server=substr($FQDN,8);
-      
-      $fileContents = join("", file($_FILES['file']['tmp_name']));
-       //$fileContents = join("", file($_SESSION["FileUpload1"]));
-
-       
-      $host="ssl://$server";
-      $port="443";
-      $fp = fsockopen($host, $port, $errno, $errstr);
-
-      if (!$fp) {
-	echo "errno: $errno \n";
-	echo "errstr: $errstr\n";
-	return $result;
-      }
-      //Boundary for MIME part
-      $boundary = "----------------------------".substr(md5(date("c")),0,10);
-  
-      $startpart = "<startpart>";
-     
-      //Form the first part of MIME body containing address, subject in urlencided format
-      $sendMMSData = $addresses_url.'&Subject='.urlencode($_SESSION["subjectTextBox"]).'&Text='.urlencode($_SESSION["messageTextBox"]).'&Group='.$group;
-
-      //Form the MIME part with MIME message headers and MIME attachment
-      $data = "";
-      $data .= "--$boundary\r\n";
-      $data .= "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\nContent-Disposition: form-data; name=\"root-fields\"\r\nContent-ID: ".$startpart."\r\n\r\n".$sendMMSData."\r\n\r\n";
-
-
-      foreach ( $_FILES as $file ){
-	if ($file['name'] != ""){
-	  $data .= "--$boundary\r\n";
-	  $data .= "Content-Disposition: form-data; name=\"file0\"; filename=\"".$file['name']."\"\r\n";//Attachment; Filename=\"".$file['name']."\"\r\n";
-	  $data .= "Content-Type:".$file['type']."\r\n";
-	  $data .= "Content-ID:<".$file['name'].">\r\n";
-	  $data .= "Content-Transfer-Encoding:binary\r\n\r\n";
-	  $data .= join("", file($file['tmp_name']))."\r\n";
-	}
-      }
-      $data .= "--$boundary--\r\n";
-
-      // Form the HTTP headers
-      $header = "POST $FQDN/rest/1/MyMessages? HTTP/1.0\r\n";
-      $header .= "Authorization: BEARER ".$_SESSION["access_token_index"]."\r\n"; 
-      $header .= "Content-Type: multipart/form-data; type=\"application/x-www-form-urlencoded\"; start=\"$startpart\"; boundary=\"$boundary\"\r\n";
-      $header .= "MIME-Version: 1.0\r\n";
-      $header .= "Host: $server\r\n";
-      $dc = strlen($data); //content length
-      $header .= "Content-length: $dc\r\n\r\n";
-      
-
-
-      $httpRequest = $header.$data;
-
-      fputs($fp, $httpRequest);
-      
-      $sendMMS_response="";
-      while(!feof($fp)) {
-	$sendMMS_response .= fread($fp,1024);
-      }
-      fclose($fp);
-      $responseCode=trim(substr($sendMMS_response,9,4));//get the response code.
-
-      /*
-       If URL invocation is successful print the mms ID,
-       else print the error msg
-      */
-      if($responseCode>=200 && $responseCode<=300)
-	{
-           $splitString=explode("{",$sendMMS_response);
-	    $joinString="{".implode("{",array($splitString[1],$splitString[2]));
-           //echo $joinString;
-           $id = substr($joinString, 11, -6);
-           
-
-	    ?>
-
-	      <div class="success">
-		 <strong>SUCCESS:</strong><br />
-		 <strong>Message ID</strong> <?php echo $id; ?>
-		 </div>
-<?php }else {
-	    
-	    //print "The Request was Not Successful";
-	    ?>
-	    <div class="errorWide">
-	    <strong>ERROR:</strong><br />
-	    <?php echo htmlspecialchars($sendMMS_response)  ?>
-	    </div>
-
-	<?php }
-}
-}
-}
-}else {
-
-
-
-//$addresses = $_POST['phoneTextBox'];
-//$_SESSION["phoneTextBox"] = $addresses;      
-      $addresses_url="";
-      $addresses_array=explode(",",$_SESSION["phoneTextBox"]);
-      $invalid_addresses = array();
-      $addresses_second = array();
-      foreach($addresses_array as $address){
-	$clean_addres =  str_replace("-","",$address);
-	$clean_addres =  str_replace("tel:","",$clean_addres);
-	$clean_addres =  str_replace("+1","",$clean_addres);
-	if(preg_match("/\d{10}/",$clean_addres)){
-           $addresses_url.="Addresses=".urlencode("tel:".$clean_addres)."&";
-                                   
-	     
-	   }
-          else if (preg_match("/^[^@]*@[^@]*\.[^@]*$/", $clean_addres)) {
-           $addresses_url.="Addresses=".urlencode($clean_addres)."&";
-                                   
-	     
-	   }
-           else if(preg_match("/\d[3-8]/",$clean_addres)){
-           $addresses_url.="Addresses=".urlencode("short:".$clean_addres)."&";
-                                   
-	   }else{
-	  array_push($invalid_addresses,$address);
-	}
-      }
-
-      if ( $addresses_url != "" ){
-     
-    
-      //$subjectTextBox = $_POST['subjectTextBox'];
-
-
-
-// Form the URL to send SMS
-        $APIReq_RequestBody = $addresses_url.'Subject='.urlencode($_SESSION["subjectTextBox"]).'&Text='.urlencode($_SESSION["messageTextBox"]).'&Group=false'; 
-
-      $APIReq_Url = "$FQDN/rest/1/MyMessages?";
-	  $authorization = 'Authorization: Bearer '.$_SESSION["access_token_index"];
-	 $content = "Content-Type: application/x-www-form-urlencoded";
-
-      
-
-	//Invoke the URL
-	$APIReq = curl_init();
-	
-	curl_setopt($APIReq, CURLOPT_URL, $APIReq_Url);
-	curl_setopt($APIReq, CURLOPT_POST, 1);
-	curl_setopt($APIReq, CURLOPT_HEADER, 0);
-	curl_setopt($APIReq, CURLINFO_HEADER_OUT, 0);
-	curl_setopt($APIReq, CURLOPT_HTTPHEADER, array($authorization, $content));
-	curl_setopt($APIReq, CURLOPT_POSTFIELDS, $APIReq_RequestBody);
-	curl_setopt($APIReq, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($APIReq, CURLOPT_SSL_VERIFYPEER, false);
-	
-	
-	$APIReq_response = curl_exec($APIReq);
-	$responseCode=curl_getinfo($APIReq,CURLINFO_HTTP_CODE);
-
-        /*
-	  If URL invocation is successful print success msg along with sms ID,
-	  else print the error msg
-	*/
-	if($responseCode==200 || $responseCode ==201 || $responseCode==300)
-	{
-		$jsonObj = json_decode($APIReq_response);
-		$smsID = $jsonObj->{'Id'};//if the SMS send successfully ,then will get a SMS id.
-		$_SESSION["sms1_smsID"] = $smsID;
-?>
-         <div class="success">
-		 <strong>SUCCESS:</strong><br />
-		 <strong>Message ID</strong> <?php echo $jsonObj->{'Id'}; ?>
-
-		 </div>
-<?php
-
-		}else {
-	    
-	    //print "The Request was Not Successful";
-	    ?>
-	    <div class="errorWide">
-	    <strong>ERROR:</strong><br />
-	    <?php echo htmlspecialchars($APIReq_response)  ?>
-	    </div>
-
-	<?php }
-
-}
-
-if(!empty($invalid_addresses )){
-	
-	?>
-	<div class="errorWide">
-	<strong>ERROR: Invalid numbers</strong><br />
-	<?php 
-	foreach ( $invalid_addresses as $invalid_address ){
-	  echo htmlspecialchars($invalid_address) . "<br/>";
-	}  
-
-
-?> </div> <?php 
-	} 
-}
-}
-
-?>
-
-<div id="footer">
-
-	<div style="float: right; width: 20%; font-size: 9px; text-align: right">Powered by AT&amp;T Cloud Architecture</div>
-    <p>© 2012 AT&amp;T Intellectual Property. All rights reserved.  <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
-<br>
-The Application hosted on this site are working examples intended to be used for reference in creating products to consume AT&amp;T Services and  not meant to be used as part of your product.  The data in these pages is for test purposes only and intended only for use as a reference in how the services perform.
-<br>
-For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
-<br>
-For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-
-</div>
-
-</body></html>
+<html lang="en"> 
+  <head> 
+    <title>AT&amp;T Sample Application - In App Messaging from Mobile Number</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script src="scripts/utils.js"></script>
+    <script type="text/javascript">
+	    var _gaq = _gaq || [];
+	    _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+             var ga = document.createElement('script');
+             ga.type = 'text/javascript';
+             ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                         : 'http://www')
+                                         + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0];
+             s.parentNode.insertBefore(ga, s);
+         })();
+    </script>
+  </head>
+  <body>
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo"></div> 
+        <div id="menuButton" class="hide"><a id="jump" href="#nav">Main Navigation</a></div> 
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<?php echo $linkSource ?>" target="_blank">Source<img src="images/opensource.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<?php echo $linkDownload ?>" target="_blank">Download<img src="images/download.png"></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<?php echo $linkHelp ?>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a></li>
+        </ul> <!-- end of links -->
+      </div> <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>AT&amp;T Sample Application - In App Messaging from Mobile Number</h1>
+          <div class="border"></div>
+          <div id="introtext">
+            <div><b>Server Time:&nbsp;</b><?php echo Util::getServerTime(); ?></div> 
+            <div><b>Client Time:&nbsp;</b><script>document.write("" + new Date());</script></div>
+            <div><b>User Agent:&nbsp;</b><script>document.write("" + navigator.userAgent);</script></div>
+          </div> <!-- end of introtext -->
+        </div> <!-- end of contentHeading -->
+
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <div id="sendMessages">
+              <h2>Send Messages:<h2>
+              <form method="post" action="index.php" name="msgContentForm" >
+                <div class="inputFields">
+                  <input placeholder="Address" name="Address" type="text" />     
+                  <label>Group: <input name="groupCheckBox" type="checkbox" /></label>
+                  <label>
+                    Message:
+                    <select name="message">
+                      <option value="ATT IMMN sample message">ATT IMMN sample message</option>
+                    </select>
+                  </label>
+                  <label>
+                    Subject:
+                    <select name="subject">
+                      <option value="ATT IMMN sample subject">ATT IMMN sample subject</option>
+                    </select>
+                  </label>
+                  <label>
+                    Attachment:
+                    <select name="attachment">
+                      <option value="None">None</option>
+                      <?php foreach ($immnService->getAttachments() as $attachment) { ?>
+                      <option value="<?php echo $attachment; ?>"><?php echo htmlspecialchars($attachment); ?></option>
+                      <?php } ?>
+                    </select>
+                  </label>
+                  <button type="submit" class="submit" id="sendMessage" name="sendMessage">Send Message</button>
+                </div> <!-- end of inputFields -->
+              </form>
+              <?php if ($immnSend != NULL) { ?>
+
+              <div class="successWide">
+                <strong>SUCCESS:</strong>
+                <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
+
+              </div> <!-- end of successWide -->
+                  <?php } ?>
+                  <?php if ($immnService->errorSend() != NULL) { ?>
+
+              <div class="errorWide">
+                <strong>ERROR:</strong>
+                <?php echo htmlspecialchars($immnService->errorSend()); ?>
+              </div> <!-- end of errorWide -->
+              <?php } ?>
+
+            </div> <!-- end of sendMessages -->
+            <div class="lightBorder"></div>
+            <div id="getMessages">
+              <h2>Read Messages:</h2>
+              <form method="post" action="index.php" name="msgHeaderForm" id="msgHeaderForm">
+                <div class="inputFields">
+                  <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
+                  <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
+                  <button type="submit" class="submit" name="getMessageHeaders" 
+                    id="getMessageHeaders">Get Message Headers</button>
+                </div> <!-- end of inputFields -->
+              </form>
+              <form method="post" action="index.php" name="msgContentForm" id="msgContentForm">
+                <div class="inputFields">
+                  <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
+                  <input name="PartNumber" id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
+                  <button type="submit" class="submit" name="getMessageContent" id="getMessageContent">
+                    Get Message Content
+                  </button>
+                </div> <!-- end of inputFields -->
+              </form>
+              <label class="note">To use this feature, you must be a subscriber to My AT&amp;T Messages.</label>
+            </div> <!-- end of getMessages -->
+          </div> <!-- end of formContainer -->
+
+          <!-- BEGIN HEADER CONTENT RESULTS -->
+          <?php 
+          if ($msgBody != NULL) { 
+          $rawCType = $msgBody->getContentType();
+          $tokenCType = strtok($rawCType, ';');
+          $splitCType = strtok($rawCType, '/');
+          ?> 
+              
+          <div class="successWide">
+            <strong>SUCCESS:</strong>
+          </div> <!-- end of successWide -->
+          <?php 
+          if (strcmp('TEXT', $splitCType) == 0) { 
+          echo htmlspecialchars($msgBody->getData()); 
+          } else if (strcmp($tokenCType, 'APPLICATION/SMIL') == 0) {
+          $data = htmlspecialchars($msgBody->getData());
+          ?>
+
+          <textarea name="TextBox1" rows="2" cols="20" id="TextBox1" disabled="disabled"><?php echo $data; ?></textarea>
+          <?php } else if (strcmp($splitCType, 'IMAGE') == 0) { ?>
+
+          <img src="data:<?php echo $tokenCType; ?>;base64,<?php echo base64_encode($msgBody->getData()); ?>" />
+          <?php
+          }
+          }
+          ?>
+
+          <!-- END HEADER CONTENT RESULTS -->
+
+          <!-- BEGIN HEADER RESULTS -->
+          <?php 
+          if ($msgHeaders != NULL) { 
+          $headers = $msgHeaders->getHeaders();
+          $indexCursor = $msgHeaders->getIndexCursor();
+          $headerCount = $msgHeaders->getHeaderCount();
+          ?>
+
+          <div class="successWide">
+            <strong>SUCCESS:</strong>
+          </div> <!-- end of successWide -->
+          <p id="headerCount">Header Count: <?php echo $headerCount; ?></p>
+          <p id="indexCursor">Index Cursor: <?php echo $indexCursor; ?></p>
+          <table class="kvp" id="kvp">
+            <thead>
+              <tr>
+                <th>MessageId</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Received</th>
+                <th>Text</th>
+                <th>Favorite</th>
+                <th>Read</th>
+                <th>Type</th>
+                <th>Direction</th>
+                <th>Contents</th>
+              </tr>
+            </thead>
+            <tbody>
+            <?php for ($i = 0; $i < count($headers); ++$i) { 
+              $header = $headers[$i];
+              $text = $header->getText();
+              if ($text == NULL || $text == '') {
+                $text = '&#45';
+              }
+              $toArr = $header->getTo();
+              $to = (count($toArr) > 0) ? $toArr[0] : ''; 
+              for ($j = 1; $j < count($toArr); ++$j) {
+                $to .= ',' . $toArr[$j];
+              }
+              $favorite = ($header->getFavorite()) ? 'true' : 'false';
+              ?>
+
+              <tr id="<?php echo 'row' . $i; ?>">
+                <td data-value="MessageId"><?php echo $header->getMessageId(); ?></td>
+                <td data-value="From"><?php echo $header->getFrom(); ?></td>
+                <td data-value="To"><?php echo $to; ?></td>
+                <td data-value="Received"><?php echo $header->getReceived(); ?></td>
+                <td data-value="Text"><?php echo $text; ?></td>
+                <td data-value="Favorite"><?php echo $favorite; ?></td>
+                <td data-value="Read"><?php echo $header->getRead(); ?></td>
+                <td data-value="Type"><?php echo $header->getType(); ?></td>
+                <td data-value="Direction"><?php echo $header->getDirection(); ?></td>
+                <td data-value="Contents">
+                <?php if ($header->getMmsContent() != NULL) { ?>
+
+                  <select id="attachments" onchange='chooseSelect("<?php echo 'row' . $i; ?>", this)'>
+                    <option>More..</option>
+                    <?php foreach ($header->getMmsContent() as $p) { ?>
+
+                    <option><?php echo $p['PartNumber'] . '-' . $p['ContentName'] . '-' . $p['ContentType']; ?></option>
+                    <?php } ?>
+
+                  </select>
+                    <?php } else { ?>
+                      &#45;
+                      <?php } ?>
+
+                </td>
+              </tr>
+              <?php } ?>
+
+            </tbody>
+          </table>
+          <?php } ?>
+
+          <!-- END HEADER RESULTS -->
+          <?php if ($immnService->errorGet() != NULL) { ?>
+
+          <div class="errorWide">
+            <strong>ERROR:</strong>
+            <?php echo htmlspecialchars($immnService->errorGet()); ?>
+
+          </div> <!-- end of errorWide -->
+          <?php } ?>
+
+        </div> <!-- end of formBox -->
+      </div> <!-- end of content -->
+      <div class="border"></div>
+      <div id="footer">
+        <div id="powered_by">Powered by AT&amp;T Cloud Architecture</div>
+        <p>
+          The Application hosted on this site are working examples intended to be used for reference in creating 
+          products to consume AT&amp;T Services and not meant to be used as part of your product. The data in 
+          these pages is for test purposes only and intended only for use as a reference in how the services 
+          perform. 
+          <br> <br> 
+          For download of tools and documentation, please go to 
+          <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
+          <br> 
+          For more information contact 
+          <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+          <br> <br>
+          &copy; 2013 AT&amp;T Intellectual Property. All rights reserved.
+          <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        </p>
+      </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
+    <script>setup();</script>
+  </body>
+</html>

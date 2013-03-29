@@ -1,7 +1,7 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -61,9 +61,9 @@ create and run one's own full-fledged sample applications.
 
    Requirements:
      Apache web server 
-     PHP 5.2+
+     PHP 5.4+
      PHP CURL extension	
-     Apache and PHP configured. The package manager on most Linux systems should automatically 
+     Apache and PHP configured. The package manager on most GNU/Linux systems should automatically 
      configure Apache/PHP upon installation.
 
    Installation:
@@ -73,43 +73,12 @@ create and run one's own full-fledged sample applications.
 
 3. Parameters
    
-  Each sample application contains a config file. It holds configurable parameters
-  described in an easy to read format. Please populate the following parameters in
-  config.php as specified below:
+  Each application contains a config.php file. This file holds configurable parameters described in an 
+  easy-to-read format. Please modify the config.php file using the comments specified within the file. 
+  
+  Note: If your application is promoted from Sandbox environment to Production environment and you decide to use
+  production application settings, you must update parameters as per production application details.
 
-  1) API_KEY              : This is a mandatory parameter. Set the value as per your
-			    registered application 'API key' field value.
-
-  2) SECRET_KEY     	  : This is a mandatory parameter. Set the value as per your
-			    registered application 'Secret key' field value.
-
-  3) FQDN		  : https://api.att.com
-
-  4) SCOPE		  : DC (Scope used for access token)
-
-  5) POSTAUTH_URL	  : URL for displaying error/device capabilities. Should be set to 
-                            the index page. For example, http://<hostname>/app1/index.php
-
-  6) REDIRECT-URL         : URL where oAuth provider will redirect to. Needs to be exactly 
-                            the same as one used while  application in DevConnect. Set to
-                            dirname(POSTAUTH_URL) . '/oauth/callback/callback.php'
-
-  7) AUTH_CODE_URL        : URL for getting authorization code. Should be set to
-                            FQDN . '/oauth/authorize?scope='. SCOPE .'&client_id=' 
-                            . API_KEY . '&redirect_uri=' . REDIRECT_URL
-
-  8) ACCESSTOK_URL        : URL for getting access token. Should be set to
-                            FQDN . '/oauth/token'
-
-  9) GETDCURL             : URL for getting device capabilities. Should be set to
-                            FQDN . '/rest/2/Devices/Info' 
-
-  10) SESSION_TOKEN_INDEX : Index in session array for storing access token. Should be set to 
-                            "devicecapabilities_access_token"
-
-Note: If your application is promoted from Sandbox environment to Production
-environment and you decide to use production application settings, you must update
-parameters 1-2 as per production application details.
 
 4. Running the application
 

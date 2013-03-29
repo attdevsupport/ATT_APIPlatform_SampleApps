@@ -49,7 +49,7 @@ create and run one's own full-fledged sample applications.
 Requirements:
 Apache web server
 PHP 5.2+
-Apache and php configured , on most Linux systems if installed using packages this will be done automatically 
+Apache and php configured , on most GNU/Linux systems if installed using packages this will be done automatically 
 
 Installation:
 Copy the sample application  folder to apache web root folder, for example /var/www/html 

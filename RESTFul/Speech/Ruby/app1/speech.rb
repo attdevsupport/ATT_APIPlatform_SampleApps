@@ -1,7 +1,7 @@
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
 #!/usr/bin/ruby
@@ -20,6 +20,8 @@ config_file 'config.yml'
 
 set :port, settings.port
 set :protection, :except => :frame_options
+
+RestClient.proxy = settings.proxy
 
 SCOPE = 'SPEECH'
 AUDIO_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/audio")
@@ -92,7 +94,7 @@ def speech_to_text
 
 	default_to_generic
 
-	url = "#{settings.FQDN}/rest/2/SpeechToText"
+	url = "#{settings.FQDN}/speech/v3/speechToText"
 
 	if params[:chkChunked] != nil
 		response = RestClient.post url, "#{@file_contents}", :Authorization => "Bearer #{@access_token}", :Content_Transfer_Encoding => 'chunked', :X_arg => "#{x_arg_val}", :X_SpeechContext => params[:SpeechContext], :Content_Type => "#{@type}" , :Accept => 'application/json'

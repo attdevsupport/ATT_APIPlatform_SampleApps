@@ -1,7 +1,7 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 AT&T API Platform Samples - SpeechToText app 1 
@@ -51,25 +51,17 @@ either the Autonomous Client or the Web-Server
 2. Installation
 ** Requirements
 Apache web server
-PHP 5.2+
-Apache and PHP configured, on most Linux systems if installed using packages
+PHP 5.4+
+Apache and PHP configured, on most GNU/Linux systems if installed using packages
 this will be done automatically.
 
 Copy the sample application folder to Apache web root folder, for example
 /var/www/html.
  
 3. Parameters
-Each sample application contains a config.php file. It holds configurable 
-parameters described in an easy to read format. 
-Please populate the following parameters in config.php as specified 
-below: 
-1) api_key : {set the value as per your registered application 
-'API key' field value} 
-2) secret_key : {set the value as per your registered application 
-'Secret key' field value} 
-3) FQDN : https://api.att.com 
-4) $oauth_file = "speechoauthtoken.php" : Oauth Token persistance location.
 
-Note: You must update parameters 1-2 after you promote your application 
-from 'Sandbox' environment to 'Production' environment. 
-
+  Each application contains a config.php file. This file holds configurable parameters described in an 
+  easy-to-read format. Please modify the config.php file using the comments specified within the file. 
+  
+  Note: If your application is promoted from Sandbox environment to Production environment and you decide to use
+  production application settings, you must update parameters as per production application details.

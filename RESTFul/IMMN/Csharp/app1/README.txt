@@ -1,6 +1,6 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2013
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -67,34 +67,14 @@ order to use this sample application code.
 
 3. Parameters
 
-Each sample application contains a web.config file. It holds configurable parameters 
-described in an easy to read format. Please populate the following parameters in 
-web.config as specified below:
+  Each sample application contains an web.config file. This file
+  is located in the 'app' folder. This file holds configurable
+  parameters described in an easy-to-read format. Please modify the
+  web.config file using the comments specified within the file. 
 
-1) api_key               : This is mandatory parameter, set the value as per your 
-                           registered application 'API key' field value.
-
-2) secret_key		 : This is mandatory parameter, set the value as per your 
-                           registered application 'Secret key' field value.
-
-3) endPoint		 : This is mandatory parameter, set it to the end point URI 
-                           of AT&T Service.
-
-4) scope		 : IMMN (Scope of the ATT service that will be invoked by 
-                           the Application)
-
-5) authorize_redirect_uri: This is mandatory key and value should be equal
-         		   to IMMN Service registered application 'OAuth Redirect URL'
-
-6) refreshTokenExpiresIn : This is optional key, which specifies the expiry time of 
-			   refresh token in Hrs. Default value is 24Hrs.
-
-7) max_addresses	 : This is optional key specifying the maximum number of addresses, 
-			   user can specify. Default value is 10.
-
- 
-Note: You must update parameters 1-2 after you promote your application from 'Sandbox' 
-environment to 'Production' environment.
+  Note: If your application is promoted from Sandbox environment to Production
+  environment and you decide to use production application settings, you must
+  update parameters as per production application details.
 
 
 

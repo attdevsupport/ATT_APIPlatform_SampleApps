@@ -1,218 +1,172 @@
 ﻿<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="DC_App1" %>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<!-- 
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+For more information contact developer.support@att.com
+-->
+<!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en">
 <head>
     <title>AT&amp;T Sample DC Application - Get Device Capabilities Application</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
     <link rel="stylesheet" type="text/css" href="style/common.css" />
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script');
+            ga.type = 'text/javascript';
+            ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                      : 'http://www')
+                                      + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
 </head>
 <body>
     <form id="form1" runat="server">
-    <div id="container">
-        <!-- open HEADER -->
+    <div id="pageContainer">
         <div id="header">
-            <div>
-                <div class="hcLeft">
-                    Server Time:</div>
-                <div class="hcRight">
-                    <asp:Label ID="lblServerTime" runat="server" Text="Label"></asp:Label>
-                </div>
+            <div class="logo">
             </div>
-            <div>
-                <div class="hcLeft">
-                    Client Time:</div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        var myDate = new Date();
-                        document.write(myDate);
-                    </script>
-                </div>
+            <div id="menuButton" class="hide">
+                <a id="jump" href="#nav">Main Navigation</a>
             </div>
-            <div>
-                <div class="hcLeft">
-                    User Agent:</div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write("" + navigator.userAgent);
-                    </script>
-                </div>
-            </div>
-            <br style="clear: both;" />
+            <ul class="links" id="nav">
+                <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a> <span class="divider">
+                    |&nbsp;</span> </li>
+                <li><a runat="server" target="_blank" id="SourceLink">Source<img src="images/opensource.png" /></a>
+                    <span class="divider">|&nbsp;</span> </li>
+                <li><a runat="server" target="_blank" id="DownloadLink">Download<img src="images/download.png" /></a>
+                    <span class="divider">|&nbsp;</span> </li>
+                <li><a runat="server" target="_blank" id="HelpLink">Help</a> </li>
+                <li id="back"><a href="#top">Back to top</a> </li>
+            </ul>
+            <!-- end of links -->
         </div>
-        <!-- close HEADER -->
-        <div>
-            <div class="content">
+        <!-- end of header -->
+        <div id="content">
+            <div id="contentHeading">
                 <h1>
                     AT&amp;T Sample DC Application - Get Device Capabilities Application</h1>
-                <h2>
-                    Feature 1: Get Device Capabilities</h2>
-            </div>
-        </div>
-        <br />
-        <br />
-
-        <div class="extra">
-            <table>
-                <tbody>
-                    <div id="extraleft">
-                        <div class="warning">
-                            <strong>Note:</strong><br />
-                            <strong>OnNet Flow:</strong> Request Device Capabilities details from the AT&T network for the mobile device of an AT&T subscriber who is using an AT&T direct Mobile data connection to access this application. <br />
-                            <strong>OffNet Flow:</strong> Where the end-user is not on an AT&T Mobile data connection or using a Wi-Fi or tethering connection while accessing this application.  This will result in an HTTP 400 error.
-                        </div>
+                <div class="border">
+                </div>
+                <div id="introtext">
+                    <div>
+                        <b>Server Time:&nbsp;</b><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %></div>
+                    <div>
+                        <b>Client Time:</b>
+                        <script language="JavaScript" type="text/javascript">
+                            var myDate = new Date();
+                            document.write(myDate);
+                        </script>
                     </div>
-                </tbody>
-            </table>
+                    <div>
+                        <b>User Agent:</b>
+                        <script language="JavaScript" type="text/javascript">
+                            document.write("" + navigator.userAgent);
+                        </script>
+                    </div>
+                </div>
+                <!-- end of introtext -->
+            </div>
+            <!-- end of contentHeading -->
+            <!-- SAMPLE APP CONTENT STARTS HERE! -->
+            <div class="formBox" id="formBox">
+                <div id="formContainer" class="formContainer">
+                    <h2>
+                        Feature 1: Get Device Capabilities</h2>
+                    <div class="lightBorder">
+                    </div>
+                    <div class="note">
+                        <strong>OnNet Flow:</strong> Request Device Capabilities details from the AT&amp;T
+                        network for the mobile device of an AT&amp;T subscriber who is using an AT&amp;T
+                        direct Mobile data connection to access this application.
+                        <br />
+                        <strong>OffNet Flow:</strong> Where the end-user is not on an AT&amp;T Mobile data
+                        connection or using a Wi-Fi or tethering connection while accessing this application.
+                        This will result in an HTTP 400 error.
+                    </div>
+                    <!-- end note -->
+                    <% If Not String.IsNullOrEmpty(getDCSuccess) Then%>
+                    <div class="successWide">
+                        <strong>SUCCESS:</strong>
+                        <br />
+                        Device parameters listed below.
+                    </div>
+                    <table class="kvp" id="kvp">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Parameter
+                                </th>
+                                <th>
+                                    Value
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% For Each pair As KeyValuePair(Of String, String) In getDCResponse%>
+                            <tr>
+                                <td data-value="Parameter">
+                                    <%= pair.Key.ToString()%>
+                                </td>
+                                <td data-value="Value">
+                                    <%= pair.Value.ToString()%>
+                                </td>
+                            </tr>
+                            <% Next%>
+                        </tbody>
+                    </table>
+                    <% End If%>
+                    <% If Not String.IsNullOrEmpty(getDCError) Then%>
+                    <div class="errorWide">
+                        <b>ERROR:</b><br />
+                        <%= getDCError %>
+                    </div>
+                    <% End If%>
+                </div>
+                <!-- end of formContainer -->
+            </div>
+            <!-- end of formBox -->
+            <!-- SAMPLE APP CONTENT ENDS HERE! -->
         </div>
-        <br clear="all" />
-        <div class="successWide" runat="server" id="tbDeviceCapabSuccess" visible="false">
-            <strong>SUCCESS:</strong><br />
-            Device parameters listed below.
+        <!-- end of content -->
+        <div class="border">
         </div>
-        <br />
-        <div align="center">
-            <table width="500" cellpadding="1" cellspacing="1" border="0" runat="server" id="tbDeviceCapabilities"
-                visible="false">
-                <thead>
-                    <tr>
-                        <th width="50%" class="label">
-                            Parameter
-                        </th>
-                        <th width="50%" class="label">
-                            Value
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>TypeAllocationCode</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblTypeAllocationCode" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>Name</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblName" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>Vendor</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblVendor" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>Model</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblModel" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>FirmwareVersion</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblFirmwareVersion" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>UaProf</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblUAProf" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>MmsCapable</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblMMSCapable" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>AssistedGps</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblAGPS" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>LocationTechnology</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblLocationTechnology" runat="server" /></em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>DeviceBrowser</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblDeviceBrowser" runat="server" /></em>
-                        </td>
-                    </tr>                   
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>WapPushCapable</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <asp:Label ID="lblWAPPush" runat="server" /></em>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <br />
-        <div id="tbDeviceCapabError" runat="server" cellspacing="1" class="errorWide" visible="false">
-            <b>ERROR:</b><br />
-            <asp:Label ID="lblErrorMessage" runat="server" Text="" />
-        </div>
-        <br clear="all" />
         <div id="footer">
-            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
-                Powered by AT&amp;T Cloud Architecture</div>
+            <div id="powered_by">
+                Powered by AT&amp;T Cloud Architecture
+            </div>
             <p>
-                &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
-                <br />
                 The Application hosted on this site are working examples intended to be used for
                 reference in creating products to consume AT&amp;T Services and not meant to be
                 used as part of your product. The data in these pages is for test purposes only
                 and intended only for use as a reference in how the services perform.
                 <br />
+                <br />
                 For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
                     target="_blank">https://devconnect-api.att.com</a>
                 <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
+                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+                <br />
+                <br />
+                &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                    target="_blank">http://developer.att.com</a>
+            </p>
         </div>
+        <!-- end of footer -->
     </div>
-    <p>
-        &nbsp;</p>
+    <!-- end of page_container -->
     </form>
 </body>
 </html>

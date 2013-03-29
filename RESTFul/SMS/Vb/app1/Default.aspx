@@ -1,192 +1,404 @@
+ï»¿<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="SMS_App1" %>
+<!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
-
-<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="SMS_App1" %>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en">
 <head>
-    <title>AT&T Sample SMS Application &#8211; Basic SMS Service Application</title>
-    <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
+    <title>AT&amp;T Sample Application - Basic SMS Service Application</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
+    <meta http-equiv="refresh" content="300" />
     <link rel="stylesheet" type="text/css" href="style/common.css" />
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script');
+            ga.type = 'text/javascript';
+            ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                      : 'http://www')
+                                      + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+    <script type="text/javascript" src="scripts/utils.js"></script>
 </head>
-<body>
-    <div id="container">
-        <!-- open HEADER -->
+<body onload="setup()">
+    <form id="form1" runat="server">
+    <div id="pageContainer">
         <div id="header">
-            <div>
-                <div class="hcLeft">
-                    Server Time:</div>
-                <div class="hcRight">
-                    <asp:Label ID="serverTimeLabel" runat="server" Text="Label"></asp:Label>
-                </div>
+            <div class="logo">
             </div>
-            <div>
-                <div class="hcLeft">
-                    Client Time:</div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        var myDate = new Date();
-                        document.write(myDate);
-                    </script>
-                </div>
-            </div>
-            <div>
-                <div class="hcLeft">
-                    User Agent:</div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write("" + navigator.userAgent);
-                    </script>
-                </div>
-            </div>
-            <br clear="all" />
+            <div id="menuButton" class="hide">
+                <a id="jump" href="#nav">Main Navigation</a></div>
+            <ul class="links" id="nav">
+                <li><a href="#" target="_blank">Full Page<img alt="fullpage" src="images/max.png" /></a>
+                    <span class="divider">|&nbsp;</span> </li>
+                <li><a runat="server" target="_blank" id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
+                    <span class="divider">|&nbsp;</span> </li>
+                <li><a runat="server" target="_blank" id="DownloadLink">Download<img alt="download"
+                    src="images/download.png" /></a> <span class="divider">|&nbsp;</span> </li>
+                <li><a runat="server" target="_blank" id="HelpLink">Help</a> </li>
+                <li id="back"><a href="#top">Back to top</a></li>
+            </ul>
+            <!-- end of links -->
         </div>
-        <!-- close HEADER -->
-        <form id="form1" runat="server">
-        <div class="wrapper">
-            <div class="content">
+        <!-- end of header -->
+        <div id="content">
+            <div id="contentHeading">
                 <h1>
-                    AT&T Sample SMS Application &#8211; Basic SMS Service Application</h1>
-                <h2>
-                    Feature 1: Send SMS</h2>
+                    AT&amp;T Sample Application - Basic SMS Service Application</h1>
+                <div class="border">
+                </div>
+                <div id="introtext">
+                    <div>
+                        <b>Server Time:&nbsp;</b><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %></div>
+                    <div>
+                        <b>Client Time:</b>
+                        <script language="JavaScript" type="text/javascript">
+                            var myDate = new Date();
+                            document.write(myDate);
+                        </script>
+                    </div>
+                    <div>
+                        <b>User Agent:</b>
+                        <script language="JavaScript" type="text/javascript">
+                            document.write("" + navigator.userAgent);
+                        </script>
+                    </div>
+                </div>
+                <!-- end of introtext -->
             </div>
-        </div>
-        <div class="navigation">
-            <table border="0" width="40%">
-                <tbody>
-                    <tr>
-                        <td width="20%" valign="top" class="label">
-                            Phone:
-                        </td>
-                        <td class="cell">
-                            <asp:TextBox ID="txtmsisdn" runat="server" MaxLength="16"></asp:TextBox>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="top" class="label">
-                            Message:
-                        </td>
-                        <td class="cell">
-                            <asp:TextBox ID="txtmsg" runat="server" Height="87px" Width="387px" TextMode="MultiLine"></asp:TextBox>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="extra">
-            <table border="0">
-                <tbody>
-                    <tr>
-                        <td width="20%" valign="top">
-                            &nbsp;
-                        </td>
-                        <td>
-                            <div id="extraleft">
-                                <div class="warning">
-                                <strong>Note:</strong><br />
-                                All Messages will be sent from first short code of a registered application<br />
-                                </div>
+            <!-- end of contentHeading -->
+            <div class="formBox" id="formBox">
+                <div id="formContainer" class="formContainer">
+                    <div class="inputFields">
+                        <div id="sendSMSdiv">
+                            <h2>
+                                Feature 1: Send SMS</h2>
+                            <input placeholder="Address" name="address" id="address" type="text" runat="server" />
+                            <label>
+                                Message
+                                <asp:DropDownList ID="message" runat="server" name="message">
+                                </asp:DropDownList>
+                            </label>
+                            <label>
+                                <asp:CheckBox ID="chkGetOnlineStatus" runat="server" ToolTip="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                                Receive Delivery Status Notification<br />
+                            </label>
+                            <button type="submit" class="submit" name="sendSMS" id="sendSMS" runat="server" onserverclick="BtnSubmit_Click">
+                                Send SMS</button>
+                            <% If Not String.IsNullOrEmpty(sendSMSSuccessMessage) Then
+                               %>
+                            <div class="successWide">
+                                <strong>SUCCESS:</strong><br />
+                                <strong>messageId: </strong>
+                                <%= sendSMSResponseData.outBoundSMSResponse.messageId%>
+                                <% If sendSMSResponseData.outBoundSMSResponse.resourceReference IsNot Nothing Then
+                                   %>
+                                <br />
+                                <strong>resourceURL: </strong>
+                                <%= sendSMSResponseData.outBoundSMSResponse.resourceReference.resourceURL%>
+                                <%End If%>
                             </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td width="20%" valign="bottom">
-                            <asp:Button ID="BtnSendSMS" runat="server" OnClick="BtnSendSMS_Click" Text="Send SMS" />
-                        </td>
-                        <td class="cell">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <table>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-        <br clear="all" />
-        <div align="center">
-            <asp:Panel ID="sendSMSPanel" runat="server" Font-Names="Calibri" Font-Size="XX-Small">
-            </asp:Panel>
-        </div>
-        <br clear="all" />
-        <div class="wrapper">
-            <div class="content">
-                <h2>
-                    <br />
-                    Feature 2: Get Delivery Status</h2>
+                            <% End If%>
+                            <% If Not String.IsNullOrEmpty(sendSMSErrorMessage) Then
+                               %>
+                            <div class="errorWide">
+                                <strong>ERROR:</strong><br />
+                                <%=sendSMSErrorMessage.ToString()%>
+                            </div>
+                            <% End If%>
+                        </div>
+                        <!-- end of sendSMS -->
+                        <div class="lightBorder">
+                        </div>
+                        <div id="getStatusdiv">
+                            <h2>
+                                Feature 2: Get Delivery Status</h2>
+                            <input placeholder="Message ID" name="messageId" id="messageId" type="text" runat="server" />
+                            <button type="submit" class="submit" name="getStatus" id="getStatus" runat="server"
+                                onserverclick="GetDeliveryStatusButton_Click">
+                                Get Status</button>
+                            <% If Not String.IsNullOrEmpty(getSMSDeliveryStatusSuccessMessagae) Then
+                               %>
+                            <div class="successWide">
+                                <strong>SUCCESS: </strong>
+                                <br />
+                                <strong>ResourceURL </strong>
+                                <%=getSMSDeliveryStatusResponseData.DeliveryInfoList.ResourceURL%><br />
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            Id
+                                        </th>
+                                        <th>
+                                            Address
+                                        </th>
+                                        <th>
+                                            DeliveryStatus
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% For Each delinfo In getSMSDeliveryStatusResponseData.DeliveryInfoList.DeliveryInfo
+                                       %>
+                                    <tr>
+                                        <td data-value="Id">
+                                            <%=delinfo.Id %>
+                                        </td>
+                                        <td data-value="Address">
+                                            <%= delinfo.Address %>
+                                        </td>
+                                        <td data-value="DeliveryStatus">
+                                            <%= delinfo.Deliverystatus %>
+                                        </td>
+                                    </tr>
+                                    <% Next%>
+                                </tbody>
+                            </table>
+                            <%End If%>
+                            <% If Not String.IsNullOrEmpty(getSMSDeliveryStatusErrorMessage) Then
+                                %>
+                            <div class="errorWide">
+                                <strong>ERROR:</strong><br />
+                                <%=getSMSDeliveryStatusErrorMessage.ToString()%>
+                            </div>
+                            <% End If%>
+                        </div>
+                        <!-- end of getStatus -->
+                        <div class="lightBorder">
+                        </div>
+                        <div id="receiveStatusdiv">
+                            <h2>
+                                Feature 3: Receive Delivery Status</h2>
+                            <button type="submit" class="submit" name="receiveStatusBtn" id="receiveStatusBtn"
+                                runat="server" onserverclick="receiveStatusBtn_Click">
+                                Refresh Notifications</button>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                messageId
+                                            </th>
+                                            <th>
+                                                address
+                                            </th>
+                                            <th>
+                                                deliveryStatus
+                                            </th>
+                                        </tr>
+                                    </thead>
+                            <% If receiveSMSDeliveryStatusSuccessMessagae IsNot Nothing AndAlso receiveSMSDeliveryStatusResponseData.Count > 0 Then
+                               %>
+                                    <tbody>
+                                        <% For Each deinfo In receiveSMSDeliveryStatusResponseData
+                                            %>
+                                        <tr>
+                                            <td data-value="messageId">
+                                                <%=deinfo.messageId%>
+                                            </td>
+                                            <td data-value="address">
+                                                <%=deinfo.deliveryInfo.address%>
+                                            </td>
+                                            <td data-value="deliveryStatus">
+                                                <%=deinfo.deliveryInfo.deliveryStatus%>
+                                            </td>
+                                        </tr>
+                                        <%Next%>
+                                    </tbody>
+                            <% End If%>
+                             </table>
+                                <br />
+                            <% If Not String.IsNullOrEmpty(receiveSMSDeliveryStatusErrorMessage) Then
+                               %>
+                            <div class="errorWide">
+                                <strong>ERROR:</strong><br />
+                                <%=receiveSMSDeliveryStatusErrorMessage.ToString()%>
+                            </div>
+                            <% End If%>
+                        </div>
+                        <!-- end of receiveStatus -->
+                        <div class="lightBorder">
+                        </div>
+                        <div id="getMessagesDiv">
+                            <h2>
+                                Feature 4: Get Messages (<%= offlineShortCode%>)</h2>
+                            <%If Not String.IsNullOrEmpty(offlineShortCode) Then
+                              %>
+                            <button type="submit" runat="server" class="submit" name="getMessages" id="getMessages" onserverclick="GetMessagesButton_Click">
+                                Get Messages</button>
+                            <%End If%>
+                            <% If getSMSResponseData IsNot Nothing Then
+                               %>
+                            <div class="successWide">
+                                <strong>SUCCESS:</strong><br />
+                                <strong>Messages in this batch: </strong>
+                                <%=getSMSResponseData.InboundSMSMessageList.NumberOfMessagesInThisBatch.ToString()%><br />
+                                <strong>Messages pending: </strong>
+                                <%= getSMSResponseData.InboundSMSMessageList.TotalNumberOfPendingMessages.ToString()%>
+                            </div>
+                            <br />
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            Message Index
+                                        </th>
+                                        <th>
+                                            Message Text
+                                        </th>
+                                        <th>
+                                            Sender Address
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% For Each msg In getSMSResponseData.InboundSMSMessageList.InboundSMSMessage
+                                       %>
+                                    <tr>
+                                        <td data-value="Message Index">
+                                            <%=msg.MessageId.ToString() %>
+                                        </td>
+                                        <td data-value="Message Text">
+                                            <%=msg.Message.ToString() %>
+                                        </td>
+                                        <td data-value="Sender Address">
+                                            <%=msg.SenderAddress.ToString() %>
+                                        </td>
+                                    </tr>
+                                    <%Next%>
+                                </tbody>
+                            </table>
+                        </div>
+                        <%End If%>
+                        <% If Not String.IsNullOrEmpty(getSMSErrorMessage) Then
+                           %>
+                        <div class="errorWide">
+                            <strong>ERROR:</strong><br />
+                            <%=getSMSErrorMessage.ToString()%>
+                        </div>
+                        <% End If%>
+                        <!-- end of getMessages -->
+                        <div class="lightBorder">
+                        </div>
+                        <div id="votes">
+                            <h2>
+                                Feature 5: Receive Messages (<%= onlineShortCode.ToString() %>)
+                            </h2>
+                            <button type="submit" class="submit" name="receiveMessages" id="receiveMessages"
+                                runat="server" onserverclick="receiveMessagesBtn_Click">
+                                Refresh Received Messages</button>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            DateTime
+                                        </th>
+                                        <th>
+                                            SenderAddress
+                                        </th>
+                                        <th>
+                                            Message
+                                        </th>
+                                        <th>
+                                            DestinationAddress
+                                        </th>
+                                        <th>
+                                            MessageId
+                                        </th>
+                                    </tr>
+                                </thead>
+                            <% If receivedSMSList IsNot Nothing AndAlso receivedSMSList.Count > 0 Then
+                               %>
+                                <tbody>
+                                    <% For Each msg In receivedSMSList
+                                        %>
+                                    <tr>
+                                        <td data-value="DateTime">
+                                            <%=msg.DateTime.ToString() %>
+                                        </td>
+                                        <td data-value="SenderAddress">
+                                            <%=msg.SenderAddress.ToString() %>
+                                        </td>
+                                        <td data-value="Message">
+                                            <%=msg.Message.ToString() %>
+                                        </td>
+                                        <td data-value="DestinationAddress">
+                                            <%=msg.DestinationAddress.ToString() %>
+                                        </td>
+                                        <td data-value="MessageId">
+                                            <% Dim mid = "-"
+                                                If Not String.IsNullOrEmpty(msg.MessageId) Then
+                                               
+                                                   mid = msg.MessageId.ToString()
+                                                End If%>
+                                            <%= mid.ToString() %>
+                                        </td>
+                                    </tr>
+                                    <%Next%>
+                                </tbody>
+                            <% End If%>
+                            </table>
+                            <% If Not String.IsNullOrEmpty(receiveSMSErrorMesssage) Then
+                               %>
+                            <div class="errorWide">
+                                <strong>ERROR:</strong><br />
+                                <%=receiveSMSErrorMesssage.ToString()%>
+                            </div>
+                            <% End If%>
+                        </div>
+                        <!-- end of votes -->
+                    </div>
+                    <!-- end of inputFields -->
+                </div>
+                <!-- end of formContainer -->
             </div>
+            <!-- end of formBox -->
         </div>
-        <div class="navigation">
-            <table border="0" width="100%">
-                <tbody>
-                    <tr>
-                        <td width="20%" valign="top" class="label">
-                            Message ID:
-                        </td>
-                        <td class="cell">
-                            <asp:TextBox ID="txtSmsId" runat="server" Width="160px"></asp:TextBox>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- end of content -->
+        <div class="border">
         </div>
-        <div class="extra">
-            <table border="0" width="100%">
-                <tbody>
-                    <tr>
-                        <td class="cell">
-                            <asp:Button ID="getDeliveryStatusButton" runat="server" OnClick="GetDeliveryStatusButton_Click"
-                                Text="Get Status" Width="104px" />
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <br clear="all" />
-        <div align="center">
-            <asp:Panel ID="getStatusPanel" runat="server" Font-Names="Calibri" Font-Size="XX-Small">
-            </asp:Panel>
-        </div>
-        <br clear="all" />
-        <div class="wrapper">
-            <div class="content">
-                <h2>
-                    <br />
-                    Feature 3: Get Received Messages</h2>
-            </div>
-        </div>
-        <div class="navigation">
-            <asp:Panel ID="receiveMessagePanel" runat="server" Font-Names="Calibri">
-            </asp:Panel>
-        </div>
-        <br clear="all" />
-        <div align="center">
-            <asp:Panel ID="getMessagePanel" runat="server" Font-Names="Calibri" Font-Size="XX-Small">
-            </asp:Panel>
-        </div>
-        <br clear="all" />
         <div id="footer">
-            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
+            <div id="powered_by">
                 Powered by AT&amp;T Cloud Architecture</div>
             <p>
-                © 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
-                <br />
                 The Application hosted on this site are working examples intended to be used for
                 reference in creating products to consume AT&amp;T Services and not meant to be
                 used as part of your product. The data in these pages is for test purposes only
                 and intended only for use as a reference in how the services perform.
                 <br />
+                <br />
                 For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
                     target="_blank">https://devconnect-api.att.com</a>
                 <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
+                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+                <br />
+                <br />
+                &copy; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                    target="_blank">http://developer.att.com</a>
+            </p>
         </div>
-        </form>
+        <!-- end of footer -->
+    </div>
+    <!-- end of page_container -->
+    </form>
+    <script type="text/javascript">        setup();</script>
 </body>
 </html>
+
+

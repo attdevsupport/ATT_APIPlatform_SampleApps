@@ -1,252 +1,159 @@
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' September 2011
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
--->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<head>
+<!DOCTYPE html>
+
+<html lang="en"> 
+  <head> 
     <title>AT&amp;T Sample DC Application - Get Device Capabilities Application</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
-</head>
-<body>
-    <div id="container">
-        <!-- open HEADER -->
-        <div id="header">
-            <div>
-                <div class="hcRight">
-                    <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %>
-                </div>
-                <div class="hcLeft">
-                    Server Time:</div>
-            </div>
-            <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write(new Date());
-                    </script>
-                </div>
-                <div class="hcLeft">
-                    Client Time:</div>
-            </div>
-            <div>
-                <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write("" + navigator.userAgent);
-                    </script>
-                </div>
-                <div class="hcLeft">
-                    User Agent:</div>
-            </div>
-            <br clear="all" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-33466541-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function () {
+       var ga = document.createElement('script');
+       ga.type = 'text/javascript';
+       ga.async = true;
+       ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+         : 'http://www')
+       + '.google-analytics.com/ga.js';
+       var s = document.getElementsByTagName('script')[0];
+       s.parentNode.insertBefore(ga, s);
+       })();
+     </script>
+  </head>
+  <body>
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo"> 
         </div>
-        <!-- close HEADER -->
-        <div>
-            <div class="content">
-                <h1>
-                    AT&amp;T Sample DC Application - Get Device Capabilities Application</h1>
-                <h2>
-                    Feature 1: Get Device Capabilities</h2>
-            </div>
-        </div>
-        <br />
-        <br />
-        <div class="extra">
-            <table>
-                <tbody>
-                    <div id="extraleft">
-                        <div class="warning">
-                            <strong>Note:</strong><br />
-                            <strong>OnNet Flow:</strong> Request Device Capabilities details from the AT&T network
-                            for the mobile device of an AT&T subscriber who is using an AT&T direct Mobile data
-                            connection to access this application.
-                            <br />
-                            <strong>OffNet Flow:</strong> Where the end-user is not on an AT&T Mobile data connection
-                            or using a Wi-Fi or tethering connection while accessing this application. This
-                            will result in an HTTP 400 error.
-                        </div>
-                    </div>
-                </tbody>
-            </table>
-        </div>
-        <br />
-		
-		<br clear="all" />
-		<% if @result %>
-        <div class="successWide" runat="server" id="tb_dc_output" visible="false">
-            <strong>SUCCESS:</strong><br />
-            Device parameters listed below.
-        </div>
-        <br />
-        <div align="center">
-            <table width="500" cellpadding="1" cellspacing="1" border="0" runat="server" id="tbDeviceCapabilities"
-                visible="false">
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a>
+        </div> 
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png"></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.help_link %>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li>
+        </ul> <!-- end of links -->
+      </div> <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>AT&amp;T Sample DC Application - Get Device Capabilities Application</h1>
+          <div class="border"></div>
+          <div id="introtext">
+            <div><b>Server Time:&nbsp;</b><%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
+            <div><b>Client Time:&nbsp;</b><script>document.write("" + new Date());</script></div>
+            <div><b>User Agent:&nbsp;</b><script>document.write("" + navigator.userAgent);</script></div>
+          </div> <!-- end of introtext -->
+        </div> <!-- end of contentHeading -->
+
+        <!-- SAMPLE APP CONTENT STARTS HERE! -->
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <h2>Feature 1: Get Device Capabilities</h2>
+            <div class="lightBorder"></div>
+
+            <div class="note">
+              <strong>OnNet Flow:</strong>
+              Request Device Capabilities details from the AT&amp;T network
+              for the mobile device of an AT&amp;T subscriber who is using an AT&amp;T direct Mobile data
+              connection to access this application.
+              <br />
+              <strong>OffNet Flow:</strong> Where the end-user is not on an AT&amp;T Mobile data connection
+              or using a Wi-Fi or tethering connection while accessing this application. This
+              will result in an HTTP 400 error.
+            </div> <!-- end note -->
+
+            <% if @result %>
+              <div class="successWide">
+                <strong>SUCCESS:</strong>
+                <br />
+                Device parameters listed below.
+              </div>
+              <table class="kvp" id="kvp">
                 <thead>
-                    <tr>
-                        <th width="50%" class="label">
-                            Parameter
-                        </th>
-                        <th width="50%" class="label">
-                            Value
-                        </th>
-                    </tr>
+                  <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                  </tr>
                 </thead>
                 <tbody>
+                  <tr>
+                    <td data-value="Parameter">
+                      TypeAllocationCode
+                    </td>
+                    <td data-value="Value">
+                      <%= @result['DeviceInfo']['DeviceId']['TypeAllocationCode'] %>
+                    </td>
+                  </tr>
+                  <% @result['DeviceInfo']['Capabilities'].each do |key, value| %>
                     <tr>
-                        <td class="cell" align="center">
-                            <em>TypeAllocationCode</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblTypeAllocationCode"><%= @result['DeviceInfo']['DeviceId']['TypeAllocationCode'] %></label>
-                            </em>
-                        </td>
+                      <td data-value="Parameter">
+                        <%= key %>
+                      </td>
+                      <td data-value="Value">
+                        <%= value %>
+                      </td>
                     </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>Name</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                            <label id="lblName"><%= @result['DeviceInfo']['Capabilities']['Name'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>Vendor</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblVendor"><%= @result['DeviceInfo']['Capabilities']['Vendor'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>Model</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                            <label id="lblModel"><%= @result['DeviceInfo']['Capabilities']['Model'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>FirmwareVersion</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                            <label id="lblRelease"><%= @result['DeviceInfo']['Capabilities']['FirmwareVersion'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>UaProf</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                            <label id="lblUAProf"><%= @result['DeviceInfo']['Capabilities']['UaProf'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>MmsCapable</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblMMSCapable"><%= @result['DeviceInfo']['Capabilities']['MmsCapable'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>AssistedGps</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblAGPS"><%= @result['DeviceInfo']['Capabilities']['AssistedGps'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>LocationTechnology</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblLocation"><%= @result['DeviceInfo']['Capabilities']['LocationTechnology'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>DeviceBrowser</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblBrowserName"><%= @result['DeviceInfo']['Capabilities']['DeviceBrowser'] %></label>
-                            </em>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="cell" align="center">
-                            <em>WapPushCapable</em>
-                        </td>
-                        <td class="cell" align="center">
-                            <em>
-                                <label id="lblWAPPush"><%= @result['DeviceInfo']['Capabilities']['WapPushCapable'] %></label>
-                            </em>
-                        </td>
-                    </tr>
+                  <% end %>
                 </tbody>
-            </table>
-        </div>
-		<% end %>
-		
-		<br clear="all" />
-		<% if @error %>
-        <br />
-            <div id="tbDeviceCapabError" runat="server" cellspacing="1" class="errorWide" visible="false">
-				<b>ERROR:</b><br />
-            <label id="lblErrorMessage"><%= @error %></label>
-        </div>
-		<% end %>
+              </table>
+            <% end %>
 
-		<br clear="all" />
-		<% if session[:access_error] %>
-        <br />
-            <div id="tbDeviceCapabError" runat="server" cellspacing="1" class="errorWide" visible="false">
-				<b>ERROR:</b><br />
-            <label id="lblErrorMessage">error=<%= session[:access_error] %>&error_description=<%= session[:error_type] %></label>
+            <% if @error %>
+              <div class="errorWide">
+                <b>ERROR:</b>
+                <%= @error %>
+              </div>
+            <% end %>
+
+            <% if session[:access_error] %>
+              <div class="errorWide">
+                <b>ERROR:</b><br />
+                error=<%= session[:access_error] %>&amp;error_description=<%= session[:error_type] %>
+              </div>
+            <% end %>
+
+          </div> <!-- end of formContainer -->
+        </div> <!-- end of formBox -->
+        <!-- SAMPLE APP CONTENT ENDS HERE! -->
+
+      </div> <!-- end of content -->
+      <div class="border"></div>
+      <div id="footer">
+        <div id="powered_by">
+          Powered by AT&amp;T Cloud Architecture
         </div>
-		<% end %>
-		
-        <br clear="all" />
-        <div id="footer">
-            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
-                Powered by AT&amp;T Virtual Mobile</div>
-            <p>
-                &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
-                <br />
-                The Application hosted on this site are working examples intended to be used for
-                reference in creating products to consume AT&amp;T Services and not meant to be
-                used as part of your product. The data in these pages is for test purposes only
-                and intended only for use as a reference in how the services perform.
-                <br />
-                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
-                <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
-        </div>
-    </div>
-    <p>
-        &nbsp;</p>
-</body>
+        <p>
+        The Application hosted on this site are working examples
+        intended to be used for reference in creating products to consume
+        AT&amp;T Services and not meant to be used as part of your
+        product. The data in these pages is for test purposes only and
+        intended only for use as a reference in how the services perform.
+        <br /><br />
+        For download of tools and documentation, please go to 
+        <a href="https://devconnect-api.att.com/" 
+          target="_blank">https://devconnect-api.att.com</a>
+        <br> For more information contact 
+        <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+        <br /><br />
+        &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+        <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        </p>
+      </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
+  </body>
 </html>

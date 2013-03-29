@@ -7,11 +7,11 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2012. 
+ * Agreement.' 2013. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2012 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category Authentication 

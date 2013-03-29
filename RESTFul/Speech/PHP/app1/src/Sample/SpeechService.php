@@ -7,11 +7,11 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2012. 
+ * Agreement.' 2013. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2012 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category Speech Sample Application 
@@ -38,6 +38,7 @@ class SpeechService {
     private $_scope;
     private $_audioFolder;
     private $_speechContexts;
+    private $_xSpeechSubContext;
     private $_error;
 
     /**
@@ -81,6 +82,8 @@ class SpeechService {
         $this->_clientId = $api_key;
         $this->_clientSecret = $secret_key;
         $this->_speechContexts = $speech_context_config;
+        $this->_xSpeechSubContext = $xSpeechSubContext;
+        $this->_xArgs = $x_arg;
         $this->_error = NULL;
     }
 
@@ -110,8 +113,8 @@ class SpeechService {
     * @return boolean true if previously selected, false otherwise
     */
     public function isAudioFileSelected($fname) {
-    	return isset($_SESSION['filename']) 
-                && strcmp($_SESSION['filename'], $fname) == 0;
+    	return isset($_SESSION['audio_file']) 
+                && strcmp($_SESSION['audio_file'], $fname) == 0;
     } 
 
     /**
@@ -129,8 +132,8 @@ class SpeechService {
     * @return boolean true if previously selected, false otherwise
     */
     public function isSpeechContextSelected($cname) {
-        return isset($_SESSION['context']) 
-            && strcmp($_SESSION['context'], $cname) == 0; 
+        return isset($_SESSION['SpeechContext']) 
+            && strcmp($_SESSION['SpeechContext'], $cname) == 0; 
     }
 
     /**
@@ -155,11 +158,11 @@ class SpeechService {
         try {
             $token = $this->getToken();
 
-            $context = $_REQUEST['context'];
-            $_SESSION['context'] = $context;
+            $context = $_REQUEST['SpeechContext'];
+            $_SESSION['SpeechContext'] = $context;
 
-            $filename = $_REQUEST['filename'];
-            $_SESSION['filename'] = $filename;
+            $filename = $_REQUEST['audio_file'];
+            $_SESSION['audio_file'] = $filename;
 
             $chunked = isset($_REQUEST['chkChunked']) ? 
                 $_REQUEST['chkChunked'] : false;
@@ -171,6 +174,9 @@ class SpeechService {
             $speechRequest->setSpeechContext($context);
             $speechRequest->setChunked($chunked);
             $speechRequest->setXArgs($this->_xArgs);
+            if (strcmp($context, 'Gaming') == 0) {
+                $speechRequest->setXSpeechSubContext($this->_xSpeechSubContext);
+            }
             $speechResponse = $speechRequest->sendRequest();
            
             return $speechResponse;

@@ -1,184 +1,168 @@
+<?php
+session_start();
+require __DIR__ . '/config.php';
+require_once __DIR__ . '/src/Sample/DCService.php';
+require_once __DIR__ . '/lib/Util/Util.php';
+$service = new DCService();
+$dInfo = $service->getDeviceInformation();
+?>
+<!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' September 2011
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2011 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
+<html lang="en"> 
+  <head> 
+    <title>AT&amp;T Sample DC Application - Get Device Capabilities Application</title>
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
 
-<?php
-header("Content-Type: text/html; charset=ISO-8859-1");
-header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
-require_once("config.php");
-
-session_start();
-?>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<head>
-<title>AT&amp;T Sample DC Application - Get Device Capabilities
-    Application</title>
-<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-<link rel="stylesheet" type="text/css" href="style/common.css" />
-</head>
-<body>
-    <div id="container">
-<?php
-require('header.php')
-?>
-        <div>
-            <div class="content">
-                <h1>AT&amp;T Sample DC Application - Get Device Capabilities
-                Application</h1>
-                <h2>Feature 1: Get Device Capabilities</h2>
-            </div>
+        (function () {
+             var ga = document.createElement('script');
+             ga.type = 'text/javascript';
+             ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                         : 'http://www')
+                                         + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0];
+             s.parentNode.insertBefore(ga, s);
+         })();
+    </script>
+  </head>
+  <body>
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo"> 
         </div>
-        <br /> <br />
-        <div class="extra">
-            <table>
-                <tbody>
-                    <div id="extraleft">
-                        <div class="warning">
-                            <strong>Note:</strong><br /> <strong>OnNet Flow:</strong> Request
-                                Device Capabilities details from the AT&T network for the mobile
-                                device of an AT&T subscriber who is using an AT&T direct Mobile
-                                data connection to access this application. <br /> <strong>OffNet
-                                Flow:</strong> Where the end-user is not on an AT&T Mobile data
-                                connection or using a Wi-Fi or tethering connection while
-                                accessing this application. This will result in an HTTP 400
-                                error.
-                        </div>
-                    </div>
-                </tbody>
-            </table>
-                </div>
-                <br clear="all" />
-                <?php
-                $error = isset($_SESSION['error']) ? $_SESSION['error'] : null;
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a>
+        </div> 
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<?php echo $linkSource; ?>" target="_blank">Source<img src="images/opensource.png" /></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<?php echo $linkDownload; ?>" target="_blank">Download<img src="images/download.png"></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<?php echo $linkHelp; ?>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li>
+        </ul> <!-- end of links -->
+      </div> <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>AT&amp;T Sample DC Application - Get Device Capabilities Application</h1>
+          <div class="border"></div>
+          <div id="introtext">
+            <div><b>Server Time:&nbsp;</b><?php echo Util::getServerTime(); ?></div>
+            <div><b>Client Time:&nbsp;</b><script>document.write("" + new Date());</script></div>
+            <div><b>User Agent:&nbsp;</b><script>document.write("" + navigator.userAgent);</script></div>
+          </div> <!-- end of introtext -->
+        </div> <!-- end of contentHeading -->
 
-                if($error != null) {
-                ?>
-        
-            <div class="errorWide">
-                <strong>ERROR:</strong><br />
-                <?php 
-                echo $_SESSION['error_description']; 
-            
-                unset($_SESSION['error']);
-                unset($_SESSION['error_description']);
-                ?>
-            </div>
-                <?php
-                } else {
-                    //Device capabilities  session access token
-                    $sToken = isset($_SESSION[SESSION_TOKEN_INDEX]) ? $_SESSION[SESSION_TOKEN_INDEX] : null;
+        <!-- SAMPLE APP CONTENT STARTS HERE! -->
+        <div class="formBox" id="formBox">
+          <div class="formContainer" id="formContainer">
+            <h2>Feature 1: Get Device Capabilities</h2>
+            <div class="lightBorder"></div>
 
-                    if($sToken == null || $sToken  == '') {
-                        header('Location: ' . AUTH_CODE_URL);
-                    } else {
-                        $authorization = 'Authorization: Bearer ' . $sToken; 
-                        $accept = 'Accept: application/json';
+            <div class="note">
+              <strong>OnNet Flow:</strong>
+              Request Device Capabilities details from the AT&amp;T network
+              for the mobile device of an AT&amp;T subscriber who is using an AT&amp;T direct Mobile data
+              connection to access this application.
+              <br />
+              <strong>OffNet Flow:</strong> Where the end-user is not on an AT&amp;T Mobile data connection
+              or using a Wi-Fi or tethering connection while accessing this application. This
+              will result in an HTTP 400 error.
+            </div> <!-- end note -->
 
-                        $device_capabilities = curl_init();
-
-                        curl_setopt($device_capabilities, CURLOPT_URL, GETDCURL);
-                        curl_setopt($device_capabilities, CURLOPT_RETURNTRANSFER,true);
-                        curl_setopt($device_capabilities, CURLOPT_HTTPGET, true);
-                        curl_setopt($device_capabilities, CURLINFO_HEADER_OUT, 1);
-                        curl_setopt($device_capabilities, CURLOPT_SSL_VERIFYPEER,false);
-                        curl_setopt($device_capabilities, CURLOPT_SSL_VERIFYHOST,false);
-                        curl_setopt($device_capabilities, CURLOPT_HTTPHEADER, array($authorization, $accept));
-
-                        $device_capabilities_response = curl_exec($device_capabilities);
-
-                        $responseCode=curl_getinfo($device_capabilities,CURLINFO_HTTP_CODE);
-
-                    if($responseCode >= 200 && $responseCode <= 300) {
-                        $jsonObj = json_decode($device_capabilities_response);//decode the response and display it.
-                ?>
-                <br clear="all" />
-                <div class="successWide" runat="server" id="tb_dc_output" visible="false">
-                    <strong>SUCCESS:</strong><br /> Device parameters listed below.
-                </div>
+            <?php if ($dInfo != NULL) { ?>
+              <div class="successWide">
+                <strong>SUCCESS:</strong>
                 <br />
-                <div align="center">
-                    <table width="500" cellpadding="1" cellspacing="1" border="0"
-                        runat="server" id="tbDeviceCapabilities" visible="false">
-                        <thead>
-                            <tr>
-                                <th width="50%" class="label">Parameter</th>
-                                <th width="50%" class="label">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $names = array('TypeAllocationCode', 'Name', 'Vendor', 
-                                'Model', 'FirmwareVersion', 'UaProf', 'MmsCapable', 
-                                'AssistedGps', 'LocationTechnology', 'DeviceBrowser', 
-                                'WapPushCapable');
-
-                            $ids = array('lblTypeAllocationCode', 'lblName', 'lblVendor',
-                                'lblModel', 'lblRelease', 'lblUAProf', 'lblMMSCapable', 'lblAGPS',
-                                'lblLocation', 'lblBrowserName', 'lblWAPPush');
-
-                            // Device Information
-                            $dInfo = $jsonObj->DeviceInfo;
-
-                            // Capabilities
-                            $caps = $dInfo->Capabilities;
-
-
-                            $values = array($dInfo->DeviceId->TypeAllocationCode, $caps->Name, 
-                                $caps->Vendor, $caps->Model, $caps->FirmwareVersion, $caps->UaProf, 
-                                $caps->MmsCapable, $caps->AssistedGps, $caps->LocationTechnology, 
-                                $caps->DeviceBrowser, $caps->WapPushCapable);
-                    
-                            for ($i = 0; $i < count($names); ++$i) {
-
-                            ?>
-
-                            <tr>
-                                <td class="cell" align="center"<em><?php echo $names[$i] ?></em>
-                                </td>
-                                <td class="cell" align="center">
-                                    <em>
-                                        <label id="<?php echo $ids[$i] ?>">
-                                        <?php echo $values[$i] ?>
-
-                                        </label>
-                                    <em>
-                                <td>
-                            <tr>
-			    <?php 
-			    } //end of for loop
-			    ?>
-
-                        </tbody>
-                    </table>
-                </div>
-                <?php   
-                    } else {
-                        $msghead = "Error";
-                        $msgdata = curl_error($device_capabilities);
-                        $errormsg = $msgdata.$device_capabilities_response; ?>
-
-                <div class="errorWide">
-                    <strong>ERROR2:</strong><br />
-                    <?php  echo $errormsg ;  ?>
-                </div>
-                <?php }
-                    curl_close ($device_capabilities);
-                  }
-              } ?>
+                Device parameters listed below.
+              </div>
+              <table class="kvp" id="kvp">
+                <thead>
+                  <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td data-value="Parameter">
+                      TypeAllocationCode
+                    </td>
+                    <td data-value="Value">
+                      <?php echo htmlspecialchars($dInfo['DeviceInfo']['DeviceId']['TypeAllocationCode']); ?>
+                    </td>
+                  </tr>
+                  <?php 
+                  $arr = $dInfo['DeviceInfo']['Capabilities']; 
+                  foreach ($arr as $name => $value) {
+                  ?>
+                    <tr>
+                      <td data-value="Parameter">
+                        <?php echo htmlspecialchars($name); ?>
+                      </td>
+                      <td data-value="Value">
+                        <?php echo htmlspecialchars($value); ?>
+                      </td>
+                    </tr>
+                    <?php } ?>
+                </tbody>
+              </table>
+            <?php } ?>
               
-              <br clear="all" />
-        
-        
-<?php 
-require('footer.php') 
-?>
+            <?php if ($service->getError() != NULL) { ?>
+              <div class="errorWide">
+                <b>ERROR:</b><br>
+                <?php echo htmlspecialchars($service->getError()); ?>
+              </div>
+            <?php } ?>
+          </div> <!-- end of formContainer -->
+        </div> <!-- end of formBox -->
 
-    </div>
-    <p>&nbsp;</p>
-</body>
+        <!-- SAMPLE APP CONTENT ENDS HERE! -->
+
+      </div> <!-- end of content -->
+      <div class="border"></div>
+      <div id="footer">
+        <div id="powered_by">
+          Powered by AT&amp;T Cloud Architecture
+        </div>
+        <p>
+        The Application hosted on this site are working examples
+        intended to be used for reference in creating products to consume
+        AT&amp;T Services and not meant to be used as part of your
+        product. The data in these pages is for test purposes only and
+        intended only for use as a reference in how the services perform.
+        <br /><br />
+        For download of tools and documentation, please go to 
+        <a href="https://devconnect-api.att.com/" 
+          target="_blank">https://devconnect-api.att.com</a>
+        <br> For more information contact 
+        <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+        <br /><br />
+        &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+        <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        </p>
+      </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
+  </body>
 </html>

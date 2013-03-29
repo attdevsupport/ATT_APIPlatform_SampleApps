@@ -7,11 +7,11 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2012. 
+ * Agreement.' 2013. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2012 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category SpeechAPI 
@@ -30,6 +30,7 @@ require __DIR__ . '/SpeechResponse.php';
  */
 class SpeechRequest {
     private $_xArgs;
+    private $_xSpeechSubContext;
     private $_speechContext;
     private $_chunked;
     private $_speechURL;
@@ -103,6 +104,10 @@ class SpeechRequest {
             $headersMap['X-Arg'] = $this->_xArgs;
         }
 
+        if ($this->_xSpeechSubContext != null) {
+            $headersMap['X-SpeechSubContext'] = $this->_xSpeechSubContext;
+        }
+
         $this->_headers = array();
         foreach ($headersMap as $key => $value) { 
             array_push($this->_headers, $key . ': ' . $value); 
@@ -130,6 +135,7 @@ class SpeechRequest {
         $this->_headers = array();
 
         $this->_xArgs = NULL;
+        $this->_xSpeechSubContext = NULL;
         $this->_speechContext = 'Generic';
         $this->_chunked = true;
     }
@@ -150,6 +156,10 @@ class SpeechRequest {
     */
     public function setXArgs($xArgs) {
         $this->_xArgs = $xArgs;
+    }
+
+    public function setXSpeechSubContext($xSpeechSubContext) {
+        $this->_xSpeechSubContext = $xSpeechSubContext;
     }
 
 

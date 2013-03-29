@@ -1,7 +1,7 @@
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
 #!/usr/bin/ruby
@@ -10,6 +10,7 @@ require 'json'
 require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
+require 'cgi'
 require File.join(File.dirname(__FILE__), 'common.rb')
 
 enable :sessions
@@ -34,17 +35,17 @@ end
 def get_device_location
   url = "#{settings.FQDN}/2/devices/location?"
 
-  url += "RequestedAccuracy=#{session[:tl_requested_accuracy]}&AcceptableAccuracy=#{session[:tl_acceptable_accuracy]}&"
+  url += "requestedAccuracy=#{session[:tl_requested_accuracy]}&acceptableAccuracy=#{session[:tl_acceptable_accuracy]}&"
   # tolerance
-  url += "Tolerance=#{session[:tl_tolerance]}"
+  url += "tolerance=#{session[:tl_tolerance]}"
 
   t1 = Time.now
-  
+
   RestClient.get url,:Authorization => "Bearer #{session[:tl_access_token]}", :Accept => 'application/json' do |response, request, code, &block|
     @r = response
   end
   
-  session[:tl_elapsed] = (Time.now-t1).truncate
+  session[:elapsed] = (Time.now-t1).truncate
   
   if @r.code == 200
     @result = JSON.parse @r

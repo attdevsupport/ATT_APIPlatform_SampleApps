@@ -1,8 +1,8 @@
 <?php
 session_start();
-require __DIR__ . '/src/Sample/SpeechService.php';
 require __DIR__ . '/config.php';
-require __DIR__ . '/lib/Util/Util.php';
+require_once __DIR__ . '/src/Sample/SpeechService.php';
+require_once __DIR__ . '/lib/Util/Util.php';
 $speechService = new SpeechService();
 $response = $speechService->speechToText();
 ?>
@@ -27,6 +27,22 @@ For more information contact developer.support@att.com
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+             var ga = document.createElement('script');
+             ga.type = 'text/javascript';
+             ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                         : 'http://www')
+                                         + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0];
+             s.parentNode.insertBefore(ga, s);
+         })();
+    </script>
 </head>
 <body>
     <div id="pageContainer" class="pageContainer">
@@ -79,49 +95,47 @@ For more information contact developer.support@att.com
                         <div id="formData"> 
                         <!-- start context select -->
                             <h3>Speech Context:</h3>
-                            <select name="context">
-
-                            <?php
-                            $speechContexts = $speechService->getSpeechContexts();
-                            foreach ($speechContexts as $sname) { 
-                            $selected = '';
-                            if ($speechService->isSpeechContextSelected($sname)) $selected = 'selected ';
-                            ?>
-
-                            <option <?php echo $selected; ?>value="<?php echo $sname ?>"><?php echo $sname ?></option>
-                            <?php } ?>
-                            
+                            <select name="SpeechContext">
+                              <?php
+                              $speechContexts = $speechService->getSpeechContexts();
+                              foreach ($speechContexts as $sname) { 
+                              $selected = '';
+                              if ($speechService->isSpeechContextSelected($sname)) $selected = 'selected ';
+                              ?>
+                              <option <?php echo $selected; ?>value="<?php echo $sname ?>"><?php echo $sname ?></option>
+                              <?php } ?>
                             </select> 
                         <!-- end context select --> 
                             
                         <!-- start audio file select -->
                             <h3>Audio File:</h3>
-                            <select name="filename">
-                            <?php 
-                            $audioFiles = $speechService->getAudioFiles();
-                            foreach ($audioFiles as $fname) { 
-                            $selected = '';
-                            if ($speechService->isAudioFileSelected($fname)) $selected ='selected ';
-                            ?>
-
-                            <option <?php echo $selected; ?>value="<?php echo $fname ?>"><?php echo $fname ?></option>
-                            <?php } ?>
-
+                            <select name="audio_file">
+                              <?php 
+                              $audioFiles = $speechService->getAudioFiles();
+                              foreach ($audioFiles as $fname) { 
+                              $selected = '';
+                              if ($speechService->isAudioFileSelected($fname)) $selected ='selected ';
+                              ?>
+                              <option <?php echo $selected; ?>value="<?php echo $fname ?>"><?php echo $fname ?></option>
+                              <?php } ?>
                             </select> 
                         <!-- end audio file select -->
-
                             <div id="chunked">
+
                                 <br>
                                 <b>Send Chunked:</b>
-				<?php $chked = $speechService->isChunkedSelected() ? ' checked'  : ''; ?>
+                                <?php $chked = $speechService->isChunkedSelected() ? ' checked'  : ''; ?>
 
                                 <input name="chkChunked" value="Send Chunked" type="checkbox"<?php echo $chked; ?>>
                             </div>
                             <h3>X-Arg:</h3>
-                            <textarea id="x_arg" name="x-arg" readonly="readonly" 
-                                rows="4"><?php echo $x_arg ?></textarea>
+                            <textarea id="x_arg" name="x_arg" readonly="readonly" 
+                                rows="4" value="<?php echo $x_arg?>"><?php echo $x_arg ?></textarea>
+                            <h3>X-SpeechSubContext</h3>
+                            <textarea id="x_subContext" name="x_arg" readonly="readonly" rows="4" 
+                                value="<?php echo $xSpeechSubContext?>"><?php echo $xSpeechSubContext?></textarea>
                             <br>
-                            <button type="submit" name="SpeechToText">Submit</button>
+                            <button type="submit" id="btnSubmit" name="SpeechToText">Submit</button>
                         </div> <!-- end of formData -->
                     </form> <!-- end of SpeechToText form -->
                 </div> <!-- end of formContainer -->
@@ -213,7 +227,7 @@ For more information contact developer.support@att.com
                 For more information contact 
                 <a href="mailto:developer.support@att.com">developer.support@att.com</a>
                 <br> <br>
-                &copy; 2012 AT&amp;T Intellectual Property. All rights reserved.
+                &copy; 2013 AT&amp;T Intellectual Property. All rights reserved.
                 <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
                 </p>
             </div> <!-- end of ft -->

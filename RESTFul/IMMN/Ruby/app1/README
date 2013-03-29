@@ -1,11 +1,11 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-  AT&T API Platform Samples - IMMN App 1
+  AT&T API Platform Samples - MIM App 1
  --------------------------------------
 
 This file describes how to set up, configure and run the Ruby applications using AT&T API Platform services. 
@@ -103,11 +103,11 @@ create and run one's own full-fledged sample applications.
 
   To run the application, open up a terminal window and type:
 
-    ruby ./immn.rb
+    ruby ./mim.rb
 
   or
 
-    ./immn.rb
+    ./mim.rb
 
   Your application becomes available in a web browser, so you may visit: http://localhost:4567/ to see it working.
 

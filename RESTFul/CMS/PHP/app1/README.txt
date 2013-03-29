@@ -1,7 +1,7 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -62,9 +62,9 @@ create and run one's own full-fledged sample applications.
 
    Requirements:
      Apache web server 
-     PHP 5.2+
+     PHP 5.4+
      PHP CURL extension	
-     Apache and PHP configured. The package manager on most Linux systems should automatically 
+     Apache and PHP configured. The package manager on most GNU/Linux systems should automatically 
      configure Apache/PHP upon installation.
 
    Installation:
@@ -74,30 +74,12 @@ create and run one's own full-fledged sample applications.
 
 3. Parameters
    
-  Each sample application contains a config file. It holds configurable parameters
-  described in an easy to read format. Please populate the following parameters in
-  config.php as specified below:
+  Each application contains a config.php file. This file holds configurable parameters described in an 
+  easy-to-read format. Please modify the config.php file using the comments specified within the file. 
+  
+  Note: If your application is promoted from Sandbox environment to Production environment and you decide to use
+  production application settings, you must update parameters as per production application details.
 
-  1) $api_key            : This is a mandatory parameter. Set the value as per your
-			   registered application 'API key' field value.
-
-  2) $secret_key     	 : This is a mandatory parameter. Set the value as per your
-			   registered application 'Secret key' field value.
-
-  3) $FQDN		 : https://api.att.com
-
-  4) $oauth_file         : File containing authorization and refresh tokens 
-
-  5) $scope              : Scope used when requested access token. Set to CMS. 
-
-  6) $callcontrol_file   : Contains path to call control file. Default: callcontrolscript.php
-
-  7) $number             : Application's test phone number 
-
-
-  Note: If your application is promoted from Sandbox environment to Production
-  environment and you decide to use production application settings, you must update
-  parameters 1-2 as per production application details.
 
 4. Running the application
 

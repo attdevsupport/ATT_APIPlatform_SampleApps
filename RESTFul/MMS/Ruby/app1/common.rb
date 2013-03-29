@@ -1,14 +1,14 @@
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012 
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com 
+# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com 
 # For more information contact developer.support@att.com
 
 # Tries to parse supplied address using one of known formats. Returns false on failure.
 def parse_address(address)
   address.strip!
   if (address.match('^\d{10}$'))
-    
+    address = address
   elsif (m = address.match('^1(\d{10})$'))
     address = m[1].to_s
   elsif (m = address.match('^\+1(\d{10})$'))
@@ -28,7 +28,7 @@ end
 def obtain_tokens(fqdn, client_id, client_secret, scope, tokens_file)
   read_tokens(tokens_file)
   
-  response = RestClient.post "#{fqdn}/oauth/access_token", :grant_type => 'client_credentials', :client_id => client_id, :client_secret => client_secret, :scope => scope
+  response = RestClient.post "#{fqdn}/oauth/token", :grant_type => 'client_credentials', :client_id => client_id, :client_secret => client_secret, :scope => scope
 	
   from_json = JSON.parse(response.to_str)
   @access_token = from_json['access_token']

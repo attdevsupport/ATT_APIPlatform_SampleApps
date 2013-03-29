@@ -1,6 +1,6 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -67,44 +67,14 @@ order to use this sample application code.
 
 3. Parameters
 
-Each sample application contains a web.config file. It holds configurable parameters 
-described in an easy to read format. Please populate the following parameters in 
-web.config as specified below:
+  Each sample application contains an web.config file. This file
+  is located in the 'app' folder. This file holds configurable
+  parameters described in an easy-to-read format. Please modify the
+  web.config file using the comments specified within the file. 
 
-1) api_key              : This is mandatory parameter, set the value as per your 
-                          registered appliaction 'API key' field value.
-
-2) secret_key     	: This is mandatory parameter, set the value as per your 
-                          registered appliaction 'Secret key' field value.
-
-3) endPoint		: This is mandatory parameter, set it to the end point URI 
-                          of AT&T Service.
-
-4) scope		: SPEECH (Scope of the ATT service that will be invoked by 
-                          the Application)
-
-5) DefaultFile		: This is Optional parameter, which points to the default 
-                          wav file, which will act as a sample to show speech 
-                          conversion when user has not selected any wave file using 
-                          Browse button.
-
-6) AccessTokenFilePath	: ~\\SpeechApp1AccessToken.txt (This is optional parameter, 
-                          which points to the file path, where application stores 
-                          access token information. If the parameter is not configured,
-                          it will take the default value as ~\\SpeechApp1AccessToken.txt.
-                          Give read/write access to this file.)
-
-7) X-Arg		: This is optional key, the value of the this key is sent as 
-			  an X-Arg hearder, which should contain name value pair 
-			  separated by semicolan Ex: name=value,name1=value1.
-
-8) SpeechContext	: This is mandatory key, the value of the this key is used to 
-			  populate Speech Context drop down list. The value of this key 
-			  should contain list of speech context values separated by semicolan
-
- 
-Note: You must update parameters 1-2 after you promote your application from 'Sandbox' 
-environment to 'Production' environment.
+  Note: If your application is promoted from Sandbox environment to Production
+  environment and you decide to use production application settings, you must
+  update parameters as per production application details.
 
 
 

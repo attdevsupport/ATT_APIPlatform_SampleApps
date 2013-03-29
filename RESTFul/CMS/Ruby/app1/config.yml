@@ -1,6 +1,14 @@
 port:           4567
+proxy: 
 api_key:        
 secret_key:     
 tokens_file:    tokens
 FQDN:           https://api.att.com
 phoneNumber:    
+
+#A list of the methods that our script will support
+script_methods: ,ask,conference,message,reject,transfer,wait
+
+source_link: #
+download_link: #
+help_link: #

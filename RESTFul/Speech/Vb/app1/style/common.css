@@ -20,6 +20,9 @@ div#header {
 	padding-top: 10px;
 }
 
+#chunked {
+	margin-top:10px;
+}
 
 blockquote {
 	padding: 24px;
@@ -371,6 +374,11 @@ table.kvp {
 	margin-bottom: 10px;
 }
 
+.textWide 
+{
+    width: 65%;
+}
+
 th.label {
 	text-align: center;
 }
@@ -394,7 +402,7 @@ td.cell {
 }
 
 .successWide {
-	float: left;
+	clear: both;
 	border: 3px outset green;
 	background: #cfc;
 	width: 94%;
@@ -625,7 +633,7 @@ noteContent .contentPadding {
 		border: 0;
 		text-indent: -999em;
 		/* make it fill the screen */
-		position: absolute;
+		position: fixed;
 		top: -101em;
 		bottom: -101em;
 		left: -101em;
@@ -638,6 +646,9 @@ noteContent .contentPadding {
 	}
 	#nav:target a.icon {
 		display: none;
+	}
+	.successWide, .errorWide {
+		width: 90%;
 	}
 }
 
@@ -670,6 +681,9 @@ noteContent .contentPadding {
 	}
 	#nav:target a.icon {
 		display: none;
+	}
+	.successWide, .errorWide {
+		width: 85%;
 	}
 }
 

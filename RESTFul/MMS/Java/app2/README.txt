@@ -51,7 +51,7 @@ NOTE: You MUST select MMS in the list of services under field 'Services' in orde
 
 ** Setting up multiple sample applications simultaneously
 
-   In case multiple applications need to be run at the same time, make sure to put each app in a separate folders.
+   In case multiple applications need to be run at the same time, make sure to put each app in separate folders.
 
 3. Parameters
    

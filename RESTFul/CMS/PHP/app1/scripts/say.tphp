@@ -1,7 +1,0 @@
-<?php
-
-say("Welcome to the AT&T Call Control Service Sample Application Demo.  This is say script.");
-say("Thank you, for using AT&T Call Control Service Sample Application Demo.  Good Bye");
-hangup();
-
-?>

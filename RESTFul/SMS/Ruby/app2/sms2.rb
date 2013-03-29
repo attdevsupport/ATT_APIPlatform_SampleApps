@@ -28,9 +28,9 @@ SCOPE = 'SMS'
 end
 
 get '/' do
-  session[:batch1] ||= 0
-  session[:batch2] ||= 0
-  session[:batch3] ||= 0
+  session[:football_votes] ||= 0
+  session[:baseball_votes] ||= 0
+  session[:basketball_votes] ||= 0
   
   loadTallys
 
@@ -54,15 +54,15 @@ end
 #update our tallys from the current votes
 def loadTallys
   File.open 'tally1.txt', 'r+' do |f|
-    session[:batch1] = f.read.to_i
+    session[:football_votes] = f.read.to_i
   end
   File.open 'tally2.txt', 'r+' do |f|
-    session[:batch2] = f.read.to_i
+    session[:baseball_votes] = f.read.to_i
   end
   File.open 'tally3.txt', 'r+' do |f|
-    session[:batch3]= f.read.to_i
+    session[:basketball_votes]= f.read.to_i
   end
-  @received_total = session[:batch1]+session[:batch2]+session[:batch3]
+  @received_total = session[:football_votes]+session[:baseball_votes]+session[:basketball_votes]
 end
 
 def receive_sms
@@ -70,40 +70,40 @@ def receive_sms
   if File.exists? settings.votes_file 
     File.open settings.votes_file, 'r' do |f| 
       while (line = f.gets) do
-        a = line.split
-        n = Hash.new
-        n[:date_time] = a[0]
-        n[:message_id] = a[1] 
-        n[:message] = a[2]
-        n[:sender] = a[3]
-        n[:destination] = a[4]
+        words = line.split
+        msg_info = Hash.new
+        msg_info[:date_time] = words[0]
+        msg_info[:message_id] = words[1] 
+        msg_info[:message] = words[2]
+        msg_info[:sender] = words[3]
+        msg_info[:destination] = words[4]
         
         @invalid_messages = []
         
-        text = n[:message]
+        text = msg_info[:message]
         if text.downcase.eql? 'football'
-           session[:batch1] = session[:batch1]+1
-           @votes.push n
+           session[:football_votes] += 1
+           @votes.push msg_info
         elsif text.downcase.eql? 'baseball' 
-           session[:batch2] = session[:batch2]+1
-           @votes.push n
+           session[:baseball_votes] += 1
+           @votes.push msg_info
         elsif text.downcase.eql? 'basketball' 
-           session[:batch3] = session[:batch3]+1
-           @votes.push n
+           session[:basketball_votes] += 1
+           @votes.push msg_info
         else 
-           @invalid_messages.push n
+           @invalid_messages.push msg_info
         end
         
-        @received_total = session[:batch1]+session[:batch2]+session[:batch3]
+        @received_total = session[:football_votes]+session[:baseball_votes]+session[:basketball_votes]
 
         File.open 'tally1.txt', 'w' do |fi|
-          fi.write(session[:batch1])
+          fi.write(session[:football_votes])
         end
         File.open 'tally2.txt', 'w' do |fi|
-          fi.write(session[:batch2])
+          fi.write(session[:baseball_votes])
         end
         File.open 'tally3.txt', 'w' do |fi|
-          fi.write(session[:batch3])
+          fi.write(session[:basketball_votes])
         end
       end
     end
@@ -120,7 +120,7 @@ end
 
 
 def sms_listener
-  input   = request.env["rack.input"].read
+  input = request.env["rack.input"].read
 
   File.open("#{settings.mosms_file_dir}/notifications", 'a+') { |f| f.puts input }
   

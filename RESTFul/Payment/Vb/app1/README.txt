@@ -1,7 +1,7 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -78,64 +78,14 @@ order to use this sample application code.
 
 3. Parameters
 
-Each sample application contains a web.config file. It holds configurable parameters
-described in an easy to read format. Please populate the following parameters in
-web.config as specified below:
+  Each sample application contains an web.config file. This file
+  is located in the 'app' folder. This file holds configurable
+  parameters described in an easy-to-read format. Please modify the
+  web.config file using the comments specified within the file. 
 
-1) api_key                	: This is mandatory parameter, Set the value as per
-				  your registered appliaction 'API key' field value.
-
-2) secret_key     	  	: This is mandatory parameter,Set the value as per
-				  your registered appliaction 'Secret key' field value.
-
-3) endPoint		  	: This is mandatory parameter, Set it to the end point
-				  URI of AT&T Service.
-
-4) AccessTokenFilePath		: ~\\PayApp1AccessToken.txt (This is optional parameter,
-				  which points to the file path, where application
-				  stores access token information. If the parameter is
-				  not configured, it will take the default value as 
-				  ~\\PayApp1AccessToken.txt. Give read/write access to
-				  this file.)
-
-5) scope			: PAYMENT (Scope of the ATT service that will be
-				  invoked by the Application)
-
-6) Category                     : 1 (Category of the product)
-
-7) Channel                      : MOBILE_WEB
-
-8) MerchantPaymentRedirectUrl	: Set to the URL pointing to the application. ATT
-				  platform uses this URL to return the control back
-				  to the application after transaction is completed.
-				  Example: https://IIS_HOSTNAME:8080/payment/app1/Default.aspx
-
-9) notaryURL                    : Set to the URL pointing to Notary application.
-				  Payment application uses Notary application to get
-				  the SignedDocument and Signature to be used in
-				  New Transaction.
-				  Example: https://IIS_HOSTNAME:8080/notary/app1/Default.aspx
-
-10) notificationDetailsFile     : ~\\notificationDetailsFile.txt - (This is optional
-				  parameter, which points to the file path, where the
-				  notification details will be saved by listener. If
-				  the parameter is not configured, it will take the
-				  default value as ~\\notificationDetailsFile.txt.
-				  Give read/write access to this file.)
-
-11) refundFile	                : ~\\refundFile.txt - (This is optional parameter,
-				  which points to the file path, where latest
-				  transaction IDs will be stored. If the parameter is
-				  not configured, it will take the default value as 
-				  ~\\refundFile.txt. Give read/write access to this file.)
-
-12) refundCountToDisplay	: This is optional key, which will allow to display
-				  the defined number of transactions for refund table,
-				  default is 5.
-
-
-Note: You must update parameters 1-2 after you promote your application from 'Sandbox'
-environment to 'Production' environment.
+  Note: If your application is promoted from Sandbox environment to Production
+  environment and you decide to use production application settings, you must
+  update parameters as per production application details.
 
 
 

@@ -1,16 +1,15 @@
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
--->
-
 <?php
-$oauth_file = "paytoken.php";
-$api_key = "";
-$secret_key = "";
-$FQDN = "https://api.att.com";
-$singlepayRedirect = "";
-$minTransactionValue = "0.00";
-$maxTransactionValue = "2.99";
+$oauth_file = 'token.php';
+$api_key = '';
+$secret_key = '';
+$FQDN = 'https://api.att.com';
+$redirect_url = 'http://localhost/payment/index.php';
+$scope = 'PAYMENT';
+$minTransactionValue = '0.00';
+$maxTransactionValue = '2.99';
+$minSubscriptionValue = '0.00';
+$maxSubscriptionValue = '2.99';
+$linkDownload='#';
+$linkSource='#';
+$linkHelp='#';
 ?>

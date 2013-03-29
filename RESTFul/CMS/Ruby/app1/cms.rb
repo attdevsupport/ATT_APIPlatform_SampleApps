@@ -1,10 +1,10 @@
+#!/usr/bin/ruby
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
-#!/usr/bin/ruby
 require 'rubygems'
 require 'json'
 require 'rest_client'
@@ -22,6 +22,9 @@ set :port, settings.port
 set :protection, :except => :frame_options
 
 SCOPE = 'CMS'
+
+#An array of all the methods our script supports
+SCRIPT_METHODS = settings.script_methods.split(",")
 
 # Obtain an OAuth access token if necessary.
 ['/CreateSession', '/SendSignal'].each do |path|
@@ -75,7 +78,7 @@ end
 
 # Function to get contents of selected script file.
 def getContentsFromFile filetoread
-  return File.read Dir.pwd + '/' + filetoread
+  return File.read(Dir.pwd + '/' + filetoread)
 end
 
 def read_script
@@ -86,7 +89,6 @@ end
 
 # Function to create session for outbound voice and messaging.
 def create_session
-
   # Script variables for First.rb.
   numberToDial = session[:txtNumberToDial] = CGI.escapeHTML(params[:txtNumberToDial])
   messageToPlay = session[:txtMessageToPlay] = CGI.escapeHTML(params[:txtMessageToPlay])
@@ -105,21 +107,18 @@ def create_session
   
   # Resource URL for Create Session.
   url = "#{settings.FQDN}/rest/1/Sessions"
-RestClient.post url, requestbody, :Authorization => "Bearer #{@access_token}", :Content_Type => 'application/json', :Accept => 'application/json' do |response, request, result, &block|
-  	@r = response
-  end
+  response = RestClient.post url, requestbody, :Authorization => "Bearer #{@access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
 
-  if @r.code == 200
-    @result = JSON.parse @r
+  if response.code == 200 || response.code == 201
+    @result = JSON.parse response
     session[:cms_id] = @result['id']
   else
-    @error = @r
+    @error = r
   end
 end
 
 # Function which sends signal to either exit, hold or dequeue session.
 def send_signal
-  
   # Resource URL for Send Signal.
   url = "#{settings.FQDN}/rest/1/Sessions/#{session[:cms_id]}/Signals"
   

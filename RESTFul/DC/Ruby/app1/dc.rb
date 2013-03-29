@@ -1,7 +1,7 @@
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
 #!/usr/bin/ruby
@@ -25,7 +25,7 @@ SCOPE = 'DC'
 # obtain an OAuth access token if necessary
 def authorize
   if session[:dc_access_token].nil? then
-   redirect "#{settings.auth_code_url}client_id=#{settings.api_key}&scope=DC&redirect_uri=#{settings.redirect_url}"
+   redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=#{SCOPE}&redirect_uri=#{settings.redirect_url}"
   else
    redirect "#{settings.base_url}/GetDeviceCapabilities"
   end
@@ -33,7 +33,7 @@ end
 
 def get_device_capabilties
    
-  response = RestClient.get "#{settings.getdc_url}", :Authorization => "BEARER #{session[:dc_access_token]}", :Content_Type => 'application/json', :Accept => 'application/json'
+  response = RestClient.get "#{settings.FQDN}#{settings.endpoint}", :Authorization => "BEARER #{session[:dc_access_token]}", :Content_Type => 'application/json', :Accept => 'application/json'
    
   @result = JSON.parse(response)
 
@@ -44,13 +44,12 @@ ensure
 end
 
 def get_access_token
-
   if params[:error] != nil
      session[:access_error] = params[:error]
      session[:error_type] = params[:error_description]
      redirect "#{settings.base_url}/"
   else
-     response = RestClient.post "#{settings.access_token_url}", :grant_type => "authorization_code", :client_id => settings.api_key, :client_secret => settings.secret_key, :code => params[:code]
+     response = RestClient.post "#{settings.FQDN}/oauth/access_token", :grant_type => "authorization_code", :client_id => settings.api_key, :client_secret => settings.secret_key, :code => params[:code]
      from_json = JSON.parse response
      session[:dc_access_token] = from_json['access_token']
      redirect "#{settings.base_url}/GetDeviceCapabilities"
@@ -69,7 +68,7 @@ get '/auth/callback' do
 end
 
 get '/' do
-  if session[:access_error] != nil
+  if session[:access_error]
     return erb :dc
   else
     authorize

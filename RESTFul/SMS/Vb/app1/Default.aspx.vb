@@ -1,27 +1,21 @@
 ' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
 #Region "References"
-
 Imports System.Collections.Generic
 Imports System.Configuration
-Imports System.Drawing
 Imports System.IO
-Imports System.Linq
 Imports System.Net
 Imports System.Net.Security
 Imports System.Security.Cryptography.X509Certificates
 Imports System.Text
-Imports System.Web
+Imports System.Text.RegularExpressions
 Imports System.Web.Script.Serialization
 Imports System.Web.UI
-Imports System.Web.UI.WebControls
-Imports System.Xml
-
 #End Region
 
 ''' <summary>
@@ -30,21 +24,63 @@ Imports System.Xml
 Partial Public Class SMS_App1
     Inherits System.Web.UI.Page
 #Region "Variable Declaration"
-    ''' <summary>
-    ''' Global Variable Declaration
-    ''' </summary>
-    Private shortCode As String, endPoint As String, accessTokenFilePath As String, apiKey As String, secretKey As String, accessToken As String, _
-     accessTokenExpiryTime As String, scope As String, refreshToken As String, refreshTokenExpiryTime As String
 
     ''' <summary>
-    ''' Global Variable Declaration
+    ''' Global Variables related to application
     ''' </summary>
-    Private shortCodes As String()
+    Private endPoint As String, apiKey As String, secretKey As String, scope As String
+
+    '''<summary>
+    '''API URL's
+    '''</summary>
+    Private sendSMSURL As String = "/sms/v3/messaging/outbox"
+    Private getDeliveryStatusURL As String = "/sms/v3/messaging/outbox/"
+    Private getSMSURL As String = "/sms/v3/messaging/inbox"
 
     ''' <summary>
-    ''' Gets or sets the value of refreshTokenExpiresIn
+    ''' Global Variables related to access token
     ''' </summary>
+    Private accessTokenFilePath As String, accessToken As String, accessTokenExpiryTime As String, refreshToken As String, refreshTokenExpiryTime As String
     Private refreshTokenExpiresIn As Integer
+
+    ''' <summary>
+    ''' Variables related to Send SMS
+    ''' </summary>
+    Public sendSMSErrorMessage As String = String.Empty
+    Public sendSMSSuccessMessage As String = String.Empty
+    Public sendSMSResponseData As SendSMSResponse = Nothing
+
+    ''' <summary>
+    ''' Variables related to Get Delivery Status
+    ''' </summary>
+    Public getSMSDeliveryStatusErrorMessage As String = String.Empty
+    Public getSMSDeliveryStatusSuccessMessagae As String = String.Empty
+    Public getSMSDeliveryStatusResponseData As GetDeliveryStatus = Nothing
+
+    ''' <summary>
+    ''' Variables related to Get SMS
+    ''' </summary>
+
+    Public getSMSSuccessMessage As String = String.Empty
+    Public offlineShortCode As String = String.Empty
+    Public getSMSErrorMessage As String = String.Empty
+    Public getSMSResponseData As GetSmsResponse = Nothing
+
+    ''' <summary>
+    ''' Variables related to Receive SMS
+    ''' </summary>
+    Public onlineShortCode As String = String.Empty
+    Public receiveSMSSuccessMessage As String = String.Empty
+    Public receiveSMSErrorMesssage As String = String.Empty
+    Public receivedSMSList As New List(Of ReceiveSMS)()
+    Public receiveSMSFilePath As String = "\Messages.txt"
+    ''' <summary>
+    ''' Variables related to Get Delivery Status
+    ''' </summary>
+    Public receiveSMSDeliveryStatusErrorMessage As String = String.Empty
+    Public receiveSMSDeliveryStatusSuccessMessagae As String = String.Empty
+    Public receiveSMSDeliveryStatusResponseData As New List(Of deliveryInfoNotification)()
+    Public receiveSMSDeliveryStatusFilePath As String = "\DeliveryStatus.txt"
 
     ''' <summary>
     ''' Access Token Types
@@ -69,36 +105,23 @@ Partial Public Class SMS_App1
     ''' </summary>
     ''' <param name="sender">Sender Details</param>
     ''' <param name="e">List of Arguments</param>
-    Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
             ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-            Dim currentServerTime As DateTime = DateTime.UtcNow
-            serverTimeLabel.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) & " UTC"
-
             Dim ableToRead As Boolean = Me.ReadConfigFile()
             If ableToRead = False Then
                 Return
             End If
 
-            Me.shortCodes = Me.shortCode.Split(";"c)
-            Me.shortCode = Me.shortCodes(0)
-            Dim table As New Table()
-            table.Font.Size = 8
-            For Each srtCode As String In Me.shortCodes
-                Dim button As New Button()
-                AddHandler button.Click, New EventHandler(AddressOf Me.GetMessagesButton_Click)
-                button.Text = "Get Messages for " & srtCode
-                Dim rowOne As New TableRow()
-                Dim rowOneCellOne As New TableCell()
-                rowOne.Controls.Add(rowOneCellOne)
-                rowOneCellOne.Controls.Add(button)
-                table.Controls.Add(rowOne)
-            Next
-
-            receiveMessagePanel.Controls.Add(table)
+            If Session("lastSentSMSID") IsNot Nothing Then
+                messageId.Value = Session("lastSentSMSID").ToString()
+            End If
+            'If Not IsPostBack Then
+            readOnlineMessages()
+            readOnlineDeliveryStatus()
+            'End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(sendSMSPanel, ex.ToString())
-            Response.Write(ex.ToString())
+            sendSMSErrorMessage = ex.ToString()
         End Try
     End Sub
 
@@ -114,25 +137,25 @@ Partial Public Class SMS_App1
 
         Me.endPoint = ConfigurationManager.AppSettings("endPoint")
         If String.IsNullOrEmpty(Me.endPoint) Then
-            Me.DrawPanelForFailure(sendSMSPanel, "endPoint is not defined in configuration file")
+            sendSMSErrorMessage = "endPoint is not defined in configuration file"
             Return False
         End If
 
-        Me.shortCode = ConfigurationManager.AppSettings("short_code")
-        If String.IsNullOrEmpty(Me.shortCode) Then
-            Me.DrawPanelForFailure(sendSMSPanel, "short_code is not defined in configuration file")
+        Me.offlineShortCode = ConfigurationManager.AppSettings("OfflineShortCode")
+        If String.IsNullOrEmpty(Me.offlineShortCode) Then
+            sendSMSErrorMessage = "short_code is not defined in configuration file"
             Return False
         End If
 
         Me.apiKey = ConfigurationManager.AppSettings("api_key")
         If String.IsNullOrEmpty(Me.apiKey) Then
-            Me.DrawPanelForFailure(sendSMSPanel, "api_key is not defined in configuration file")
+            sendSMSErrorMessage = "api_key is not defined in configuration file"
             Return False
         End If
 
         Me.secretKey = ConfigurationManager.AppSettings("secret_key")
         If String.IsNullOrEmpty(Me.secretKey) Then
-            Me.DrawPanelForFailure(sendSMSPanel, "secret_key is not defined in configuration file")
+            sendSMSErrorMessage = "secret_key is not defined in configuration file"
             Return False
         End If
 
@@ -149,6 +172,52 @@ Partial Public Class SMS_App1
             Me.refreshTokenExpiresIn = 24
         End If
 
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SourceLink")) Then
+            SourceLink.HRef = ConfigurationManager.AppSettings("SourceLink")
+        Else
+            ' Default value
+            SourceLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("DownloadLink")) Then
+            DownloadLink.HRef = ConfigurationManager.AppSettings("DownloadLink")
+        Else
+            ' Default value
+            DownloadLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("HelpLink")) Then
+            HelpLink.HRef = ConfigurationManager.AppSettings("HelpLink")
+        Else
+            ' Default value
+            HelpLink.HRef = "#"
+        End If
+
+        Me.onlineShortCode = ConfigurationManager.AppSettings("OnlineShortCode")
+        If String.IsNullOrEmpty(Me.onlineShortCode) Then
+            sendSMSErrorMessage = "Online ShortCode is not defined in configuration file"
+            Return False
+        End If
+
+        Me.sendSMSURL = ConfigurationManager.AppSettings("SendSMSURL")
+        Me.getDeliveryStatusURL = ConfigurationManager.AppSettings("GetDeliveryStatusURL")
+        Me.getSMSURL = ConfigurationManager.AppSettings("GetSMSURL")
+
+        Me.receiveSMSDeliveryStatusFilePath = ConfigurationManager.AppSettings("ReceivedDeliveryStatusFilePath")
+        Me.receiveSMSFilePath = ConfigurationManager.AppSettings("ReceivedMessagesFilePath")
+
+        If Not IsPostBack Then
+            Dim sampleMessages As String = ConfigurationManager.AppSettings("SMSSampleMessage")
+            If Not String.IsNullOrEmpty(sampleMessages) Then
+                Dim sample As String() = Regex.Split(sampleMessages, "_-_-")
+                For Each sm As String In sample
+                    message.Items.Add(sm)
+                Next
+            Else
+                message.Items.Add("ATT SMS sample Message")
+
+            End If
+        End If
         Return True
     End Function
 
@@ -158,32 +227,15 @@ Partial Public Class SMS_App1
     ''' </summary>
     ''' <param name="sender">Sender Information</param>
     ''' <param name="e">List of Arguments</param>
-    Protected Sub BtnSendSMS_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub BtnSubmit_Click(sender As Object, e As EventArgs)
         Try
-            If Me.ReadAndGetAccessToken(sendSMSPanel) = True Then
-                Me.SendSms()
+            If Me.ReadAndGetAccessToken(sendSMSErrorMessage) = True Then
+                Me.SendSmsMethod()
             Else
-                Me.DrawPanelForFailure(sendSMSPanel, "Unable to get access token.")
+                sendSMSErrorMessage = "Unable to get access token."
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(sendSMSPanel, ex.ToString())
-        End Try
-    End Sub
-
-    ''' <summary>
-    ''' This method is called when user clicks on get delivery status button
-    ''' </summary>
-    ''' <param name="sender">Sender Information</param>
-    ''' <param name="e">List of Arguments</param>
-    Protected Sub GetDeliveryStatusButton_Click(ByVal sender As Object, ByVal e As EventArgs)
-        Try
-            If Me.ReadAndGetAccessToken(getStatusPanel) = True Then
-                Me.GetSmsDeliveryStatus()
-            Else
-                Me.DrawPanelForFailure(getStatusPanel, "Unable to get access token.")
-            End If
-        Catch ex As Exception
-            Me.DrawPanelForFailure(getStatusPanel, ex.ToString())
+            sendSMSErrorMessage = ex.ToString()
         End Try
     End Sub
 
@@ -192,25 +244,22 @@ Partial Public Class SMS_App1
     ''' </summary>
     ''' <param name="sender">Sender Details</param>
     ''' <param name="e">List of Arguments</param>
-    Protected Sub GetMessagesButton_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub GetMessagesButton_Click(sender As Object, e As EventArgs)
         Try
-            If Me.ReadAndGetAccessToken(getMessagePanel) = True Then
-                Dim button As Button = TryCast(sender, Button)
-                Dim buttonCaption As String = button.Text.ToString()
-                Me.shortCode = buttonCaption.Replace("Get Messages for ", String.Empty)
-                Me.RecieveSms()
+            If Me.ReadAndGetAccessToken(getSMSErrorMessage) = True Then
+                Me.GetSms()
             Else
-                Me.DrawPanelForFailure(getMessagePanel, "Unable to get access token.")
+                getSMSErrorMessage = "Unable to get access token."
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(getMessagePanel, ex.ToString())
+            getSMSErrorMessage = ex.ToString()
         End Try
     End Sub
 #End Region
 
-#Region "SMS Application related functions"
+
     ''' <summary>
-    ''' This function is used to neglect the ssl handshake error with authentication server
+    ''' Neglect the ssl handshake error with authentication server
     ''' </summary>
     Function CertificateValidationCallBack( _
     ByVal sender As Object, _
@@ -222,6 +271,136 @@ Partial Public Class SMS_App1
         Return True
     End Function
 
+
+    ''' <summary>
+    ''' This function calls receive sms api to fetch the sms's
+    ''' </summary>
+    Private Sub GetSms()
+        Try
+            Dim receiveSmsResponseData As String
+            If String.IsNullOrEmpty(Me.offlineShortCode) Then
+                getSMSErrorMessage = "Short code is null or empty"
+                Return
+            End If
+
+            Dim objRequest As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & Me.getSMSURL & "/" & Me.offlineShortCode.ToString()), HttpWebRequest)
+            objRequest.Method = "GET"
+            objRequest.Headers.Add("Authorization", "BEARER " & Me.accessToken)
+            Dim receiveSmsResponseObject As HttpWebResponse = DirectCast(objRequest.GetResponse(), HttpWebResponse)
+            Using receiveSmsResponseStream As New StreamReader(receiveSmsResponseObject.GetResponseStream())
+                receiveSmsResponseData = receiveSmsResponseStream.ReadToEnd()
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                getSMSResponseData = New GetSmsResponse()
+                getSMSResponseData = DirectCast(deserializeJsonObject.Deserialize(receiveSmsResponseData, GetType(GetSmsResponse)), GetSmsResponse)
+                receiveSmsResponseStream.Close()
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+            Catch
+                errorResponse = "Unable to get response"
+            End Try
+
+            getSMSErrorMessage = errorResponse & Environment.NewLine & we.ToString()
+        Catch ex As Exception
+            getSMSErrorMessage = ex.ToString()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Method will be called when the user clicks on Update Votes Total button
+    ''' </summary>
+    ''' <param name="sender">object, that invoked this method</param>
+    ''' <param name="e">EventArgs, specific to this method</param>
+    Protected Sub receiveStatusBtn_Click(sender As Object, e As EventArgs)
+        Try
+            'Me.readOnlineDeliveryStatus()
+        Catch ex As Exception
+            receiveSMSErrorMesssage = ex.ToString()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Method will be called when the user clicks on Update Votes Total button
+    ''' </summary>
+    ''' <param name="sender">object, that invoked this method</param>
+    ''' <param name="e">EventArgs, specific to this method</param>
+    Protected Sub receiveMessagesBtn_Click(sender As Object, e As EventArgs)
+        Try
+            'Me.readOnlineMessages()
+        Catch ex As Exception
+            receiveSMSErrorMesssage = ex.ToString()
+        End Try
+    End Sub
+
+
+
+    ''' <summary>
+    ''' This method reads the messages file and draw the table.
+    ''' </summary>
+    Private Sub readOnlineDeliveryStatus()
+        Dim receivedMessagesFile As String = ConfigurationManager.AppSettings("ReceivedDeliveryStatusFilePath")
+        If Not String.IsNullOrEmpty(receivedMessagesFile) Then
+            receivedMessagesFile = Request.MapPath(receivedMessagesFile)
+        Else
+            receivedMessagesFile = Request.MapPath("~\DeliveryStatus.txt")
+        End If
+        Dim messagesLine As String = [String].Empty
+        If File.Exists(receivedMessagesFile) Then
+            Using sr As New StreamReader(receivedMessagesFile)
+                While sr.Peek() >= 0
+                    Dim dNot As New deliveryInfoNotification()
+                    dNot.deliveryInfo = New ReceiveDeliveryInfo()
+                    messagesLine = sr.ReadLine()
+                    Dim messageValues As String() = Regex.Split(messagesLine, "_-_-")
+                    dNot.messageId = messageValues(0)
+                    dNot.deliveryInfo.address = messageValues(1)
+                    dNot.deliveryInfo.deliveryStatus = messageValues(2)
+                    receiveSMSDeliveryStatusResponseData.Add(dNot)
+                End While
+                receiveSMSDeliveryStatusResponseData.Reverse()
+                sr.Close()
+
+            End Using
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' This method reads the messages file and draw the table.
+    ''' </summary>
+    Private Sub readOnlineMessages()
+        Dim receivedMessagesFile As String = ConfigurationManager.AppSettings("ReceivedMessagesFilePath")
+        If Not String.IsNullOrEmpty(receivedMessagesFile) Then
+            receivedMessagesFile = Request.MapPath(receivedMessagesFile)
+        Else
+            receivedMessagesFile = Request.MapPath("~\Messages.txt")
+        End If
+        Dim messagesLine As String = [String].Empty
+        If File.Exists(receivedMessagesFile) Then
+            Using sr As New StreamReader(receivedMessagesFile)
+                While sr.Peek() >= 0
+                    Dim inboundMsg As New ReceiveSMS()
+                    messagesLine = sr.ReadLine()
+                    Dim messageValues As String() = Regex.Split(messagesLine, "_-_-")
+                    inboundMsg.DateTime = messageValues(0)
+                    inboundMsg.MessageId = messageValues(1)
+                    inboundMsg.Message = messageValues(2)
+                    inboundMsg.SenderAddress = messageValues(3)
+                    inboundMsg.DestinationAddress = messageValues(4)
+                    receivedSMSList.Add(inboundMsg)
+                End While
+                receivedSMSList.Reverse()
+                sr.Close()
+
+            End Using
+        End If
+    End Sub
+
     ''' <summary>
     ''' This function reads the Access Token File and stores the values of access token, expiry seconds
     ''' refresh token, last access token time and refresh token expiry time
@@ -229,7 +408,7 @@ Partial Public Class SMS_App1
     ''' </summary>
     ''' <param name="panelParam">Panel Details</param>
     ''' <returns>Returns boolean</returns>    
-    Private Function ReadAccessTokenFile(ByVal panelParam As Panel) As Boolean
+    Private Function ReadAccessTokenFile(ByRef message As String) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim streamReader As StreamReader = Nothing
         Try
@@ -240,7 +419,7 @@ Partial Public Class SMS_App1
             Me.refreshToken = streamReader.ReadLine()
             Me.refreshTokenExpiryTime = streamReader.ReadLine()
         Catch ex As Exception
-            Me.DrawPanelForFailure(panelParam, ex.Message)
+            message = ex.Message
             Return False
         Finally
             If streamReader IsNot Nothing Then
@@ -291,16 +470,16 @@ Partial Public Class SMS_App1
     ''' </summary>
     ''' <param name="panelParam">Panel Details</param>
     ''' <returns>Returns Boolean</returns>
-    Private Function ReadAndGetAccessToken(ByVal panelParam As Panel) As Boolean
+    Private Function ReadAndGetAccessToken(ByRef responseString As String) As Boolean
         Dim result As Boolean = True
-        If Me.ReadAccessTokenFile(panelParam) = False Then
-            result = Me.GetAccessToken(AccessType.ClientCredential, panelParam)
+        If Me.ReadAccessTokenFile(responseString) = False Then
+            result = Me.GetAccessToken(AccessType.ClientCredential, responseString)
         Else
             Dim tokenValidity As String = Me.IsTokenValid()
             If tokenValidity = "REFRESH_TOKEN" Then
-                result = Me.GetAccessToken(AccessType.RefreshToken, panelParam)
+                result = Me.GetAccessToken(AccessType.RefreshToken, responseString)
             ElseIf String.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") = 0 Then
-                result = Me.GetAccessToken(AccessType.ClientCredential, panelParam)
+                result = Me.GetAccessToken(AccessType.ClientCredential, responseString)
             End If
         End If
 
@@ -319,7 +498,7 @@ Partial Public Class SMS_App1
     ''' <param name="type">Type as integer</param>
     ''' <param name="panelParam">Panel details</param>
     ''' <returns>Return boolean</returns>
-    Private Function GetAccessToken(ByVal type As AccessType, ByVal panelParam As Panel) As Boolean
+    Private Function GetAccessToken(type As AccessType, ByRef message As String) As Boolean
         Dim fileStream As FileStream = Nothing
         Dim postStream As Stream = Nothing
         Dim streamWriter As StreamWriter = Nothing
@@ -391,9 +570,9 @@ Partial Public Class SMS_App1
                     errorResponse = "Unable to get response"
                 End Try
 
-                Me.DrawPanelForFailure(panelParam, errorResponse & Environment.NewLine & we.ToString())
+                message = errorResponse & Environment.NewLine & we.ToString()
             Catch ex As Exception
-                Me.DrawPanelForFailure(panelParam, ex.Message)
+                message = ex.Message
                 Return False
             Finally
                 If postStream IsNot Nothing Then
@@ -461,9 +640,9 @@ Partial Public Class SMS_App1
                     errorResponse = "Unable to get response"
                 End Try
 
-                Me.DrawPanelForFailure(panelParam, errorResponse & Environment.NewLine & we.ToString())
+                message = errorResponse & Environment.NewLine & we.ToString()
             Catch ex As Exception
-                Me.DrawPanelForFailure(panelParam, ex.Message)
+                message = ex.Message
                 Return False
             Finally
                 If postStream IsNot Nothing Then
@@ -486,360 +665,74 @@ Partial Public Class SMS_App1
     ''' <summary>
     ''' This function validates the input fields and if they are valid send sms api is invoked
     ''' </summary>
-    Private Sub SendSms()
+    Private Sub SendSmsMethod()
         Try
-            Dim smsAddressInput As String = txtmsisdn.Text.ToString()
-            Dim smsAddressFormatted As String
-            Dim phoneStringPattern As String = "^\d{3}-\d{3}-\d{4}$"
-            If System.Text.RegularExpressions.Regex.IsMatch(smsAddressInput, phoneStringPattern) Then
-                smsAddressFormatted = smsAddressInput.Replace("-", String.Empty)
-            Else
-                smsAddressFormatted = smsAddressInput
-            End If
-
-            Dim smsAddressForRequest As String = smsAddressFormatted.ToString()
-            Dim tryParseResult As Long = 0
-            If smsAddressFormatted.Length = 16 AndAlso smsAddressFormatted.StartsWith("tel:+1") Then
-                smsAddressFormatted = smsAddressFormatted.Substring(6, 10)
-            ElseIf smsAddressFormatted.Length = 15 AndAlso smsAddressFormatted.StartsWith("tel:1") Then
-                smsAddressFormatted = smsAddressFormatted.Substring(5, 10)
-            ElseIf smsAddressFormatted.Length = 14 AndAlso smsAddressFormatted.StartsWith("tel:") Then
-                smsAddressFormatted = smsAddressFormatted.Substring(4, 10)
-            ElseIf smsAddressFormatted.Length = 12 AndAlso smsAddressFormatted.StartsWith("+1") Then
-                smsAddressFormatted = smsAddressFormatted.Substring(2, 10)
-            ElseIf smsAddressFormatted.Length = 11 AndAlso smsAddressFormatted.StartsWith("1") Then
-                smsAddressFormatted = smsAddressFormatted.Substring(1, 10)
-            End If
-
-            If (smsAddressFormatted.Length <> 10) OrElse (Not Long.TryParse(smsAddressFormatted, tryParseResult)) Then
-                Me.DrawPanelForFailure(sendSMSPanel, "Invalid phone number: " & smsAddressInput)
-            Else
-                Dim smsMessage As String = txtmsg.Text.ToString()
-                If smsMessage Is Nothing OrElse smsMessage.Length <= 0 Then
-                    Me.DrawPanelForFailure(sendSMSPanel, "Message is null or empty")
-                    Return
+            Dim outBoundSmsJson As String = String.Empty
+            Dim destinationNumbers As New List(Of String)()
+            If Not String.IsNullOrEmpty(address.Value) Then
+                Dim addressInput As String = address.Value
+                Dim multipleAddresses As String() = addressInput.Split(","c)
+                For Each addr As String In multipleAddresses
+                    If addr.StartsWith("tel:") Then
+                        destinationNumbers.Add(addr)
+                    Else
+                        Dim phoneNumberWithTel As String = "tel:" & addr
+                        destinationNumbers.Add(phoneNumberWithTel)
+                    End If
+                Next
+                If multipleAddresses.Length = 1 Then
+                    Dim outBoundSms As New SendSMSDataForSingle()
+                    outBoundSms.outboundSMSRequest = New OutboundSMSRequestForSingle()
+                    outBoundSms.outboundSMSRequest.notifyDeliveryStatus = chkGetOnlineStatus.Checked
+                    outBoundSms.outboundSMSRequest.address = destinationNumbers(0)
+                    outBoundSms.outboundSMSRequest.message = message.SelectedValue
+                    Dim javaScriptSerializer As New JavaScriptSerializer()
+                    outBoundSmsJson = javaScriptSerializer.Serialize(outBoundSms)
+                Else
+                    Dim outBoundSms As New SendSMSDataForMultiple()
+                    outBoundSms.outboundSMSRequest = New OutboundSMSRequestForMultiple()
+                    outBoundSms.outboundSMSRequest.notifyDeliveryStatus = chkGetOnlineStatus.Checked
+                    outBoundSms.outboundSMSRequest.address = destinationNumbers
+                    outBoundSms.outboundSMSRequest.message = message.SelectedValue
+                    Dim javaScriptSerializer As New JavaScriptSerializer()
+                    outBoundSmsJson = javaScriptSerializer.Serialize(outBoundSms)
                 End If
-
-                Dim sendSmsResponseData As String
-                '''/ HttpWebRequest sendSmsRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/sms/2/messaging/outbox?access_token=" + this.access_token.ToString());
-                Dim sendSmsRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/rest/sms/2/messaging/outbox"), HttpWebRequest)
-                Dim strReq As String = "{'Address':'tel:" & smsAddressFormatted & "','Message':'" & smsMessage & "'}"
-                sendSmsRequestObject.Method = "POST"
-                sendSmsRequestObject.Headers.Add("Authorization", "Bearer " & Me.accessToken)
-                sendSmsRequestObject.ContentType = "application/json"
-                sendSmsRequestObject.Accept = "application/json"
-
-                Dim encoding As New UTF8Encoding()
-                Dim postBytes As Byte() = encoding.GetBytes(strReq)
-                sendSmsRequestObject.ContentLength = postBytes.Length
-
-                Dim postStream As Stream = sendSmsRequestObject.GetRequestStream()
-                postStream.Write(postBytes, 0, postBytes.Length)
-                postStream.Close()
-
-                Dim sendSmsResponseObject As HttpWebResponse = DirectCast(sendSmsRequestObject.GetResponse(), HttpWebResponse)
-                Using sendSmsResponseStream As New StreamReader(sendSmsResponseObject.GetResponseStream())
-                    sendSmsResponseData = sendSmsResponseStream.ReadToEnd()
-                    Dim deserializeJsonObject As New JavaScriptSerializer()
-                    Dim deserializedJsonObj As SendSmsResponse = DirectCast(deserializeJsonObject.Deserialize(sendSmsResponseData, GetType(SendSmsResponse)), SendSmsResponse)
-                    txtSmsId.Text = deserializedJsonObj.Id.ToString()
-                    Me.DrawPanelForSuccess(sendSMSPanel, deserializedJsonObj.Id.ToString())
-                    sendSmsResponseStream.Close()
-                End Using
-            End If
-        Catch we As WebException
-            Dim errorResponse As String = String.Empty
-
-            Try
-                Using sr2 As New StreamReader(we.Response.GetResponseStream())
-                    errorResponse = sr2.ReadToEnd()
-                    sr2.Close()
-                End Using
-            Catch
-                errorResponse = "Unable to get response"
-            End Try
-
-            Me.DrawPanelForFailure(sendSMSPanel, errorResponse & Environment.NewLine & we.ToString())
-        Catch ex As Exception
-            Me.DrawPanelForFailure(sendSMSPanel, ex.ToString())
-        End Try
-    End Sub
-
-    ''' <summary>
-    ''' This function is called when user clicks on get delivery status button.
-    ''' this funciton calls get sms delivery status API to fetch the status.
-    ''' </summary>
-    Private Sub GetSmsDeliveryStatus()
-        Try
-            Dim smsId As String = txtSmsId.Text.ToString()
-            If smsId Is Nothing OrElse smsId.Length <= 0 Then
-                Me.DrawPanelForFailure(getStatusPanel, "Message is null or empty")
-                Return
-            End If
-
-            If Me.ReadAndGetAccessToken(getStatusPanel) = True Then
-                Dim getSmsDeliveryStatusResponseData As String
-                ' HttpWebRequest getSmsDeliveryStatusRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.FQDN + "/rest/sms/2/messaging/outbox/" + smsId.ToString() + "?access_token=" + this.access_token.ToString());
-                Dim getSmsDeliveryStatusRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/rest/sms/2/messaging/outbox/" & smsId.ToString()), HttpWebRequest)
-                getSmsDeliveryStatusRequestObject.Method = "GET"
-                getSmsDeliveryStatusRequestObject.Headers.Add("Authorization", "BEARER " & Me.accessToken)
-                getSmsDeliveryStatusRequestObject.ContentType = "application/JSON"
-                getSmsDeliveryStatusRequestObject.Accept = "application/json"
-
-                Dim getSmsDeliveryStatusResponse As HttpWebResponse = DirectCast(getSmsDeliveryStatusRequestObject.GetResponse(), HttpWebResponse)
-                Using getSmsDeliveryStatusResponseStream As New StreamReader(getSmsDeliveryStatusResponse.GetResponseStream())
-                    getSmsDeliveryStatusResponseData = getSmsDeliveryStatusResponseStream.ReadToEnd()
-                    getSmsDeliveryStatusResponseData = getSmsDeliveryStatusResponseData.Replace("-", String.Empty)
-                    Dim deserializeJsonObject As New JavaScriptSerializer()
-                    Dim status As GetDeliveryStatus = DirectCast(deserializeJsonObject.Deserialize(getSmsDeliveryStatusResponseData, GetType(GetDeliveryStatus)), GetDeliveryStatus)
-                    Me.DrawGetStatusSuccess(status.DeliveryInfoList.DeliveryInfo(0).Deliverystatus, status.DeliveryInfoList.ResourceURL)
-                    getSmsDeliveryStatusResponseStream.Close()
-                End Using
             Else
-                Me.DrawPanelForFailure(getStatusPanel, "Unable to get access token.")
-            End If
-        Catch we As WebException
-            Dim errorResponse As String = String.Empty
-
-            Try
-                Using sr2 As New StreamReader(we.Response.GetResponseStream())
-                    errorResponse = sr2.ReadToEnd()
-                    sr2.Close()
-                End Using
-            Catch
-                errorResponse = "Unable to get response"
-            End Try
-
-            Me.DrawPanelForFailure(getStatusPanel, errorResponse & Environment.NewLine & we.ToString())
-        Catch ex As Exception
-            Me.DrawPanelForFailure(getStatusPanel, ex.ToString())
-        End Try
-    End Sub
-
-    ''' <summary>
-    ''' This function is used to draw the table for get status success response
-    ''' </summary>
-    ''' <param name="status">Status as string</param>
-    ''' <param name="url">url as string</param>
-    Private Sub DrawGetStatusSuccess(ByVal status As String, ByVal url As String)
-        Dim table As New Table()
-        Dim rowOne As New TableRow()
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
-        table.BorderStyle = BorderStyle.Outset
-        table.Width = Unit.Pixel(650)
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "SUCCESS:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellOne As New TableCell()
-        Dim rowTwoCellTwo As New TableCell()
-        rowTwoCellOne.Text = "Status: "
-        rowTwoCellOne.Font.Bold = True
-        rowTwo.Controls.Add(rowTwoCellOne)
-        rowTwoCellTwo.Text = status.ToString()
-        rowTwo.Controls.Add(rowTwoCellTwo)
-        table.Controls.Add(rowTwo)
-        Dim rowThree As New TableRow()
-        Dim rowThreeCellOne As New TableCell()
-        Dim rowThreeCellTwo As New TableCell()
-        rowThreeCellOne.Text = "ResourceURL: "
-        rowThreeCellOne.Font.Bold = True
-        rowThree.Controls.Add(rowThreeCellOne)
-        rowThreeCellTwo.Text = url.ToString()
-        rowThree.Controls.Add(rowThreeCellTwo)
-        table.Controls.Add(rowThree)
-        table.BorderWidth = 2
-        table.BorderColor = Color.DarkGreen
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#cfc")
-        getStatusPanel.Controls.Add(table)
-    End Sub
-
-    ''' <summary>
-    ''' This function is called to draw the table in the panelParam panel for success response
-    ''' </summary>
-    ''' <param name="panelParam">Panel Details</param>
-    ''' <param name="message">Message as string</param>
-    Private Sub DrawPanelForSuccess(ByVal panelParam As Panel, ByVal message As String)
-        Dim table As New Table()
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
-        table.BorderStyle = BorderStyle.Outset
-        table.Width = Unit.Pixel(650)
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "SUCCESS:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellOne As New TableCell()
-        rowTwoCellOne.Font.Bold = True
-        rowTwoCellOne.Text = "Message ID:"
-        rowTwoCellOne.Width = Unit.Pixel(70)
-        rowTwo.Controls.Add(rowTwoCellOne)
-        Dim rowTwoCellTwo As New TableCell()
-        rowTwoCellTwo.Text = message.ToString()
-        rowTwo.Controls.Add(rowTwoCellTwo)
-        table.Controls.Add(rowTwo)
-        table.BorderWidth = 2
-        table.BorderColor = Color.DarkGreen
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#cfc")
-        panelParam.Controls.Add(table)
-    End Sub
-
-    ''' <summary>
-    ''' This function draws table for failed response in the panalParam panel
-    ''' </summary>
-    ''' <param name="panelParam">Panel Details</param>
-    ''' <param name="message">Message as string</param>
-    Private Sub DrawPanelForFailure(ByVal panelParam As Panel, ByVal message As String)
-        Dim table As New Table()
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
-        table.BorderStyle = BorderStyle.Outset
-        table.Width = Unit.Pixel(650)
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "ERROR:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellOne As New TableCell()
-        rowTwoCellOne.Text = message.ToString()
-        rowTwo.Controls.Add(rowTwoCellOne)
-        table.Controls.Add(rowTwo)
-        table.BorderWidth = 2
-        table.BorderColor = Color.Red
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc")
-        panelParam.Controls.Add(table)
-    End Sub
-
-    ''' <summary>
-    ''' This function calls receive sms api to fetch the sms's
-    ''' </summary>
-    Private Sub RecieveSms()
-        Try
-            Dim receiveSmsResponseData As String
-            If Me.shortCode Is Nothing OrElse Me.shortCode.Length <= 0 Then
-                Me.DrawPanelForFailure(getMessagePanel, "Short code is null or empty")
+                sendSMSErrorMessage = "No input provided for Address"
                 Return
             End If
 
-            If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
-                Me.DrawPanelForFailure(getMessagePanel, "Invalid access token")
-                Return
-            End If
 
-            ' HttpWebRequest objRequest = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.FQDN + "/rest/sms/2/messaging/inbox?access_token=" + this.access_token.ToString() + "&RegistrationID=" + this.shortCode.ToString());
-            Dim objRequest As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/rest/sms/2/messaging/inbox?RegistrationID=" & Me.shortCode.ToString()), HttpWebRequest)
-            objRequest.Method = "GET"
-            objRequest.Headers.Add("Authorization", "BEARER " & Me.accessToken)
-            Dim receiveSmsResponseObject As HttpWebResponse = DirectCast(objRequest.GetResponse(), HttpWebResponse)
-            Using receiveSmsResponseStream As New StreamReader(receiveSmsResponseObject.GetResponseStream())
-                receiveSmsResponseData = receiveSmsResponseStream.ReadToEnd()
+
+            Dim sendSmsResponseData__1 As String
+            Dim sendSmsRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & Me.sendSMSURL), HttpWebRequest)
+            sendSmsRequestObject.Method = "POST"
+            sendSmsRequestObject.Headers.Add("Authorization", "Bearer " & Me.accessToken)
+            sendSmsRequestObject.ContentType = "application/json"
+            sendSmsRequestObject.Accept = "application/json"
+
+            Dim encoding As New UTF8Encoding()
+            Dim postBytes As Byte() = encoding.GetBytes(outBoundSmsJson)
+            sendSmsRequestObject.ContentLength = postBytes.Length
+
+            Dim postStream As Stream = sendSmsRequestObject.GetRequestStream()
+            postStream.Write(postBytes, 0, postBytes.Length)
+            postStream.Close()
+
+            Dim sendSmsResponseObject As HttpWebResponse = DirectCast(sendSmsRequestObject.GetResponse(), HttpWebResponse)
+            Using sendSmsResponseStream As New StreamReader(sendSmsResponseObject.GetResponseStream())
+                sendSmsResponseData__1 = sendSmsResponseStream.ReadToEnd()
                 Dim deserializeJsonObject As New JavaScriptSerializer()
-                Dim deserializedJsonObj As RecieveSmsResponse = DirectCast(deserializeJsonObject.Deserialize(receiveSmsResponseData, GetType(RecieveSmsResponse)), RecieveSmsResponse)
-                Dim numberOfMessagesInThisBatch As Integer = deserializedJsonObj.InboundSMSMessageList.NumberOfMessagesInThisBatch
-                Dim resourceURL As String = deserializedJsonObj.InboundSMSMessageList.ResourceURL.ToString()
-                Dim totalNumberOfPendingMessages As String = deserializedJsonObj.InboundSMSMessageList.TotalNumberOfPendingMessages.ToString()
-
-                Dim parsedJson As String = "MessagesInThisBatch : " & numberOfMessagesInThisBatch.ToString() & "<br/>" & "MessagesPending : " & totalNumberOfPendingMessages.ToString() & "<br/>"
-                Dim table As New Table()
-                table.Font.Name = "Sans-serif"
-                table.Font.Size = 9
-                table.BorderStyle = BorderStyle.Outset
-                table.Width = Unit.Pixel(650)
-                Dim tableRow As New TableRow()
-                Dim tableCell As New TableCell()
-                tableCell.Width = Unit.Pixel(110)
-                tableCell.Text = "SUCCESS:"
-                tableCell.Font.Bold = True
-                tableRow.Cells.Add(tableCell)
-                table.Rows.Add(tableRow)
-                tableRow = New TableRow()
-                tableCell = New TableCell()
-                tableCell.Width = Unit.Pixel(150)
-                tableCell.Text = "Messages in this batch:"
-                tableCell.Font.Bold = True
-                tableRow.Cells.Add(tableCell)
-                tableCell = New TableCell()
-                tableCell.HorizontalAlign = HorizontalAlign.Left
-                tableCell.Text = numberOfMessagesInThisBatch.ToString()
-                tableRow.Cells.Add(tableCell)
-                table.Rows.Add(tableRow)
-                tableRow = New TableRow()
-                tableCell = New TableCell()
-                tableCell.Width = Unit.Pixel(110)
-                tableCell.Text = "Messages pending:"
-                tableCell.Font.Bold = True
-                tableRow.Cells.Add(tableCell)
-                tableCell = New TableCell()
-                tableCell.Text = totalNumberOfPendingMessages.ToString()
-                tableRow.Cells.Add(tableCell)
-                table.Rows.Add(tableRow)
-                tableRow = New TableRow()
-                table.Rows.Add(tableRow)
-                tableRow = New TableRow()
-                table.Rows.Add(tableRow)
-                Dim secondTable As New Table()
-                If numberOfMessagesInThisBatch > 0 Then
-                    tableRow = New TableRow()
-                    secondTable.Font.Name = "Sans-serif"
-                    secondTable.Font.Size = 9
-                    tableCell = New TableCell()
-                    tableCell.Width = Unit.Pixel(100)
-                    tableCell.Text = "Message Index"
-                    tableCell.HorizontalAlign = HorizontalAlign.Center
-                    tableCell.Font.Bold = True
-                    tableRow.Cells.Add(tableCell)
-                    tableCell = New TableCell()
-                    tableCell.Font.Bold = True
-                    tableCell.Width = Unit.Pixel(350)
-                    tableCell.Wrap = True
-                    tableCell.Text = "Message Text"
-                    tableCell.HorizontalAlign = HorizontalAlign.Center
-                    tableRow.Cells.Add(tableCell)
-                    tableCell = New TableCell()
-                    tableCell.Text = "Sender Address"
-                    tableCell.HorizontalAlign = HorizontalAlign.Center
-                    tableCell.Font.Bold = True
-                    tableCell.Width = Unit.Pixel(175)
-                    tableRow.Cells.Add(tableCell)
-                    secondTable.Rows.Add(tableRow)
-
-                    For Each prime As InboundSMSMessage In deserializedJsonObj.InboundSMSMessageList.InboundSMSMessage
-                        tableRow = New TableRow()
-                        Dim tableCellmessageId As New TableCell()
-                        tableCellmessageId.Width = Unit.Pixel(75)
-                        tableCellmessageId.Text = prime.MessageId.ToString()
-                        tableCellmessageId.HorizontalAlign = HorizontalAlign.Center
-                        Dim tableCellmessage As New TableCell()
-                        tableCellmessage.Width = Unit.Pixel(350)
-                        tableCellmessage.Wrap = True
-                        tableCellmessage.Text = prime.Message.ToString()
-                        tableCellmessage.HorizontalAlign = HorizontalAlign.Center
-                        Dim tableCellsenderAddress As New TableCell()
-                        tableCellsenderAddress.Width = Unit.Pixel(175)
-                        tableCellsenderAddress.Text = prime.SenderAddress.ToString()
-                        tableCellsenderAddress.HorizontalAlign = HorizontalAlign.Center
-                        tableRow.Cells.Add(tableCellmessageId)
-                        tableRow.Cells.Add(tableCellmessage)
-                        tableRow.Cells.Add(tableCellsenderAddress)
-                        secondTable.Rows.Add(tableRow)
-                    Next
+                sendSMSResponseData = New SendSMSResponse()
+                sendSMSResponseData.outBoundSMSResponse = New OutBoundSMSResponse()
+                sendSMSResponseData = DirectCast(deserializeJsonObject.Deserialize(sendSmsResponseData__1, GetType(SendSMSResponse)), SendSMSResponse)
+                If Not chkGetOnlineStatus.Checked Then
+                    Session("lastSentSMSID") = sendSMSResponseData.outBoundSMSResponse.messageId
+                    messageId.Value = Session("lastSentSMSID").ToString()
                 End If
+                sendSMSSuccessMessage = "Success"
+                sendSmsResponseStream.Close()
 
-                table.BorderColor = Color.DarkGreen
-                table.BackColor = System.Drawing.ColorTranslator.FromHtml("#cfc")
-                table.BorderWidth = 2
-
-                getMessagePanel.Controls.Add(table)
-                getMessagePanel.Controls.Add(secondTable)
-                receiveSmsResponseStream.Close()
             End Using
         Catch we As WebException
             Dim errorResponse As String = String.Empty
@@ -853,14 +746,73 @@ Partial Public Class SMS_App1
                 errorResponse = "Unable to get response"
             End Try
 
-            Me.DrawPanelForFailure(getMessagePanel, errorResponse & Environment.NewLine & we.ToString())
+            sendSMSErrorMessage = errorResponse
         Catch ex As Exception
-            Me.DrawPanelForFailure(getMessagePanel, ex.ToString())
+            sendSMSErrorMessage = ex.ToString()
+        End Try
+    End Sub
+#Region "Get SMS Delivery Status code."
+    ''' <summary>
+    ''' This method is called when user clicks on get delivery status button
+    ''' </summary>
+    ''' <param name="sender">Sender Information</param>
+    ''' <param name="e">List of Arguments</param>
+    Protected Sub GetDeliveryStatusButton_Click(sender As Object, e As EventArgs)
+        Try
+            Session("lastSentSMSID") = System.Web.HttpUtility.HtmlEncode(messageId.Value)
+            If Me.ReadAndGetAccessToken(getSMSDeliveryStatusErrorMessage) = True Then
+                Me.GetSmsDeliveryStatus()
+            Else
+                getSMSDeliveryStatusErrorMessage = "Unable to get access token."
+            End If
+        Catch ex As Exception
+            getSMSDeliveryStatusErrorMessage = ex.ToString()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' This function is called when user clicks on get delivery status button.
+    ''' this funciton calls get sms delivery status API to fetch the status.
+    ''' </summary>
+    Private Sub GetSmsDeliveryStatus()
+        Try
+            Dim getSmsDeliveryStatusResponseData__1 As String
+            Dim getSmsDeliveryStatusRequestObject As HttpWebRequest = DirectCast(System.Net.WebRequest.Create((String.Empty & Me.endPoint & Me.getDeliveryStatusURL) + messageId.Value), HttpWebRequest)
+            getSmsDeliveryStatusRequestObject.Method = "GET"
+            getSmsDeliveryStatusRequestObject.Headers.Add("Authorization", "BEARER " & Me.accessToken)
+            getSmsDeliveryStatusRequestObject.ContentType = "application/JSON"
+            getSmsDeliveryStatusRequestObject.Accept = "application/json"
+            Dim getSmsDeliveryStatusResponse As HttpWebResponse = DirectCast(getSmsDeliveryStatusRequestObject.GetResponse(), HttpWebResponse)
+            Using getSmsDeliveryStatusResponseStream As New StreamReader(getSmsDeliveryStatusResponse.GetResponseStream())
+                getSmsDeliveryStatusResponseData__1 = getSmsDeliveryStatusResponseStream.ReadToEnd()
+                getSmsDeliveryStatusResponseData__1 = getSmsDeliveryStatusResponseData__1.Replace("-", String.Empty)
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                getSMSDeliveryStatusResponseData = New GetDeliveryStatus()
+                getSMSDeliveryStatusResponseData = DirectCast(deserializeJsonObject.Deserialize(getSmsDeliveryStatusResponseData__1, GetType(GetDeliveryStatus)), GetDeliveryStatus)
+                getSMSDeliveryStatusSuccessMessagae = "Success"
+                getSmsDeliveryStatusResponseStream.Close()
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+            Catch
+                errorResponse = "Unable to get response"
+            End Try
+            getSMSDeliveryStatusErrorMessage = errorResponse
+        Catch ex As Exception
+            getSMSDeliveryStatusErrorMessage = ex.ToString()
         End Try
     End Sub
 #End Region
 
+
 #Region "SMS Application related Data Structures"
+
+#Region "Data structure for get access token"
     ''' <summary>
     ''' Class to hold access token response
     ''' </summary>
@@ -872,7 +824,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_access_token
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_access_token = Value
             End Set
         End Property
@@ -885,7 +837,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_refresh_token
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_refresh_token = Value
             End Set
         End Property
@@ -898,97 +850,170 @@ Partial Public Class SMS_App1
             Get
                 Return m_expires_in
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_expires_in = Value
             End Set
         End Property
         Private m_expires_in As String
     End Class
+#End Region
+#Region "Data structure for send sms response"
 
+    '''<summary>
+    '''Class to hold ResourceReference
+    '''</summary>
+    Public Class ResourceReference
+        '''<summary>
+        '''Gets or sets resourceURL
+        '''</summary>
+        Public Property resourceURL() As String
+            Get
+                Return m_resourceURL
+            End Get
+            Set(value As String)
+                m_resourceURL = Value
+            End Set
+        End Property
+        Private m_resourceURL As String
+    End Class
+
+    Public Class SendSMSResponse
+        Public outBoundSMSResponse As OutBoundSMSResponse
+    End Class
     ''' <summary>
     ''' Class to hold send sms response
     ''' </summary>
-    Public Class SendSmsResponse
+    Public Class OutBoundSMSResponse
         ''' <summary>
-        ''' Gets or sets id
+        ''' Gets or sets messageId
         ''' </summary>
-        Public Property Id() As String
+        Public Property messageId() As String
             Get
-                Return m_Id
+                Return m_messageId
             End Get
-            Set(ByVal value As String)
-                m_Id = Value
+            Set(value As String)
+                m_messageId = Value
             End Set
         End Property
-        Private m_Id As String
+        Private m_messageId As String
+        ''' <summary>
+        ''' Gets or sets ResourceReference
+        ''' </summary>
+        Public Property resourceReference() As ResourceReference
+            Get
+                Return m_resourceReference
+            End Get
+            Set(value As ResourceReference)
+                m_resourceReference = Value
+            End Set
+        End Property
+        Private m_resourceReference As ResourceReference
     End Class
 
-    ''' <summary>
-    ''' Class to hold sms delivery status
-    ''' </summary>
-    Public Class GetSetSmsDeliveryStatus
-        ''' <summary>
-        ''' Gets or sets status
-        ''' </summary>
-        Public Property Status() As String
+    Public Class SendSMSDataForSingle
+        Public Property outboundSMSRequest() As OutboundSMSRequestForSingle
             Get
-                Return m_Status
+                Return m_outboundSMSRequest
             End Get
-            Set(ByVal value As String)
-                m_Status = Value
+            Set(value As OutboundSMSRequestForSingle)
+                m_outboundSMSRequest = Value
             End Set
         End Property
-        Private m_Status As String
-
-        ''' <summary>
-        ''' Gets or sets resource url
-        ''' </summary>
-        Public Property ResourceUrl() As String
-            Get
-                Return m_ResourceUrl
-            End Get
-            Set(ByVal value As String)
-                m_ResourceUrl = Value
-            End Set
-        End Property
-        Private m_ResourceUrl As String
+        Private m_outboundSMSRequest As OutboundSMSRequestForSingle
     End Class
 
-    ''' <summary>
-    ''' Class to hold sms status
-    ''' </summary>
-    Public Class SmsStatus
+    Public Class OutboundSMSRequestForSingle
         ''' <summary>
-        ''' Gets or sets status
+        ''' Gets or sets the address to send.
         ''' </summary>
-        Public Property Status() As String
+        Public Property address() As String
             Get
-                Return m_Status
+                Return m_address
             End Get
-            Set(ByVal value As String)
-                m_Status = Value
+            Set(value As String)
+                m_address = Value
             End Set
         End Property
-        Private m_Status As String
+        Private m_address As String
 
         ''' <summary>
-        ''' Gets or sets resource url
+        ''' Gets or sets message text to send.
         ''' </summary>
-        Public Property ResourceURL() As String
+        Public Property message() As String
             Get
-                Return m_ResourceURL
+                Return m_message
             End Get
-            Set(ByVal value As String)
-                m_ResourceURL = Value
+            Set(value As String)
+                m_message = Value
             End Set
         End Property
-        Private m_ResourceURL As String
+        Private m_message As String
+
+        Public Property notifyDeliveryStatus() As Boolean
+            Get
+                Return m_notifyDeliveryStatus
+            End Get
+            Set(value As Boolean)
+                m_notifyDeliveryStatus = Value
+            End Set
+        End Property
+        Private m_notifyDeliveryStatus As Boolean
+    End Class
+    Public Class SendSMSDataForMultiple
+        Public Property outboundSMSRequest() As OutboundSMSRequestForMultiple
+            Get
+                Return m_outboundSMSRequest
+            End Get
+            Set(value As OutboundSMSRequestForMultiple)
+                m_outboundSMSRequest = Value
+            End Set
+        End Property
+        Private m_outboundSMSRequest As OutboundSMSRequestForMultiple
     End Class
 
+    Public Class OutboundSMSRequestForMultiple
+        ''' <summary>
+        ''' Gets or sets the list of address to send.
+        ''' </summary>
+        Public Property address() As List(Of String)
+            Get
+                Return m_address
+            End Get
+            Set(value As List(Of String))
+                m_address = Value
+            End Set
+        End Property
+        Private m_address As List(Of String)
+
+        ''' <summary>
+        ''' Gets or sets message text to send.
+        ''' </summary>
+        Public Property message() As String
+            Get
+                Return m_message
+            End Get
+            Set(value As String)
+                m_message = Value
+            End Set
+        End Property
+        Private m_message As String
+
+        Public Property notifyDeliveryStatus() As Boolean
+            Get
+                Return m_notifyDeliveryStatus
+            End Get
+            Set(value As Boolean)
+                m_notifyDeliveryStatus = Value
+            End Set
+        End Property
+        Private m_notifyDeliveryStatus As Boolean
+    End Class
+#End Region
+#Region "Data structure for Get SMS (offline)"
     ''' <summary>
     ''' Class to hold rececive sms response
     ''' </summary>
-    Public Class RecieveSmsResponse
+    Public Class GetSmsResponse
         ''' <summary>
         ''' Gets or sets inbound sms message list
         ''' </summary>
@@ -996,7 +1021,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_InboundSMSMessageList
             End Get
-            Set(ByVal value As InboundSMSMessageList)
+            Set(value As InboundSMSMessageList)
                 m_InboundSMSMessageList = Value
             End Set
         End Property
@@ -1014,7 +1039,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_InboundSMSMessage
             End Get
-            Set(ByVal value As List(Of InboundSMSMessage))
+            Set(value As List(Of InboundSMSMessage))
                 m_InboundSMSMessage = Value
             End Set
         End Property
@@ -1027,7 +1052,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_NumberOfMessagesInThisBatch
             End Get
-            Set(ByVal value As Integer)
+            Set(value As Integer)
                 m_NumberOfMessagesInThisBatch = Value
             End Set
         End Property
@@ -1040,7 +1065,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_ResourceURL
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_ResourceURL = Value
             End Set
         End Property
@@ -1053,7 +1078,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_TotalNumberOfPendingMessages
             End Get
-            Set(ByVal value As Integer)
+            Set(value As Integer)
                 m_TotalNumberOfPendingMessages = Value
             End Set
         End Property
@@ -1065,39 +1090,13 @@ Partial Public Class SMS_App1
     ''' </summary>
     Public Class InboundSMSMessage
         ''' <summary>
-        ''' Gets or sets datetime
-        ''' </summary>
-        Public Property DateTime() As String
-            Get
-                Return m_DateTime
-            End Get
-            Set(ByVal value As String)
-                m_DateTime = Value
-            End Set
-        End Property
-        Private m_DateTime As String
-
-        ''' <summary>
-        ''' Gets or sets destination address
-        ''' </summary>
-        Public Property DestinationAddress() As String
-            Get
-                Return m_DestinationAddress
-            End Get
-            Set(ByVal value As String)
-                m_DestinationAddress = Value
-            End Set
-        End Property
-        Private m_DestinationAddress As String
-
-        ''' <summary>
         ''' Gets or sets message id
         ''' </summary>
         Public Property MessageId() As String
             Get
                 Return m_MessageId
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_MessageId = Value
             End Set
         End Property
@@ -1110,7 +1109,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_Message
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_Message = Value
             End Set
         End Property
@@ -1123,12 +1122,85 @@ Partial Public Class SMS_App1
             Get
                 Return m_SenderAddress
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_SenderAddress = Value
             End Set
         End Property
         Private m_SenderAddress As String
     End Class
+#End Region
+#Region "Data structure for Receive SMS (online)"
+    ''' <summary>
+    ''' Class to hold inbound sms message
+    ''' </summary>
+    Public Class ReceiveSMS
+        ''' <summary>
+        ''' Gets or sets datetime
+        ''' </summary>
+        Public Property DateTime() As String
+            Get
+                Return m_DateTime
+            End Get
+            Set(value As String)
+                m_DateTime = Value
+            End Set
+        End Property
+        Private m_DateTime As String
+
+        ''' <summary>
+        ''' Gets or sets destination address
+        ''' </summary>
+        Public Property DestinationAddress() As String
+            Get
+                Return m_DestinationAddress
+            End Get
+            Set(value As String)
+                m_DestinationAddress = Value
+            End Set
+        End Property
+        Private m_DestinationAddress As String
+
+        ''' <summary>
+        ''' Gets or sets message id
+        ''' </summary>
+        Public Property MessageId() As String
+            Get
+                Return m_MessageId
+            End Get
+            Set(value As String)
+                m_MessageId = Value
+            End Set
+        End Property
+        Private m_MessageId As String
+
+        ''' <summary>
+        ''' Gets or sets message
+        ''' </summary>
+        Public Property Message() As String
+            Get
+                Return m_Message
+            End Get
+            Set(value As String)
+                m_Message = Value
+            End Set
+        End Property
+        Private m_Message As String
+
+        ''' <summary>
+        ''' Gets or sets sender address
+        ''' </summary>
+        Public Property SenderAddress() As String
+            Get
+                Return m_SenderAddress
+            End Get
+            Set(value As String)
+                m_SenderAddress = Value
+            End Set
+        End Property
+        Private m_SenderAddress As String
+    End Class
+#End Region
+#Region "Data structure for Get Delivery Status (offline)"
 
     ''' <summary>
     ''' Class to hold delivery status
@@ -1141,7 +1213,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_DeliveryInfoList
             End Get
-            Set(ByVal value As DeliveryInfoList)
+            Set(value As DeliveryInfoList)
                 m_DeliveryInfoList = Value
             End Set
         End Property
@@ -1159,7 +1231,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_ResourceURL
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_ResourceURL = Value
             End Set
         End Property
@@ -1172,7 +1244,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_DeliveryInfo
             End Get
-            Set(ByVal value As List(Of DeliveryInfo))
+            Set(value As List(Of DeliveryInfo))
                 m_DeliveryInfo = Value
             End Set
         End Property
@@ -1190,7 +1262,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_Id
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_Id = Value
             End Set
         End Property
@@ -1203,7 +1275,7 @@ Partial Public Class SMS_App1
             Get
                 Return m_Address
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_Address = Value
             End Set
         End Property
@@ -1216,11 +1288,71 @@ Partial Public Class SMS_App1
             Get
                 Return m_Deliverystatus
             End Get
-            Set(ByVal value As String)
+            Set(value As String)
                 m_Deliverystatus = Value
             End Set
         End Property
         Private m_Deliverystatus As String
     End Class
+
+#End Region
+#Region "Data structure for receive delivery status"
+
+    Public Class ReceiveDeliveryInfo
+        ''' <summary>
+        ''' Gets or sets the list of address.
+        ''' </summary>
+        Public Property address() As String
+            Get
+                Return m_address
+            End Get
+            Set(value As String)
+                m_address = Value
+            End Set
+        End Property
+        Private m_address As String
+        ''' <summary>
+        ''' Gets or sets the list of deliveryStatus.
+        ''' </summary>
+        Public Property deliveryStatus() As String
+            Get
+                Return m_deliveryStatus
+            End Get
+            Set(value As String)
+                m_deliveryStatus = Value
+            End Set
+        End Property
+        Private m_deliveryStatus As String
+    End Class
+    Public Class deliveryInfoNotification
+        ''' <summary>
+        ''' Gets or sets the list of messageId.
+        ''' </summary>
+        Public Property messageId() As String
+            Get
+                Return m_messageId
+            End Get
+            Set(value As String)
+                m_messageId = Value
+            End Set
+        End Property
+        Private m_messageId As String
+
+        ''' <summary>
+        ''' Gets or sets message text to send.
+        ''' </summary>
+        Public Property deliveryInfo() As ReceiveDeliveryInfo
+            Get
+                Return m_deliveryInfo
+            End Get
+            Set(value As ReceiveDeliveryInfo)
+                m_deliveryInfo = Value
+            End Set
+        End Property
+        Private m_deliveryInfo As ReceiveDeliveryInfo
+    End Class
+#End Region
+
+
 #End Region
 End Class

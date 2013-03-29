@@ -1,28 +1,22 @@
 // <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 // TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
 #region References
-
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Web;
+using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.Xml;
-
 #endregion
 
 /// <summary>
@@ -31,22 +25,65 @@ using System.Xml;
 public partial class SMS_App1 : System.Web.UI.Page
 {
     #region Variable Declaration
+   
     /// <summary>
-    /// Global Variable Declaration
+    /// Global Variables related to application
     /// </summary>
-    private string shortCode, endPoint, accessTokenFilePath, apiKey, secretKey, accessToken, accessTokenExpiryTime,
-        scope, refreshToken, refreshTokenExpiryTime;
+    private string endPoint, apiKey, secretKey,  scope;
+
+    ///<summary>
+    ///API URL's
+    ///</summary>
+    private string sendSMSURL = "/sms/v3/messaging/outbox";
+    private string getDeliveryStatusURL = "/sms/v3/messaging/outbox/";
+    private string getSMSURL = "/sms/v3/messaging/inbox";
 
     /// <summary>
-    /// Global Variable Declaration
+    /// Global Variables related to access token
     /// </summary>
-    private string[] shortCodes;
-
-    /// <summary>
-    /// Gets or sets the value of refreshTokenExpiresIn
-    /// </summary>
+    private string accessTokenFilePath, accessToken, accessTokenExpiryTime,
+        refreshToken, refreshTokenExpiryTime;
     private int refreshTokenExpiresIn;
 
+    /// <summary>
+    /// Variables related to Send SMS
+    /// </summary>
+    public string sendSMSErrorMessage = string.Empty;
+    public string sendSMSSuccessMessage = string.Empty;
+    public SendSMSResponse sendSMSResponseData = null;
+
+    /// <summary>
+    /// Variables related to Get Delivery Status
+    /// </summary>
+    public string getSMSDeliveryStatusErrorMessage = string.Empty;
+    public string getSMSDeliveryStatusSuccessMessagae = string.Empty;
+    public GetDeliveryStatus getSMSDeliveryStatusResponseData = null;
+
+    /// <summary>
+    /// Variables related to Get SMS
+    /// </summary>
+
+    public string getSMSSuccessMessage = string.Empty;
+    public string offlineShortCode = string.Empty;
+    public string getSMSErrorMessage = string.Empty;
+    public GetSmsResponse getSMSResponseData = null;
+
+    /// <summary>
+    /// Variables related to Receive SMS
+    /// </summary>
+    public string onlineShortCode = string.Empty;
+    public string receiveSMSSuccessMessage = string.Empty;
+    public string receiveSMSErrorMesssage = string.Empty;
+    public List<ReceiveSMS> receivedSMSList = new List<ReceiveSMS>();
+    public string receiveSMSFilePath = "\\Messages.txt";
+    /// <summary>
+    /// Variables related to Get Delivery Status
+    /// </summary>
+    public string receiveSMSDeliveryStatusErrorMessage = string.Empty;
+    public string receiveSMSDeliveryStatusSuccessMessagae = string.Empty;
+    public List<deliveryInfoNotification> receiveSMSDeliveryStatusResponseData = new List<deliveryInfoNotification>();
+    public string receiveSMSDeliveryStatusFilePath = "\\DeliveryStatus.txt";
+    
     /// <summary>
     /// Access Token Types
     /// </summary>
@@ -76,37 +113,25 @@ public partial class SMS_App1 : System.Web.UI.Page
         try
         {
             BypassCertificateError();
-            DateTime currentServerTime = DateTime.UtcNow;
-            serverTimeLabel.Text = string.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
-            
             bool ableToRead = this.ReadConfigFile();
             if (ableToRead == false)
             {
                 return;
             }
-            
-            this.shortCodes = this.shortCode.Split(';');
-            this.shortCode = this.shortCodes[0];
-            Table table = new Table();
-            table.Font.Size = 8;
-            foreach (string srtCode in this.shortCodes)
-            {
-                Button button = new Button();
-                button.Click += new EventHandler(this.GetMessagesButton_Click);
-                button.Text = "Get Messages for " + srtCode;
-                TableRow rowOne = new TableRow();
-                TableCell rowOneCellOne = new TableCell();
-                rowOne.Controls.Add(rowOneCellOne);
-                rowOneCellOne.Controls.Add(button);
-                table.Controls.Add(rowOne);
-            }
 
-            receiveMessagePanel.Controls.Add(table);
+            if (Session["lastSentSMSID"] != null)
+            {
+                messageId.Value = Session["lastSentSMSID"].ToString();
+            }
+            //if (!IsPostBack)
+            //{
+                readOnlineMessages();
+                readOnlineDeliveryStatus();
+            //}
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(sendSMSPanel, ex.ToString());
-            Response.Write(ex.ToString());
+            sendSMSErrorMessage =  ex.ToString();
         }
     }
 
@@ -125,28 +150,28 @@ public partial class SMS_App1 : System.Web.UI.Page
         this.endPoint = ConfigurationManager.AppSettings["endPoint"];
         if (string.IsNullOrEmpty(this.endPoint))
         {
-            this.DrawPanelForFailure(sendSMSPanel, "endPoint is not defined in configuration file");
+            sendSMSErrorMessage= "endPoint is not defined in configuration file";
             return false;
         }
 
-        this.shortCode = ConfigurationManager.AppSettings["short_code"];
-        if (string.IsNullOrEmpty(this.shortCode))
+        this.offlineShortCode = ConfigurationManager.AppSettings["OfflineShortCode"];
+        if (string.IsNullOrEmpty(this.offlineShortCode))
         {
-            this.DrawPanelForFailure(sendSMSPanel, "short_code is not defined in configuration file");
+            sendSMSErrorMessage= "short_code is not defined in configuration file";
             return false;
         }
 
         this.apiKey = ConfigurationManager.AppSettings["api_key"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
-            this.DrawPanelForFailure(sendSMSPanel, "api_key is not defined in configuration file");
+            sendSMSErrorMessage=  "api_key is not defined in configuration file";
             return false;
         }
 
         this.secretKey = ConfigurationManager.AppSettings["secret_key"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
-            this.DrawPanelForFailure(sendSMSPanel, "secret_key is not defined in configuration file");
+            sendSMSErrorMessage= "secret_key is not defined in configuration file";
             return false;
         }
 
@@ -166,6 +191,64 @@ public partial class SMS_App1 : System.Web.UI.Page
             this.refreshTokenExpiresIn = 24; // Default value
         }
 
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        {
+            SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
+        }
+        else
+        {
+            SourceLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DownloadLink"]))
+        {
+            DownloadLink.HRef = ConfigurationManager.AppSettings["DownloadLink"];
+        }
+        else
+        {
+            DownloadLink.HRef = "#"; // Default value
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["HelpLink"]))
+        {
+            HelpLink.HRef = ConfigurationManager.AppSettings["HelpLink"];
+        }
+        else
+        {
+            HelpLink.HRef = "#"; // Default value
+        }
+
+        this.onlineShortCode = ConfigurationManager.AppSettings["OnlineShortCode"];
+        if (string.IsNullOrEmpty(this.onlineShortCode))
+        {
+            sendSMSErrorMessage = "Online ShortCode is not defined in configuration file";
+            return false;
+        }
+
+        this.sendSMSURL = ConfigurationManager.AppSettings["SendSMSURL"];
+        this.getDeliveryStatusURL = ConfigurationManager.AppSettings["GetDeliveryStatusURL"];
+        this.getSMSURL = ConfigurationManager.AppSettings["GetSMSURL"];
+
+        this.receiveSMSDeliveryStatusFilePath = ConfigurationManager.AppSettings["ReceivedDeliveryStatusFilePath"];
+        this.receiveSMSFilePath = ConfigurationManager.AppSettings["ReceivedMessagesFilePath"];
+
+        if (!IsPostBack)
+        {
+            string sampleMessages = ConfigurationManager.AppSettings["SMSSampleMessage"];
+            if (!string.IsNullOrEmpty(sampleMessages))
+            {
+                string[] sample = Regex.Split(sampleMessages, "_-_-");
+                foreach (string sm in sample)
+                {
+                    message.Items.Add(sm);
+                }
+            }
+            else
+            {
+                message.Items.Add("ATT SMS sample Message");
+            }
+
+        }
         return true;
     }
 
@@ -175,46 +258,22 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// </summary>
     /// <param name="sender">Sender Information</param>
     /// <param name="e">List of Arguments</param>
-    protected void BtnSendSMS_Click(object sender, EventArgs e)
+    protected void BtnSubmit_Click(object sender, EventArgs e)
     {
         try
         {
-            if (this.ReadAndGetAccessToken(sendSMSPanel) == true)
+            if (this.ReadAndGetAccessToken(ref sendSMSErrorMessage) == true)
             {
                 this.SendSms();
             }
             else
             {
-                this.DrawPanelForFailure(sendSMSPanel, "Unable to get access token.");
+                sendSMSErrorMessage =  "Unable to get access token.";
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(sendSMSPanel, ex.ToString());
-        }
-    }
-
-    /// <summary>
-    /// This method is called when user clicks on get delivery status button
-    /// </summary>
-    /// <param name="sender">Sender Information</param>
-    /// <param name="e">List of Arguments</param>
-    protected void GetDeliveryStatusButton_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            if (this.ReadAndGetAccessToken(getStatusPanel) == true)
-            {
-                this.GetSmsDeliveryStatus();
-            }
-            else
-            {
-                this.DrawPanelForFailure(getStatusPanel, "Unable to get access token.");
-            }
-        }
-        catch (Exception ex)
-        {
-            this.DrawPanelForFailure(getStatusPanel, ex.ToString());
+            sendSMSErrorMessage = ex.ToString();
         }
     }
 
@@ -227,26 +286,23 @@ public partial class SMS_App1 : System.Web.UI.Page
     {
         try
         {
-            if (this.ReadAndGetAccessToken(getMessagePanel) == true)
+            if (this.ReadAndGetAccessToken(ref getSMSErrorMessage) == true)
             {
-                Button button = sender as Button;
-                string buttonCaption = button.Text.ToString();
-                this.shortCode = buttonCaption.Replace("Get Messages for ", string.Empty);
-                this.RecieveSms();
+                    this.GetSms();
             }
             else
             {
-                this.DrawPanelForFailure(getMessagePanel, "Unable to get access token.");
+                getSMSErrorMessage = "Unable to get access token.";
             }
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(getMessagePanel, ex.ToString());
+            getSMSErrorMessage = ex.ToString();
         }
     }
     #endregion
 
-    #region SMS Application related functions
+
     /// <summary>
     /// This function is used to neglect the ssl handshake error with authentication server
     /// </summary>
@@ -260,13 +316,168 @@ public partial class SMS_App1 : System.Web.UI.Page
     }
 
     /// <summary>
+    /// This function calls receive sms api to fetch the sms's
+    /// </summary>
+    private void GetSms()
+    {
+        try
+        {
+            string receiveSmsResponseData;
+            if (string.IsNullOrEmpty(this.offlineShortCode))
+            {
+                getSMSErrorMessage = "Short code is null or empty";
+                return;
+            }
+
+            HttpWebRequest objRequest = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + this.getSMSURL +"/" + this.offlineShortCode.ToString());
+            objRequest.Method = "GET";
+            objRequest.Headers.Add("Authorization", "BEARER " + this.accessToken);
+            HttpWebResponse receiveSmsResponseObject = (HttpWebResponse)objRequest.GetResponse();
+            using (StreamReader receiveSmsResponseStream = new StreamReader(receiveSmsResponseObject.GetResponseStream()))
+            {
+                receiveSmsResponseData = receiveSmsResponseStream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                getSMSResponseData = new GetSmsResponse();
+                getSMSResponseData = (GetSmsResponse)deserializeJsonObject.Deserialize(receiveSmsResponseData, typeof(GetSmsResponse));
+                receiveSmsResponseStream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+            }
+
+            getSMSErrorMessage =  errorResponse + Environment.NewLine + we.ToString();
+        }
+        catch (Exception ex)
+        {
+            getSMSErrorMessage = ex.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Method will be called when the user clicks on Update Votes Total button
+    /// </summary>
+    /// <param name="sender">object, that invoked this method</param>
+    /// <param name="e">EventArgs, specific to this method</param>
+    protected void receiveStatusBtn_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            //this.readOnlineDeliveryStatus();
+        }
+        catch (Exception ex)
+        {
+            receiveSMSErrorMesssage = ex.ToString();
+        }
+    }
+
+            /// <summary>
+    /// Method will be called when the user clicks on Update Votes Total button
+    /// </summary>
+    /// <param name="sender">object, that invoked this method</param>
+    /// <param name="e">EventArgs, specific to this method</param>
+    protected void receiveMessagesBtn_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            //this.readOnlineMessages();
+        }
+        catch (Exception ex)
+        {
+            receiveSMSErrorMesssage = ex.ToString();
+        }
+    }
+
+
+
+    /// <summary>
+    /// This method reads the messages file and draw the table.
+    /// </summary>
+    private void readOnlineDeliveryStatus()
+    {
+        string receivedMessagesFile = ConfigurationManager.AppSettings["ReceivedDeliveryStatusFilePath"];
+        if (!string.IsNullOrEmpty(receivedMessagesFile))
+            receivedMessagesFile = Request.MapPath(receivedMessagesFile);
+        else
+            receivedMessagesFile = Request.MapPath("~\\DeliveryStatus.txt");
+        string messagesLine = String.Empty;
+        if (File.Exists(receivedMessagesFile))
+        {
+            using (StreamReader sr = new StreamReader(receivedMessagesFile))
+            {
+                while (sr.Peek() >= 0)
+                {
+                    deliveryInfoNotification dNot = new deliveryInfoNotification();
+                    dNot.deliveryInfo = new ReceiveDeliveryInfo();
+                    messagesLine = sr.ReadLine();
+                    string[] messageValues = Regex.Split(messagesLine, "_-_-");
+                    dNot.messageId = messageValues[0];
+                    dNot.deliveryInfo.address = messageValues[1];
+                    dNot.deliveryInfo.deliveryStatus  = messageValues[2];
+                    receiveSMSDeliveryStatusResponseData.Add(dNot);
+                }
+                sr.Close();
+                receiveSMSDeliveryStatusResponseData.Reverse();
+            }
+
+        }
+    }
+
+    /// <summary>
+    /// This method reads the messages file and draw the table.
+    /// </summary>
+    private void readOnlineMessages()
+    {
+        string receivedMessagesFile = ConfigurationManager.AppSettings["ReceivedMessagesFilePath"];
+        if (!string.IsNullOrEmpty(receivedMessagesFile))
+            receivedMessagesFile = Request.MapPath(receivedMessagesFile);
+        else
+            receivedMessagesFile = Request.MapPath("~\\Messages.txt");
+        string messagesLine = String.Empty;
+        if (File.Exists(receivedMessagesFile))
+        {
+            using (StreamReader sr = new StreamReader(receivedMessagesFile))
+            {
+                while (sr.Peek() >= 0)
+                {
+                    ReceiveSMS inboundMsg = new ReceiveSMS();
+                    messagesLine = sr.ReadLine();
+                    string[] messageValues = Regex.Split(messagesLine, "_-_-");
+                    inboundMsg.DateTime = messageValues[0];
+                    inboundMsg.MessageId = messageValues[1];
+                    inboundMsg.Message = messageValues[2];
+                    inboundMsg.SenderAddress = messageValues[3];
+                    inboundMsg.DestinationAddress = messageValues[4];
+                    receivedSMSList.Add(inboundMsg);
+                }
+                sr.Close();
+                receivedSMSList.Reverse();
+            }
+
+        }
+    }
+
+    /// <summary>
     /// This function reads the Access Token File and stores the values of access token, expiry seconds
     /// refresh token, last access token time and refresh token expiry time
     /// This funciton returns true, if access token file and all others attributes read successfully otherwise returns false
     /// </summary>
     /// <param name="panelParam">Panel Details</param>
     /// <returns>Returns boolean</returns>    
-    private bool ReadAccessTokenFile(Panel panelParam)
+    private bool ReadAccessTokenFile(ref string  message)
     {
         FileStream fileStream = null;
         StreamReader streamReader = null;
@@ -281,7 +492,7 @@ public partial class SMS_App1 : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(panelParam, ex.Message);
+            message= ex.Message;
             return false;
         }
         finally
@@ -347,23 +558,23 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// </summary>
     /// <param name="panelParam">Panel Details</param>
     /// <returns>Returns Boolean</returns>
-    private bool ReadAndGetAccessToken(Panel panelParam)
+    private bool ReadAndGetAccessToken(ref string responseString)
     {
         bool result = true;
-        if (this.ReadAccessTokenFile(panelParam) == false)
+        if (this.ReadAccessTokenFile(ref responseString) == false)
         {
-            result = this.GetAccessToken(AccessType.ClientCredential, panelParam);
+            result = this.GetAccessToken(AccessType.ClientCredential, ref responseString);
         }
         else
         {
             string tokenValidity = this.IsTokenValid();
             if (tokenValidity == "REFRESH_TOKEN")
             {
-                result = this.GetAccessToken(AccessType.RefreshToken, panelParam);
+                result = this.GetAccessToken(AccessType.RefreshToken, ref responseString);
             }
             else if (string.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") == 0)
             {
-                result = this.GetAccessToken(AccessType.ClientCredential, panelParam);
+                result = this.GetAccessToken(AccessType.ClientCredential, ref responseString);
             }
         }
 
@@ -385,7 +596,7 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <param name="type">Type as integer</param>
     /// <param name="panelParam">Panel details</param>
     /// <returns>Return boolean</returns>
-    private bool GetAccessToken(AccessType type, Panel panelParam)
+    private bool GetAccessToken(AccessType type, ref string message)
     {
         FileStream fileStream = null;
         Stream postStream = null;
@@ -470,11 +681,11 @@ public partial class SMS_App1 : System.Web.UI.Page
                     errorResponse = "Unable to get response";
                 }
 
-                this.DrawPanelForFailure(panelParam, errorResponse + Environment.NewLine + we.ToString());
+                message = errorResponse + Environment.NewLine + we.ToString();
             }
             catch (Exception ex)
             {
-                this.DrawPanelForFailure(panelParam, ex.Message);
+                message = ex.Message;
                 return false;
             }
             finally
@@ -557,11 +768,11 @@ public partial class SMS_App1 : System.Web.UI.Page
                     errorResponse = "Unable to get response";
                 }
 
-                this.DrawPanelForFailure(panelParam, errorResponse + Environment.NewLine + we.ToString());
+                message = errorResponse + Environment.NewLine + we.ToString();
             }
             catch (Exception ex)
             {
-                this.DrawPanelForFailure(panelParam, ex.Message);
+                message = ex.Message;
                 return false;
             }
             finally
@@ -593,82 +804,85 @@ public partial class SMS_App1 : System.Web.UI.Page
     {
         try
         {
-            string smsAddressInput = txtmsisdn.Text.ToString();
-            string smsAddressFormatted;
-            string phoneStringPattern = "^\\d{3}-\\d{3}-\\d{4}$";
-            if (System.Text.RegularExpressions.Regex.IsMatch(smsAddressInput, phoneStringPattern))
+            string outBoundSmsJson = string.Empty; 
+            List<string> destinationNumbers = new List<string>();
+            if (!string.IsNullOrEmpty(address.Value))
             {
-                smsAddressFormatted = smsAddressInput.Replace("-", string.Empty);
+                string addressInput = address.Value;
+                string[] multipleAddresses = addressInput.Split(',');
+                foreach (string addr in multipleAddresses)
+                {
+                    if (addr.StartsWith("tel:"))
+                    {
+                        destinationNumbers.Add(addr);
+                    }
+                    else
+                    {
+                        string phoneNumberWithTel = "tel:" + addr;
+                        destinationNumbers.Add(phoneNumberWithTel);
+                    }
+                }
+                if (multipleAddresses.Length == 1)
+                {
+                    SendSMSDataForSingle outBoundSms = new SendSMSDataForSingle();
+                    outBoundSms.outboundSMSRequest = new OutboundSMSRequestForSingle();
+                    outBoundSms.outboundSMSRequest.notifyDeliveryStatus = chkGetOnlineStatus.Checked;
+                    outBoundSms.outboundSMSRequest.address = destinationNumbers[0];
+                    outBoundSms.outboundSMSRequest.message = message.SelectedValue;
+                    JavaScriptSerializer javaScriptSerializer = new JavaScriptSerializer();
+                    outBoundSmsJson = javaScriptSerializer.Serialize(outBoundSms);
+                }
+                else
+                {
+                    SendSMSDataForMultiple outBoundSms = new SendSMSDataForMultiple();
+                    outBoundSms.outboundSMSRequest = new OutboundSMSRequestForMultiple();
+                    outBoundSms.outboundSMSRequest.notifyDeliveryStatus = chkGetOnlineStatus.Checked;
+                    outBoundSms.outboundSMSRequest.address = destinationNumbers;
+                    outBoundSms.outboundSMSRequest.message = message.SelectedValue;
+                    JavaScriptSerializer javaScriptSerializer = new JavaScriptSerializer();
+                    outBoundSmsJson = javaScriptSerializer.Serialize(outBoundSms);
+                }
             }
             else
             {
-                smsAddressFormatted = smsAddressInput;
+                sendSMSErrorMessage = "No input provided for Address";
+                return;
             }
+            
+            
 
-            string smsAddressForRequest = smsAddressFormatted.ToString();
-            long tryParseResult = 0;
-            if (smsAddressFormatted.Length == 16 && smsAddressFormatted.StartsWith("tel:+1"))
-            {
-                smsAddressFormatted = smsAddressFormatted.Substring(6, 10);
-            }
-            else if (smsAddressFormatted.Length == 15 && smsAddressFormatted.StartsWith("tel:1"))
-            {
-                smsAddressFormatted = smsAddressFormatted.Substring(5, 10);
-            }
-            else if (smsAddressFormatted.Length == 14 && smsAddressFormatted.StartsWith("tel:"))
-            {
-                smsAddressFormatted = smsAddressFormatted.Substring(4, 10);
-            }
-            else if (smsAddressFormatted.Length == 12 && smsAddressFormatted.StartsWith("+1"))
-            {
-                smsAddressFormatted = smsAddressFormatted.Substring(2, 10);
-            }
-            else if (smsAddressFormatted.Length == 11 && smsAddressFormatted.StartsWith("1"))
-            {
-                smsAddressFormatted = smsAddressFormatted.Substring(1, 10);
-            }
+            string sendSmsResponseData;
+            HttpWebRequest sendSmsRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + this.sendSMSURL);
+            sendSmsRequestObject.Method = "POST";
+            sendSmsRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);
+            sendSmsRequestObject.ContentType = "application/json";
+            sendSmsRequestObject.Accept = "application/json";
 
-            if ((smsAddressFormatted.Length != 10) || (!long.TryParse(smsAddressFormatted, out tryParseResult)))
+            UTF8Encoding encoding = new UTF8Encoding();
+            byte[] postBytes = encoding.GetBytes(outBoundSmsJson);
+            sendSmsRequestObject.ContentLength = postBytes.Length;
+
+            Stream postStream = sendSmsRequestObject.GetRequestStream();
+            postStream.Write(postBytes, 0, postBytes.Length);
+            postStream.Close();
+
+            HttpWebResponse sendSmsResponseObject = (HttpWebResponse)sendSmsRequestObject.GetResponse();
+            using (StreamReader sendSmsResponseStream = new StreamReader(sendSmsResponseObject.GetResponseStream()))
             {
-                this.DrawPanelForFailure(sendSMSPanel, "Invalid phone number: " + smsAddressInput);
-            }
-            else
-            {
-                string smsMessage = txtmsg.Text.ToString();
-                if (smsMessage == null || smsMessage.Length <= 0)
+                sendSmsResponseData = sendSmsResponseStream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                sendSMSResponseData = new SendSMSResponse();
+                sendSMSResponseData.outBoundSMSResponse = new OutBoundSMSResponse();
+                sendSMSResponseData = (SendSMSResponse)deserializeJsonObject.Deserialize(sendSmsResponseData, typeof(SendSMSResponse));
+                if (!chkGetOnlineStatus.Checked)
                 {
-                    this.DrawPanelForFailure(sendSMSPanel, "Message is null or empty");
-                    return;
+                    Session["lastSentSMSID"] = sendSMSResponseData.outBoundSMSResponse.messageId;
+                    messageId.Value = Session["lastSentSMSID"].ToString();
                 }
-
-                string sendSmsResponseData;
-                //// HttpWebRequest sendSmsRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/sms/2/messaging/outbox?access_token=" + this.access_token.ToString());
-                HttpWebRequest sendSmsRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/sms/2/messaging/outbox");
-                string strReq = "{'Address':'tel:" + smsAddressFormatted + "','Message':'" + smsMessage + "'}";
-                sendSmsRequestObject.Method = "POST";
-                sendSmsRequestObject.Headers.Add("Authorization", "Bearer " + this.accessToken);
-                sendSmsRequestObject.ContentType = "application/json";
-                sendSmsRequestObject.Accept = "application/json";
-
-                UTF8Encoding encoding = new UTF8Encoding();
-                byte[] postBytes = encoding.GetBytes(strReq);
-                sendSmsRequestObject.ContentLength = postBytes.Length;
-
-                Stream postStream = sendSmsRequestObject.GetRequestStream();
-                postStream.Write(postBytes, 0, postBytes.Length);
-                postStream.Close();
-
-                HttpWebResponse sendSmsResponseObject = (HttpWebResponse)sendSmsRequestObject.GetResponse();
-                using (StreamReader sendSmsResponseStream = new StreamReader(sendSmsResponseObject.GetResponseStream()))
-                {
-                    sendSmsResponseData = sendSmsResponseStream.ReadToEnd();
-                    JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                    SendSmsResponse deserializedJsonObj = (SendSmsResponse)deserializeJsonObject.Deserialize(sendSmsResponseData, typeof(SendSmsResponse));
-                    txtSmsId.Text = deserializedJsonObj.Id.ToString();
-                    this.DrawPanelForSuccess(sendSMSPanel, deserializedJsonObj.Id.ToString());
-                    sendSmsResponseStream.Close();
-                }
+                sendSMSSuccessMessage = "Success";
+                sendSmsResponseStream.Close();
             }
+
         }
         catch (WebException we)
         {
@@ -687,14 +901,39 @@ public partial class SMS_App1 : System.Web.UI.Page
                 errorResponse = "Unable to get response";
             }
 
-            this.DrawPanelForFailure(sendSMSPanel, errorResponse + Environment.NewLine + we.ToString());
+            sendSMSErrorMessage= errorResponse;
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(sendSMSPanel, ex.ToString());
+            sendSMSErrorMessage = ex.ToString();
         }
     }
-    
+    #region Get SMS Delivery Status code.
+    /// <summary>
+    /// This method is called when user clicks on get delivery status button
+    /// </summary>
+    /// <param name="sender">Sender Information</param>
+    /// <param name="e">List of Arguments</param>
+    protected void GetDeliveryStatusButton_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            Session["lastSentSMSID"] = System.Web.HttpUtility.HtmlEncode(messageId.Value);
+            if (this.ReadAndGetAccessToken(ref getSMSDeliveryStatusErrorMessage) == true)
+            {
+                this.GetSmsDeliveryStatus();
+            }
+            else
+            {
+                getSMSDeliveryStatusErrorMessage = "Unable to get access token.";
+            }
+        }
+        catch (Exception ex)
+        {
+            getSMSDeliveryStatusErrorMessage = ex.ToString();
+        }
+    }
+
     /// <summary>
     /// This function is called when user clicks on get delivery status button.
     /// this funciton calls get sms delivery status API to fetch the status.
@@ -703,304 +942,27 @@ public partial class SMS_App1 : System.Web.UI.Page
     {
         try
         {
-            string smsId = txtSmsId.Text.ToString();
-            if (smsId == null || smsId.Length <= 0)
+            string getSmsDeliveryStatusResponseData;
+            HttpWebRequest getSmsDeliveryStatusRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + this.getDeliveryStatusURL + messageId.Value);
+            getSmsDeliveryStatusRequestObject.Method = "GET";
+            getSmsDeliveryStatusRequestObject.Headers.Add("Authorization", "BEARER " + this.accessToken);
+            getSmsDeliveryStatusRequestObject.ContentType = "application/JSON";
+            getSmsDeliveryStatusRequestObject.Accept = "application/json";
+            HttpWebResponse getSmsDeliveryStatusResponse = (HttpWebResponse)getSmsDeliveryStatusRequestObject.GetResponse();
+            using (StreamReader getSmsDeliveryStatusResponseStream = new StreamReader(getSmsDeliveryStatusResponse.GetResponseStream()))
             {
-                this.DrawPanelForFailure(getStatusPanel, "Message is null or empty");
-                return;
-            }
-
-            if (this.ReadAndGetAccessToken(getStatusPanel) == true)
-            {
-                string getSmsDeliveryStatusResponseData;
-                // HttpWebRequest getSmsDeliveryStatusRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.FQDN + "/rest/sms/2/messaging/outbox/" + smsId.ToString() + "?access_token=" + this.access_token.ToString());
-                HttpWebRequest getSmsDeliveryStatusRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/sms/2/messaging/outbox/" + smsId.ToString());
-                getSmsDeliveryStatusRequestObject.Method = "GET";
-                getSmsDeliveryStatusRequestObject.Headers.Add("Authorization", "BEARER " + this.accessToken);
-                getSmsDeliveryStatusRequestObject.ContentType = "application/JSON";
-                getSmsDeliveryStatusRequestObject.Accept = "application/json";
-
-                HttpWebResponse getSmsDeliveryStatusResponse = (HttpWebResponse)getSmsDeliveryStatusRequestObject.GetResponse();
-                using (StreamReader getSmsDeliveryStatusResponseStream = new StreamReader(getSmsDeliveryStatusResponse.GetResponseStream()))
-                {
-                    getSmsDeliveryStatusResponseData = getSmsDeliveryStatusResponseStream.ReadToEnd();
-                    getSmsDeliveryStatusResponseData = getSmsDeliveryStatusResponseData.Replace("-", string.Empty);
-                    JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                    GetDeliveryStatus status = (GetDeliveryStatus)deserializeJsonObject.Deserialize(getSmsDeliveryStatusResponseData, typeof(GetDeliveryStatus));
-                    this.DrawGetStatusSuccess(status.DeliveryInfoList.DeliveryInfo[0].Deliverystatus, status.DeliveryInfoList.ResourceURL);
-                    getSmsDeliveryStatusResponseStream.Close();
-                }
-            }
-            else
-            {
-                this.DrawPanelForFailure(getStatusPanel, "Unable to get access token.");
-            }
-        }
-        catch (WebException we)
-        {
-            string errorResponse = string.Empty;
-
-            try
-            {
-                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
-                {
-                    errorResponse = sr2.ReadToEnd();
-                    sr2.Close();
-                }
-            }
-            catch
-            {
-                errorResponse = "Unable to get response";
-            }
-
-            this.DrawPanelForFailure(getStatusPanel, errorResponse + Environment.NewLine + we.ToString());
-        }
-        catch (Exception ex)
-        {
-            this.DrawPanelForFailure(getStatusPanel, ex.ToString());
-        }
-    }
-    
-    /// <summary>
-    /// This function is used to draw the table for get status success response
-    /// </summary>
-    /// <param name="status">Status as string</param>
-    /// <param name="url">url as string</param>
-    private void DrawGetStatusSuccess(string status, string url)
-    {
-        Table table = new Table();
-        TableRow rowOne = new TableRow();
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
-        table.BorderStyle = BorderStyle.Outset;
-        table.Width = Unit.Pixel(650);
-        TableCell rowOneCellOne = new TableCell();
-        rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "SUCCESS:";
-        rowOne.Controls.Add(rowOneCellOne);
-        table.Controls.Add(rowOne);
-        TableRow rowTwo = new TableRow();
-        TableCell rowTwoCellOne = new TableCell();
-        TableCell rowTwoCellTwo = new TableCell();
-        rowTwoCellOne.Text = "Status: ";
-        rowTwoCellOne.Font.Bold = true;
-        rowTwo.Controls.Add(rowTwoCellOne);
-        rowTwoCellTwo.Text = status.ToString();
-        rowTwo.Controls.Add(rowTwoCellTwo);
-        table.Controls.Add(rowTwo);
-        TableRow rowThree = new TableRow();
-        TableCell rowThreeCellOne = new TableCell();
-        TableCell rowThreeCellTwo = new TableCell();
-        rowThreeCellOne.Text = "ResourceURL: ";
-        rowThreeCellOne.Font.Bold = true;
-        rowThree.Controls.Add(rowThreeCellOne);
-        rowThreeCellTwo.Text = url.ToString();
-        rowThree.Controls.Add(rowThreeCellTwo);
-        table.Controls.Add(rowThree);
-        table.BorderWidth = 2;
-        table.BorderColor = Color.DarkGreen;
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#cfc");
-        getStatusPanel.Controls.Add(table);
-    }
-
-    /// <summary>
-    /// This function is called to draw the table in the panelParam panel for success response
-    /// </summary>
-    /// <param name="panelParam">Panel Details</param>
-    /// <param name="message">Message as string</param>
-    private void DrawPanelForSuccess(Panel panelParam, string message)
-    {
-        Table table = new Table();
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
-        table.BorderStyle = BorderStyle.Outset;
-        table.Width = Unit.Pixel(650);
-        TableRow rowOne = new TableRow();
-        TableCell rowOneCellOne = new TableCell();
-        rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "SUCCESS:";
-        rowOne.Controls.Add(rowOneCellOne);
-        table.Controls.Add(rowOne);
-        TableRow rowTwo = new TableRow();
-        TableCell rowTwoCellOne = new TableCell();
-        rowTwoCellOne.Font.Bold = true;
-        rowTwoCellOne.Text = "Message ID:";
-        rowTwoCellOne.Width = Unit.Pixel(70);
-        rowTwo.Controls.Add(rowTwoCellOne);
-        TableCell rowTwoCellTwo = new TableCell();
-        rowTwoCellTwo.Text = message.ToString();
-        rowTwo.Controls.Add(rowTwoCellTwo);
-        table.Controls.Add(rowTwo);
-        table.BorderWidth = 2;
-        table.BorderColor = Color.DarkGreen;
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#cfc");
-        panelParam.Controls.Add(table);
-    }
-    
-    /// <summary>
-    /// This function draws table for failed response in the panalParam panel
-    /// </summary>
-    /// <param name="panelParam">Panel Details</param>
-    /// <param name="message">Message as string</param>
-    private void DrawPanelForFailure(Panel panelParam, string message)
-    {
-        Table table = new Table();
-        table.Font.Name = "Sans-serif";
-        table.Font.Size = 9;
-        table.BorderStyle = BorderStyle.Outset;
-        table.Width = Unit.Pixel(650);
-        TableRow rowOne = new TableRow();
-        TableCell rowOneCellOne = new TableCell();
-        rowOneCellOne.Font.Bold = true;
-        rowOneCellOne.Text = "ERROR:";
-        rowOne.Controls.Add(rowOneCellOne);
-        table.Controls.Add(rowOne);
-        TableRow rowTwo = new TableRow();
-        TableCell rowTwoCellOne = new TableCell();
-        rowTwoCellOne.Text = message.ToString();
-        rowTwo.Controls.Add(rowTwoCellOne);
-        table.Controls.Add(rowTwo);
-        table.BorderWidth = 2;
-        table.BorderColor = Color.Red;
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc");
-        panelParam.Controls.Add(table);
-    }
-    
-    /// <summary>
-    /// This function calls receive sms api to fetch the sms's
-    /// </summary>
-    private void RecieveSms()
-    {
-        try
-        {
-            string receiveSmsResponseData;
-            if (this.shortCode == null || this.shortCode.Length <= 0)
-            {
-                this.DrawPanelForFailure(getMessagePanel, "Short code is null or empty");
-                return;
-            }
-
-            if (this.accessToken == null || this.accessToken.Length <= 0)
-            {
-                this.DrawPanelForFailure(getMessagePanel, "Invalid access token");
-                return;
-            }
-            
-            // HttpWebRequest objRequest = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.FQDN + "/rest/sms/2/messaging/inbox?access_token=" + this.access_token.ToString() + "&RegistrationID=" + this.shortCode.ToString());
-            HttpWebRequest objRequest = (HttpWebRequest)System.Net.WebRequest.Create(string.Empty + this.endPoint + "/rest/sms/2/messaging/inbox?RegistrationID=" + this.shortCode.ToString());
-            objRequest.Method = "GET";
-            objRequest.Headers.Add("Authorization", "BEARER " + this.accessToken);
-            HttpWebResponse receiveSmsResponseObject = (HttpWebResponse)objRequest.GetResponse();
-            using (StreamReader receiveSmsResponseStream = new StreamReader(receiveSmsResponseObject.GetResponseStream()))
-            {
-                receiveSmsResponseData = receiveSmsResponseStream.ReadToEnd();
+                getSmsDeliveryStatusResponseData = getSmsDeliveryStatusResponseStream.ReadToEnd();
+                getSmsDeliveryStatusResponseData = getSmsDeliveryStatusResponseData.Replace("-", string.Empty);
                 JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                RecieveSmsResponse deserializedJsonObj = (RecieveSmsResponse)deserializeJsonObject.Deserialize(receiveSmsResponseData, typeof(RecieveSmsResponse));
-                int numberOfMessagesInThisBatch = deserializedJsonObj.InboundSMSMessageList.NumberOfMessagesInThisBatch;
-                string resourceURL = deserializedJsonObj.InboundSMSMessageList.ResourceURL.ToString();
-                string totalNumberOfPendingMessages = deserializedJsonObj.InboundSMSMessageList.TotalNumberOfPendingMessages.ToString();
-
-                string parsedJson = "MessagesInThisBatch : " + numberOfMessagesInThisBatch.ToString() + "<br/>" + "MessagesPending : " + totalNumberOfPendingMessages.ToString() + "<br/>";
-                Table table = new Table();
-                table.Font.Name = "Sans-serif";
-                table.Font.Size = 9;
-                table.BorderStyle = BorderStyle.Outset;
-                table.Width = Unit.Pixel(650);
-                TableRow tableRow = new TableRow();
-                TableCell tableCell = new TableCell();
-                tableCell.Width = Unit.Pixel(110);
-                tableCell.Text = "SUCCESS:";
-                tableCell.Font.Bold = true;
-                tableRow.Cells.Add(tableCell);
-                table.Rows.Add(tableRow);
-                tableRow = new TableRow();
-                tableCell = new TableCell();
-                tableCell.Width = Unit.Pixel(150);
-                tableCell.Text = "Messages in this batch:";
-                tableCell.Font.Bold = true;
-                tableRow.Cells.Add(tableCell);
-                tableCell = new TableCell();
-                tableCell.HorizontalAlign = HorizontalAlign.Left;
-                tableCell.Text = numberOfMessagesInThisBatch.ToString();
-                tableRow.Cells.Add(tableCell);
-                table.Rows.Add(tableRow);
-                tableRow = new TableRow();
-                tableCell = new TableCell();
-                tableCell.Width = Unit.Pixel(110);
-                tableCell.Text = "Messages pending:";
-                tableCell.Font.Bold = true;
-                tableRow.Cells.Add(tableCell);
-                tableCell = new TableCell();
-                tableCell.Text = totalNumberOfPendingMessages.ToString();
-                tableRow.Cells.Add(tableCell);
-                table.Rows.Add(tableRow);
-                tableRow = new TableRow();
-                table.Rows.Add(tableRow);
-                tableRow = new TableRow();
-                table.Rows.Add(tableRow);
-                Table secondTable = new Table();
-                if (numberOfMessagesInThisBatch > 0)
-                {
-                    tableRow = new TableRow();
-                    secondTable.Font.Name = "Sans-serif";
-                    secondTable.Font.Size = 9;
-                    tableCell = new TableCell();
-                    tableCell.Width = Unit.Pixel(100);
-                    tableCell.Text = "Message Index";
-                    tableCell.HorizontalAlign = HorizontalAlign.Center;
-                    tableCell.Font.Bold = true;
-                    tableRow.Cells.Add(tableCell);
-                    tableCell = new TableCell();
-                    tableCell.Font.Bold = true;
-                    tableCell.Width = Unit.Pixel(350);
-                    tableCell.Wrap = true;
-                    tableCell.Text = "Message Text";
-                    tableCell.HorizontalAlign = HorizontalAlign.Center;
-                    tableRow.Cells.Add(tableCell);
-                    tableCell = new TableCell();
-                    tableCell.Text = "Sender Address";
-                    tableCell.HorizontalAlign = HorizontalAlign.Center;
-                    tableCell.Font.Bold = true;
-                    tableCell.Width = Unit.Pixel(175);
-                    tableRow.Cells.Add(tableCell);
-                    secondTable.Rows.Add(tableRow);
-
-                    foreach (InboundSMSMessage prime in deserializedJsonObj.InboundSMSMessageList.InboundSMSMessage)
-                    {
-                        tableRow = new TableRow();
-                        TableCell tableCellmessageId = new TableCell();
-                        tableCellmessageId.Width = Unit.Pixel(75);
-                        tableCellmessageId.Text = prime.MessageId.ToString();
-                        tableCellmessageId.HorizontalAlign = HorizontalAlign.Center;
-                        TableCell tableCellmessage = new TableCell();
-                        tableCellmessage.Width = Unit.Pixel(350);
-                        tableCellmessage.Wrap = true;
-                        tableCellmessage.Text = prime.Message.ToString();
-                        tableCellmessage.HorizontalAlign = HorizontalAlign.Center;
-                        TableCell tableCellsenderAddress = new TableCell();
-                        tableCellsenderAddress.Width = Unit.Pixel(175);
-                        tableCellsenderAddress.Text = prime.SenderAddress.ToString();
-                        tableCellsenderAddress.HorizontalAlign = HorizontalAlign.Center;
-                        tableRow.Cells.Add(tableCellmessageId);
-                        tableRow.Cells.Add(tableCellmessage);
-                        tableRow.Cells.Add(tableCellsenderAddress);
-                        secondTable.Rows.Add(tableRow);
-                    }
-                }
-
-                table.BorderColor = Color.DarkGreen;
-                table.BackColor = System.Drawing.ColorTranslator.FromHtml("#cfc");
-                table.BorderWidth = 2;
-                
-                getMessagePanel.Controls.Add(table);
-                getMessagePanel.Controls.Add(secondTable);
-                receiveSmsResponseStream.Close();
+                getSMSDeliveryStatusResponseData = new GetDeliveryStatus();
+                getSMSDeliveryStatusResponseData = (GetDeliveryStatus)deserializeJsonObject.Deserialize(getSmsDeliveryStatusResponseData, typeof(GetDeliveryStatus));
+                getSMSDeliveryStatusSuccessMessagae = "Success";
+                getSmsDeliveryStatusResponseStream.Close();
             }
         }
         catch (WebException we)
         {
             string errorResponse = string.Empty;
-
             try
             {
                 using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
@@ -1013,17 +975,19 @@ public partial class SMS_App1 : System.Web.UI.Page
             {
                 errorResponse = "Unable to get response";
             }
-
-            this.DrawPanelForFailure(getMessagePanel, errorResponse + Environment.NewLine + we.ToString());
+            getSMSDeliveryStatusErrorMessage =   errorResponse ;
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(getMessagePanel, ex.ToString());
+            getSMSDeliveryStatusErrorMessage = ex.ToString();
         }
     }
     #endregion
 
+
     #region SMS Application related Data Structures
+
+    #region Data structure for get access token
     /// <summary>
     /// Class to hold access token response
     /// </summary>
@@ -1044,54 +1008,107 @@ public partial class SMS_App1 : System.Web.UI.Page
         /// </summary>
         public string expires_in { get; set; }
     }
+    #endregion
+    #region Data structure for send sms response
 
+    ///<summary>
+    ///Class to hold ResourceReference
+    ///</summary>
+    public class ResourceReference
+    {
+        ///<summary>
+        ///Gets or sets resourceURL
+        ///</summary>
+        public string resourceURL { get; set; }
+    }
+
+    public class SendSMSResponse
+    {
+        public OutBoundSMSResponse outBoundSMSResponse;
+    }
     /// <summary>
     /// Class to hold send sms response
     /// </summary>
-    public class SendSmsResponse
+    public class OutBoundSMSResponse
     {
         /// <summary>
-        /// Gets or sets id
+        /// Gets or sets messageId
         /// </summary>
-        public string Id { get; set; }
+        public string messageId { get; set; }
+        /// <summary>
+        /// Gets or sets ResourceReference
+        /// </summary>
+        public ResourceReference resourceReference { get; set; }
     }
 
-    /// <summary>
-    /// Class to hold sms delivery status
-    /// </summary>
-    public class GetSetSmsDeliveryStatus
+    public class SendSMSDataForSingle
+    {
+        public OutboundSMSRequestForSingle outboundSMSRequest { get; set; }
+    }
+
+    public class OutboundSMSRequestForSingle
     {
         /// <summary>
-        /// Gets or sets status
+        /// Gets or sets the address to send.
         /// </summary>
-        public string Status { get; set; }
+        public string address
+        {
+            get;
+            set;
+        }
 
         /// <summary>
-        /// Gets or sets resource url
+        /// Gets or sets message text to send.
         /// </summary>
-        public string ResourceUrl { get; set; }
+        public string message
+        {
+            get;
+            set;
+        }
+
+        public bool notifyDeliveryStatus
+        {
+            get;
+            set;
+        }
+    }
+    public class SendSMSDataForMultiple
+    {
+        public OutboundSMSRequestForMultiple outboundSMSRequest { get; set; }
     }
 
-    /// <summary>
-    /// Class to hold sms status
-    /// </summary>
-    public class SmsStatus
+    public class OutboundSMSRequestForMultiple
     {
         /// <summary>
-        /// Gets or sets status
+        /// Gets or sets the list of address to send.
         /// </summary>
-        public string Status { get; set; }
+        public List<string> address
+        {
+            get;
+            set;
+        }
 
         /// <summary>
-        /// Gets or sets resource url
+        /// Gets or sets message text to send.
         /// </summary>
-        public string ResourceURL { get; set; }
-    }
+        public string message
+        {
+            get;
+            set;
+        }
 
+        public bool notifyDeliveryStatus
+        {
+            get;
+            set;
+        }
+    }
+    #endregion
+    #region Data structure for Get SMS (offline)
     /// <summary>
     /// Class to hold rececive sms response
     /// </summary>
-    public class RecieveSmsResponse
+    public class GetSmsResponse
     {
         /// <summary>
         /// Gets or sets inbound sms message list
@@ -1131,6 +1148,28 @@ public partial class SMS_App1 : System.Web.UI.Page
     public class InboundSMSMessage
     {
         /// <summary>
+        /// Gets or sets message id
+        /// </summary>
+        public string MessageId { get; set; }
+
+        /// <summary>
+        /// Gets or sets message
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// Gets or sets sender address
+        /// </summary>
+        public string SenderAddress { get; set; }
+    }
+    #endregion
+    #region Data structure for Receive SMS (online)
+    /// <summary>
+    /// Class to hold inbound sms message
+    /// </summary>
+    public class ReceiveSMS
+    {
+        /// <summary>
         /// Gets or sets datetime
         /// </summary>
         public string DateTime { get; set; }
@@ -1155,6 +1194,8 @@ public partial class SMS_App1 : System.Web.UI.Page
         /// </summary>
         public string SenderAddress { get; set; }
     }
+    #endregion
+    #region Data structure for Get Delivery Status (offline)
 
     /// <summary>
     /// Class to hold delivery status
@@ -1203,5 +1244,51 @@ public partial class SMS_App1 : System.Web.UI.Page
         /// </summary>
         public string Deliverystatus { get; set; }
     }
+
+    #endregion 
+    #region Data structure for receive delivery status
+
+    public class ReceiveDeliveryInfo
+    {
+        /// <summary>
+        /// Gets or sets the list of address.
+        /// </summary>
+        public string address
+        {
+            get;
+            set;
+        }
+        /// <summary>
+        /// Gets or sets the list of deliveryStatus.
+        /// </summary>
+        public string deliveryStatus
+        {
+            get;
+            set;
+        }
+    }
+    public class deliveryInfoNotification
+    {
+        /// <summary>
+        /// Gets or sets the list of messageId.
+        /// </summary>
+        public string messageId
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets message text to send.
+        /// </summary>
+        public ReceiveDeliveryInfo deliveryInfo
+        {
+            get;
+            set;
+        }
+    }
+    #endregion
+
+
     #endregion
 }

@@ -1,7 +1,7 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
   AT&T API Platform Samples - WAP Push
@@ -49,7 +49,7 @@ create and run one's own full-fledged sample applications.
 Requirements:
 Apache web server
 PHP 5.2+
-Apache and php configured , on most Linux systems if installed using packages this will be done automatically 
+Apache and php configured , on most GNU/Linux systems if installed using packages this will be done automatically 
 
 Installation:
 Copy the sample application  folder to apache web root folder, for example /var/www/html 

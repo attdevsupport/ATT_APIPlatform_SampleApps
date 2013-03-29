@@ -1,606 +1,269 @@
-<!--Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2012
+<?php
+session_start();
+require __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/Util/Util.php';
+require_once __DIR__ . '/src/Sample/SMSService.php';
+$smsService = new SMSService();
+$sendSms = $smsService->sendSMS();
+$getStatus = $smsService->getSMSDeliveryStatus();
+$getMsgs = $smsService->getMessages();
+$results = $smsService->getResults();
+?>
+<!DOCTYPE html>
+<!-- 
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
-<?php
-header("Content-Type: text/html; charset=ISO-8859-1");
-include ("config.php");
-include ($oauth_file);
-error_reporting(0);
+<html lang="en"> 
+  <head> 
+    <title>AT&amp;T Sample Application - Basic SMS Service Application</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script src="scripts/utils.js"></script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
 
-session_start();
+        (function () {
+             var ga = document.createElement('script');
+             ga.type = 'text/javascript';
+             ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                         : 'http://www')
+                                         + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0];
+             s.parentNode.insertBefore(ga, s);
+         })();
+    </script>
+  </head>
+  <body onload="setup()">
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo"></div> 
+        <div id="menuButton" class="hide"><a id="jump" href="#nav">Main Navigation</a></div> 
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img alt="fullpage" src="images/max.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<?php echo $linkSource; ?>" target="_blank" 
+                id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<?php echo $linkDownload; ?>" target="_blank" 
+                id="DownloadLink">Download<img alt="download" src="images/download.png"></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<?php echo $linkHelp; ?>" target="_blank" id="HelpLink">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a></li>
+        </ul> <!-- end of links -->
+      </div> <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>AT&amp;T Sample Application - Basic SMS Service Application</h1>
+          <div class="border"></div>
+          <div id="introtext">
+            <div><b>Server Time:&nbsp;</b><?php echo Util::getServerTime(); ?></div> 
+            <div><b>Client Time:&nbsp;</b><script>document.write("" + new Date());</script></div>
+            <div><b>User Agent:&nbsp;</b><script>document.write("" + navigator.userAgent);</script></div>
+          </div> <!-- end of introtext -->
+        </div> <!-- end of contentHeading -->
 
-if (!empty($_REQUEST["sendSms"])) {
-  $_SESSION["sms1_smsMsg"] = $_POST['message'];
-  $_SESSION["sms1_address"] = $_POST['address'];
- }
-
-$smsID=$_SESSION["sms1_smsID"];
-$smsMsg=$_SESSION["sms1_smsMsg"];
-$address=$_SESSION["sms1_address"];
-
-if($address==null){
-  $address = $default_address;
- }
-if($smsMsg==null){
-  $smsMsg = $default_smsMsg;
- }
-
-function RefreshToken($FQDN,$api_key,$secret_key,$scope,$fullToken){
-
-  $refreshToken=$fullToken["refreshToken"];
-  $accessTok_Url = $FQDN."/oauth/token";
-
-  //http header values
-  $accessTok_headers = array(
-			     'Content-Type: application/x-www-form-urlencoded'
-			     );
-
-  //Invoke the URL
-  $post_data="client_id=".$api_key."&client_secret=".$secret_key."&refresh_token=".$refreshToken."&grant_type=refresh_token";
-
-  $accessTok = curl_init();
-  curl_setopt($accessTok, CURLOPT_URL, $accessTok_Url);
-  curl_setopt($accessTok, CURLOPT_HTTPGET, 1);
-  curl_setopt($accessTok, CURLOPT_HEADER, 0);
-  curl_setopt($accessTok, CURLINFO_HEADER_OUT, 0);
-  curl_setopt($accessTok, CURLOPT_HTTPHEADER, $accessTok_headers);
-  curl_setopt($accessTok, CURLOPT_RETURNTRANSFER, 1);
-  curl_setopt($accessTok, CURLOPT_SSL_VERIFYPEER, false);
-  curl_setopt($accessTok, CURLOPT_POST, 1);
-  curl_setopt($accessTok, CURLOPT_POSTFIELDS,$post_data);
-  $accessTok_response = curl_exec($accessTok);
-  $currentTime=time();
-
-  $responseCode=curl_getinfo($accessTok,CURLINFO_HTTP_CODE);
-  if($responseCode==200){
-    $jsonObj = json_decode($accessTok_response);
-    $accessToken = $jsonObj->{'access_token'};//fetch the access token from the response.
-    $refreshToken = $jsonObj->{'refresh_token'};
-    $expiresIn = $jsonObj->{'expires_in'};
-    
-     if($expiresIn == 0) {
-	  $expiresIn = 24*60*60;
-	 
-	  }
-	      
-    $refreshTime=$currentTime+(int)($expiresIn); // Time for token refresh
-    $updateTime=$currentTime + ( 24*60*60); // Time to get for a new token update, current time + 24h 
-	      
-    $fullToken["accessToken"]=$accessToken;
-    $fullToken["refreshToken"]=$refreshToken;
-    $fullToken["refreshTime"]=$refreshTime;
-    $fullToken["updateTime"]=$updateTime;
-                        
-  }
-  else{
-    $fullToken["accessToken"]=null;
-    $fullToken["errorMessage"]=curl_error($accessTok).$accessTok_response;
-
-			
-  }
-  curl_close ($accessTok);
-  return $fullToken;
-
-}
-function GetAccessToken($FQDN,$api_key,$secret_key,$scope){
-
-  $accessTok_Url = $FQDN."/oauth/token";
-	    
-  //http header values
-  $accessTok_headers = array(
-			     'Content-Type: application/x-www-form-urlencoded'
-			     );
-
-  //Invoke the URL
-  $post_data = "client_id=".$api_key."&client_secret=".$secret_key."&scope=".$scope."&grant_type=client_credentials";
-
-  $accessTok = curl_init();
-  curl_setopt($accessTok, CURLOPT_URL, $accessTok_Url);
-  curl_setopt($accessTok, CURLOPT_HTTPGET, 1);
-  curl_setopt($accessTok, CURLOPT_HEADER, 0);
-  curl_setopt($accessTok, CURLINFO_HEADER_OUT, 0);
-  curl_setopt($accessTok, CURLOPT_HTTPHEADER, $accessTok_headers);
-  curl_setopt($accessTok, CURLOPT_RETURNTRANSFER, 1);
-  curl_setopt($accessTok, CURLOPT_SSL_VERIFYPEER, false);
-  curl_setopt($accessTok, CURLOPT_POST, 1);
-  curl_setopt($accessTok, CURLOPT_POSTFIELDS,$post_data);
-  $accessTok_response = curl_exec($accessTok);
-   
-  
-  $responseCode=curl_getinfo($accessTok,CURLINFO_HTTP_CODE);
-  $currentTime=time();
-  /*
-   If URL invocation is successful fetch the access token and store it in session,
-   else display the error.
-  */
-  if($responseCode==200)
-    {
-      $jsonObj = json_decode($accessTok_response);
-      $accessToken = $jsonObj->{'access_token'};//fetch the access token from the response.
-      $refreshToken = $jsonObj->{'refresh_token'};
-      $expiresIn = $jsonObj->{'expires_in'};
-       
-       if($expiresIn == 0) {
-	  $expiresIn = 24*60*60*365*100;
-	 
-	  }
-      $refreshTime=$currentTime+(int)($expiresIn); // Time for token refresh
-      $updateTime=$currentTime + ( 24*60*60); // Time to get a new token update, current time + 24h
-
-      $fullToken["accessToken"]=$accessToken;
-      $fullToken["refreshToken"]=$refreshToken;
-      $fullToken["refreshTime"]=$refreshTime;
-      $fullToken["updateTime"]=$updateTime;
-      
-    }else{
- 
-    $fullToken["accessToken"]=null;
-    $fullToken["errorMessage"]=curl_error($accessTok).$accessTok_response;
-
-  }
-  curl_close ($accessTok);
-  return $fullToken;
-}
-function SaveToken( $fullToken,$oauth_file ){
-
-  $accessToken=$fullToken["accessToken"];
-  $refreshToken=$fullToken["refreshToken"];
-  $refreshTime=$fullToken["refreshTime"];
-  $updateTime=$fullToken["updateTime"];
-      
-
-  $tokenfile = $oauth_file;
-  $fh = fopen($tokenfile, 'w');
-  $tokenfile="<?php \$accessToken=\"".$accessToken."\"; \$refreshToken=\"".$refreshToken."\"; \$refreshTime=".$refreshTime."; \$updateTime=".$updateTime."; ?>";
-  fwrite($fh,$tokenfile);
-  fclose($fh);
-}
-
-function check_token( $FQDN,$api_key,$secret_key,$scope, $fullToken,$oauth_file){
-
-  $currentTime=time();
-
-  if ( ($fullToken["updateTime"] == null) || ($fullToken["updateTime"] <= $currentTime)){
-    $fullToken=GetAccessToken($FQDN,$api_key,$secret_key,$scope);
-    if(  $fullToken["accessToken"] == null ){
-      //      echo $fullToken["errorMessage"];
-    }else{
-      //      echo $fullToken["accessToken"];
-      SaveToken( $fullToken,$oauth_file );
-    }
-  }
-  elseif ($fullToken["refreshTime"]<= $currentTime){
-    $fullToken=RefreshToken($FQDN,$api_key,$secret_key,$scope, $fullToken);
-    if(  $fullToken["accessToken"] == null ){
-      //      echo $fullToken["errorMessage"];
-    }else{
-      //      echo $fullToken["accessToken"];
-      SaveToken( $fullToken,$oauth_file );
-    }
-  }
-  
-  return $fullToken;
-  
-}
-
-?>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-<head>
-<title>AT&amp;T Sample SMS Application - Basic SMS Service Application</title>
-     <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
-     <link rel="stylesheet" type="text/css" href="common.css"/ >
-</head>
-
-<body>
-<div id="container">
-<!-- open HEADER --><div id="header">
-
-<div>
-	<div id="hcRight">
-<?php echo  date("D M j G:i:s T Y"); ?>
-</div>
-	<div id="hcLeft">Server Time:</div>
-</div>
-<div>
-	<div id="hcRight"><script language="JavaScript" type="text/javascript">
-var myDate = new Date();
-document.write(myDate);
-</script></div>
-	<div id="hcLeft">Client Time:</div>
-</div>
-<div>
-	<div id="hcRight"><script language="JavaScript" type="text/javascript">
-document.write("" + navigator.userAgent);
-</script></div>
-	<div id="hcLeft">User Agent:</div>
-</div>
-<br clear="all" />
-</div><!-- close HEADER -->
-
-<div id="wrapper">
-<div id="content">
-
-  <h1>AT&amp;T Sample SMS Application - Basic SMS Service Application</h1>
-<h2>Feature 1: Send SMS</h2>
-
-</div>
-</div>
-
-<form name="sendSms" method="post">
-<div id="navigation">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td width="20%" valign="top" class="label">Phone:</td>
-    <td class="cell"><input maxlength="16" size="12" name="address" value="<?php echo htmlspecialchars($address); ?>" style="width: 90%" ></input>
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" class="label">Message:</td>
-    <td class="cell"><textarea rows="4" name="message" style="width: 90%" ><?php echo htmlspecialchars($smsMsg); ?></textarea>
-    </td></tr>
-  </tbody></table>
-
-</div>
-<div id="extra">
-
-  <table>
-  <tbody>
-  <tr>
-    <td width="20%" valign="top">
-    &nbsp;
-    </td>
-    <td>
-      <div id="extraleft">
-        <div class="warning">
-          <strong>Note:</strong><br />
-          All Messages will be sent from first short code of a registered application<br />
-        </div>
-      </div>
-    </td>
-  </tr>
-  <tr>
-  	<td><br /><br /><br /><br /><br /><button type="submit" name="sendSms" value="Send SMS Message">Send SMS</button></td>
-  </tr>
-  </tbody>
-  </table>
-
-
-</div>
-<br clear="all" />
-<div align="center"></div>
-
-</form>
-
-<?php
-	/* Extract POST parmeters from send SMS form
-	   and invoke he URL to send SMS along with access token
-	*/
-    if (!empty($_REQUEST["sendSms"])) {
-
-      $fullToken["accessToken"]=$accessToken;
-      $fullToken["refreshToken"]=$refreshToken;
-      $fullToken["refreshTime"]=$refreshTime;
-      $fullToken["updateTime"]=$updateTime;
-      
-      $fullToken=check_token($FQDN,$api_key,$secret_key,$scope,$fullToken,$oauth_file);
-      $accessToken=$fullToken["accessToken"];
-
-      $smsMsg = $_POST['message'];
-      $address =  str_replace("-","",$_POST['address']);
-      $address =  str_replace("tel:","",$address);
-      $address =  str_replace("+1","",$address);
-      $address = "tel:" . $address;
-	
-	// Form the URL to send SMS 
-      $sendSMS_RequestBody = json_encode(array('Address' => $address, 'Message' => $smsMsg));
-      $sendSMS_Url = "$FQDN/rest/sms/2/messaging/outbox?";
-	  $authorization = 'Authorization: Bearer '.$accessToken;
-	 $content = "Content-Type: application/json";
-      
-
-	//Invoke the URL
-	$sendSMS = curl_init();
-	
-	curl_setopt($sendSMS, CURLOPT_URL, $sendSMS_Url);
-	curl_setopt($sendSMS, CURLOPT_POST, 1);
-	curl_setopt($sendSMS, CURLOPT_HEADER, 0);
-	curl_setopt($sendSMS, CURLINFO_HEADER_OUT, 0);
-	curl_setopt($sendSMS, CURLOPT_HTTPHEADER, array($authorization, $content));
-	curl_setopt($sendSMS, CURLOPT_POSTFIELDS, $sendSMS_RequestBody);
-	curl_setopt($sendSMS, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($sendSMS, CURLOPT_SSL_VERIFYPEER, false);
-	
-	
-	$sendSMS_response = curl_exec($sendSMS);
-	
-	$responseCode=curl_getinfo($sendSMS,CURLINFO_HTTP_CODE);
-
-        /*
-	  If URL invocation is successful print success msg along with sms ID,
-	  else print the error msg
-	*/
-	if($responseCode==200 || $responseCode ==201 || $responseCode==300)
-	{
-		$jsonObj = json_decode($sendSMS_response);
-		$smsID = $jsonObj->{'Id'};//if the SMS send successfully ,then will get a SMS id.
-		$_SESSION["sms1_smsID"] = $smsID;
-        	$msghead="Message Id";
-		$msgdata=$smsID; ?>
-
-		<div class="success">
-                <strong>SUCCESS:</strong><br />
-               <strong> Message ID</strong> <?php echo htmlspecialchars($msgdata); ?>
-                </div>
-
-	<?php } 
-	else{
-		$msghead="Error";
-		$msgdata=curl_error($sendSMS);
-		$errormsg= $msgdata.$sendSMS_response;
-		?>
-
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <div class="inputFields">
+              <div id="sendSMSdiv">
+                <h2>Feature 1: Send SMS</h2>
+                <form method="post" action="index.php#sendSMS" name="sendSMSForm" id="sendSMSForm">
+                  <input placeholder="Address" name="address" id="address" type="text"
+                      value="<?php echo isset($_SESSION['rawaddrs']) ? $_SESSION['rawaddrs'] : ''; ?>" />
+                  <label>
+                    Message
+                    <select name="message" id="message">
+                      <option value="ATT SMS sample Message">ATT SMS sample message</option>
+                    </select>
+                  </label>
+                  <label>
+                    <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True"
+                        title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                    Receive Delivery Status Notification<br />
+                  </label>
+                  <button type="submit" class="submit" name="sendSMS" id="sendSMS">Send SMS</button>
+                </form>
+                <?php if ($smsService->getSendError() != NULL) { ?>
                 <div class="errorWide">
-                <strong>ERROR:</strong><br />
-			
-                <?php echo htmlspecialchars($errormsg)  ?>
+                  <strong>ERROR: </strong><br>
+                  <?php echo htmlspecialchars($smsService->getSendError()); ?>
                 </div>
-
-	<?php }
-	curl_close ($sendSMS);
-}
-?>
-
-<div id="wrapper">
-<div id="content">
-
-<h2><br />
-Feature 2: Get Delivery Status</h2>
-
-</div>
-</div>
-<form name="getSmsDeliveryStatus" method="post">
-<div id="navigation">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td width="20%" valign="top" class="label">Message ID:</td>
-    <td class="cell"><input maxlength="20" size="12" name="id" value="<?php echo htmlspecialchars($smsID); ?>" style="width: 90%">
-    </td>
-  </tr>
-  </tbody></table>
-  
-</div>
-<div id="extra">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td class="cell"><button type="submit" name="getSmsDeliveryStatus" value="Get Status" >Get Status</button>
-    </td>
-  </tr>
-  </tbody></table>
-
-</div>
-<br clear="all" />
-
-</form>
-
-<?php
-        /* Extract sms ID  from getSmsDeliveryStatus form
-           and invoke the URL to get Sms Delivery Status along with access token
-        */
-   if (!empty($_REQUEST["getSmsDeliveryStatus"] )) {
-
-     $fullToken["accessToken"]=$accessToken;
-     $fullToken["refreshToken"]=$refreshToken;
-     $fullToken["refreshTime"]=$refreshTime;
-     $fullToken["updateTime"]=$updateTime;
-     
-     $fullToken=check_token($FQDN,$api_key,$secret_key,$scope,$fullToken,$oauth_file);
-     $accessToken=$fullToken["accessToken"];
-
-      $smsID = $_POST['id'];
-      $_SESSION["sms1_smsID"] = $_POST['id'];
-	// Form the URL to get Sms Delivery Status
-      $getSMSDelStatus_Url = "$FQDN/rest/sms/2/messaging/outbox/";
-      $getSMSDelStatus_Url .= $smsID;
-    
-	 $authorization = 'Authorization: Bearer '.$accessToken;
-	 $content = "Content-Type: application/json";
-	
-	//Invoke the URL
-	$getSMSDelStatus = curl_init();	
-	curl_setopt($getSMSDelStatus, CURLOPT_URL, $getSMSDelStatus_Url);
-	curl_setopt($getSMSDelStatus, CURLOPT_HTTPGET, 1);
-	curl_setopt($getSMSDelStatus, CURLOPT_HEADER, 0);
-	curl_setopt($getSMSDelStatus, CURLINFO_HEADER_OUT, 0);
-	curl_setopt($getSMSDelStatus, CURLOPT_HTTPHEADER, array($authorization, $content));
-	curl_setopt($getSMSDelStatus, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($getSMSDelStatus, CURLOPT_SSL_VERIFYPEER, false);
-	
-
-	$getSMSDelStatus_response = curl_exec($getSMSDelStatus);
-	$responseCode=curl_getinfo($getSMSDelStatus,CURLINFO_HTTP_CODE);
-
-        /*
-	  If URL invocation is successful print success msg along with sms delivery status,
-	  else print the error msg
-	*/
-	if($responseCode==200)
-	{
-		//decode the response and display it.
-	  $jsonObj = json_decode($getSMSDelStatus_response,true);
-	  $deliveryStatus=$jsonObj['DeliveryInfoList']['DeliveryInfo']['0']['DeliveryStatus'];
-	  $resourceURL=$jsonObj['DeliveryInfoList']['ResourceUrl'];
-
-	  ?>
-	    <div class="successWide">
-	       <strong>SUCCESS:</strong><br />
-	       <strong>Status:</strong><?php echo htmlspecialchars($deliveryStatus); ?><br />
-               <strong>Resource URL:</strong><?php echo htmlspecialchars($resourceURL); ?>
-            </div>
-          <?php
-	}
-	else{
-	  $msghead="Error";
-	  $msgdata=curl_error($getSMSDelStatus);
-	  $errormsg=$msgdata.$getSMSDelStatus_response;
-	  ?>
-		<div class="errorWide">
-                <strong>ERROR:</strong><br />
-                <?php  echo htmlspecialchars($errormsg) ;  ?>
+                <?php } else if ($sendSms != NULL) {
+                $msgId = $sendSms->outboundSMSResponse->messageId;
+                ?>
+                <div class="successWide">
+                  <strong>SUCCESS: </strong><br>
+                  <strong>messageId: </strong><?php echo $msgId; ?><br>
+                  <?php if (property_exists($sendSms->outboundSMSResponse, 'resourceReference')) { ?>
+                  <strong>resourceURL: </strong><?php echo $sendSms->outboundSMSResponse->resourceReference->resourceURL; ?><br>
+                  <?php } ?>
                 </div>
-
-		
-	<?php }
-	curl_close ($getSMSDelStatus);
-	
-}
-?>
-<div id="wrapper">
-<div id="content">
-
-<h2><br />Feature 3: Get Received Messages</h2>
-
-</div>
-</div>
-
-<form name="receiveSms" method="post">
-<div id="navigation">
-
-<table border="0" width="100%">
-  <tbody>
-  <tr>
-    <td class="cell">
-     <button type="submit" name="receiveSms" value="<?php echo htmlspecialchars($short_code); ?>">Get Messages for Short Code <?php echo htmlspecialchars($short_code) ?></button>
-     <button type="submit" name="receiveSms" value="<?php echo htmlspecialchars($short_code2); ?>">Get Messages for Short Code <?php echo htmlspecialchars($short_code2) ?></button>
-    </td>
-  </tr>
-  </tbody>
-</table>
-
-</div>
-<br clear="all" />
-</form>
-
-<?php
-        /*
-	  If Receive SMS request is submitted, then invoke the URL to get the inbox messages
-	  by using the registrationID i.e. short code, along with the access token.
-	*/
-
-    if (!empty($_REQUEST["receiveSms"] )) {
-
-      $fullToken["accessToken"]=$accessToken;
-      $fullToken["refreshToken"]=$refreshToken;
-      $fullToken["refreshTime"]=$refreshTime;
-      $fullToken["updateTime"]=$updateTime;
-
-      $fullToken=check_token($FQDN,$api_key,$secret_key,$scope,$fullToken,$oauth_file);
-      $accessToken=$fullToken["accessToken"];
-
-	// Form the URL for getting the inbox messages
-
-      $shortCode = $_POST['receiveSms'];
-      $receiveSMS_Url = "$FQDN/rest/sms/2/messaging/inbox?&RegistrationID=".$shortCode;
-      
-	//$receiveSMS_headers = 
-	/*array(
-	//	'Content-Type: application/x-www-form-urlencoded'
-		'Accept: application/json'
-	);*/
- $authorization = 'Authorization: Bearer '.$accessToken;
-	 $content = "Content-Type: application/json";
-	 
-	//Invoke the URL
-	$receiveSMS = curl_init();
-	curl_setopt($receiveSMS, CURLOPT_URL, $receiveSMS_Url);
-	curl_setopt($receiveSMS, CURLOPT_HTTPGET, 1);
-	curl_setopt($receiveSMS, CURLOPT_HEADER, 0);
-	curl_setopt($receiveSMS, CURLINFO_HEADER_OUT, 0);
-	curl_setopt($receiveSMS, CURLOPT_HTTPHEADER, array($authorization, $content));
-	curl_setopt($receiveSMS, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($receiveSMS, CURLOPT_SSL_VERIFYPEER, false);
-
-
-	$receiveSMS_response = curl_exec($receiveSMS);
-	$responseCode=curl_getinfo($receiveSMS,CURLINFO_HTTP_CODE);
-       /*
-	  If URL invocation is successful fetch all the received sms,else display the error.
-	*/
-        if($responseCode==200 || $responseCode==300)
-        {
-		//decode the response and display the messages.
-	$jsonObj = json_decode($receiveSMS_response,true);
-	$smsMsgList = $jsonObj['InboundSmsMessageList'];
-	$noOfReceivedSMSMsg = $smsMsgList['NumberOfMessagesInThisBatch'];
-	$noOfPendingMsg = $smsMsgList['TotalNumberOfPendingMessages'];
-
-		  ?>
-		    <div class="successWide">
-                    <strong>SUCCESS:</strong><br />
-		       <strong>Messages in this batch: </strong><?php echo htmlspecialchars($noOfReceivedSMSMsg); ?><br />
-		       <strong>Messages pending: </strong><?php echo htmlspecialchars($noOfPendingMsg); ?>
-                    </div>
-                    <div align="center"><table style="width: 650px" cellpadding="1" cellspacing="1" border="0">
+                <?php } ?>
+              </div> <!-- end of sendSMS -->
+              <div class="lightBorder"></div>
+              <div id="getStatusdiv">
+                <h2>Feature 2: Get Delivery Status</h2>
+                <form method="post" action="index.php#getStatus" name="getStatusForm" id="getStatusForm">
+                  <input placeholder="Message ID" name="messageId" id="messageId" type="text" 
+                      value="<?php echo isset($_SESSION['SmsId']) ? $_SESSION['SmsId'] : '' ?>">
+                  <button type="submit" class="submit" name="getStatus" id="getStatus">Get Status</button>
+                </form>
+                <?php if ($smsService->getDeliveryStatusError() != NULL) { ?>
+                <div class="errorWide">
+                  <strong>ERROR: </strong><br>
+                  <?php echo htmlspecialchars($smsService->getDeliveryStatusError()); ?>
+                </div>
+                <?php } else if($getStatus != NULL) { 
+                $status = $getStatus->DeliveryInfoList->DeliveryInfo[0]->DeliveryStatus; 
+                $resourceURL = $getStatus->DeliveryInfoList->ResourceUrl;
+                ?>
+                <div class="successWide">
+                  <strong>SUCCESS: </strong><br>
+                  <strong>Status: </strong><?php echo htmlspecialchars($status); ?><br>
+                  <strong>Resource URL: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
+                </div>
+                <?php } ?>
+              </div> <!-- end of getStatus -->
+              <div class="lightBorder"></div>
+              <div id="receiveStatusdiv">
+                <h2>Feature 3: Receive Delivery Status</h2>
+                <form method="post" action="index.php" name="refreshStatusForm" id="refreshStatusForm">
+                  <button type="submit" class="submit" name="receiveStatusBtn" id="receiveStatusBtn">
+                    Refresh Notifications</button>
+                </form>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Message Id</th>
+                      <th>Address</th>
+                      <th>Delivery Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <?php foreach ($results['resultStatusN'] as $statusNotification) { 
+                    $dInfoNotification = $statusNotification['deliveryInfoNotification']; 
+                    $dInfo = $dInfoNotification['deliveryInfo'];
+                  ?>
+                    <tr>
+                      <td data-value="Message Id"><?php echo $dInfoNotification['messageId']; ?></td>
+                      <td data-value="Status"><?php echo $dInfo['address']; ?></td>
+                      <td data-value="Resouce Url"><?php echo $dInfo['deliveryStatus']; ?></td>
+                    </tr>
+                    <?php } ?>
+                  </tbody>
+                </table>
+              </div><!-- end of receiveStatus -->
+              <div class="lightBorder"></div>
+              <div id="getMessagesDiv">
+                <h2>Feature 4: Get Messages (<?php echo $getMsgsShortCode; ?>)</h2>
+                <form method="post" action="index.php" name="getMessagesForm" id="getMessagesForm">
+                  <button type="submit" class="submit" name="getMessages" id="getMessages">
+                    Get Messages</button>
+                </form>
+                <?php if ($smsService->getMessagesError() != NULL) { ?>
+                <div class="errorWide">
+                  <strong>ERROR: </strong><br>
+                  <?php echo htmlspecialchars($smsService->getMessagesError()); ?>
+                </div>
+                <?php } else if ($getMsgs != NULL) {
+                  $msgList = $getMsgs->InboundSmsMessageList;
+                  $numMessages = $msgList->NumberOfMessagesInThisBatch;
+                  $numPending = $msgList->TotalNumberOfPendingMessages;
+                  $inboundMsgList = $msgList->InboundSmsMessage;
+                  ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong><br>
+                  <strong>Messages in this batch: <strong><?php echo $numMessages; ?><br>
+                  <strong>Messages pending: <strong><?php echo $numPending; ?><br>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Message Index</th>
+                      <th>Message Text</th>
+                      <th>Sender Address</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <?php foreach($inboundMsgList as $name => $value) { ?>
+                    <tr>
+                      <td data-value="Message Index"><?php echo htmlspecialchars($value->MessageId); ?></td>
+                      <td data-value="Message Text"><?php echo htmlspecialchars($value->Message); ?></td>
+                      <td data-value="Sender Address"><?php echo htmlspecialchars($value->SenderAddress); ?></td>
+                    </tr>
+                    <?php } ?>
+                  </tbody>
+                </table>
+                <?php } ?>
+              </div><!-- end of getMessages -->
+              <div class="lightBorder"></div>
+              <div id="receiveMsgs">
+                <h2>Feature 5: Receive Messages (<?php echo $receiveMsgsShortCode; ?>)</h2>
+                <form method="post" action="index.php" name="receiveMessagesForm" id="receiveMessagesForm">
+                  <button type="submit" class="submit" name="receiveMessages" 
+                      id="receiveMessages">Refresh Received Messages</button>
+                </form>
+                  <table>
                     <thead>
-                        <tr>
-                        	<th style="width: 100px" class="cell"><strong>Message Index</strong></th>
-                            <th style="width: 275px" class="cell"><strong>Message Text</strong></th>
-                            <th style="width: 125px" class="cell"><strong>Sender Address</strong></th>
-                    	</tr>
+                      <tr>
+                        <th>DateTime</th>
+                        <th>Message Id</th>
+                        <th>Message</th>
+                        <th>Sender Address</th>
+                        <th>Destination Address</th>
+                      </tr>
                     </thead>
                     <tbody>
-		    <?php
-		    foreach($smsMsgList["InboundSmsMessage"] as $smsTag=>$val) {
-		    ?>
-                    <tr>
-		    <td class="cell"><?php echo htmlspecialchars($val["MessageId"]) ?></td>
-		    <td align="center" class="cell"><?php echo htmlspecialchars($val["Message"]) ?></td>
-                    <td align="center" class="cell"><?php echo htmlspecialchars($val["SenderAddress"]) ?></td>
-                    </tr>
-		    <?php
-		  }
-                   ?>
-		    </tbody>
-                    </table>
-                    </div><br/>
-        <?php
-			
-        } else{
-		$msghead="Error";
-		$msgdata=curl_error($receiveSMS);
-		$errormsg=$msgdata.$receiveSMS_response;
-               ?>
-		<div class="errorWide">
-                <strong>ERROR:</strong><br />
-                <?php  echo htmlspecialchars($errormsg) ;  ?>
-                </div>
-
-        <?php }
-	curl_close ($receiveSMS);
-    }
-?>
-<div id="footer">
-
-	<div style="float: right; width: 20%; font-size: 9px; text-align: right">Powered by AT&amp;T Cloud Architecture</div>
-    <p> &#169; 2012 AT&amp;T Intellectual Property. All rights reserved.  <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
-<br>
-The Application hosted on this site are working examples intended to be used for reference in creating products to consume AT&amp;T Services and  not meant to be used as part of your product.  The data in these pages is for test purposes only and intended only for use as a reference in how the services perform.
-<br>
-For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
-<br>
-For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-
-</div>
-</div>
-
-
-</body>
+                      <?php foreach ($results['resultMsgs'] as $msg) { ?>
+                        <tr>
+                          <td data-value="DateTime"> <?php echo $msg['DateTime']; ?></td>
+                          <td data-value="Message Id"> <?php echo $msg['MessageId'] == '' ? '-' : $msg['MessageId']; ?></td>
+                          <td data-value="Message"> <?php echo $msg['Message']; ?></td>
+                          <td data-value="Sender Address"><?php echo $msg['SenderAddress']; ?></td>
+                          <td data-value="Destination Address"><?php echo $msg['DestinationAddress']; ?></td>
+                        </tr>
+                      <?php } ?>
+                  </tbody>
+                </table>
+              </div> <!-- end of receiveMsgs -->
+            </div> <!-- end of inputFields -->
+          </div> <!-- end of formContainer -->
+        </div> <!-- end of formBox -->
+      </div> <!-- end of content -->
+      <div class="border"></div>
+      <div id="footer">
+        <div id="powered_by">Powered by AT&amp;T Cloud Architecture</div>
+        <p>
+          The Application hosted on this site are working examples intended to be used for reference in creating 
+          products to consume AT&amp;T Services and not meant to be used as part of your product. The data in 
+          these pages is for test purposes only and intended only for use as a reference in how the services 
+          perform. 
+          <br> <br> 
+          For download of tools and documentation, please go to 
+          <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
+          <br> 
+          For more information contact 
+          <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+          <br> <br>
+          &copy; 2013 AT&amp;T Intellectual Property. All rights reserved.
+          <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        </p>
+      </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
+    <script>setup();</script>
+  </body>
 </html>
-

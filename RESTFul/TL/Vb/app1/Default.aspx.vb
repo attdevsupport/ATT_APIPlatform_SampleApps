@@ -1,7 +1,7 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -68,6 +68,11 @@ Partial Public Class TL_App1
     ''' </summary>
     Private getStatusTable As Table
 
+    Public getLocationSuccess As String = String.Empty
+    Public getLocationError As String = String.Empty
+    Public getLocationResponse As TLResponse
+    Public responseTime As String = String.Empty
+
 #End Region
 
 #Region "SSL Handshake Error"
@@ -75,7 +80,6 @@ Partial Public Class TL_App1
     ''' <summary>
     ''' Neglect the ssl handshake error with authentication server
     ''' </summary>
-
     Function CertificateValidationCallBack( _
     ByVal sender As Object, _
     ByVal certificate As X509Certificate, _
@@ -96,38 +100,35 @@ Partial Public Class TL_App1
     ''' </summary>
     ''' <param name="sender">object that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
             ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-            map_canvas.Visible = False
-
-            Dim currentServerTime As DateTime = DateTime.UtcNow
-            serverTimeLabel.Text = [String].Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) & " UTC"
-
             Dim ableToRead As Boolean = Me.ReadConfigFile()
             If Not ableToRead Then
                 Return
             End If
 
-            If Session("tl_session_acceptableAccuracy") IsNot Nothing Then
-                Radio_AcceptedAccuracy.SelectedIndex = Convert.ToInt32(Session("tl_session_acceptableAccuracy").ToString())
-                Radio_RequestedAccuracy.SelectedIndex = Convert.ToInt32(Session("tl_session_requestedAccuracy").ToString())
-                Radio_DelayTolerance.SelectedIndex = Convert.ToInt32(Session("tl_session_tolerance").ToString())
+            If Not IsPostBack AndAlso (Session("VbRestTLSelectedValues") Is Nothing) Then
+                RA2.Checked = True
+                AA3.Checked = True
+                DT2.Checked = True
             End If
-
-            If (Session("tl_session_appState") Is "GetToken") AndAlso (Request("Code") IsNot Nothing) Then
+            If (Session("vb_tl_session_appState") Is "GetToken") AndAlso (Request("Code") IsNot Nothing) Then
                 Me.authCode = Request("code")
                 Dim ableToGetToken As Boolean = Me.GetAccessToken(AccessTokenType.Authorization_Code)
+                FetchSelectedValuesFromSessionVariables()
+                Session("VbRestTLSelectedValues") = Nothing
                 If ableToGetToken Then
+
                     Me.GetDeviceLocation()
                 Else
-                    Me.DrawPanelForFailure(tlPanel, "Failed to get Access token")
+                    getLocationError = "Failed to get Access token"
                     Me.ResetTokenSessionVariables()
                     Me.ResetTokenVariables()
                 End If
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(tlPanel, ex.ToString())
+            getLocationError = ex.ToString()
         End Try
     End Sub
 
@@ -137,23 +138,110 @@ Partial Public Class TL_App1
     ''' </summary>
     ''' <param name="sender">object that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub GetDeviceLocation_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub GetDeviceLocation_Click(sender As Object, e As EventArgs)
         Try
-            Session("tl_session_acceptableAccuracy") = Radio_AcceptedAccuracy.SelectedIndex
-            Session("tl_session_requestedAccuracy") = Radio_RequestedAccuracy.SelectedIndex
-            Session("tl_session_tolerance") = Radio_DelayTolerance.SelectedIndex
-
             Dim ableToGetAccessToken As Boolean = Me.ReadAndGetAccessToken()
             If ableToGetAccessToken Then
                 Me.GetDeviceLocation()
             Else
-                Me.DrawPanelForFailure(tlPanel, "Unable to get access token")
+                getLocationError = "Unable to get access token"
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(tlPanel, ex.Message)
+            getLocationError = ex.Message
         End Try
     End Sub
 
+#End Region
+
+#Region "session and radio buttons"
+
+    Public Sub FetchSelectedValuesFromSessionVariables()
+        Dim sessionValue As String = Session("VbRestTLSelectedValues").ToString()
+
+        Dim selectedValues As String() = sessionValue.Split(";"c)
+        If Not String.IsNullOrEmpty(selectedValues(0)) Then
+            If selectedValues(0).CompareTo("AA1") = 0 Then
+                AA1.Checked = True
+            ElseIf selectedValues(0).CompareTo("AA2") = 0 Then
+                AA2.Checked = True
+            ElseIf selectedValues(0).CompareTo("AA3") = 0 Then
+                AA3.Checked = True
+            End If
+        End If
+
+        If Not String.IsNullOrEmpty(selectedValues(1)) Then
+            If selectedValues(1).CompareTo("RA1") = 0 Then
+                RA1.Checked = True
+            ElseIf selectedValues(1).CompareTo("RA2") = 0 Then
+                RA2.Checked = True
+            ElseIf selectedValues(1).CompareTo("RA3") = 0 Then
+                RA3.Checked = True
+            End If
+        End If
+
+        If Not String.IsNullOrEmpty(selectedValues(2)) Then
+            If selectedValues(2).CompareTo("DT1") = 0 Then
+                DT1.Checked = True
+            ElseIf selectedValues(2).CompareTo("DT2") = 0 Then
+                DT2.Checked = True
+            ElseIf selectedValues(2).CompareTo("DT3") = 0 Then
+                DT3.Checked = True
+            End If
+        End If
+    End Sub
+    Public Sub StoreSelectedValuesToSessionVariables()
+        Dim selectedValues As String = String.Empty
+        If AA1.Checked Then
+            selectedValues = selectedValues & "AA1"
+        ElseIf AA2.Checked Then
+            selectedValues = selectedValues & "AA2"
+        ElseIf AA3.Checked Then
+            selectedValues = selectedValues & "AA3"
+        End If
+        selectedValues = selectedValues & ";"
+        If RA1.Checked Then
+            selectedValues = selectedValues & "RA1"
+        ElseIf RA2.Checked Then
+            selectedValues = selectedValues & "RA2"
+        ElseIf RA3.Checked Then
+            selectedValues = selectedValues & "RA3"
+        End If
+        selectedValues = selectedValues & ";"
+        If DT1.Checked Then
+            selectedValues = selectedValues & "DT1"
+        ElseIf DT2.Checked Then
+            selectedValues = selectedValues & "DT2"
+        ElseIf DT3.Checked Then
+            selectedValues = selectedValues & "DT3"
+        End If
+
+        Session("VbRestTLSelectedValues") = selectedValues
+    End Sub
+
+    Public Function getAcceptableAccuracy() As Integer
+        If AA1.Checked Then
+            Return Convert.ToInt32(AA1.Value)
+        ElseIf AA2.Checked Then
+            Return Convert.ToInt32(AA2.Value)
+        End If
+        Return Convert.ToInt32(AA3.Value)
+    End Function
+    Public Function getRequestedAccuracry() As Integer
+        If RA1.Checked Then
+            Return Convert.ToInt32(RA1.Value)
+        ElseIf RA2.Checked Then
+            Return Convert.ToInt32(RA2.Value)
+        End If
+        Return Convert.ToInt32(RA3.Value)
+    End Function
+    Public Function getDelayTolerance() As String
+        If DT1.Checked Then
+            Return DT1.Value
+        ElseIf DT2.Checked Then
+            Return DT2.Value
+        End If
+        Return DT3.Value
+    End Function
 #End Region
 
 #Region "API Invokation"
@@ -163,19 +251,17 @@ Partial Public Class TL_App1
     ''' </summary>
     Private Sub GetDeviceLocation()
         Try
-            Dim definedReqAccuracy As Integer() = New Integer(2) {100, 1000, 10000}
-            Dim definedTolerance As String() = New String(2) {"NoDelay", "LowDelay", "DelayTolerant"}
 
-            Dim requestedAccuracy As Integer, acceptableAccuracy As Integer
-            Dim tolerance As String
+            Dim requestedAccuracyVal As Integer, acceptableAccuracyVal As Integer
+            Dim toleranceVal As String
 
-            acceptableAccuracy = definedReqAccuracy(Radio_AcceptedAccuracy.SelectedIndex)
-            requestedAccuracy = definedReqAccuracy(Radio_RequestedAccuracy.SelectedIndex)
-            tolerance = definedTolerance(Radio_DelayTolerance.SelectedIndex)
+            acceptableAccuracyVal = getAcceptableAccuracy()
+            requestedAccuracyVal = getRequestedAccuracry()
+            toleranceVal = getDelayTolerance()
 
             Dim strResult As String
 
-            Dim webRequest As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/2/devices/location?requestedAccuracy=" & requestedAccuracy & "&acceptableAccuracy=" & acceptableAccuracy & "&tolerance=" & tolerance), HttpWebRequest)
+            Dim webRequest As HttpWebRequest = DirectCast(System.Net.WebRequest.Create(String.Empty & Me.endPoint & "/2/devices/location?requestedAccuracy=" & requestedAccuracyVal & "&acceptableAccuracy=" & acceptableAccuracyVal & "&tolerance=" & toleranceVal), HttpWebRequest)
             webRequest.Headers.Add("Authorization", "Bearer " & Me.accessToken)
             webRequest.Method = "GET"
 
@@ -187,33 +273,21 @@ Partial Public Class TL_App1
             Using responseStream As New StreamReader(webResponse.GetResponseStream())
                 strResult = responseStream.ReadToEnd()
                 Dim deserializeJsonObject As New JavaScriptSerializer()
-                Dim deserializedJsonObj As TLResponse = DirectCast(deserializeJsonObject.Deserialize(strResult, GetType(TLResponse)), TLResponse)
-
-                Me.DrawPanelForGetLocationResult(String.Empty, String.Empty, True)
-                Me.DrawPanelForGetLocationResult("Accuracy:", deserializedJsonObj.accuracy, False)
-                Me.DrawPanelForGetLocationResult("Latitude:", deserializedJsonObj.latitude, False)
-                Me.DrawPanelForGetLocationResult("Longitude:", deserializedJsonObj.longitude, False)
-                Me.DrawPanelForGetLocationResult("TimeStamp:", deserializedJsonObj.timestamp, False)
-                Me.DrawPanelForGetLocationResult("Response Time:", tokenSpan.Seconds.ToString() & "seconds", False)
-
-                MapTerminalLocation.Visible = True
-                map_canvas.Visible = True
-                Dim googleString As New StringBuilder()
-                googleString.Append("http://maps.google.com/?q=" & deserializedJsonObj.latitude & "+" & deserializedJsonObj.longitude & "&output=embed")
-                MapTerminalLocation.Attributes("src") = googleString.ToString()
-
+                getLocationResponse = DirectCast(deserializeJsonObject.Deserialize(strResult, GetType(TLResponse)), TLResponse)
+                responseTime = tokenSpan.Seconds.ToString()
+                getLocationSuccess = "Success"
                 responseStream.Close()
             End Using
         Catch we As WebException
             If we.Response IsNot Nothing Then
                 Using stream As Stream = we.Response.GetResponseStream()
                     Dim streamReader As New StreamReader(stream)
-                    Me.DrawPanelForFailure(tlPanel, streamReader.ReadToEnd())
+                    getLocationError = streamReader.ReadToEnd()
                     streamReader.Close()
                 End Using
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(tlPanel, ex.Message)
+            getLocationError = ex.Message
         End Try
     End Sub
 
@@ -230,12 +304,13 @@ Partial Public Class TL_App1
 
         Dim tokentResult As String = Me.IsTokenValid()
         If tokentResult.Equals("INVALID_ACCESS_TOKEN") Then
-            Session("tl_session_appState") = "GetToken"
+            StoreSelectedValuesToSessionVariables()
+            Session("vb_tl_session_appState") = "GetToken"
             Me.GetAuthCode()
         ElseIf tokentResult.Equals("REFRESH_TOKEN") Then
             Dim ableToGetToken As Boolean = Me.GetAccessToken(AccessTokenType.Refresh_Token)
             If ableToGetToken = False Then
-                Me.DrawPanelForFailure(tlPanel, "Failed to get Access token")
+                getLocationError = "Failed to get Access token"
                 Me.ResetTokenSessionVariables()
                 Me.ResetTokenVariables()
                 Return False
@@ -250,23 +325,23 @@ Partial Public Class TL_App1
     ''' </summary>
     Private Sub ReadTokenSessionVariables()
         Me.accessToken = String.Empty
-        If Session("tl_session_access_token") IsNot Nothing Then
-            Me.accessToken = Session("tl_session_access_token").ToString()
+        If Session("vb_tl_session_access_token") IsNot Nothing Then
+            Me.accessToken = Session("vb_tl_session_access_token").ToString()
         End If
 
         Me.refreshToken = Nothing
-        If Session("tl_session_refresh_token") IsNot Nothing Then
-            Me.refreshToken = Session("tl_session_refresh_token").ToString()
+        If Session("vb_tl_session_refresh_token") IsNot Nothing Then
+            Me.refreshToken = Session("vb_tl_session_refresh_token").ToString()
         End If
 
         Me.accessTokenExpiryTime = Nothing
-        If Session("tl_session_accessTokenExpiryTime") IsNot Nothing Then
-            Me.accessTokenExpiryTime = Session("tl_session_accessTokenExpiryTime").ToString()
+        If Session("vb_tl_session_accessTokenExpiryTime") IsNot Nothing Then
+            Me.accessTokenExpiryTime = Session("vb_tl_session_accessTokenExpiryTime").ToString()
         End If
 
         Me.refreshTokenExpiryTime = Nothing
-        If Session("tl_session_refreshTokenExpiryTime") IsNot Nothing Then
-            Me.refreshTokenExpiryTime = Session("tl_session_refreshTokenExpiryTime").ToString()
+        If Session("vb_tl_session_refreshTokenExpiryTime") IsNot Nothing Then
+            Me.refreshTokenExpiryTime = Session("vb_tl_session_refreshTokenExpiryTime").ToString()
         End If
     End Sub
 
@@ -274,10 +349,10 @@ Partial Public Class TL_App1
     ''' This function resets access token related session variable to null 
     ''' </summary>
     Private Sub ResetTokenSessionVariables()
-        Session("tl_session_access_token") = Nothing
-        Session("tl_session_refresh_token") = Nothing
-        Session("tl_session_accessTokenExpiryTime") = Nothing
-        Session("tl_session_refreshTokenExpiryTime") = Nothing
+        Session("vb_tl_session_access_token") = Nothing
+        Session("vb_tl_session_refresh_token") = Nothing
+        Session("vb_tl_session_accessTokenExpiryTime") = Nothing
+        Session("vb_tl_session_refreshTokenExpiryTime") = Nothing
     End Sub
 
     ''' <summary>
@@ -297,7 +372,7 @@ Partial Public Class TL_App1
     ''' </summary>
     ''' <returns>string variable containing valid/invalid access/refresh token</returns>
     Private Function IsTokenValid() As String
-        If Session("tl_session_access_token") Is Nothing Then
+        If Session("vb_tl_session_access_token") Is Nothing Then
             Return "INVALID_ACCESS_TOKEN"
         End If
 
@@ -331,7 +406,7 @@ Partial Public Class TL_App1
     ''' <param name="type">If type value is Authorization_code, access token is fetch for authorization code flow
     ''' If type value is Refresh_Token, access token is fetch for authorization code floww based on the exisiting refresh token</param>
     ''' <returns>true/false; true if success, else false</returns>
-    Private Function GetAccessToken(ByVal type As AccessTokenType) As Boolean
+    Private Function GetAccessToken(type As AccessTokenType) As Boolean
         Dim postStream As Stream = Nothing
         Try
             Dim currentServerTime As DateTime = DateTime.UtcNow.ToLocalTime()
@@ -374,28 +449,28 @@ Partial Public Class TL_App1
 
                     Me.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() & " " & refreshExpiry.ToLongTimeString()
 
-                    Session("tl_session_access_token") = Me.accessToken
-                    Session("tl_session_refresh_token") = Me.refreshToken
-                    Session("tl_session_accessTokenExpiryTime") = Me.accessTokenExpiryTime
-                    Session("tl_session_refreshTokenExpiryTime") = Me.refreshTokenExpiryTime
-                    Session("tl_session_appState") = "TokenReceived"
+                    Session("vb_tl_session_access_token") = Me.accessToken
+                    Session("vb_tl_session_refresh_token") = Me.refreshToken
+                    Session("vb_tl_session_accessTokenExpiryTime") = Me.accessTokenExpiryTime
+                    Session("vb_tl_session_refreshTokenExpiryTime") = Me.refreshTokenExpiryTime
+                    Session("vb_tl_session_appState") = "TokenReceived"
 
                     accessTokenResponseStream.Close()
                     Return True
                 Else
-                    Me.DrawPanelForFailure(tlPanel, "Auth server returned null access token")
+                    getLocationError = "Auth server returned null access token"
                 End If
             End Using
         Catch we As WebException
             If we.Response IsNot Nothing Then
                 Using stream As Stream = we.Response.GetResponseStream()
                     Dim streamReader As New StreamReader(stream)
-                    Me.DrawPanelForFailure(tlPanel, streamReader.ReadToEnd())
+                    getLocationError = streamReader.ReadToEnd()
                     streamReader.Close()
                 End Using
             End If
         Catch ex As Exception
-            Me.DrawPanelForFailure(tlPanel, ex.Message)
+            getLocationError = ex.Message
         Finally
             If postStream IsNot Nothing Then
                 postStream.Close()
@@ -412,25 +487,25 @@ Partial Public Class TL_App1
     Private Function ReadConfigFile() As Boolean
         Me.endPoint = ConfigurationManager.AppSettings("endPoint")
         If String.IsNullOrEmpty(Me.endPoint) Then
-            Me.DrawPanelForFailure(tlPanel, "endPoint is not defined in configuration file")
+            getLocationError = "endPoint is not defined in configuration file"
             Return False
         End If
 
         Me.apiKey = ConfigurationManager.AppSettings("api_key")
         If String.IsNullOrEmpty(Me.apiKey) Then
-            Me.DrawPanelForFailure(tlPanel, "api_key is not defined in configuration file")
+            getLocationError = "api_key is not defined in configuration file"
             Return False
         End If
 
         Me.secretKey = ConfigurationManager.AppSettings("secret_key")
         If String.IsNullOrEmpty(Me.secretKey) Then
-            Me.DrawPanelForFailure(tlPanel, "secret_key is not defined in configuration file")
+            getLocationError = "secret_key is not defined in configuration file"
             Return False
         End If
 
         Me.authorizeRedirectUri = ConfigurationManager.AppSettings("authorize_redirect_uri")
         If String.IsNullOrEmpty(Me.authorizeRedirectUri) Then
-            Me.DrawPanelForFailure(tlPanel, "authorize_redirect_uri is not defined in configuration file")
+            getLocationError = "authorize_redirect_uri is not defined in configuration file"
             Return False
         End If
 
@@ -446,74 +521,31 @@ Partial Public Class TL_App1
             Me.refreshTokenExpiresIn = 24
         End If
 
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("SourceLink")) Then
+            SourceLink.HRef = ConfigurationManager.AppSettings("SourceLink")
+        Else
+            ' Default value
+            SourceLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("DownloadLink")) Then
+            DownloadLink.HRef = ConfigurationManager.AppSettings("DownloadLink")
+        Else
+            ' Default value
+            DownloadLink.HRef = "#"
+        End If
+
+        If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("HelpLink")) Then
+            HelpLink.HRef = ConfigurationManager.AppSettings("HelpLink")
+        Else
+            ' Default value
+            HelpLink.HRef = "#"
+        End If
         Return True
     End Function
 
 #End Region
 
-#Region "Display Methods"
-
-    ''' <summary>
-    ''' Displays error message
-    ''' </summary>
-    ''' <param name="panelParam">Panel to draw error message</param>
-    ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForFailure(ByVal panelParam As Panel, ByVal message As String)
-        Dim table As New Table()
-        table.Font.Name = "Sans-serif"
-        table.Font.Size = 9
-        table.BorderStyle = BorderStyle.Outset
-        table.CssClass = "errorWide"
-        table.Width = Unit.Pixel(650)
-        Dim rowOne As New TableRow()
-        Dim rowOneCellOne As New TableCell()
-        rowOneCellOne.Font.Bold = True
-        rowOneCellOne.Text = "ERROR:"
-        rowOne.Controls.Add(rowOneCellOne)
-        table.Controls.Add(rowOne)
-        Dim rowTwo As New TableRow()
-        Dim rowTwoCellOne As New TableCell()
-        rowTwoCellOne.Text = message
-        rowTwo.Controls.Add(rowTwoCellOne)
-        table.Controls.Add(rowTwo)
-        table.BorderWidth = 2
-        table.BorderColor = Color.Red
-        table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc")
-        panelParam.Controls.Add(table)
-    End Sub
-
-    ''' <summary>
-    ''' This method is used to draw table for successful response of get device locations
-    ''' </summary>
-    ''' <param name="attribute">string, attribute to be displayed</param>
-    ''' <param name="value">string, value to be displayed</param>
-    ''' <param name="headerFlag">boolean, flag indicating to draw header panel</param>
-    Private Sub DrawPanelForGetLocationResult(ByVal attribute As String, ByVal value As String, ByVal headerFlag As Boolean)
-        If headerFlag = True Then
-            Me.getStatusTable = New Table()
-            Me.getStatusTable.CssClass = "successWide"
-            Dim rowOne As New TableRow()
-            Dim rowOneCellOne As New TableCell()
-            rowOneCellOne.Font.Bold = True
-            rowOneCellOne.Text = "SUCCESS:"
-            rowOne.Controls.Add(rowOneCellOne)
-            Me.getStatusTable.Controls.Add(rowOne)
-            tlPanel.Controls.Add(Me.getStatusTable)
-        Else
-            Dim row As New TableRow()
-            Dim cell1 As New TableCell()
-            Dim cell2 As New TableCell()
-            cell1.Text = attribute.ToString()
-            cell1.Font.Bold = True
-            cell1.Width = Unit.Pixel(100)
-            row.Controls.Add(cell1)
-            cell2.Text = value.ToString()
-            row.Controls.Add(cell2)
-            Me.getStatusTable.Controls.Add(row)
-        End If
-    End Sub
-
-#End Region
 End Class
 
 #Region "Data Structures"
@@ -529,7 +561,7 @@ Public Class AccessTokenResponse
         Get
             Return m_access_token
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_access_token = Value
         End Set
     End Property
@@ -542,7 +574,7 @@ Public Class AccessTokenResponse
         Get
             Return m_refresh_token
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_refresh_token = Value
         End Set
     End Property
@@ -555,7 +587,7 @@ Public Class AccessTokenResponse
         Get
             Return m_expires_in
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_expires_in = Value
         End Set
     End Property
@@ -573,7 +605,7 @@ Public Class TLResponse
         Get
             Return m_accuracy
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_accuracy = Value
         End Set
     End Property
@@ -586,7 +618,7 @@ Public Class TLResponse
         Get
             Return m_latitude
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_latitude = Value
         End Set
     End Property
@@ -599,7 +631,7 @@ Public Class TLResponse
         Get
             Return m_longitude
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_longitude = Value
         End Set
     End Property
@@ -612,7 +644,7 @@ Public Class TLResponse
         Get
             Return m_timestamp
         End Get
-        Set(ByVal value As String)
+        Set(value As String)
             m_timestamp = Value
         End Set
     End Property
