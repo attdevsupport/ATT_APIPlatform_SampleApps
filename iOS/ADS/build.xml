@@ -1,0 +1,21 @@
+<project name="ATTAdKitSampleApp" default="package">
+<description>
+This is the ${ant.project.name} project.
+It builds the iPhone client app for ${ant.project.name}
+
+
+See this message with ant -e -projecthelp from this directory
+</description>
+
+  <!--  Build up our property tree -->
+  <!--  Remember:  Properties are immutable, NOT last one wins -->
+  <property environment="env"/>
+  <property file="${env.HOME}/build.properties"/>
+  <property name="storefront"        value="enterprise"/>
+  <property name="xcodebuild.target" value="${ant.project.name}"/>
+  <property name="xcodebuild.sdk"    value="iphoneos" />
+  <property name="platform"          value="iphone" />
+  <!-- Load common tasks which are driven by properties defined in the above specified files  -->
+  <import file="${svn.rootdir}/Common/Ant/common.xml"/>
+
+</project>

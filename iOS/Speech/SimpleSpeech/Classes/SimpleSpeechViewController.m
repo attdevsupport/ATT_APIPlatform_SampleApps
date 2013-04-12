@@ -48,14 +48,15 @@
     speechService.showUI = YES;
     
     // Choose the speech recognition package.
-    speechService.speechContext = @"BusinessSearch";
+    speechService.speechContext = @"WebSearch";
     
     // Start the OAuth background operation, disabling the Talk button until 
     // it's done.
     talkButton.enabled = NO;
     [[SpeechAuth authenticatorForService: SpeechOAuthUrl()
                                   withId: SpeechOAuthKey()
-                                  secret: SpeechOAuthSecret()]
+                                  secret: SpeechOAuthSecret()
+                                   scope: SpeechOAuthScope()]
         fetchTo: ^(NSString* token, NSError* error) {
             if (token) {
                 speechService.bearerAuthToken = token;
@@ -69,6 +70,13 @@
     [speechService prepare];
 }
 
+#pragma mark -
+#pragma mark UI
+
+- (BOOL) shouldAutorotateToInterfaceOrientation: (UIInterfaceOrientation) interfaceOrientation
+{
+    return YES;
+}
 
 #pragma mark -
 #pragma mark Actions
@@ -82,13 +90,12 @@
     ATTSpeechService* speechService = [ATTSpeechService sharedSpeechService];
 
     // Add extra arguments for speech recogniton.
-    // We do it now to capture the local time.
     // The parameter is the name of the current screen within this app.
-    speechService.requestHeaders =
-        [NSDictionary dictionaryWithObject: SpeechExtraArguments(@"main")
-                                    forKey: @"X-Arg"];
+    speechService.xArgs =
+        [NSDictionary dictionaryWithObjectsAndKeys:
+         @"main", @"ClientScreen", nil];
 
-    [speechService startWithMicrophone];
+    [speechService startListening];
 }
 
 // Make use of the recognition text in this app.
@@ -99,10 +106,10 @@
     
     // Load a website using the recognized text.
     // First make the recognizedText safe for use as a search term in a URL.
-    NSString* webSafeTerm =
+    NSString* escapedTerm =
         [recognizedText stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
     NSString* urlString =
-        [NSString stringWithFormat: @"http://m.yp.com/search?search_term=%@", webSafeTerm];
+        [NSString stringWithFormat: @"http://en.m.wikipedia.org/w/index.php?search=%@", escapedTerm];
     NSURL* url = [NSURL URLWithString: urlString];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
     [self.webView loadRequest:request];
