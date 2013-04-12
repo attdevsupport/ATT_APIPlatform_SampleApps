@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple TTS Demo</string>
+    <string name="speak_button">Press to Talk</string>
+    <string name="speak_button_wait">Please wait</string>
+    <string name="greeting">Press the "Talk" button, and ask a question.</string>
+    <string name="response_format">You asked, %s?  I wish I new the answer!</string>
+    <string name="result"> </string>
+</resources>

@@ -22,6 +22,8 @@ Before building the sample app, you will need to add the configuration for your 
 
 ## Understanding the sample
 
-The main code of the sample app is in the SimpleSpeechActivityDemo and SimpleSpeechServiceDemo class.  Look in the `startSpeechActivity` and `startSpeechService` methods for examples of setting up and starting a speech interaction.  Look in the `onActivityResult` method and ResultListener/ErrorListener classes for handling recognition responses and errors.
+The main code of the sample app is in the `SimpleSpeechActivityDemo` and `SimpleSpeechServiceDemo` classes.  Look in the `startSpeechActivity` and `startSpeechService` methods for examples of setting up and starting a speech interaction.  Look in the `onActivityResult` method and `ResultListener`/`ErrorListener` inner classes for handling recognition responses and errors.
 
-An example of OAuth client credential validation is in the class SpeechAuth.  You may use that class in your own applications, or you can use any other OAuth library. 
+## Reusable OAuth code
+
+An example of OAuth client credential validation is in the class `SpeechAuth`.  You may use that class in your own applications, or you can use any other OAuth library. 

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/test_tab_background" >
+
+        <TextView
+            android:id="@+id/keyWordsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:text="Keywords"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/keyWordsEditText"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toRightOf="@id/keyWordsTitle"
+            android:maxLength="50"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/zipTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_below="@id/keyWordsTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
+            android:text="Zip"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/zipEditText"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_below="@id/keyWordsTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_toRightOf="@id/keyWordsTitle"
+            android:inputType="number"
+            android:maxLength="8"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/premiumTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_below="@id/zipTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
+            android:text="Premium"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/premiumType"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_below="@id/zipTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toRightOf="@id/keyWordsTitle"
+            android:background="@drawable/bg_theme"
+            android:gravity="left|center_vertical"
+            android:paddingLeft="5dp"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/ageGroupTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_below="@id/premiumTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
+            android:text="Age Group"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/ageGroupType"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_below="@id/premiumTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toRightOf="@id/keyWordsTitle"
+            android:background="@drawable/bg_theme"
+            android:gravity="left|center_vertical"
+            android:paddingLeft="5dp"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/adSizeTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_below="@id/ageGroupTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:gravity="center"
+            android:text="Ad Size"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/adSizeType"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_below="@id/ageGroupTitle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toRightOf="@id/keyWordsTitle"
+            android:background="@drawable/bg_theme"
+            android:gravity="left|center_vertical"
+            android:paddingLeft="5dp"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/locationTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_alignLeft="@+id/adSizeTitle"
+            android:layout_below="@id/adSizeTitle"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="5dp"
+            android:gravity="left|center_vertical"
+            android:text="Current Location"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <CheckBox
+            android:id="@+id/showLatLong"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_alignBottom="@+id/locationTextView"
+            android:layout_below="@+id/adSizeType"
+            android:layout_marginRight="5dp"
+            android:layout_toRightOf="@id/locationTextView"
+            android:checked="false"
+            android:gravity="left|center_vertical" />
+
+        <TextView
+            android:id="@+id/longitude"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_alignLeft="@+id/locationTextView"
+            android:layout_below="@id/showLatLong"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="5dp"
+            android:gravity="left|center_vertical"
+            android:text="Longitude"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/longitudeEditText"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_alignLeft="@+id/adSizeType"
+            android:layout_alignTop="@+id/longitude"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:gravity="left|center_vertical"
+            android:inputType="number|numberDecimal|numberSigned"
+            android:maxLength="12"
+            android:singleLine="true"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/latitudeEditText"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_alignLeft="@+id/longitudeEditText"
+            android:layout_below="@id/longitude"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:gravity="left|center_vertical"
+            android:inputType="number|numberDecimal|numberSigned"
+            android:maxLength="12"
+            android:singleLine="true"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/latitude"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_alignLeft="@+id/adSizeTitle"
+            android:layout_alignTop="@+id/latitudeEditText"
+            android:gravity="left|center_vertical"
+            android:text="Latitude"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+</ScrollView>

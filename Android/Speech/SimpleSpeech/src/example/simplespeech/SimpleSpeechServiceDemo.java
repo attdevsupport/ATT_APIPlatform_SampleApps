@@ -109,16 +109,15 @@ public class SimpleSpeechServiceDemo extends Activity {
         }
         
         // Specify the speech context for this app.
-        speechService.setSpeechContext("BusinessSearch");
+        speechService.setSpeechContext("WebSearch");
         
         // Set the OAuth token that was fetched in the background.
         speechService.setBearerAuthToken(oauthToken);
         
         // Add extra arguments for speech recognition.
-        // We do it now to capture the local time.
         // The parameter is the name of the current screen within this app.
-        speechService.setRequestHeaders(
-                Collections.singletonMap("X-Arg", SpeechConfig.extraArguments(this, "main")));
+        speechService.setXArgs(
+                Collections.singletonMap("ClientScreen", "main"));
 
         // Finally we have all the information needed to start the speech service.  
         speechService.startListening();
@@ -157,8 +156,7 @@ public class SimpleSpeechServiceDemo extends Activity {
         resultView.setText(resultText);
         // And then perform a search on a website using the text.
         String query = URLEncoder.encode(resultText);
-        // Display a Yellow pages search.
-        String url = "http://m.yp.com/search?search_term="+query;
+        String url = "http://en.m.wikipedia.org/w/index.php?search="+query;
         webView.loadUrl(url);
     }
     
@@ -208,7 +206,8 @@ public class SimpleSpeechServiceDemo extends Activity {
      * Disables the Speak button until the check is complete.
     **/
     private void validateOAuth() {
-        SpeechAuth auth = SpeechAuth.forService(SpeechConfig.oauthUrl(), 
+        SpeechAuth auth = 
+            SpeechAuth.forService(SpeechConfig.oauthUrl(), SpeechConfig.oauthScope(), 
                 SpeechConfig.oauthKey(), SpeechConfig.oauthSecret());
         auth.fetchTo(new OAuthResponseListener());
         speakButton.setText(R.string.speak_wait);

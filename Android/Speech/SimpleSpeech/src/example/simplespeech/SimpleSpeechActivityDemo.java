@@ -109,17 +109,16 @@ public class SimpleSpeechActivityDemo extends Activity {
         
         // Specify the speech context for this app.
         recognizerIntent.putExtra(ATTSpeechActivity.EXTRA_SPEECH_CONTEXT, 
-                "BusinessSearch");
+                "WebSearch");
         
         // Set the OAuth token that was fetched in the background.
         recognizerIntent.putExtra(ATTSpeechActivity.EXTRA_BEARER_AUTH_TOKEN, 
                 oauthToken);
 
         // Add extra arguments for speech recognition.
-        recognizerIntent.putExtra(ATTSpeechActivity.EXTRA_REQUEST_HEADER_NAMES, 
-                new String[] {"X-Arg"});
-        recognizerIntent.putExtra(ATTSpeechActivity.EXTRA_REQUEST_HEADER_VALUES, 
-                new String[] {SpeechConfig.extraArguments(this, "main")});
+        // The parameter is the name of the current screen within this app.
+        recognizerIntent.putExtra(ATTSpeechActivity.EXTRA_XARGS, 
+                "ClientScreen=main");
 
         // Finally we have all the information needed to start the speech activity.  
         startActivityForResult(recognizerIntent, SPEECH_REQUEST_CODE);
@@ -192,8 +191,7 @@ public class SimpleSpeechActivityDemo extends Activity {
         resultView.setText(resultText);
         // And then perform a search on a website using the text.
         String query = URLEncoder.encode(resultText);
-        // Display a Yellow pages search.
-        String url = "http://m.yp.com/search?search_term="+query;
+        String url = "http://en.m.wikipedia.org/w/index.php?search="+query;
         webView.loadUrl(url);
     }
 
@@ -213,7 +211,8 @@ public class SimpleSpeechActivityDemo extends Activity {
      * Disables the Speak button until the check is complete.
     **/
     private void validateOAuth() {
-        SpeechAuth auth = SpeechAuth.forService(SpeechConfig.oauthUrl(), 
+        SpeechAuth auth = 
+            SpeechAuth.forService(SpeechConfig.oauthUrl(), SpeechConfig.oauthScope(), 
                 SpeechConfig.oauthKey(), SpeechConfig.oauthSecret());
         auth.fetchTo(new OAuthResponseListener());
         speakButton.setText(R.string.speak_wait);

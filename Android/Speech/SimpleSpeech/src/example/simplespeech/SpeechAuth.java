@@ -47,13 +47,15 @@ public class SpeechAuth
      * @throws IllegalArgumentException for bad URL, etc.
     **/
     public static SpeechAuth
-    forService(String oauthService, String apiKey, String apiSecret)
+    forService(String oauthService, String oauthScope,
+               String apiKey, String apiSecret)
         throws IllegalArgumentException
     {
         try {
             URL url = new URL(oauthService);
             HttpURLConnection request = (HttpURLConnection)url.openConnection();
-            String data = String.format(Locale.US, OAUTH_DATA, apiKey, apiSecret);
+            String data = String.format(Locale.US, OAUTH_DATA, 
+                    oauthScope, apiKey, apiSecret);
             byte[] bytes = data.getBytes("UTF8");
             request.setConnectTimeout(CONNECT_TIMEOUT);
             request.setReadTimeout(READ_TIMEOUT);
@@ -67,7 +69,8 @@ public class SpeechAuth
         }
     }
 
-    private static final String OAUTH_DATA = "client_id=%s&client_secret=%s&grant_type=client_credentials&scope=SPEECH";
+    private static final String OAUTH_DATA = 
+            "grant_type=client_credentials&scope=%s&client_id=%s&client_secret=%s";
     /** The OAuth server is quite quick.  The only timeouts will be for network failures. **/
     private static final int CONNECT_TIMEOUT = 5*1000; // milliseconds
     private static final int READ_TIMEOUT = 5*1000;
