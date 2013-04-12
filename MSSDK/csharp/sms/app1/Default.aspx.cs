@@ -1,7 +1,7 @@
 ﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -16,7 +16,9 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Web.UI.WebControls;
 using ATT_MSSDK;
-using ATT_MSSDK.SMSv2;
+using ATT_MSSDK.SMSv3;
+using System.IO;
+using System.Text.RegularExpressions;
 #endregion
 
 /* This Application demonstrates usage of  AT&T MS SDK wrapper library for sending SMS,
@@ -30,7 +32,7 @@ using ATT_MSSDK.SMSv2;
  * 
  * Steps to be followed by the application to invoke SMS APIs exposed by MS SDK wrapper library:
  * --------------------------------------------------------------------------------------------
- * 1. Import ATT_MSSDK and ATT_MSSDK.SMSv2 NameSpace.
+ * 1. Import ATT_MSSDK and ATT_MSSDK.SMSv3 NameSpace.
  * 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
  * the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
  * while creating RequestFactory instance.
@@ -77,7 +79,7 @@ public partial class SMS_App1 : System.Web.UI.Page
      * \n \n <b>Send Message:</b>
      * \n This method sends an SMS message to one Mobile Network device.
      * \n \n Steps followed in the app to invoke the method:
-     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.SMSv2 NameSpace.</li>
+     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.SMSv3 NameSpace.</li>
      * <li>Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
      * Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.</li>
      * <li>Invoke \c SendSms() exposed in the \c RequestFactory class of MS SDK library.</li></ul>
@@ -191,9 +193,13 @@ public partial class SMS_App1 : System.Web.UI.Page
                 return;
             }
 
-            SmsResponse resp = this.requestFactory.SendSms(txtmsisdn.Text.Trim(), txtmsg.Text.Trim());
-            txtSmsId.Text = resp.Id;
-            this.DrawPanelForSuccess(sendSMSPanel, resp.Id);
+            SmsResponse resp = this.requestFactory.SendSms(txtmsisdn.Text.Trim(), txtmsg.Text.Trim(), chkReceiveNotification.Checked);
+
+            if (!chkReceiveNotification.Checked)
+            {
+                txtSmsId.Text = resp.MessageId;
+            }
+            this.DrawPanelForSuccess(sendSMSPanel, resp.MessageId);
         }
         catch (ArgumentException ex)
         {
@@ -259,6 +265,11 @@ public partial class SMS_App1 : System.Web.UI.Page
         {
             this.DrawPanelForFailure(getMessagePanel, ex.ToString());
         }
+    }
+
+    protected void btnRefresh_Click(object sender, EventArgs e)
+    {
+        this.DisplayDeliveryNotificationStatus();
     }
 
     #endregion
@@ -425,6 +436,94 @@ public partial class SMS_App1 : System.Web.UI.Page
     }
 
     /// <summary>
+    /// This function calls receive sms api to fetch the sms's
+    /// </summary>
+    private void DisplayDeliveryNotificationStatus()
+    {
+        string receivedMessagesFile = ConfigurationManager.AppSettings["deliveryStatusFilePath"];
+        if (!string.IsNullOrEmpty(receivedMessagesFile))
+            receivedMessagesFile = Server.MapPath(receivedMessagesFile);
+        else
+            receivedMessagesFile = Server.MapPath("DeliveryStatus.txt");
+        string messagesLine = String.Empty;
+
+        List<DeliveryInfoNotification> receiveSMSDeliveryStatusResponseData = new List<DeliveryInfoNotification>();
+
+        if (File.Exists(receivedMessagesFile))
+        {
+            using (StreamReader sr = new StreamReader(receivedMessagesFile))
+            {
+                while (sr.Peek() >= 0)
+                {
+                    DeliveryInfoNotification dNot = new DeliveryInfoNotification();
+                    dNot.DeliveryInfo = new DeliveryInfo();
+                    messagesLine = sr.ReadLine();
+                    string[] messageValues = Regex.Split(messagesLine, "_-_-");
+                    dNot.DeliveryInfo.Id = messageValues[0];
+                    dNot.DeliveryInfo.Address= messageValues[1];
+                    dNot.DeliveryInfo.DeliveryStatus = messageValues[2];
+                    receiveSMSDeliveryStatusResponseData.Add(dNot);
+                }
+                sr.Close();
+                receiveSMSDeliveryStatusResponseData.Reverse();
+            }
+        }
+
+        Table notificationTable = new Table();
+        notificationTable.Font.Name = "Sans-serif";
+        notificationTable.Font.Size = 9;
+        notificationTable.BorderStyle = BorderStyle.Outset;
+        notificationTable.Width = Unit.Pixel(650);
+
+        TableRow tableRow = new TableRow();
+
+        TableCell rowOneCellOne = new TableCell();
+        rowOneCellOne.Font.Bold = true;
+        rowOneCellOne.Text = "Message ID";
+        tableRow.Controls.Add(rowOneCellOne);
+
+        rowOneCellOne = new TableCell();
+        rowOneCellOne.Font.Bold = true;
+        rowOneCellOne.Text = "Address";
+        tableRow.Controls.Add(rowOneCellOne);
+
+        rowOneCellOne = new TableCell();
+        rowOneCellOne.Font.Bold = true;
+        rowOneCellOne.Text = "Delivery Status";
+        tableRow.Controls.Add(rowOneCellOne);
+
+        notificationTable.Controls.Add(tableRow);
+
+        foreach(DeliveryInfoNotification dNot in receiveSMSDeliveryStatusResponseData)
+        {
+            if (null != dNot.DeliveryInfo)
+            {
+                tableRow = new TableRow();
+
+                rowOneCellOne = new TableCell();
+                rowOneCellOne.Font.Bold = true;
+                rowOneCellOne.Text = dNot.DeliveryInfo.Id;
+                tableRow.Controls.Add(rowOneCellOne);
+
+                rowOneCellOne = new TableCell();
+                rowOneCellOne.Font.Bold = true;
+                rowOneCellOne.Text = dNot.DeliveryInfo.Address;
+                tableRow.Controls.Add(rowOneCellOne);
+
+                rowOneCellOne = new TableCell();
+                rowOneCellOne.Font.Bold = true;
+                rowOneCellOne.Text = dNot.DeliveryInfo.DeliveryStatus;
+                tableRow.Controls.Add(rowOneCellOne);
+                notificationTable.Controls.Add(tableRow);
+            }
+        }
+
+        notificationTable.BorderWidth = 1;
+        notificationsPanel.Controls.Add(notificationTable);
+        
+    }
+
+    /// <summary>
     /// This function is used to draw the table for get status success response
     /// </summary>
     /// <param name="status">Status as string</param>
@@ -527,7 +626,7 @@ public partial class SMS_App1 : System.Web.UI.Page
         table.BorderColor = Color.Red;
         table.BackColor = System.Drawing.ColorTranslator.FromHtml("#fcc");
         panelParam.Controls.Add(table);
-    }   
+    }
 
     #endregion
 

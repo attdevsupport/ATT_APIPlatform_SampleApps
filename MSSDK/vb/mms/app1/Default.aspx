@@ -1,4 +1,4 @@
-﻿<%@ Page Language="VB" AutoEventWireup="false" CodeFile="Default.aspx.vb" Inherits="MMS_App1" %>
+﻿<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="MMS_App1" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
@@ -67,6 +67,12 @@
                         <td class="cell">
                             <asp:TextBox ID="messageTextBox" runat="server" Height="99px" TextMode="MultiLine"
                                 Width="291px"></asp:TextBox>
+                        </td>
+                    </tr>
+                    <tr>                       
+                        <td></td>
+                        <td class="cell">
+                            <asp:CheckBox ID="chkReceiveNotification" runat="server" Text="Receive Delivery Status Notification" />
                         </td>
                     </tr>
                 </tbody>
@@ -161,11 +167,24 @@
             </asp:Panel>
         </div>
         <br clear="all" />
+        <div class="wrapper">
+            <div class="content">
+                <br />
+                <h2>Feature 3: Receive Delivery Status</h2>
+                <asp:Button ID="btnRefresh" runat="server" Text="Refresh Notifications" OnClick="btnRefresh_Click"/>
+                <br />
+                <br />
+                <div align="left">
+                    <asp:Panel ID="notificationsPanel" runat="server"></asp:Panel>
+                </div>
+            </div>
+        </div>
+        <br clear="all" />
         <div id="footer" align="center">
                 <div style="float: right; width: 20%; font-size: 9px; text-align: right">
                     Powered by AT&amp;T Cloud Architecture</div>
                 <p>
-                    © 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                    © 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
                         target="_blank">http://developer.att.com</a>
                     <br/>
                     The Application hosted on this site are working examples intended to be used for
@@ -173,8 +192,9 @@
                     used as part of your product. The data in these pages is for test purposes only
                     and intended only for use as a reference in how the services perform.
                     <br/>
-                    For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                        target="_blank">https://devconnect-api.att.com</a>
+                    For download of tools and documentation, please go to <a href="http://developer.att.com/SDK"
+                        target="_blank">https://developer.att.com/SDK</a> and <a href="http://developer.att.com/docs"
+                        target="_blank">https://developer.att.com/docs</a>
                     <br/>
                     For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
             </div>

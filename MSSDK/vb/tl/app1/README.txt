@@ -1,6 +1,6 @@
 ******************************************************************************************
 * Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 

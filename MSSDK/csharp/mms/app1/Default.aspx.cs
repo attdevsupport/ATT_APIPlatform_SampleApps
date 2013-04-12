@@ -1,7 +1,7 @@
 ﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -15,8 +15,9 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Web.UI.WebControls;
+using System.Text.RegularExpressions;
 using ATT_MSSDK;
-using ATT_MSSDK.MMSv2;
+using ATT_MSSDK.MMSv3;
 #endregion
 
 /* 
@@ -31,7 +32,7 @@ using ATT_MSSDK.MMSv2;
  * 
  * Steps to be followed by the application to invoke MMS APIs exposed by MS SDK wrapper library:
  * --------------------------------------------------------------------------------------------
- * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv2 NameSpace.
+ * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv3 NameSpace.
  * 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
  * the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
  * while creating RequestFactory instance.
@@ -78,7 +79,7 @@ public partial class MMS_App1 : System.Web.UI.Page
      * \n \n <b>Send MMS:</b>
      * \n This method sends MMS to one or more mobile network devices.
      * \n \n Steps followed in the app to invoke the method:
-     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.MMSv2 NameSpace.</li>
+     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.MMSv3 NameSpace.</li>
      * <li>Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
      * Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.</li>
      * <li>Invoke \c SendMms() exposed in the \c RequestFactory class of MS SDK library.</li></ul>
@@ -424,15 +425,18 @@ public partial class MMS_App1 : System.Web.UI.Page
             MmsResponse resp;
             if (null != this.mmsAttachments && this.mmsAttachments.Count == 0)
             {
-                resp = this.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim());
+                resp = this.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim(),MmsPriority.Normal,chkReceiveNotification.Checked);
             }
             else
             {
-                resp = this.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim(), this.mmsAttachments);
+                resp = this.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim(), this.mmsAttachments, MmsPriority.Normal,600, chkReceiveNotification.Checked);
             }
 
-            messageIDTextBox.Text = resp.Id;
-            this.DrawPanelForSuccess(sendMessagePanel, resp.Id);
+            if (!chkReceiveNotification.Checked)
+            {
+                messageIDTextBox.Text = resp.MessageId;
+            }
+            this.DrawPanelForSuccess(sendMessagePanel, resp.MessageId);
         }
         catch (ArgumentException ex)
         {
@@ -452,4 +456,94 @@ public partial class MMS_App1 : System.Web.UI.Page
 
     /** }@ */
     /** }@ */
+    protected void btnRefresh_Click(object sender, EventArgs e)
+    {
+        this.DisplayDeliveryNotificationStatus();
+    }
+
+    private void DisplayDeliveryNotificationStatus()
+    {
+        string receivedMessagesFile = ConfigurationManager.AppSettings["deliveryStatusFilePath"];
+        if (!string.IsNullOrEmpty(receivedMessagesFile))
+            receivedMessagesFile = Server.MapPath(receivedMessagesFile);
+        else
+            receivedMessagesFile = Server.MapPath("DeliveryStatus.txt");
+        string messagesLine = String.Empty;
+
+        List<DeliveryInfoNotification> receiveMMSDeliveryStatusResponseData = new List<DeliveryInfoNotification>();
+
+        if (File.Exists(receivedMessagesFile))
+        {
+            using (StreamReader sr = new StreamReader(receivedMessagesFile))
+            {
+                while (sr.Peek() >= 0)
+                {
+                    DeliveryInfoNotification dNot = new DeliveryInfoNotification();
+                    dNot.deliveryInfo = new DeliveryInfo();
+                    messagesLine = sr.ReadLine();
+                    string[] messageValues = Regex.Split(messagesLine, "_-_-");
+                    dNot.messageId = messageValues[0];
+                    dNot.deliveryInfo.Address = messageValues[1];
+                    dNot.deliveryInfo.DeliveryStatus = messageValues[2];
+                    receiveMMSDeliveryStatusResponseData.Add(dNot);
+                }
+                sr.Close();
+                receiveMMSDeliveryStatusResponseData.Reverse();
+            }
+        }
+
+        Table notificationTable = new Table();
+        notificationTable.Font.Name = "Sans-serif";
+        notificationTable.Font.Size = 9;
+        notificationTable.BorderStyle = BorderStyle.Outset;
+        notificationTable.Width = Unit.Pixel(650);
+
+        TableRow tableRow = new TableRow();
+
+        TableCell rowOneCellOne = new TableCell();
+        rowOneCellOne.Font.Bold = true;
+        rowOneCellOne.Text = "Message ID";
+        tableRow.Controls.Add(rowOneCellOne);
+
+        rowOneCellOne = new TableCell();
+        rowOneCellOne.Font.Bold = true;
+        rowOneCellOne.Text = "Address";
+        tableRow.Controls.Add(rowOneCellOne);
+
+        rowOneCellOne = new TableCell();
+        rowOneCellOne.Font.Bold = true;
+        rowOneCellOne.Text = "Delivery Status";
+        tableRow.Controls.Add(rowOneCellOne);
+
+        notificationTable.Controls.Add(tableRow);
+
+        foreach (DeliveryInfoNotification dNot in receiveMMSDeliveryStatusResponseData)
+        {
+            if (null != dNot.deliveryInfo)
+            {
+                tableRow = new TableRow();
+
+                rowOneCellOne = new TableCell();
+                rowOneCellOne.Font.Bold = true;
+                rowOneCellOne.Text = dNot.messageId;
+                tableRow.Controls.Add(rowOneCellOne);
+
+                rowOneCellOne = new TableCell();
+                rowOneCellOne.Font.Bold = true;
+                rowOneCellOne.Text = dNot.deliveryInfo.Address;
+                tableRow.Controls.Add(rowOneCellOne);
+
+                rowOneCellOne = new TableCell();
+                rowOneCellOne.Font.Bold = true;
+                rowOneCellOne.Text = dNot.deliveryInfo.DeliveryStatus;
+                tableRow.Controls.Add(rowOneCellOne);
+                notificationTable.Controls.Add(tableRow);
+            }
+        }
+
+        notificationTable.BorderWidth = 1;
+        notificationsPanel.Controls.Clear();
+        notificationsPanel.Controls.Add(notificationTable);
+
+    }
 }

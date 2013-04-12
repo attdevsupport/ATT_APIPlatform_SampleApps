@@ -1,7 +1,7 @@
 ﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -12,7 +12,7 @@ using System.Configuration;
 using System.IO;
 using System.Web.UI.WebControls;
 using ATT_MSSDK;
-using ATT_MSSDK.MMSv2;
+using ATT_MSSDK.MMSv3;
 #endregion
 
 /* 
@@ -27,7 +27,7 @@ using ATT_MSSDK.MMSv2;
  * 
  * Steps to be followed by the application to invoke MMS APIs exposed by MS SDK wrapper library:
  * --------------------------------------------------------------------------------------------
- * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv2 NameSpace.
+ * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv3 NameSpace.
  * 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
  * the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
  * while creating RequestFactory instance.
@@ -77,7 +77,7 @@ public partial class MMS_App2 : System.Web.UI.Page
      * \n \n <b>Send MMS:</b>
      * \n This method sends MMS to one or more mobile network devices.
      * \n \n Steps followed in the app to invoke the method:
-     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.MMSv2 NameSpace.</li>
+     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.MMSv3 NameSpace.</li>
      * <li>Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
      * Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.</li>
      * <li>Invoke \c SendMms() exposed in the \c RequestFactory class of MS SDK library.</li></ul>
@@ -206,8 +206,8 @@ public partial class MMS_App2 : System.Web.UI.Page
             phoneNumbersList.AddRange(phoneNumbers);
 
             MmsResponse resp = this.requestFactory.SendMms(phoneNumbersList, subjectLabel.Text.Trim(), this.mmsAttachments);
-            msgIdLabel.Text = resp.Id;
-            this.DrawPanelForSuccess(sendMMSPanel, resp.Id);
+            msgIdLabel.Text = resp.MessageId;
+            this.DrawPanelForSuccess(sendMMSPanel, resp.MessageId);
         }
         catch (ArgumentException ex)
         {

@@ -1,7 +1,7 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -14,45 +14,50 @@ Imports System.Net
 Imports System.Net.Security
 Imports System.Security.Cryptography.X509Certificates
 Imports System.Web.UI.WebControls
+Imports System.Text.RegularExpressions
 Imports ATT_MSSDK
-Imports ATT_MSSDK.MMSv2
+Imports ATT_MSSDK.MMSv3
 #End Region
 
-' This Application demonstrates usage of  AT&T MS SDK wrapper library for sending MMS and
-' getting delivery status of mms.
 ' 
-' Pre-requisite:
-' -------------
-' The developer has to register his application in AT&T Developer Platform website, for the scope 
-' of AT&T services to be used by application. AT&T Developer Platform website provides a ClientId
-' and client secret on registering the application.
+' * This Application demonstrates usage of  AT&T MS SDK wrapper library for sending MMS and
+' * getting delivery status of mms.
+' * 
+' * Pre-requisite:
+' * -------------
+' * The developer has to register his application in AT&T Developer Platform website, for the scope 
+' * of AT&T services to be used by application. AT&T Developer Platform website provides a ClientId
+' * and client secret on registering the application.
+' * 
+' * Steps to be followed by the application to invoke MMS APIs exposed by MS SDK wrapper library:
+' * --------------------------------------------------------------------------------------------
+' * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv3 NameSpace.
+' * 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
+' * the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
+' * while creating RequestFactory instance.
+' *
+' * Note: Scopes that are not configured for your application will not work.
+' * For example, your application may be configured in the AT&T API Platform to support the Payment and SMS scopes.
+' * The RequestFactory may specify any combination of Payment or SMS.  You may specify other scopes, but they will not work.
+' * 
+' * 3.Invoke the mms related APIs exposed in the RequestFactory class of MS SDK library.
+' * 
+' * For mms services MS SDK library provides APIs SendMms() and GetMmsDeliveryResponse()
+' * These methods return response objects MmsResponse, MmsDeliveryResponse.
 ' 
-' Steps to be followed by the application to invoke MMS APIs exposed by MS SDK wrapper library:
-' --------------------------------------------------------------------------------------------
-' 1. Import ATT_MSSDK and ATT_MSSDK.MMSv2 NameSpace.
-' 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
-' the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
-' while creating RequestFactory instance.
+' * Sample code for sending mms:
+' * ----------------------------
+' List<RequestFactory.ScopeTypes> scopes = new List<RequestFactory.ScopeTypes>();
+' scopes.Add(RequestFactory.ScopeTypes.MMS);
+' RequestFactory requestFactory = new RequestFactory(endPoint, apiKey, secretKey, scopes, null, null);
+' MmsResponse resp = requestFactory.SendMms(PhoneNumber, Subject, mmsAttachments);
 ' 
-' Note: Scopes that are not configured for your application will not work.
-' For example, your application may be configured in the AT&T API Platform to support the Payment and SMS scopes.
-' The RequestFactory may specify any combination of Payment or SMS.  You may specify other scopes, but they will not work.
-' 
-' 3.Invoke the mms related APIs exposed in the RequestFactory class of MS SDK library.
-' 
-' For mms services MS SDK library provides APIs SendMms() and GetMmsDeliveryResponse()
-' These methods return response objects MmsResponse, MmsDeliveryResponse.
-' 
-' Sample code for sending mms:
-' ----------------------------
-' Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-' scopes.Add(RequestFactory.ScopeTypes.MMS)
-' Dim target As New RequestFactory(endPoint, apiKey, secretKey, scopes, Nothing, Nothing)
-' Dim resp As MmsResponse = target.SendMms(PhoneNumber, Subject, mmsAttachments)
-' 
-' Sample code for getting MMS delivery status:
-' --------------------------------------------
-' Dim resp As MmsDeliveryResponse = target.GetMmsDeliveryResponse(MmsId)
+' * Sample code for getting MMS delivery status:
+' * --------------------------------------------
+'  MmsDeliveryResponse resp = requestFactory.GetMmsDeliveryResponse(MmsId);
+'
+'
+
 
 ''' <summary>
 ''' Mms_App1 class
@@ -62,36 +67,41 @@ Imports ATT_MSSDK.MMSv2
 ''' </remarks>
 Partial Public Class MMS_App1
     Inherits System.Web.UI.Page
+    '* \addtogroup MMS_App1
+    '     * Description of the application can be referred at \ref MMS_app1 example
+    '     * @{
+    '     
 
-    '** \addtogroup MMS_App1
-    '** Description of the application can be referred at \ref MMS_app1 example
-    '** @{
-    '** 
-    '**  \example MMS_app1 mms\app1\Default.aspx.vb
-    '** \n \n This application allows an end user to send an MMS message with up to three attachments of any common format, and check the delivery status of that MMS message.
-    '**  
-    '** <b>Send MMS:</b>
-    '** \li Import \c ATT_MSSDK and \c ATT_MSSDK.MMSv2 NameSpace.
-    '** \li Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
-    '** Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.
-    '** \li Invoke \c SendMms() exposed in the \c RequestFactory class of MS SDK library.
-    '** 
-    '** <b>Sample code:</b>
-    '** <pre>
-    '**    Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-    '**    scopes.Add(RequestFactory.ScopeTypes.MMS)
-    '**    Dim target As New RequestFactory(endPoint, apiKey, secretKey, scopes, Nothing, Nothing)
-    '**    Dim resp As MmsResponse = target.SendMms(PhoneNumber, Subject, mmsAttachments)
-    '** </pre>
-    '** <b>Get MMS Delivery status:</b>
-    '** <pre>
-    '**    Dim resp As MmsDeliveryResponse = target.GetMmsDeliveryResponse(MmsId)
-    '** </pre>
-    '** Installing and running the application, refer \ref Application 
-    '** \n \n <b>Parameters in web.config</b> refer \ref parameters_sec section
-    '** 
-    '** \n Documentation can be referred at \ref MMS_App1 section
-    '** @{
+
+    '* \example MMS_app1 mms\app1\Default.aspx.cs
+    '     * \n \n This application allows an end user to send an MMS message with up to three attachments of any common format, and check the delivery status of that MMS message.
+    '     * <ul> 
+    '     * <li>SDK methods showcased by the application:</li>
+    '     * \n \n <b>Send MMS:</b>
+    '     * \n This method sends MMS to one or more mobile network devices.
+    '     * \n \n Steps followed in the app to invoke the method:
+    '     * <ul><li>Import \c ATT_MSSDK and \c ATT_MSSDK.MMSv3 NameSpace.</li>
+    '     * <li>Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
+    '     * Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.</li>
+    '     * <li>Invoke \c SendMms() exposed in the \c RequestFactory class of MS SDK library.</li></ul>
+    '     * Sample code:
+    '     * <pre>
+    '     *    List<RequestFactory.ScopeTypes> scopes = new List<RequestFactory.ScopeTypes>();
+    '     *    scopes.Add(RequestFactory.ScopeTypes.MMS);
+    '     *    RequestFactory requestFactory = new RequestFactory(endPoint, apiKey, secretKey, scopes, null, null);
+    '     *    MmsResponse resp = requestFactory.SendMms(PhoneNumber, Subject, mmsAttachments);</pre>
+    '     * <b>Get MMS Delivery status:</b>
+    '     * <pre>
+    '     *    MmsDeliveryResponse resp = requestFactory.GetMmsDeliveryResponse(MmsId);</pre>
+    '     * 
+    '     <li>For Registration, Installation, Configuration and Execution, refer \ref Application </li> \n
+    '     * \n <li>Additional configuration to be done:</li> \n
+    '     * refer \ref parameters_sec section
+    '     * 
+    '     * \n <li>Documentation can be referred at \ref MMS_App1 section</li></ul>
+    '     * @{
+    '     
+
 
 #Region "Instance Variables"
 
@@ -119,7 +129,7 @@ Partial Public Class MMS_App1
     ''' </summary>
     ''' <param name="sender">Button that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
+    Protected Sub Page_Load(sender As Object, e As EventArgs)
         BypassCertificateError()
 
         Dim currentServerTime As DateTime = DateTime.UtcNow
@@ -134,7 +144,7 @@ Partial Public Class MMS_App1
     ''' </summary>
     ''' <param name="sender">object, that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub SendMMSMessageButton_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub SendMMSMessageButton_Click(sender As Object, e As EventArgs)
         Try
             If String.IsNullOrEmpty(phoneTextBox.Text) Then
                 Me.DrawPanelForFailure(sendMessagePanel, "Specify phone number")
@@ -192,7 +202,7 @@ Partial Public Class MMS_App1
     ''' </summary>
     ''' <param name="sender">object, that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
-    Protected Sub GetStatusButton_Click(ByVal sender As Object, ByVal e As EventArgs)
+    Protected Sub GetStatusButton_Click(sender As Object, e As EventArgs)
         Try
             Dim mmsId As String = messageIDTextBox.Text.Trim()
             If mmsId Is Nothing OrElse mmsId.Length <= 0 Then
@@ -248,7 +258,7 @@ Partial Public Class MMS_App1
             Me.mmsAttachments = New List(Of String)()
 
             Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-            scopes.Add(requestFactory.ScopeTypes.MMS)
+            scopes.Add(RequestFactory.ScopeTypes.MMS)
             Me.requestFactory = New RequestFactory(Me.endPoint, Me.apiKey, Me.secretKey, scopes, Nothing, Nothing)
         End If
     End Sub
@@ -258,7 +268,7 @@ Partial Public Class MMS_App1
     ''' </summary>
     ''' <param name="panelParam">Panel to draw success message</param>
     ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForSuccess(ByVal panelParam As Panel, ByVal message As String)
+    Private Sub DrawPanelForSuccess(panelParam As Panel, message As String)
         If panelParam.HasControls() Then
             panelParam.Controls.Clear()
         End If
@@ -295,7 +305,7 @@ Partial Public Class MMS_App1
     ''' </summary>
     ''' <param name="panelParam">Panel to draw success message</param>
     ''' <param name="message">Message to display</param>
-    Private Sub DrawPanelForFailure(ByVal panelParam As Panel, ByVal message As String)
+    Private Sub DrawPanelForFailure(panelParam As Panel, message As String)
         If panelParam.HasControls() Then
             panelParam.Controls.Clear()
         End If
@@ -323,7 +333,7 @@ Partial Public Class MMS_App1
     ''' </summary>
     ''' <param name="status">string, status of the request</param>
     ''' <param name="url">string, url of the resource</param>
-    Private Sub DrawGetStatusSuccess(ByVal status As String, ByVal url As String)
+    Private Sub DrawGetStatusSuccess(status As String, url As String)
         If getStatusPanel.HasControls() Then
             getStatusPanel.Controls.Clear()
         End If
@@ -369,13 +379,15 @@ Partial Public Class MMS_App1
         Try
             Dim resp As MmsResponse
             If Me.mmsAttachments IsNot Nothing AndAlso Me.mmsAttachments.Count = 0 Then
-                resp = Me.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim())
+                resp = Me.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim(), MmsPriority.Normal, chkReceiveNotification.Checked)
             Else
-                resp = Me.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim(), Me.mmsAttachments)
+                resp = Me.requestFactory.SendMms(phoneTextBox.Text.Trim(), messageTextBox.Text.Trim(), Me.mmsAttachments, MmsPriority.Normal, 600, chkReceiveNotification.Checked)
             End If
 
-            messageIDTextBox.Text = resp.Id
-            Me.DrawPanelForSuccess(sendMessagePanel, resp.Id)
+            If Not chkReceiveNotification.Checked Then
+                messageIDTextBox.Text = resp.MessageId
+            End If
+            Me.DrawPanelForSuccess(sendMessagePanel, resp.MessageId)
         Catch ex As ArgumentException
             Me.DrawPanelForFailure(sendMessagePanel, ex.ToString())
         Catch ex As InvalidResponseException
@@ -386,6 +398,93 @@ Partial Public Class MMS_App1
     End Sub
 
 #End Region
-    '** }@
-    '** }@
+
+    '* }@ 
+
+    '* }@ 
+
+    Protected Sub btnRefresh_Click(sender As Object, e As EventArgs)
+        Me.DisplayDeliveryNotificationStatus()
+    End Sub
+
+    Private Sub DisplayDeliveryNotificationStatus()
+        Dim receivedMessagesFile As String = ConfigurationManager.AppSettings("deliveryStatusFilePath")
+        If Not String.IsNullOrEmpty(receivedMessagesFile) Then
+            receivedMessagesFile = Server.MapPath(receivedMessagesFile)
+        Else
+            receivedMessagesFile = Server.MapPath("DeliveryStatus.txt")
+        End If
+        Dim messagesLine As String = [String].Empty
+
+        Dim receiveMMSDeliveryStatusResponseData As New List(Of DeliveryInfoNotification)()
+
+        If File.Exists(receivedMessagesFile) Then
+            Using sr As New StreamReader(receivedMessagesFile)
+                While sr.Peek() >= 0
+                    Dim dNot As New DeliveryInfoNotification()
+                    dNot.deliveryInfo = New DeliveryInfo()
+                    messagesLine = sr.ReadLine()
+                    Dim messageValues As String() = Regex.Split(messagesLine, "_-_-")
+                    dNot.messageId = messageValues(0)
+                    dNot.deliveryInfo.address = messageValues(1)
+                    dNot.deliveryInfo.deliveryStatus = messageValues(2)
+                    receiveMMSDeliveryStatusResponseData.Add(dNot)
+                End While
+                sr.Close()
+                receiveMMSDeliveryStatusResponseData.Reverse()
+            End Using
+        End If
+
+        Dim notificationTable As New Table()
+        notificationTable.Font.Name = "Sans-serif"
+        notificationTable.Font.Size = 9
+        notificationTable.BorderStyle = BorderStyle.Outset
+        notificationTable.Width = Unit.Pixel(650)
+
+        Dim tableRow As New TableRow()
+
+        Dim rowOneCellOne As New TableCell()
+        rowOneCellOne.Font.Bold = True
+        rowOneCellOne.Text = "Message ID"
+        tableRow.Controls.Add(rowOneCellOne)
+
+        rowOneCellOne = New TableCell()
+        rowOneCellOne.Font.Bold = True
+        rowOneCellOne.Text = "Address"
+        tableRow.Controls.Add(rowOneCellOne)
+
+        rowOneCellOne = New TableCell()
+        rowOneCellOne.Font.Bold = True
+        rowOneCellOne.Text = "Delivery Status"
+        tableRow.Controls.Add(rowOneCellOne)
+
+        notificationTable.Controls.Add(tableRow)
+
+        For Each dNot As DeliveryInfoNotification In receiveMMSDeliveryStatusResponseData
+            If dNot.deliveryInfo IsNot Nothing Then
+                tableRow = New TableRow()
+
+                rowOneCellOne = New TableCell()
+                rowOneCellOne.Font.Bold = True
+                rowOneCellOne.Text = dNot.messageId
+                tableRow.Controls.Add(rowOneCellOne)
+
+                rowOneCellOne = New TableCell()
+                rowOneCellOne.Font.Bold = True
+                rowOneCellOne.Text = dNot.deliveryInfo.address
+                tableRow.Controls.Add(rowOneCellOne)
+
+                rowOneCellOne = New TableCell()
+                rowOneCellOne.Font.Bold = True
+                rowOneCellOne.Text = dNot.deliveryInfo.deliveryStatus
+                tableRow.Controls.Add(rowOneCellOne)
+                notificationTable.Controls.Add(tableRow)
+            End If
+        Next
+
+        notificationTable.BorderWidth = 1
+        notificationsPanel.Controls.Clear()
+        notificationsPanel.Controls.Add(notificationTable)
+
+    End Sub
 End Class

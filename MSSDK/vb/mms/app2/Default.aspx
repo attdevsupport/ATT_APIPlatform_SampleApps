@@ -1,4 +1,4 @@
-<%@ Page Language="VB" AutoEventWireup="false" CodeFile="Default.aspx.vb" Inherits="MMS_App2" %>
+<%@ Page Language="VB" AutoEventWireup="true" CodeFile="Default.aspx.vb" Inherits="MMS_App2" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
@@ -8,7 +8,7 @@
     <link rel="stylesheet" type="text/css" href="style/common.css" />
 </head>
 <body>
-    <form id="form1" runat="server">
+<form id="form1" runat="server">
     <div id="container">
         <!-- open HEADER -->
         <div id="header">
@@ -128,25 +128,26 @@
             <asp:Panel ID="statusPanel" runat="server" Width="970px" Font-Names="Calibri" Font-Size="XX-Small">
             </asp:Panel>
         </div>
-        <br clear="all" />
+         <br clear="all" />
         <div id="footer" align="center">
-            <div style="float: right; width: 20%; font-size: 9px; text-align: right">
-                Powered by AT&amp;T Cloud Architecture</div>
-            <p>
-                © 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
-                <br />
-                The Application hosted on this site are working examples intended to be used for
-                reference in creating products to consume AT&amp;T Services and not meant to be
-                used as part of your product. The data in these pages is for test purposes only
-                and intended only for use as a reference in how the services perform.
-                <br />
-                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
-                <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+                <div style="float: right; width: 20%; font-size: 9px; text-align: right">
+                    Powered by AT&amp;T Cloud Architecture</div>
+                <p>
+                    © 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                        target="_blank">http://developer.att.com</a>
+                    <br/>
+                    The Application hosted on this site are working examples intended to be used for
+                    reference in creating products to consume AT&amp;T Services and not meant to be
+                    used as part of your product. The data in these pages is for test purposes only
+                    and intended only for use as a reference in how the services perform.
+                    <br/>
+                    For download of tools and documentation, please go to <a href="http://developer.att.com/SDK"
+                        target="_blank">https://developer.att.com/SDK</a> and <a href="http://developer.att.com/docs"
+                        target="_blank">https://developer.att.com/docs</a>
+                    <br/>
+                    For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+            </div>
         </div>
-    </div>
-    </form>
+        </form>
 </body>
 </html>

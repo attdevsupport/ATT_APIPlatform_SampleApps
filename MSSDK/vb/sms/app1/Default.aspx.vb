@@ -1,7 +1,7 @@
-﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+﻿' <copyright file="Default.aspx.cs" company="AT&amp;T">
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -15,7 +15,9 @@ Imports System.Net.Security
 Imports System.Security.Cryptography.X509Certificates
 Imports System.Web.UI.WebControls
 Imports ATT_MSSDK
-Imports ATT_MSSDK.SMSv2
+Imports ATT_MSSDK.SMSv3
+Imports System.IO
+
 #End Region
 
 ' This Application demonstrates usage of  AT&T MS SDK wrapper library for sending SMS,
@@ -29,7 +31,7 @@ Imports ATT_MSSDK.SMSv2
 ' 
 ' Steps to be followed by the application to invoke SMS APIs exposed by MS SDK wrapper library:
 ' --------------------------------------------------------------------------------------------
-' 1. Import ATT_MSSDK and ATT_MSSDK.SMSv2 NameSpace.
+' 1. Import ATT_MSSDK and ATT_MSSDK.SMSv3 NameSpace.
 ' 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
 ' the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
 ' while creating RequestFactory instance.
@@ -58,45 +60,13 @@ Imports ATT_MSSDK.SMSv2
 ' ------------------------------
 ' Dim message As InboundSmsMessageList =  requestFactory.ReceiveSms(shortCode)
 
+
 ''' <summary>
 ''' Default Class
 ''' </summary>
 Partial Public Class SMS_App1
     Inherits System.Web.UI.Page
 
-    '** \addtogroup SMS_App1
-    '** Description of the application can be referred at \ref SMS_app1 example
-    '** @{
-    '** 
-    '**  \example SMS_app1 sms\app1\Default.aspx.vb
-    '** \n \n This Application demonstrates usage of  AT&T MS SDK wrapper library for sending SMS, getting delivery status and receiving sms.
-    '**  
-    '** <b>Send SMS:</b>
-    '** \li Import \c ATT_MSSDK and \c ATT_MSSDK.SMSv2 NameSpace.
-    '** \li Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
-    '** Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.
-    '** \li Invoke \c SendSms() exposed in the \c RequestFactory class of MS SDK library.
-    '** 
-    '** <b>Sample code:</b>
-    '** <pre>
-    '**     Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-    '**     scopes.Add(RequestFactory.ScopeTypes.SMS)
-    '**     Dim target As RequestFactory = New RequestFactory(endPoint, apiKey, secretKey, scopes, Nothing, Nothing)
-    '**     Dim response As SmsResponse = target.SendSms(PhoneNumber, Message)
-    '** </pre>
-    '** <b>Get SMS Delivery status:</b>
-    '** <pre>
-    '**    Dim resp As SmsDeliveryResponse =  requestFactory.GetSmsDeliveryResponse(SmsId)
-    '** </pre>
-    '** <b>Sample for Receiving SMSs:</b>
-    '** <pre>
-    '**    Dim message As InboundSmsMessageList =  requestFactory.ReceiveSms(shortCode)
-    '** </pre>
-    '** Installing and running the application, refer \ref Application 
-    '** \n \n <b>Parameters in web.config</b> refer \ref parameters_sec section
-    '** 
-    '** \n Documentation can be referred at \ref SMS_App1 section
-    '** @{
 
 #Region "Variable Declaration"
 
@@ -151,6 +121,11 @@ Partial Public Class SMS_App1
             Next
 
             receiveMessagePanel.Controls.Add(table)
+
+            If (Not Page.IsPostBack) Then
+                notificationsPanel.Visible = False
+            End If
+
         Catch ex As Exception
             Me.DrawPanelForFailure(sendSMSPanel, ex.ToString())
         End Try
@@ -164,20 +139,19 @@ Partial Public Class SMS_App1
     ''' <param name="e">List of Arguments</param>
     Protected Sub BtnSendSMS_Click(sender As Object, e As EventArgs)
         Try
-            If (String.IsNullOrEmpty(txtmsisdn.Text)) Then
-
+            If String.IsNullOrEmpty(txtmsisdn.Text) Then
                 Me.DrawPanelForFailure(sendSMSPanel, "Specify phone number")
                 Return
             End If
 
-            If (String.IsNullOrEmpty(txtmsg.Text)) Then
+            If String.IsNullOrEmpty(txtmsg.Text) Then
                 Me.DrawPanelForFailure(sendSMSPanel, "Specify message to send")
                 Return
             End If
 
-            Dim resp As SmsResponse = Me.requestFactory.SendSms(txtmsisdn.Text.Trim(), txtmsg.Text.Trim())
-            txtSmsId.Text = resp.Id
-            Me.DrawPanelForSuccess(sendSMSPanel, resp.Id)
+            Dim resp As SmsResponse = Me.requestFactory.SendSms(txtmsisdn.Text.Trim(), txtmsg.Text.Trim(), chkReceiveNotification.Checked)
+            txtSmsId.Text = resp.MessageId
+            Me.DrawPanelForSuccess(sendSMSPanel, resp.MessageId)
         Catch ex As ArgumentException
             Me.DrawPanelForFailure(sendSMSPanel, ex.ToString())
         Catch ex As InvalidResponseException
@@ -188,7 +162,7 @@ Partial Public Class SMS_App1
     End Sub
 
     ''' <summary>
-    ''' This event gets triggered when user clicks on get delivery status button
+    ''' This method is called when user clicks on get delivery status button
     ''' </summary>
     ''' <param name="sender">Sender Information</param>
     ''' <param name="e">List of Arguments</param>
@@ -200,6 +174,7 @@ Partial Public Class SMS_App1
         Catch ex As ArgumentException
             Me.DrawPanelForFailure(getStatusPanel, ex.ToString())
         Catch ex As InvalidResponseException
+            'this.DrawPanelForFailure(getStatusPanel, ex.Body + Environment.NewLine + ex.ToString());
             Me.DrawPanelForFailure(getStatusPanel, ex.Body)
         Catch ex As Exception
             Me.DrawPanelForFailure(getStatusPanel, ex.ToString())
@@ -207,8 +182,8 @@ Partial Public Class SMS_App1
     End Sub
 
     ''' <summary>
-    ''' This event retrives received sms for a given short code.
-    ''' </summary> 
+    ''' This method retrives received sms for a given short code.
+    ''' </summary>
     ''' <param name="sender">Sender Information</param>
     ''' <param name="e">List of Arguments</param>
     Private Sub GetMessagesButton_Click(sender As Object, e As EventArgs)
@@ -267,7 +242,7 @@ Partial Public Class SMS_App1
             End If
 
             Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-            scopes.Add(RequestFactory.ScopeTypes.SMS)
+            scopes.Add(requestFactory.ScopeTypes.SMS)
             Me.requestFactory = New RequestFactory(Me.endPoint, Me.apiKey, Me.secretKey, scopes, Nothing, Nothing)
         End If
 
@@ -374,6 +349,96 @@ Partial Public Class SMS_App1
     End Sub
 
     ''' <summary>
+    ''' This function calls receive sms api to fetch the sms's
+    ''' </summary>
+    Private Sub DisplayDeliveryNotificationStatus()
+        notificationsPanel.Visible = True
+        Dim receivedMessagesFile As String = ConfigurationManager.AppSettings("deliveryStatusFilePath")
+        If Not String.IsNullOrEmpty(receivedMessagesFile) Then
+            receivedMessagesFile = Server.MapPath(receivedMessagesFile)
+        Else
+            receivedMessagesFile = Server.MapPath("DeliveryStatus.txt")
+        End If
+        Dim messagesLine As String = [String].Empty
+
+        Dim receiveSMSDeliveryStatusResponseData As New List(Of DeliveryInfoNotification)()
+
+        If File.Exists(receivedMessagesFile) Then
+            Using sr As New StreamReader(receivedMessagesFile)
+                While sr.Peek() >= 0
+                    Dim dNot As New DeliveryInfoNotification()
+                    dNot.DeliveryInfo = New DeliveryInfo()
+                    messagesLine = sr.ReadLine()
+                    Dim messageValues As String() = Regex.Split(messagesLine, "_-_-")
+                    dNot.DeliveryInfo.Id = messageValues(0)
+                    dNot.DeliveryInfo.Address = messageValues(1)
+                    dNot.DeliveryInfo.DeliveryStatus = messageValues(2)
+                    receiveSMSDeliveryStatusResponseData.Add(dNot)
+                End While
+                sr.Close()
+                receiveSMSDeliveryStatusResponseData.Reverse()
+            End Using
+        End If
+
+        Dim notificationTable As New Table()
+        notificationTable.Font.Name = "Sans-serif"
+        notificationTable.Font.Size = 9
+        notificationTable.BorderStyle = BorderStyle.Outset
+        notificationTable.Width = Unit.Pixel(650)
+
+        Dim tableRow As New TableRow()
+
+        tableRow.BorderWidth = 1
+        Dim rowOneCellOne As New TableCell()
+        rowOneCellOne.Font.Bold = True
+        rowOneCellOne.Text = "Message ID"
+        tableRow.Controls.Add(rowOneCellOne)
+
+        rowOneCellOne = New TableCell()
+        rowOneCellOne.Font.Bold = True
+        rowOneCellOne.Text = "Address"
+        tableRow.Controls.Add(rowOneCellOne)
+
+        rowOneCellOne = New TableCell()
+        rowOneCellOne.Font.Bold = True
+        rowOneCellOne.Text = "Delivery Status"
+        tableRow.Controls.Add(rowOneCellOne)
+
+        notificationTable.Controls.Add(tableRow)
+
+        If receiveSMSDeliveryStatusResponseData IsNot Nothing And receiveSMSDeliveryStatusResponseData.Count > 0 Then
+
+            For Each dNot As DeliveryInfoNotification In receiveSMSDeliveryStatusResponseData
+                If dNot.DeliveryInfo IsNot Nothing Then
+                    tableRow = New TableRow()
+
+                    rowOneCellOne = New TableCell()
+                    rowOneCellOne.Font.Bold = True
+                    rowOneCellOne.Text = dNot.DeliveryInfo.Id
+                    tableRow.Controls.Add(rowOneCellOne)
+
+                    rowOneCellOne = New TableCell()
+                    rowOneCellOne.Font.Bold = True
+                    rowOneCellOne.Text = dNot.DeliveryInfo.Address
+                    tableRow.Controls.Add(rowOneCellOne)
+
+                    rowOneCellOne = New TableCell()
+                    rowOneCellOne.Font.Bold = True
+                    rowOneCellOne.Text = dNot.DeliveryInfo.DeliveryStatus
+                    tableRow.Controls.Add(rowOneCellOne)
+
+                    notificationTable.Controls.Add(tableRow)
+                End If
+            Next
+        End If
+
+        notificationTable.BorderWidth = 1
+        notificationsPanel.Controls.Clear()
+        notificationsPanel.Controls.Add(notificationTable)
+
+    End Sub
+
+    ''' <summary>
     ''' This function is used to draw the table for get status success response
     ''' </summary>
     ''' <param name="status">Status as string</param>
@@ -476,6 +541,8 @@ Partial Public Class SMS_App1
     End Sub
 
 #End Region
-    '** }@
-    '** }@
+
+    Protected Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+        Me.DisplayDeliveryNotificationStatus()
+    End Sub
 End Class

@@ -1,7 +1,7 @@
 ﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -16,7 +16,8 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Web.UI.WebControls;
 using ATT_MSSDK;
-using ATT_MSSDK.Speechv2;
+using ATT_MSSDK.Speechv3;
+using System.Data;
 
 #endregion
 
@@ -84,6 +85,9 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// A meta parameter to define multiple parameters within a single HTTP header.
     /// </summary>
     private string xArgData;
+    private string commonXArg;
+    private string xArgTVContext;
+    private string xArgSocialMediaContext;
 
     #endregion
 
@@ -100,7 +104,12 @@ public partial class Speech_App1 : System.Web.UI.Page
         if (!Page.IsPostBack)
         {
             resultsPanel.Visible = false;
+            tvContextPanel.Visible = false;
+            tvContextProgramPanel.Visible = false;
+            tvContextShowtimePanel.Visible = false;
+
             this.Initialize();
+            txtXArgs.Text = this.commonXArg.Replace(",", "," + Environment.NewLine);  
             string speechContxt = ConfigurationManager.AppSettings["SpeechContext"];
             if (!string.IsNullOrEmpty(speechContxt))
             {
@@ -111,16 +120,11 @@ public partial class Speech_App1 : System.Web.UI.Page
                 }
 
                 ddlSpeechContext.Items[0].Selected = true;
-            }
-
-            this.xArgData = ConfigurationManager.AppSettings["X-Arg"];
-            txtXArgs.Text = this.xArgData.Replace(",", "," + Environment.NewLine);
+            }            
         }
 
         DateTime currentServerTime = DateTime.UtcNow;
         lblServerTime.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
-
-        this.ResetDisplay();
     }
 
     /// <summary>
@@ -158,11 +162,34 @@ public partial class Speech_App1 : System.Web.UI.Page
                 this.deleteFile = true;
             }
 
-            SpeechResponse response = this.requestFactory.SpeechToText(this.fileToConvert, ddlSpeechContext.SelectedValue, this.xArgData);
+            XSpeechContext speechContext = XSpeechContext.Generic;
+            string contentLanguage = string.Empty;
+            this.xArgData = this.commonXArg;
+            switch (ddlSpeechContext.SelectedValue)
+            {
+                case "Generic": speechContext = XSpeechContext.Generic; contentLanguage = ddlContentLang.SelectedValue; break;
+                case "BusinessSearch": speechContext = XSpeechContext.BusinessSearch; break;
+                case "TV": speechContext = XSpeechContext.TV; this.xArgData = this.xArgTVContext; break;
+                case "Gaming": speechContext = XSpeechContext.Gaming; break;
+                case "SocialMedia": speechContext = XSpeechContext.SocialMedia; this.xArgData = this.xArgSocialMediaContext; break;
+                case "WebSearch": speechContext = XSpeechContext.WebSearch; break;
+                case "SMS": speechContext = XSpeechContext.SMS; break;
+                case "VoiceMail": speechContext = XSpeechContext.VoiceMail; break;
+                case "QuestionAndAnswer": speechContext = XSpeechContext.QuestionAndAnswer; break;
+            }
+
+            string subContext = txtSubContext.Text;
+            if (subContext.ToLower().Contains("example"))
+            {
+                subContext = string.Empty;
+            }
+
+           SpeechResponse response = this.requestFactory.SpeechToText(fileToConvert, speechContext, this.xArgData, contentLanguage, subContext, ddlAudioContentType.SelectedValue);
+
             if (null != response)
             {
-                this.DrawPanelForSuccess(statusPanel, "Response Parameters listed below");
                 resultsPanel.Visible = true;
+                this.DrawPanelForSuccess(statusPanel, "Response Parameters listed below");                
                 this.DisplayResult(response);
             }
 
@@ -202,11 +229,7 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// </summary>
     private void Initialize()
     {
-
-        if (this.requestFactory == null)
-        {
             this.ReadConfigAndInitialize();
-        }
     }
 
     /// <summary>
@@ -270,68 +293,267 @@ public partial class Speech_App1 : System.Web.UI.Page
     }
 
     /// <summary>
-    /// Reset Display of success response
-    /// </summary>
-    private void ResetDisplay()
-    {
-        lblResponseId.Text = string.Empty;
-        lblStatus.Text = string.Empty;
-        lblHypothesis.Text = string.Empty;
-        lblLanguageId.Text = string.Empty;
-        lblResultText.Text = string.Empty;
-        lblGrade.Text = string.Empty;
-        lblConfidence.Text = string.Empty;
-        lblWords.Text = string.Empty;
-        lblWordScores.Text = string.Empty;
-        hypoRow.Visible = true;
-        langRow.Visible = true;
-        confRow.Visible = true;
-        gradeRow.Visible = true;
-        resultRow.Visible = true;
-        wordsRow.Visible = true;
-        wordScoresRow.Visible = true;
-    }
-    /// <summary>
     /// Displays the result onto the page
     /// </summary>
     /// <param name="speechResponse">SpeechResponse received from api</param>
     private void DisplayResult(SpeechResponse speechResponse)
     {
-        lblResponseId.Text = speechResponse.Recognition.ResponseId;
+        statusPanel.Visible = true;
         lblStatus.Text = speechResponse.Recognition.Status;
-        if ((speechResponse.Recognition.NBest != null) && (speechResponse.Recognition.NBest.Count > 0))
+        lblResponseId.Text = speechResponse.Recognition.Responseid;
+        foreach (NBest nbest in speechResponse.Recognition.NBest)
         {
-            foreach (NBest nbest in speechResponse.Recognition.NBest)
+            lblHypothesis.Text = nbest.Hypothesis;
+            lblLanguageId.Text = nbest.LanguageId;
+            lblResultText.Text = nbest.ResultText;
+            lblGrade.Text = nbest.Grade;
+            lblConfidence.Text = nbest.Confidence.ToString();
+            string words = "[ ";
+            if (null != nbest.Words)
             {
-                lblHypothesis.Text = nbest.Hypothesis;
-                lblLanguageId.Text = nbest.LanguageId;
-                lblResultText.Text = nbest.ResultText;
-                lblGrade.Text = nbest.Grade;
-                lblConfidence.Text = nbest.Confidence.ToString();
-
-                string strText = "[";
                 foreach (string word in nbest.Words)
                 {
-                    strText += "\"" + word + "\", ";
+                    words += "\"" + word + "\", ";
                 }
-                strText = strText.Substring(0, strText.LastIndexOf(","));
-                strText = strText + "]";
+                words = words.Substring(0, words.LastIndexOf(","));
+                words = words + " ]";
+            }
 
-                lblWords.Text = nbest.Words != null ? strText : string.Empty;
+            lblWords.Text = nbest.Words != null ? words : string.Empty;
 
-                lblWordScores.Text = "[" + string.Join(", ", nbest.WordScores.ToArray()) + "]";
+            if (null != nbest.WordScores)
+            {
+                lblWordScores.Text = "[ " + string.Join(", ", nbest.WordScores.ToArray()) + " ]";
             }
         }
-        else
+
+        if (ddlSpeechContext.SelectedValue != "TV")
         {
-            hypoRow.Visible = false;
-            langRow.Visible = false;
-            confRow.Visible = false;
-            gradeRow.Visible = false;
-            resultRow.Visible = false;
-            wordsRow.Visible = false;
-            wordScoresRow.Visible = false;
+            tvContextPanel.Visible = false;
+            tvContextProgramPanel.Visible = false;
+            tvContextShowtimePanel.Visible = false;
         }
+
+        if (ddlSpeechContext.SelectedValue == "TV")
+        {
+            tvContextPanel.Visible = true;
+            if (null != speechResponse.Recognition.Info)
+            {
+                lblInfoActionType.Text = speechResponse.Recognition.Info.ActionType;
+                this.lblRecognized.Text = speechResponse.Recognition.Info.Recognized;
+            }
+
+            if (null != speechResponse.Recognition.Info.Interpretation)
+            {
+                lblInterpretation_genre_id.Text = speechResponse.Recognition.Info.Interpretation.Genre_id;
+                lblInterpretation_genre_words.Text = speechResponse.Recognition.Info.Interpretation.Genre_words;
+            }
+
+            if (null != speechResponse.Recognition.Info.Metrics)
+            {
+                lblMetrics_audioBytes.Text = speechResponse.Recognition.Info.Metrics.AudioBytes.ToString();
+                this.lblMetrics_audioTime.Text = speechResponse.Recognition.Info.Metrics.AudioTime.ToString();
+            }
+
+            List<Program> programs = null;
+
+            if (null != speechResponse.Recognition.Info.Search && null != speechResponse.Recognition.Info.Search.Meta)
+            {
+                this.lblDescription.Text = speechResponse.Recognition.Info.Search.Meta.Description;
+
+                if (null != speechResponse.Recognition.Info.Search.Meta.GuideDateStart)
+                    this.lblGuideDateStart.Text = speechResponse.Recognition.Info.Search.Meta.GuideDateStart.ToString();
+
+                if (null != speechResponse.Recognition.Info.Search.Meta.GuideDateEnd)
+                    this.lblGuideDateEnd.Text = speechResponse.Recognition.Info.Search.Meta.GuideDateEnd.ToString();
+
+                this.lblLineup.Text = speechResponse.Recognition.Info.Search.Meta.Lineup;
+                this.lblMarket.Text = speechResponse.Recognition.Info.Search.Meta.Market;
+                this.lblResultCount.Text = speechResponse.Recognition.Info.Search.Meta.ResultCount.ToString();
+
+                programs = speechResponse.Recognition.Info.Search.Programs;
+
+                if (null != programs)
+                {
+                    this.DisplayProgramDetails(programs);
+                }
+            }
+
+            List<Showtime> showtimes = null;
+
+            if (null != speechResponse.Recognition.Info.Search)
+            {
+                showtimes = speechResponse.Recognition.Info.Search.Showtimes;
+
+                if (null != showtimes)
+                {
+                    this.DisplayShowTimeDetails(showtimes);
+                }
+            }
+        }
+    }
+
+    private void DisplayProgramDetails(List<Program> programs)
+    {
+        DataTable programDetailsTable = this.GetProgramDetailsTable();
+
+        DataRow row;
+        foreach (Program program in programs)
+        {
+            row = programDetailsTable.NewRow();
+
+            row["cast"] = program.Cast;
+            row["category"] = program.Category;
+            row["description"] = program.Description;
+            row["director"] = program.Director;
+            row["language"] = program.Language;
+            row["mpaaRating"] = program.MpaaRating;
+            row["originalAirDate"] = program.OriginalAirDate;
+            row["pid"] = program.Pid;
+            row["runTime"] = program.RunTime;
+            row["showType"] = program.ShowType;
+            row["starRating"] = program.StarRating;
+            row["title"] = program.Title;
+            row["subtitle"] = program.Subtitle;
+            row["year"] = program.Year;
+
+            programDetailsTable.Rows.Add(row);
+        }
+
+        tvContextProgramPanel.Visible = true;
+        gvPrograms.DataSource = programDetailsTable;
+        gvPrograms.DataBind();
+    }
+
+    private void DisplayShowTimeDetails(List<Showtime> showtimes)
+    {
+        DataTable showDetailsTable = this.GetShowTimeDetailsTable();
+
+        DataRow row;
+        foreach (Showtime showtime in showtimes)
+        {
+            row = showDetailsTable.NewRow();
+
+            row["affiliate"] = showtime.Affiliate;
+            row["callSign"] = showtime.CallSign;
+            row["channel"] = showtime.Channel;
+            row["closeCaptioned"] = showtime.CloseCaptioned;
+            row["dolby"] = showtime.Dolby;
+            row["duration"] = showtime.Duration;
+            row["endTime"] = showtime.EndTime;
+            row["finale"] = showtime.Finale;
+            row["hdtv"] = showtime.Hdtv;
+            row["newShow"] = showtime.NewShow;
+            row["pid"] = showtime.Pid.ToString();
+            row["premier"] = showtime.Premier;
+            row["repeat"] = showtime.Repeat;
+            row["showTime"] = showtime.ShowTime;
+            row["station"] = showtime.Station;
+            row["stereo"] = showtime.Stereo;
+            row["subtitled"] = showtime.Subtitled;
+            row["weekday"] = showtime.Weekday;
+
+            showDetailsTable.Rows.Add(row);
+        }
+
+        tvContextShowtimePanel.Visible = true;
+        gvShowTimes.DataSource = showDetailsTable;
+        gvShowTimes.DataBind();
+    }
+
+    private DataTable GetShowTimeDetailsTable()
+    {
+        DataTable showtimeDetailsTable = new DataTable();
+        DataColumn column = new DataColumn("affiliate");
+        showtimeDetailsTable.Columns.Add(column);
+
+        column = new DataColumn("callsign");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("channel");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("closecaptioned");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("dolby");
+        showtimeDetailsTable.Columns.Add(column);
+
+        column = new DataColumn("showtime");
+        showtimeDetailsTable.Columns.Add(column);
+
+        column = new DataColumn("endtime");
+        showtimeDetailsTable.Columns.Add(column);
+
+        column = new DataColumn("duration");
+        showtimeDetailsTable.Columns.Add(column);
+
+        column = new DataColumn("finale");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("hdtv");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("newshow");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("pid");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("premier");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("repeat");
+        showtimeDetailsTable.Columns.Add(column);
+
+        column = new DataColumn("station");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("stereo");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("subtitled");
+        showtimeDetailsTable.Columns.Add(column);
+        column = new DataColumn("weekday");
+        showtimeDetailsTable.Columns.Add(column);
+        return showtimeDetailsTable;
+    }
+
+   private DataTable GetProgramDetailsTable()
+   {
+       DataTable programDetailsTable = new DataTable();
+       DataColumn column = new DataColumn("cast");
+       programDetailsTable.Columns.Add(column);
+
+       column = new DataColumn("category");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("description");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("director");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("language");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("mpaaRating");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("originalAirDate");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("pid");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("runTime");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("showType");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("starRating");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("title");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("subtitle");
+       programDetailsTable.Columns.Add(column);
+       column = new DataColumn("year");
+       programDetailsTable.Columns.Add(column);
+       return programDetailsTable;
+   }
+
+    private void addCelltoTable(Table table, string cellOneEntry, string cellTwoEntry)
+    {        
+        TableRow row = new TableRow();
+        TableCell rowCellOne = new TableCell();        
+        rowCellOne.Text = cellOneEntry;
+        TableCell rowCellTwo = new TableCell();
+        rowCellTwo.Text = cellTwoEntry;
+        row.Controls.Add(rowCellOne);
+        row.Controls.Add(rowCellTwo);
+        table.Controls.Add(row);
     }
 
     /// <summary>
@@ -377,8 +599,44 @@ public partial class Speech_App1 : System.Web.UI.Page
         scopes.Add(RequestFactory.ScopeTypes.Speech);
 
         this.requestFactory = new RequestFactory(this.endPoint, this.apiKey, this.secretKey, scopes, null, null);
+
+        this.commonXArg = ConfigurationManager.AppSettings["X-Arg"];
+        this.xArgTVContext = ConfigurationManager.AppSettings["X-ArgTVContext"];
+        this.xArgSocialMediaContext = ConfigurationManager.AppSettings["X-ArgSocialMedia"];
+
         return true;
     }
 
     #endregion
+
+    protected void ddlSpeechContext_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        this.Initialize();
+        ddlContentLang.Enabled = false;
+        switch (ddlSpeechContext.Text)
+        {
+            case "TV":
+                txtXArgs.Text = this.xArgTVContext;
+                break;
+            case "SocialMedia":
+                txtXArgs.Text = this.xArgSocialMediaContext;
+                break;
+            case "Generic":
+                ddlContentLang.Enabled = true;
+                txtXArgs.Text = this.commonXArg;
+                break;
+            default:
+                txtXArgs.Text = this.commonXArg;
+                break;
+        }
+
+        this.xArgData = txtXArgs.Text;
+        txtXArgs.Text = txtXArgs.Text.Replace(",", "," + Environment.NewLine);
+
+        resultsPanel.Visible = false;
+        tvContextPanel.Visible = false;
+        tvContextProgramPanel.Visible = false;
+        tvContextShowtimePanel.Visible = false;
+        statusPanel.Visible = false;
+    }    
 }

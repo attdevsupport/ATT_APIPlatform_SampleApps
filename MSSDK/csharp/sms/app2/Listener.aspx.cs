@@ -1,7 +1,7 @@
 ﻿// <copyright file="Listener.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
 
@@ -13,7 +13,7 @@ using System.Text;
 using System.Web;
 using System.Web.Script.Serialization;
 using ATT_MSSDK;
-using ATT_MSSDK.SMSv2;
+using ATT_MSSDK.SMSv3;
 #endregion
 
 /// <summary>

@@ -1,7 +1,7 @@
 ﻿' <copyright file="Listener.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -12,7 +12,7 @@ Imports System.Text
 Imports System.Web
 Imports System.Web.Script.Serialization
 Imports ATT_MSSDK
-Imports ATT_MSSDK.SMSv2
+Imports ATT_MSSDK.SMSv3
 #End Region
 
 ''' <summary>

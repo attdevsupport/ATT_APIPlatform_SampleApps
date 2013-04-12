@@ -1,7 +1,7 @@
 ﻿' <copyright file="Listener.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
+' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -9,7 +9,7 @@
 Imports System.Collections.Generic
 Imports System.IO
 Imports ATT_MSSDK
-Imports ATT_MSSDK.MMSv2
+Imports ATT_MSSDK.MMSv3
 Imports System.Configuration
 #End Region
 
@@ -26,7 +26,7 @@ Imports System.Configuration
 ' * 
 ' * Steps to be followed by the application to invoke MMS APIs exposed by MS SDK wrapper library:
 ' * --------------------------------------------------------------------------------------------
-' * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv2 NameSpace.
+' * 1. Import ATT_MSSDK and ATT_MSSDK.MMSv3 NameSpace.
 ' * 2. Create an instance of RequestFactory class provided in MS SDK library. The RequestFactory manages 
 ' * the connections and calls to the AT&T API Platform.Pass clientId, ClientSecret and scope as arguments
 ' * while creating RequestFactory instance.

@@ -1,6 +1,6 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
-* Copyright 2012 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+* Licensed by AT&T under 'AT&T SDK Tools Agreement' Jan 2013
+* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
@@ -17,7 +17,7 @@ display the results and allow the user to manually trigger an update.
 
 This file describes how to set up, configure and run AT&T MSSDK VB.NET sample 
 applications. It covers all steps required to register the application on 
-DevConnect and, based on the generated API keys and secrets, create and run 
+https://developer.att.com/ and, based on the generated API keys and secrets, create and run 
 one's own full-fledged sample applications.
 
   1. Configuration
@@ -29,10 +29,10 @@ one's own full-fledged sample applications.
 1. Configuration
 
   Configuration consists of a few steps necessary to get an application registered
-  on DevConnect with the proper services and endpoints, depending on the type of
+  on https://developer.att.com/ with the proper services and endpoints, depending on the type of
   client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login with
+  To register an application, go to https://developer.att.com/ and login with
   your valid username and password. Next, choose "My Apps" from the bar at the top
   of the page and click the "Setup a New Application" button. 
 
@@ -55,10 +55,8 @@ to use this sample application code.
   secret, so these values in your application should be adjusted accordingly.
 
   Depending on the kind of authentication used, an application may be based on either
-  the Autonomous Client or the Web-Server Client OAuth flow (see 
-  https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow or
-  https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow
-  respectively).
+  the Autonomous Client or the Web-Server Client OAuth flow (see OAuth section in 
+  https://developer.att.com/docs).
 
 
 
