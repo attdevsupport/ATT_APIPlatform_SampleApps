@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, AdsSampleActivity!</string>
+    <string name="app_name">AT&amp;T Ad Sample</string>
+    <string	name="splash_message">AT&amp;T Ad Sample V1.0</string>
+	<string	name="splash_version_message">AT&amp;T Ad Sample V</string>
+    <string name="no_location_providers">Location Based services must be enabled to use Lat/Long. Please turn	them on in Settings or quit the application.</string>
+    <string name="select_premium">Select Premium</string>
+    <string name="appKey">8b859645847b01b6d0937d63c5083e697bd454848e104fe6c89649cae89d32a8a60b697a03b75312d7e593ba8f124329</string>
+    <string name="secret">b3fd2555259b664e35f445243cb1fd24a228ace99b8cd6d3e264618e549c6000</string>
+    <string name="udid">012266005922565000000000000000</string>
+    
+
+</resources>
