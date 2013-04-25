@@ -87,18 +87,19 @@ For more information contact developer.support@att.com
                         <h3>
                             Content Type:
                         </h3>
-                        <asp:DropDownList ID="ContentType" name="ContentType" runat="server" AutoPostBack="true">
+                        <asp:DropDownList ID="ContentType" name="ContentType" runat="server">
                             <asp:ListItem value="text/plain" Selected="True" Text="text/plain" />
                             <asp:ListItem value="application/ssml+xml" Text="application/ssml+xml" />
                         </asp:DropDownList>
-                        <h3>
-                        Content:
-                        </h3>
-                        <asp:TextBox ID="Content" name="Content" runat="server" cssclass="textWide" TextMode="MultiLine" Enabled="False" Rows="4"></asp:TextBox>
+                        <h3>Content:</h3>
+                          <label>text/plain</label><br/>
+                          <asp:TextBox ID="plaintext" type="text" runat="server" name="plaintext" TextMode="MultiLine" Enabled="False" Rows="4"></asp:TextBox><br/>
+                          <label>application/ssml</label><br/>
+                          <asp:TextBox  ID="ssml" type="text" runat="server" name="ssml" TextMode="MultiLine" Enabled="False" Rows="4"></asp:TextBox >
                         <h3>
                             X-Arg:
                         </h3>
-                        <asp:TextBox ID="x_arg" runat="server" TextMode="MultiLine" cssclass="textWide" Enabled="False" Rows="4"></asp:TextBox>
+                        <asp:TextBox ID="x_arg" runat="server" TextMode="MultiLine" type="text" Enabled="False" Rows="4"></asp:TextBox>
                         <br />
                         <button id="btnSubmit" onserverclick="BtnSubmit_Click" runat="server" name="TextToSpeechButton"
                             type="submit">
@@ -134,14 +135,14 @@ For more information contact developer.support@att.com
                     and intended only for use as a reference in how the services perform.
                     <br />
                     <br />
-                    For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                        target="_blank">https://devconnect-api.att.com</a>
+                    For download of tools and documentation, please go to <a href="https://developer.att.com/"
+                        target="_blank">https://developer.att.com</a>
                     <br />
                     For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
                     <br />
                     <br />
-                    © 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                        target="_blank">http://developer.att.com</a>
+                    © 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
+                        target="_blank">https://developer.att.com</a>
                 </p>
             </div>
             <!-- end of ft -->

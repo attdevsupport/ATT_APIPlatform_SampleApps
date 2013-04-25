@@ -103,6 +103,13 @@ class CMSService {
             $scriptType = $_REQUEST['scriptType'];
             $txtNumber = $_REQUEST['txtNumber'];
             $txtMessageToPlay = $_REQUEST['txtMessageToPlay'];
+
+            /* save to session */
+            $_SESSION['txtNumberToDial'] = $txtNumberToDial;
+            $_SESSION['scriptType'] = $scriptType;
+            $_SESSION['txtNumber'] = $txtNumber;
+            $_SESSION['txtMessageToPlay'] = $txtMessageToPlay;
+
             $vals = array(
                     'smsCallerId' => $this->_number,
                     'feature' => $scriptType,
@@ -148,6 +155,9 @@ class CMSService {
                 throw new InvalidArgumentException($error);
             }
             $signal = $_REQUEST['signal'];
+            
+            /* save to session */
+            $_SESSION['signal'] = $signal;
 
             $url = 
                 $this->_FQDN . '/rest/1/Sessions/' . $sessionId . '/Signals'; 

@@ -38,11 +38,11 @@ For more information contact developer.support@att.com
         <ul class="links" id="nav">
           <li><a href="#" target="_blank">Full Page<img alt="fullpage" src="images/max.png" /></a>
             <span class="divider">|&nbsp;</span> </li>
-          <li><a target="_blank" id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
+          <li><a href="<%= settings.source_link %>" target="_blank" id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
             <span class="divider">|&nbsp;</span> </li>
-          <li><a target="_blank" id="DownloadLink">Download<img alt="download" src="images/download.png" /></a>
+          <li><a href="<%= settings.download_link %>" target="_blank" id="DownloadLink">Download<img alt="download" src="images/download.png" /></a>
             <span class="divider">|&nbsp;</span> </li>
-          <li><a target="_blank" id="HelpLink">Help</a> </li>
+          <li><a href="<%= settings.help_link %>" target="_blank" id="HelpLink">Help</a> </li>
           <li id="back"><a href="#top">Back to top</a></li>
         </ul>
         <!-- end of links -->
@@ -121,7 +121,11 @@ For more information contact developer.support@att.com
               <% if @mms_id %>
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br />
-                  <strong>Message Id:&nbsp;</strong><%= @mms_id %>
+                  <strong>messageId:&nbsp;</strong><%= @mms_id %>
+                  <% if @mms_url %>
+                    <br>
+                    <strong>Resource Url:&nbsp;</strong><%= @mms_url %>
+                  <% end %>
                 </div>
               <% end %>
             </div><!-- end of sendMMS -->
@@ -145,6 +149,10 @@ For more information contact developer.support@att.com
               <% elsif @delivery_info %>
                 <div class="successWide">
                   <strong>SUCCESS: </strong>
+                  <% if @mms_url %>
+                    <br>
+                    <strong>Resource Url:&nbsp;</strong><%= @mms_url %>
+                  <% end %>
                 </div>
               <% end %>
               <table>

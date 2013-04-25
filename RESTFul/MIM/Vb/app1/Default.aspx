@@ -219,8 +219,8 @@ For more information contact developer.support@att.com
                 used as part of your product. The data in these pages is for test purposes only
                 and intended only for use as a reference in how the services perform.
                 <br />
-                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
+                For download of tools and documentation, please go to <a href="https://developer.att.com/"
+                    target="_blank">https://developer.att.com</a>
                 <br />
                 For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
         </div>

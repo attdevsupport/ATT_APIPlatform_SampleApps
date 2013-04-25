@@ -110,6 +110,11 @@ public class IMMNController extends HttpServlet {
 
         HttpSession session = request.getSession();
 
+        String addr = (String) request.getAttribute("Address");
+
+        if (addr != null)
+            session.setAttribute("address", addr);
+
         HashMap<String, String> sessionFormFieldValues = (HashMap<String, String>) session.getAttribute("formFieldValues");
         File sessionUploadFile = (File) session.getAttribute("uploadFile");
 
@@ -134,6 +139,14 @@ public class IMMNController extends HttpServlet {
         Config cfg = (Config) request.getSession().getAttribute("cfg");
         HashMap<String, String> formFieldValues = new HashMap<String, String>();
         File uploadFile;
+
+        HttpSession session = request.getSession();
+
+        String addr = (String) request.getAttribute("Address");
+
+        if (addr != null)
+            session.setAttribute("address", addr);
+
         try {
             uploadFile = parseRequest(cfg,formFieldValues, request);
         } catch (Exception e1) {
@@ -152,8 +165,6 @@ public class IMMNController extends HttpServlet {
             return;
         }
 
-        HttpSession session = request.getSession();
-
         //For the first time, we don't have access token, so we redirect to authenticate client id
         if((session.getAttribute("accessToken") == null ))
         {
@@ -169,6 +180,7 @@ public class IMMNController extends HttpServlet {
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response, Config cfg, HashMap<String, String> formFieldValues, File uploadFile) throws ServletException, IOException {
         List<String> addresses = validatePhoneNumber(formFieldValues.get("Address"));
+        request.getSession().setAttribute("address", formFieldValues.get("Address"));
         List<String> files = new ArrayList<String>();
 
         String subjectText = formFieldValues.get("subject") == null ? "" : formFieldValues.get("subject");

@@ -75,11 +75,20 @@ For more information contact developer.support@att.com
         <div class="formBox" id="formBox">
           <div id="formContainer" class="formContainer">
             <div id="sendMessages">
-              <h2>Send Messages:<h2>
+              <h2>Send Messages:</h2>
               <form method="post" action="index.php" name="msgContentForm" >
                 <div class="inputFields">
+                  <?php if (isset($_SESSION['Address'])) { ?> 
+                  <input placeholder="Address" name="Address" type="text" 
+                      value="<?php echo htmlspecialchars($_SESSION['Address']); ?>" />     
+                  <?php } else { ?>
                   <input placeholder="Address" name="Address" type="text" />     
+                  <?php } ?>
+                  <?php if (isset($_SESSION['checkbox']) && $_SESSION['checkbox'] == true) { ?>
+                  <label>Group: <input name="groupCheckBox" type="checkbox" checked /></label>
+                  <?php } else { ?>
                   <label>Group: <input name="groupCheckBox" type="checkbox" /></label>
+                  <?php } ?>
                   <label>
                     Message:
                     <select name="message">
@@ -97,27 +106,31 @@ For more information contact developer.support@att.com
                     <select name="attachment">
                       <option value="None">None</option>
                       <?php foreach ($immnService->getAttachments() as $attachment) { ?>
-                      <option value="<?php echo $attachment; ?>"><?php echo htmlspecialchars($attachment); ?></option>
+                        <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $attachment) { ?>
+                        <option value="<?php echo $attachment; ?>"
+                            selected="selected"><?php echo htmlspecialchars($attachment); ?></option>
+                        <?php } else { ?>
+                        <option value="<?php echo $attachment; ?>"><?php echo htmlspecialchars($attachment); ?></option>
+                        <?php } ?>
                       <?php } ?>
                     </select>
                   </label>
                   <button type="submit" class="submit" id="sendMessage" name="sendMessage">Send Message</button>
                 </div> <!-- end of inputFields -->
               </form>
+
               <?php if ($immnSend != NULL) { ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                  <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
+                </div> <!-- end of successWide -->
+              <?php } ?>
 
-              <div class="successWide">
-                <strong>SUCCESS:</strong>
-                <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
-
-              </div> <!-- end of successWide -->
-                  <?php } ?>
-                  <?php if ($immnService->errorSend() != NULL) { ?>
-
-              <div class="errorWide">
-                <strong>ERROR:</strong>
-                <?php echo htmlspecialchars($immnService->errorSend()); ?>
-              </div> <!-- end of errorWide -->
+              <?php if ($immnService->errorSend() != NULL) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($immnService->errorSend()); ?>
+                </div> <!-- end of errorWide -->
               <?php } ?>
 
             </div> <!-- end of sendMessages -->
@@ -126,19 +139,45 @@ For more information contact developer.support@att.com
               <h2>Read Messages:</h2>
               <form method="post" action="index.php" name="msgHeaderForm" id="msgHeaderForm">
                 <div class="inputFields">
-                  <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
-                  <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
+
+                  <?php if (isset($_SESSION['headerCountTextBox'])) { ?>
+                    <input name="headerCountTextBox" type="text" maxlength="3" 
+                        value="<?php echo htmlspecialchars($_SESSION['headerCountTextBox']); ?>" 
+                        placeholder="Header Counter" />     
+                  <?php } else { ?>
+                    <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
+                  <?php } ?>
+
+                  <?php if (isset($_SESSION['headerCountTextBox'])) { ?>
+                    <input name="indexCursorTextBox" type="text" maxlength="30" 
+                        value="<?php echo htmlspecialchars($_SESSION['indexCursorTextBox']); ?>" 
+                        placeholder="Index Cursor" />     
+                  <?php } else { ?>
+                    <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
+                  <?php } ?>
+
                   <button type="submit" class="submit" name="getMessageHeaders" 
-                    id="getMessageHeaders">Get Message Headers</button>
+                      id="getMessageHeaders">Get Message Headers</button>
+
                 </div> <!-- end of inputFields -->
               </form>
               <form method="post" action="index.php" name="msgContentForm" id="msgContentForm">
                 <div class="inputFields">
-                  <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
-                  <input name="PartNumber" id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
-                  <button type="submit" class="submit" name="getMessageContent" id="getMessageContent">
-                    Get Message Content
-                  </button>
+                  <?php if (isset($_SESSION['MessageId'])) { ?>
+                    <input name="MessageId" id="MessageId" type="text" maxlength="30" 
+                        value="<?php echo htmlspecialchars($_SESSION['MessageId']); ?>" placeholder="Message ID" />     
+                  <?php } else { ?>
+                    <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
+                  <?php } ?>
+
+                  <?php if (isset($_SESSION['PartNumber'])) { ?>
+                    <input name="PartNumber" id="PartNumber" type="text" maxlength="30" 
+                        value="<?php echo htmlspecialchars($_SESSION['PartNumber']); ?>" placeholder="Part Number" />     
+                  <?php } else { ?>
+                    <input name="PartNumber" id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
+                  <?php } ?>
+                  <button type="submit" class="submit" name="getMessageContent" 
+                      id="getMessageContent">Get Message Content</button>
                 </div> <!-- end of inputFields -->
               </form>
               <label class="note">To use this feature, you must be a subscriber to My AT&amp;T Messages.</label>
@@ -152,7 +191,6 @@ For more information contact developer.support@att.com
           $tokenCType = strtok($rawCType, ';');
           $splitCType = strtok($rawCType, '/');
           ?> 
-              
           <div class="successWide">
             <strong>SUCCESS:</strong>
           </div> <!-- end of successWide -->

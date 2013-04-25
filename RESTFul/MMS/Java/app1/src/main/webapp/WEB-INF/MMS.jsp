@@ -86,13 +86,24 @@
                     Attachment:
                     <select name="attachment">
                       <c:forEach var="fname" items="${fnames}">
-                      <option><c:out value="${fname}" /></option>
+                        <c:if test="${fname eq sessionScope.attachment}">
+                          <option selected="selected"><c:out value="${fname}" /></option>
+                        </c:if>
+                        <c:if test="${fname ne sessionScope.attachment}">
+                          <option><c:out value="${fname}" /></option>
+                        </c:if>
                       </c:forEach>
                     </select>
                   </label>
                   <label>
+                    <c:if test="${notify eq true}">
+                    <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True" checked
+                      title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                    </c:if>
+                    <c:if test="${notify ne true}">
                     <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True"
                       title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                    </c:if>
                       Receive Delivery Status Notification<br>
                   </label>
                   <button type="submit" class="submit" name="sendMms">Send MMS Message</button>

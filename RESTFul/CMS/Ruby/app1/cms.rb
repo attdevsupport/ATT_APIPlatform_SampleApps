@@ -25,6 +25,7 @@ SCOPE = 'CMS'
 
 #An array of all the methods our script supports
 SCRIPT_METHODS = settings.script_methods.split(",")
+RestClient.proxy = settings.proxy
 
 # Obtain an OAuth access token if necessary.
 ['/CreateSession', '/SendSignal'].each do |path|

@@ -147,7 +147,7 @@ class IMMNService {
 
 
     /**
-     * Attempts to send message using  ATT's API, if applicable. Will 
+     * Attempts to send message using ATT's API, if applicable. Will 
      * return NULL if no POST request was made or if there was an error.
      * If there was an error, this class's errorSend() method can be used to 
      * get the error that occured.
@@ -175,16 +175,18 @@ class IMMNService {
                     array($this->_attachmentsFolder . '/' .  $attachment);
             }
 
-            $checkbox = isset($_SESSION['groupCheckBox']);
+            $checkbox = isset($_REQUEST['groupCheckBox']);
+            $_SESSION['checkbox'] = $checkbox;
+
             $immnRequest = new IMMNRequest($this->_endpoint, $token);
             $immnRequest->setAcceptAllCerts(true);
             $id = $immnRequest->sendMessage($addr, $msg, $subject, 
                     $attachment);
-            $this->clearSession($vnames);
+            $this->clearSession(array('sendMessage'));
             return $id;
         } catch (Exception $e) {
             $this->_errorSend = $e->getMessage();
-            $this->clearSession($vnames);
+            $this->clearSession(array('sendMessage'));
             return NULL;
         }
     }
@@ -215,11 +217,11 @@ class IMMNService {
 
             $immnRequest = new IMMNRequest($url, $token);
             $immnRequest->setAcceptAllCerts(true);
-            $this->clearSession($vnames);
+            $this->clearSession(array('getMessageContent'));
             return $immnRequest->getMessageBody();
         } catch (Exception $e) {
             $this->_errorGet = $e->getMessage();
-            $this->clearSession($vnames);
+            $this->clearSession(array('getMessageContent'));
             return NULL;
         }
     }
@@ -248,12 +250,12 @@ class IMMNService {
             $token = $this->getToken();
             $immnRequest = new IMMNRequest($this->_endpoint, $token);
             $immnRequest->setAcceptAllCerts(true);
-            $this->clearSession($vnames);
+            $this->clearSession(array('getMessageHeaders'));
 
             return $immnRequest->getMessageHeaders($headerCount, $indexCursor);
         } catch (Exception $e) {
             $this->_errorGet = $e->getMessage();
-            $this->clearSession($vnames);
+            $this->clearSession(array('getMessageHeaders'));
             return NULL;
         }
     }

@@ -128,12 +128,29 @@ For more information contact developer.support@att.com
                   ${requestScope.statusError}
                 </div>
                 </c:if>
-                <c:if test="${not empty requestScope.status}">
+                <c:if test="${not empty requestScope.resultGetStatuses}">
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br>
-                  <strong>Status: </strong>${requestScope.status}<br>
                   <strong>Resource URL: </strong>${requestScope.resourceURL}<br>
                 </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Id</th>
+                      <th>Address</th>
+                      <th>DeliveryStatus</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <c:forEach var="status" items="${resultGetStatuses}">
+                    <tr>
+                      <td data-value="Message Id"><c:out value="${status.messageId}" /></td>
+                      <td data-value="Status"><c:out value="${status.address}" /></td>
+                      <td data-value="Resouce Url"><c:out value="${status.deliveryStatus}" /></td>
+                    </tr>
+                  </c:forEach>
+                  </tbody>
+                </table>
                 </c:if>
               </div> <!-- end of getStatus -->
               <div class="lightBorder"></div>

@@ -51,6 +51,19 @@ class ADSService {
         return $token;
     }
 
+    private function saveInputsToSession() {
+        $inputs = array('category', 'MMA', 'ageGroup', 'Premium', 'gender',
+                'over18', 'zipCode', 'city', 'areaCode', 'country', 'latitude',
+                'longitude', 'keywords');
+
+        foreach ($inputs as $input) {
+            if (isset($_REQUEST[$input])) {
+                $_SESSION[$input] = $_REQUEST[$input];
+            }
+        }
+
+    }
+
     public function __construct() {
         // Copy config values to member variables
         require __DIR__ . '/../../config.php';
@@ -71,6 +84,9 @@ class ADSService {
         }
 
         try {
+            // save user input to session 
+            $this->saveInputsToSession();
+
             $category = $_REQUEST['category'];
 
             $token = $this->getToken();
@@ -78,12 +94,30 @@ class ADSService {
             $adsRequest = new ADSRequest($endpoint, $token);
             $adsRequest->setAcceptAllCerts(true);
 
-            $this->_result = $adsRequest->getAdvertisement($category);
+            $inputs = array('MMA', 'ageGroup', 'Premium', 'gender',
+                    'over18', 'zipCode', 'city', 'areaCode', 'country', 
+                    'latitude', 'longitude', 'keywords');
+
+            $keys = array('MMASize', 'AgeGroup', 'Premium', 'Gender', 'Over18',
+                    'ZipCode', 'City', 'AreaCode', 'Country', 'Latitude', 
+                    'Longitude', 'Keywords');
+
+            $optVals = array();
+            for ($i = 0; $i < count($inputs); ++$i) {
+                $key = $keys[$i];
+                $input = $inputs[$i];
+
+                if (isset($_REQUEST[$input]) && $_REQUEST[$input] != "") {
+                    $optVals[$key] = $_REQUEST[$input];
+                }
+            }
+
+            $this->_result = $adsRequest->getAdvertisement($category, $optVals);
+            if ($this->_result == NULL) {
+                $this->_result = 'No Ads were returned';
+            }
         } catch (Exception $e) {
             $this->_error = $e->getMessage();
-            if ($this->_error == NULL || $this->_error == '') {
-                $this->_error = 'No Ads were returned';
-            }
             return NULL;
         }
     }

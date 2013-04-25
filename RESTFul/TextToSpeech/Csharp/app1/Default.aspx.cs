@@ -91,16 +91,12 @@ public partial class TTS_App1 : System.Web.UI.Page
 
     private void SetContent()
     {
-        if (string.Compare(ContentType.SelectedValue, "text/plain") == 0)
-        {
-            StreamReader streamReader = new StreamReader(this.TTSPlainText);
-            Content.Text = streamReader.ReadToEnd();
-        }
-        else
-        {
-            StreamReader streamReader = new StreamReader(this.TTSSSML);
-            Content.Text = streamReader.ReadToEnd();
-        }
+        StreamReader streamReaderPlain = new StreamReader(this.TTSPlainText);
+        plaintext.Text = streamReaderPlain.ReadToEnd();
+        streamReaderPlain.Close();
+        StreamReader streamReaderSSML = new StreamReader(this.TTSSSML);
+        ssml.Text = streamReaderSSML.ReadToEnd();
+        streamReaderSSML.Close();
     }
 
     /// <summary>
@@ -120,10 +116,17 @@ public partial class TTS_App1 : System.Web.UI.Page
                 TTSErrorMessage = "Unable to get access token";
                 return;
             }
+            string content = string.Empty;
+            if (string.Compare(ContentType.SelectedValue, "text/plain") == 0)
+            {
+                content = plaintext.Text;
+            }
+            else
+            {
+                content = ssml.Text;
+            }
 
-
-
-            this.TextToSpeech(this.fqdn, "/speech/v3/textToSpeech", this.accessToken, x_arg.Text, ContentType.SelectedValue, Content.Text);
+            this.TextToSpeech(this.fqdn, "/speech/v3/textToSpeech", this.accessToken, x_arg.Text, ContentType.SelectedValue, content);
             /*
             this.ConvertToSpeech(this.fqdn + "/rest/2/SpeechToText",
                 this.accessToken, SpeechContext.SelectedValue.ToString(), x_arg.Text, speechFile, chunkValue);

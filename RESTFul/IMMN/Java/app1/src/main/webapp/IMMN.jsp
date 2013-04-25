@@ -78,8 +78,15 @@
             <div id="sendMessages">
               <h2>Send Messages:</h2>
               <form method="post" action="sendMessage" name="msgContentForm" >
-                <div class="inputFields">
-                  <input placeholder="Address" name="Address" type="text" />     
+                  <div class="inputFields">
+                      <% 
+                      String addr = (String) request.getSession().getAttribute("address");
+                      if (addr != null && !addr.isEmpty()) { 
+                      %>
+                         <input placeholder="Address" value="<%= addr %>" name="Address" type="text" />     
+                      <% } else { %>
+                         <input placeholder="Address" name="Address" type="text" />     
+                      <% } %>
                   <label>Group: <input name="groupCheckBox" type="checkbox" /></label>
                   <label>
                     Message:

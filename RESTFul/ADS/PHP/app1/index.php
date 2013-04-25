@@ -83,125 +83,209 @@ For more information contact developer.support@att.com
             <h2>Feature 1: Get Advertisement</h2>
             <form method="post" name="getAdvertisement" action="index.php">
               <div id="getAds">
+
                 <label>Category</label>
+                <?php 
+                  $categories = array('auto', 'business', 'chat', 'communication', 'community', 'entertainment',
+                      'finance', 'games', 'health', 'local', 'maps', 'medical', 'movies', 'music', 'news', 
+                      'other', 'personals', 'photos', 'shopping', 'shopping', 'social', 'sports', 'technology',
+                      'tools', 'travel', 'tv', 'video', 'weather');
+                ?>
                 <select name="category" id="category">
-                  <option value="auto" selected="selected">auto</option>
-                  <option value="business">business</option>
-                  <option value="chat">chat</option>
-                  <option value="communication">communication</option>
-                  <option value="community">community</option>
-                  <option value="entertainment">entertainment</option>
-                  <option value="finance">finance</option>
-                  <option value="games">games</option>
-                  <option value="health">health</option>
-                  <option value="local">local</option>
-                  <option value="maps">maps</option>
-                  <option value="medical">medical</option>
-                  <option value="movies">movies</option>
-                  <option value="music">music</option>
-                  <option value="news">news</option>
-                  <option value="other">other</option>
-                  <option value="personals">personals</option>
-                  <option value="photos">photos</option>
-                  <option value="shopping">shopping</option>
-                  <option value="social">social</option>
-                  <option value="sports">sports</option>
-                  <option value="technology">technology</option>
-                  <option value="tools">tools</option>
-                  <option value="travel">travel</option>
-                  <option value="tv">tv</option>
-                  <option value="video">video</option>
-                  <option value="weather">weather</option>
+                  <?php foreach($categories as $category) { ?>
+                    <?php if (isset($_SESSION['category']) && $_SESSION['category'] == $category) { ?>
+                      <option value="<?php echo $category; ?>" selected="selected"><?php echo $category; ?></option>
+                    <?php } else { ?>
+                      <option value="<?php echo $category; ?>"><?php echo $category; ?></option>
+                    <?php } ?>
+                  <?php } ?>
                 </select>
+
                 <div class="inputSeperator"></div>
-                  <label>MMA Size:</label>
-                  <select name="MMA" id="MMA">
-                    <option value=""></option>
-                    <option value="120 x 20">120 x 20</option>
-                    <option value="168 x 28">168 x 28</option>
-                    <option value="216 x 36">216 x 36</option>
-                    <option value="300 x 50">300 x 50</option>
-                    <option value="300 x 250">300 x 250</option>
-                    <option value="320 x 50">320 x 50</option>
-                  </select>
+                <label>MMA Size:</label>
+                <?php
+                  $mmaSizes = array('', '120 x 20', '168 x 28', '216 x 36', '300 x 50', '300 x 250', '320 x 50'); 
+                ?>
+                <select name="MMA" id="MMA">
+                  <?php foreach($mmaSizes as $mmaSize) { ?>
+                    <?php if (isset($_SESSION['MMA']) && $_SESSION['MMA'] == $mmaSize) { ?>
+                      <option value="<?php echo $mmaSize; ?>" selected="selected"><?php echo $mmaSize; ?></option>
+                    <?php } else { ?>
+                      <option value="<?php echo $mmaSize; ?>"><?php echo $mmaSize; ?></option>
+                    <?php } ?>
+                  <?php } ?>
+                </select>
+
                 <div class="inputSeperator"></div>
+                <?php
+                  $ageGroups = array('', '1-13', '14-25', '26-35', '36-55', '55-100');
+                ?>
                 <label>Age Group:</label>
                 <select name="ageGroup" id="ageGroup">
-                  <option value=""></option>
-                  <option value="1-13">1-13</option>
-                  <option value="14-25" selected="selected">14-25</option>
-                  <option value="26-35">26-35</option>
-                  <option value="36-55">36-55</option>
-                  <option value="55-100">55-100</option>
+                  <?php foreach($ageGroups as $ageGroup) { ?>
+                    <?php if (isset($_SESSION['ageGroup']) && $_SESSION['ageGroup'] == $ageGroup) { ?>
+                      <option value="<?php echo $ageGroup; ?>" selected="selected"><?php echo $ageGroup; ?></option>
+                    <?php } else { ?>
+                      <option value="<?php echo $ageGroup; ?>"><?php echo $ageGroup; ?></option>
+                    <?php } ?>
+                  <?php } ?>
                 </select>
+
                 <div class="inputSeperator"></div>
                 <label>Premium:</label>
+                <?php
+                  $premiums = array('' => '', '0' => 'NonPremium', '1' => 'PremiumOnly', '2' => 'Both' );
+                ?>
                 <select name="Premium" id="Premium">
-                  <option value=""></option>
-                  <option value="0" >NonPremium</option>
-                  <option value="1" >Premium Only</option>
-                  <option value="2" >Both</option>
+                  <?php foreach($premiums as $k => $v) { ?>
+                    <?php if (isset($_SESSION['Premium']) && $_SESSION['Premium'] == "$k") { ?>
+                      <?php echo 'session: ' . $_SESSION['Premium']; ?> 
+                      <option value="<?php echo $k; ?>" selected="selected"><?php echo $v; ?></option>
+                    <?php } else { ?>
+                      <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                    <?php } ?>
+                  <?php } ?>
                 </select>
+
                 <div class="inputSeperator"></div>
                 <label>Gender:</label>
+                <?php
+                  $genders = array('' => '', 'M' => 'Male', 'F' => 'Female');
+                ?>
                 <select name="gender" id="gender">
-                  <option value=""></option>
-                  <option value="M" >Male</option>
-                  <option value="F"  selected="selected">Female</option>
+                  <?php foreach($genders as $k => $v) { ?>
+                    <?php if (isset($_SESSION['gender']) && $_SESSION['gender'] == "$k") { ?>
+                      <option value="<?php echo $k; ?>" selected="selected"><?php echo $v; ?></option>
+                    <?php } else { ?>
+                      <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                    <?php } ?>
+                  <?php } ?>
                 </select>
+
                 <div class="inputSeperator"></div>
                 <label>Over 18 Ad Content:</label>
+                <?php
+                  $over18Vals = array('' => '', '0' => 'Deny Over 18', '2' => 'Only Over 18', '3' => 'Allow All Ads');
+                ?>
                 <select name="over18" id="over18">
-                  <option value=""></option>
-                  <option value="0" >Deny Over 1</option>
-                  <option value="2" >Only Over 18</option>
-                  <option value="3" >Allow All Ads</option>
+                  <?php foreach($over18Vals as $k => $v) { ?>
+                    <?php if (isset($_SESSION['over18']) && $_SESSION['over18'] == "$k") { ?>
+                      <option value="<?php echo $k; ?>" selected="selected"><?php echo $v; ?></option>
+                    <?php } else { ?>
+                      <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+                    <?php } ?>
+                  <?php } ?>
                 </select>
+
                 <div class="inputSeperator"></div>
-                <label>Zip Code:&nbsp;</label><input placeholder="Zip Code" type="text" id="zipCode" name="zipCode" />
+                <label>Zip Code:&nbsp;</label>
+                <?php if (isset($_SESSION['zipCode'])) { ?>
+                  <input placeholder="Zip Code" type="text" id="zipCode" 
+                    value="<?php echo htmlspecialchars($_SESSION['zipCode']); ?>" name="zipCode" />
+                <?php } else { ?>
+                  <input placeholder="Zip Code" type="text" id="zipCode" name="zipCode" />
+                <?php } ?>
+
                 <div class="inputSeperator"></div>
-                <label>City:&nbsp;</label><input placeholder="City" type="text" id="city" name="city" />
+                <label>City:&nbsp;</label>
+                <?php if (isset($_SESSION['city'])) { ?>
+                  <input placeholder="City" type="text" id="city" 
+                    value="<?php echo htmlspecialchars($_SESSION['zipCode']); ?>" name="city" />
+                <?php } else { ?>
+                  <input placeholder="City" type="text" id="city" name="city" />
+                <?php } ?>
+
                 <div class="inputSeperator"></div>
-                <label>Area Code:&nbsp;</label><input placeholder="Area Code" type="text" id="areaCode" name="areaCode" />
+                <label>Area Code:&nbsp;</label>
+                <?php if (isset($_SESSION['areaCode'])) { ?>
+                  <input placeholder="Area Code" type="text" id="areaCode" 
+                    value="<?php echo htmlspecialchars($_SESSION['areaCode']); ?>" name="areaCode" />
+                <?php } else { ?>
+                  <input placeholder="Area Code" type="text" id="areaCode" name="areaCode" />
+                <?php } ?>
+
                 <div class="inputSeperator"></div>
-                <label>Country:&nbsp;</label><input placeholder="Country" type="text" id="country" name="country" />
+                <label>Country:&nbsp;</label>
+                <?php if (isset($_SESSION['country'])) { ?>
+                  <input placeholder="Country" type="text" id="country" 
+                    value="<?php echo htmlspecialchars($_SESSION['country']); ?>" name="country" />
+                <?php } else { ?>
+                  <input placeholder="Country" type="text" id="country" name="country" />
+                <?php } ?>
+
                 <div class="inputSeperator"></div>
-                <label>Latitude:&nbsp;</label><input placeholder="Latitude" type="text" id="latitude" name="latitude" />
+                <label>Latitude:&nbsp;</label>
+                <?php if (isset($_SESSION['latitude'])) { ?>
+                  <input placeholder="Latitude" type="text" id="latitude" 
+                    value="<?php echo htmlspecialchars($_SESSION['latitude']); ?>" name="latitude" />
+                <?php } else { ?>
+                  <input placeholder="Latitude" type="text" id="latitude" name="latitude" />
+                <?php } ?>
+                
                 <div class="inputSeperator"></div>
-                <label>Longitude:&nbsp;</label><input placeholder="Longitude" type="text" id="longitude" name="longitude" />
+                <label>Longitude:&nbsp;</label>
+                <?php if (isset($_SESSION['longitude'])) { ?>
+                  <input placeholder="Longitude" type="text" id="longitude" 
+                    value="<?php echo htmlspecialchars($_SESSION['longitude']); ?>" name="longitude" />
+                <?php } else { ?>
+                  <input placeholder="Longitude" type="text" id="longitude" name="longitude" />
+                <?php } ?>
+
                 <div class="inputSeperator"></div>
-                <label>Keywords:&nbsp;</label><input placeholder="Keywords" type="text" id="keywords" name="keywords" />
+                <label>Keywords:&nbsp;</label>
+                <?php if (isset($_SESSION['keywords'])) { ?>
+                  <input placeholder="Keywords" type="text" id="keywords" 
+                    value="<?php echo htmlspecialchars($_SESSION['keywords']); ?>" name="keywords" />
+                <?php } else { ?>
+                  <input placeholder="Keywords" type="text" id="keywords" name="keywords" />
+                <?php } ?>
+
                 <div class="inputSeperator"></div>
                 <button type="submit" name="btnGetAds">Get Advertisement</button>
               </div> <!-- end of getAds -->
             </form>
-
-            <?php if ($result != NULL) { 
+              <?php if ($result != NULL) { ?>
+              <div class="successWide">
+                <strong>SUCCESS:</strong><br>
+                <?php 
+                  if (is_string($result)) { 
+                    echo htmlspecialchars($result);
+                  }
+                ?>
+              </div>
+              <?php if (is_array($result)) { 
               $response = $result['AdsResponse'];
               $ads = $response['Ads'];
               $type = $ads['Type'];
               $clickURL = $ads['ClickUrl'];
-              $txt = isset($ads['Text']) ? $ads['Text'] : NULL;
-              $content = isset($ads['Content']) ? $ads['content'] : NULL;
-            ?>
-              <div class="successWide">
-                <strong>SUCCESS:</strong><br>
-                <b>Type:&nbsp;</b><?php echo $type; ?><br>
-                <b>Click URL:&nbsp;</b><?php echo $clickURL; ?><br>
-                <?php if ($txt != NULL) { ?>
-                <b>Text:&nbsp;</b><?php echo $txt; ?><br>
-                <?php } ?>
-                <?php if ($content != NULL) { ?>
-                <b>Content:&nbsp;</b><?php echo $content; ?><br>
-                <?php } ?>
-                <?php if (isset($ads['ImageUrl'])) { 
-                  $imgurl = $ads['ImageUrl'];
-                  $img = $imgurl['Image'];
-                ?>
-                <b>Image:&nbsp;</b><?php echo $img; ?><br>
-                <?php } ?>
-              </div>
-            <?php } ?>
+              $imgurl = $ads['ImageUrl'];
+              $img = $imgurl['Image'];
+              ?>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td data-value="Parameter">Type</td>
+                    <td data-value="Value"><?php echo htmlspecialchars($type); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">ClickUrl</td>
+                    <td data-value="Value"><?php echo htmlspecialchars($clickURL); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">ImageUrl</td>
+                    <td data-value="Value"><?php echo htmlspecialchars($img); ?></td>
+                  </tr>
+                </tbody>
+              </table>
+              <a id="hplImage" href="<?php echo $clickURL; ?>" target="_blank"><img src="<?php echo $img; ?>" alt="" /></a>
+              <?php } ?>
+              <?php } ?>
             <?php if ($error != NULL) { ?>
               <div class="errorWide">
                 <strong>ERROR:</strong>

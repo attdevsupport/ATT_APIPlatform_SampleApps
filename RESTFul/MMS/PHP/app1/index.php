@@ -93,13 +93,22 @@ $errors = $service->getErrors();
                     Attachment:
                     <select name="attachment">
                       <?php foreach ($results['fnames'] as $fname) { ?>
+                      <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $fname) { ?>
+                      <option selected="selected"><?php echo $fname; ?></option>
+                      <?php } else { ?>
                       <option><?php echo $fname; ?></option>
                       <?php } ?>
+                      <?php } /* end of foreach */?>
                     </select>
                   </label>
                   <label>
+                  <?php if (isset($_SESSION['notifyDeliveryStatus']) && $_SESSION['notifyDeliveryStatus'] == true) { ?>
+                    <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True" checked
+                      title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                  <?php } else { ?>
                     <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True"
                       title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                <?php } ?>
                       Receive Delivery Status Notification<br>
                   </label>
                   <button type="submit" class="submit" name="sendMms">Send MMS Message</button>
@@ -115,7 +124,7 @@ $errors = $service->getErrors();
             <?php if (isset($results['sendMMS'])) { ?>
             <div class="successWide">
               <strong>SUCCESS: </strong><br>
-              <strong>messageId: </strong><?php echo $results['id']; ?><br>
+              <strong>messageId: </strong><?php echo $results['messageId']; ?><br>
               <?php if (isset($results['resourceURL'])) { ?>
               <strong>resourceURL: </strong><?php echo $results['resourceURL']; ?><br>
               <?php } ?>

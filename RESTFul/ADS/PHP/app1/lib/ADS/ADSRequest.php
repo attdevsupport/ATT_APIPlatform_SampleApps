@@ -12,9 +12,12 @@ class ADSRequest extends RESTFulRequest {
         $this->_token = $token; 
     }
 
-    public function getAdvertisement($category) {
+    public function getAdvertisement($category, $optVals) {
         $this->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
         $this->addParam('Category', $category);
+        foreach ($optVals as $key => $val) {
+            $this->addParam($key, $val);
+        }
 
         // TODO: properly handle
         $this->setHeader('User-Agent', $_SERVER['HTTP_USER_AGENT']);
@@ -24,6 +27,12 @@ class ADSRequest extends RESTFulRequest {
         $result = $this->sendRequest();
         $response = $result['response'];
         $responseCode = $result['responseCode'];
+
+        // no ads returned
+        if ($responseCode == 204) {
+            return NULL;
+        }
+
         if ($responseCode != 200 && $responseCode != 201) {
             throw new Exception($responseCode . ':' .  $response);
         }

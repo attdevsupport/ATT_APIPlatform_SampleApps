@@ -3,7 +3,10 @@ proxy:
 api_key:                       
 secret_key:                    
 tokens_file:                   tokens
+
 transactions_file:             transactions
+subscriptions_file:          subscriptions
+
 recent_transactions_stored:    5
 recent_notifications_stored:   5
 notary_app_view_payload_url:   http://localhost:4567/notary

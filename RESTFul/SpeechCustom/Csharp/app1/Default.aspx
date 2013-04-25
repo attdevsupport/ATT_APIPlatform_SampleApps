@@ -98,12 +98,12 @@ For more information contact developer.support@att.com
                         <h3>
                             X-Arg:
                         </h3>
-                        <asp:TextBox ID="x_arg" runat="server" cssclass="textWide" TextMode="MultiLine" Enabled="False" Rows="4" name="x_arg"></asp:TextBox>
+                        <asp:TextBox ID="x_arg" runat="server" type="text" TextMode="MultiLine" Enabled="False" Rows="4" name="x_arg"></asp:TextBox>
                         <br />
                         <h3>
                             MIME Data:
                         </h3>
-                        <asp:TextBox ID="mimeData" cssclass="textWide" runat="server" TextMode="MultiLine" Enabled="False" Rows="4" name="mimeData"></asp:TextBox>
+                        <asp:TextBox ID="mimeData" type="text" runat="server" TextMode="MultiLine" Enabled="False" Rows="4" name="mimeData"></asp:TextBox>
                         <br />
 
                         <button id="SpeechToTextCustom" onserverclick="BtnSubmit_Click" runat="server" name="SpeechToTextCustom"
@@ -210,14 +210,14 @@ For more information contact developer.support@att.com
                     and intended only for use as a reference in how the services perform.
                     <br />
                     <br />
-                    For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                        target="_blank">https://devconnect-api.att.com</a>
+                    For download of tools and documentation, please go to <a href="https://developer.att.com/"
+                        target="_blank">https://developer.att.com</a>
                     <br />
                     For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
                     <br />
                     <br />
-                    © 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                        target="_blank">http://developer.att.com</a>
+                    © 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
+                        target="_blank">https://developer.att.com</a>
                 </p>
             </div>
             <!-- end of ft -->

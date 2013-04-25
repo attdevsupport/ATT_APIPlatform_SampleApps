@@ -9,6 +9,8 @@ import com.att.api.rest.RESTException;
 import org.json.JSONObject;
 
 import java.text.ParseException;
+import java.util.Map;
+import java.util.Set;
 
 public class ADSService {
     private final OAuthToken token;
@@ -19,18 +21,23 @@ public class ADSService {
         this.cfg = cfg;
     }
 
-    public JSONObject getAdvertisement(String category, String userAgent) 
-            throws RESTException {
+    public JSONObject getAdvertisement(String category, String userAgent,
+        Map<String, String> optVals) throws RESTException {
 
         // TODO: Refactor
-        APIResponse response = 
-            new RESTClient(this.cfg)
+        RESTClient client = new RESTClient(this.cfg)
             .addParameter("Category", category)
             .addAuthorizationHeader(this.token)
             .addHeader("User-Agent", userAgent)
             // UDID is random... trust me 
-            .addHeader("UDID", "9c8bdedf56991a7efb7f02b200915ee4")
-            .httpGet();
+            .addHeader("UDID", "9c8bdedf56991a7efb7f02b200915ee4");
+
+        Set<String> keys = optVals.keySet();
+        for (String key : keys) {
+            client.addParameter(key, optVals.get(key));
+        }
+
+        APIResponse response = client.httpGet();
 
         final String responseBody = response.getResponseBody();
 

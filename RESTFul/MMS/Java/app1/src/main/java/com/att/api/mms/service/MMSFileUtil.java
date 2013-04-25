@@ -25,7 +25,7 @@ public class MMSFileUtil {
     public static void addStatus(MMSStatus status) {
         synchronized(lockObj) {
             // TODO: Move limit to config
-            while (statuses.size() > 5) {
+            while (statuses.size() >= 5) {
                 statuses.remove(0);
             }
             statuses.add(status);

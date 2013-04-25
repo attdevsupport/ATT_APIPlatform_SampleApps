@@ -53,7 +53,6 @@ class MMSService {
             $endpoint = $this->_FQDN . '/mms/v3/messaging/outbox';
             $request = new MMSRequest($endpoint, $token); 
             $rawAddr = $_REQUEST['address']; 
-            $_SESSION['addr'] = $rawAddr;
             $addr = Util::convertAddresses($rawAddr);
             $addr = count($addr) == 1 ? $addr[0] : $addr;
             $subject = $_REQUEST['subject'];
@@ -65,9 +64,16 @@ class MMSService {
             }
             $notifyDeliveryStatus = isset($_REQUEST['chkGetOnlineStatus']);
 
+            /* save input to session */
+            $_SESSION['addr'] = $rawAddr;
+            $_SESSION['subject'] = $subject;
+            $_SESSION['attachment'] = $attachment;
+            $_SESSION['notifyDeliveryStatus'] = $notifyDeliveryStatus;
+
             $response = $request->sendMMS($addr, 
                     $attachArr, $subject, NULL, $notifyDeliveryStatus);
             $outboundResponse = $response['outboundMessageResponse'];
+            $this->_results['messageId'] = $outboundResponse['messageId'];
 
             if (!$notifyDeliveryStatus) { 
                 $_SESSION['id'] = $outboundResponse['messageId'];

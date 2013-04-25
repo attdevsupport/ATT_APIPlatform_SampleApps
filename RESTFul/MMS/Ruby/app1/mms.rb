@@ -141,6 +141,7 @@ def send_mms(address, subject, notify=false)
   response = RestClient.post "#{settings.FQDN}/mms/v3/messaging/outbox?", "#{mimeContent}", :Authorization => "Bearer #{@access_token}", :Accept => 'application/json', :Content_Type => 'multipart/form-data; type="application/json"; start=""; boundary="' + @split + '"'
 
   @mms_id = JSON.parse(response)['outboundMessageResponse']['messageId']
+  @mms_url = JSON.parse(response)['outboundMessageResponse']['resourceReference']['resourceURL']
   session[:mms_id] = @mms_id unless notify
 
 rescue => e
@@ -154,6 +155,7 @@ def get_delivery_status mmsid
 
   delivery_info_list = JSON.parse(response)['DeliveryInfoList']
   @delivery_info = delivery_info_list['DeliveryInfo']
+  @mms_url = delivery_info_list['ResourceUrl']
 
 rescue => e
   @delivery_error = e.response

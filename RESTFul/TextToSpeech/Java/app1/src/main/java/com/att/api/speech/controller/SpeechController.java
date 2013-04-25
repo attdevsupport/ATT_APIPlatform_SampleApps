@@ -1,11 +1,18 @@
 package com.att.api.speech.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 
 import com.att.api.config.AppConfig;
 import com.att.api.oauth.OAuthService;
@@ -15,16 +22,14 @@ import com.att.api.rest.RESTException;
 import com.att.api.speech.model.ConfigBean;
 import com.att.api.speech.service.SpeechService;
 
-import java.io.IOException;
-import org.apache.commons.codec.binary.Base64;
-
 public class SpeechController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private volatile AppConfig cfg;
+    private static String PLAIN_TEXT, SSML;
 
     private RESTConfig getRESTConfig(final String endpoint) {
-        final String proxyHost = cfg.getProxyHost(); 
-        final int proxyPort = cfg.getProxyPort(); 
+        final String proxyHost = cfg.getProxyHost();
+        final int proxyPort = cfg.getProxyPort();
         final boolean trustAllCerts = cfg.getTrustAllCerts();
 
         return new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts);
@@ -65,27 +70,54 @@ public class SpeechController extends HttpServlet {
             String contentType = request.getParameter("contentType");
             session.setAttribute("sessionContentType", contentType);
 
-            String speechText = request.getParameter("speechText");
+            String speechText = null;
+
+            if (contentType.equalsIgnoreCase("text/plain")) {
+                speechText = PLAIN_TEXT; 
+            } else{
+                speechText = SSML;
+            }
+
             session.setAttribute("speechText", speechText);
 
             String endpoint = cfg.getFQDN() + "/speech/v3/textToSpeech";
             SpeechService srvc = new SpeechService(getRESTConfig(endpoint));
 
             OAuthToken token = getToken();
-            byte[] wavBytes = srvc.sendRequest(token.getAccessToken(), 
+            byte[] wavBytes = srvc.sendRequest(token.getAccessToken(),
                     contentType, speechText, xarg);
 
-            request.setAttribute("encodedWavBytes", new String(Base64.encodeBase64(wavBytes)));
+            request.setAttribute("encodedWavBytes",
+                    new String(Base64.encodeBase64(wavBytes)));
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorSpeech", e.getMessage());
         }
     }
 
+    private String readFile(String path) {
+        InputStream is = SpeechController.class.getClassLoader().getResourceAsStream(path);
+
+        byte[] buf = new byte[1024];
+        String str = "";
+        int count = 0;
+
+        try {
+            while (-1 != (count = is.read(buf)))
+                str += new String(buf,0, count);
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+
+        return str;
+    }
+
     @Override
     public void init() {
         try {
             this.cfg = AppConfig.getInstance();
+            PLAIN_TEXT = readFile(cfg.getProperty("plainTextFile"));
+            SSML = readFile(cfg.getProperty("ssmlFile"));
         } catch (IOException e) {
             // print stack trace instead of handling
             e.printStackTrace();
@@ -101,8 +133,8 @@ public class SpeechController extends HttpServlet {
         String contentTypes = cfg.getProperty("contentTypes");
         request.setAttribute("xArg", cfg.getProperty("xArg", ""));
         request.setAttribute("contentTypes", contentTypes.split(","));
-        request.setAttribute("plainSpeechText", cfg.getProperty("plainSpeechText"));
-        request.setAttribute("ssmlSpeechText", cfg.getProperty("ssmlSpeechText"));
+        request.setAttribute("textContent", PLAIN_TEXT);
+        request.setAttribute("ssmlContent", SSML);
         request.setAttribute("cfg", new ConfigBean());
 
         final String forward = "WEB-INF/Speech.jsp";

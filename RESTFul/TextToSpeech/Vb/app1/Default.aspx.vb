@@ -88,13 +88,12 @@ Partial Public Class TTS_App1
     End Sub
 
     Private Sub SetContent()
-        If String.Compare(ContentType.SelectedValue, "text/plain") = 0 Then
-            Dim streamReader As New StreamReader(Me.TTSPlainText)
-            Content.Text = streamReader.ReadToEnd()
-        Else
-            Dim streamReader As New StreamReader(Me.TTSSSML)
-            Content.Text = streamReader.ReadToEnd()
-        End If
+        Dim streamReaderPlain As New StreamReader(Me.TTSPlainText)
+        plaintext.Text = streamReaderPlain.ReadToEnd()
+        streamReaderPlain.Close()
+        Dim streamReaderSSML As New StreamReader(Me.TTSSSML)
+        ssml.Text = streamReaderSSML.ReadToEnd()
+        streamReaderSSML.Close()
     End Sub
 
     ''' <summary>
@@ -111,15 +110,19 @@ Partial Public Class TTS_App1
                 TTSErrorMessage = "Unable to get access token"
                 Return
             End If
-
-
+            Dim content As String = String.Empty
+            If String.Compare(ContentType.SelectedValue, "text/plain") = 0 Then
+                content = plaintext.Text
+            Else
+                content = ssml.Text
+            End If
 
             '
             '            this.ConvertToSpeech(this.fqdn + "/rest/2/SpeechToText",
             '                this.accessToken, SpeechContext.SelectedValue.ToString(), x_arg.Text, speechFile, chunkValue);
             '             
 
-            Me.TextToSpeech(Me.fqdn, "/speech/v3/textToSpeech", Me.accessToken, x_arg.Text, ContentType.SelectedValue, Content.Text)
+            Me.TextToSpeech(Me.fqdn, "/speech/v3/textToSpeech", Me.accessToken, x_arg.Text, ContentType.SelectedValue, content)
         Catch ex As Exception
             TTSErrorMessage = ex.Message
             Return
@@ -595,5 +598,4 @@ Public Class AccessTokenResponse
     End Property
     Private m_expires_in As String
 End Class
-
 #End Region

@@ -53,7 +53,7 @@ def get_ads
 
       case response.code
       when 204
-        @error = 'No Ads were returned'
+        @no_ads = 'No Ads were returned'
       when 200,201
         @result = JSON.parse(response)["AdsResponse"]["Ads"]
       else

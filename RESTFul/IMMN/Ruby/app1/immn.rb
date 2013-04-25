@@ -202,6 +202,7 @@ def prepare_and_send
 	addresses = params[:Address].strip.split ","
 	params[:entered_address] = params[:Address]
 
+  session[:address] = params[:Address]
 	params[:Address] = Array.new
 	addresses.each do |address|
 			params[:Address] << address
@@ -219,6 +220,7 @@ end
 def load_attachments
 	@attachments = Array.new
 	Dir.entries(ATTACH_DIR).sort.each do |x|
+    #add file unless it starts with a . or more
 		@attachments.push x unless x.match /\A\.+/
 	end
 end

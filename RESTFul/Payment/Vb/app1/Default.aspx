@@ -477,13 +477,13 @@ For more information contact developer.support@att.com
         intended only for use as a reference in how the services perform.
         <br/><br/>
         For download of tools and documentation, please go to 
-        <a href="https://devconnect-api.att.com/" 
-          target="_blank">https://devconnect-api.att.com</a>
+        <a href="https://developer.att.com/" 
+          target="_blank">https://developer.att.com</a>
         <br/> For more information contact 
         <a href="mailto:developer.support@att.com">developer.support@att.com</a>
         <br/><br/>
         &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
-        <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        <a href="https://developer.att.com/" target="_blank">https://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->
     </div> <!-- end of page_container -->

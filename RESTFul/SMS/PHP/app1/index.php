@@ -128,14 +128,31 @@ For more information contact developer.support@att.com
                   <?php echo htmlspecialchars($smsService->getDeliveryStatusError()); ?>
                 </div>
                 <?php } else if($getStatus != NULL) { 
-                $status = $getStatus->DeliveryInfoList->DeliveryInfo[0]->DeliveryStatus; 
+                $statuses = $getStatus->DeliveryInfoList->DeliveryInfo;
                 $resourceURL = $getStatus->DeliveryInfoList->ResourceUrl;
                 ?>
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br>
-                  <strong>Status: </strong><?php echo htmlspecialchars($status); ?><br>
                   <strong>Resource URL: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
                 </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Id</th>
+                      <th>Address</th>
+                      <th>DeliveryStatus</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <?php foreach ($statuses as $status) { ?>
+                    <tr>
+                      <td data-value="Id"><?php echo htmlspecialchars($status->Id); ?></td>
+                      <td data-value="Address"><?php echo htmlspecialchars($status->Address); ?></td>
+                      <td data-value="DeliveryStatus"><?php echo htmlspecialchars($status->DeliveryStatus); ?></td>
+                    </tr>
+                  <?php } ?>
+                  </tbody>
+                </table>
                 <?php } ?>
               </div> <!-- end of getStatus -->
               <div class="lightBorder"></div>

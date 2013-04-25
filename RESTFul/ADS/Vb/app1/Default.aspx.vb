@@ -1,4 +1,4 @@
-﻿' <copyright file="Default.aspx.cs" company="AT&amp;T">
+﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
 ' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
 ' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
@@ -7,23 +7,15 @@
 
 #Region "References"
 
-Imports System.Collections.Generic
 Imports System.Configuration
 Imports System.IO
 Imports System.Net
 Imports System.Net.Security
 Imports System.Security.Cryptography.X509Certificates
 Imports System.Text
-Imports System.Web.Script.Serialization
-Imports System.Web.UI.WebControls
 Imports System.Text.RegularExpressions
-Imports System.Collections
-Imports System.Drawing
-Imports System.Linq
-Imports System.Web
-Imports System.Web.UI
+Imports System.Web.Script.Serialization
 
-Imports System.Xml
 
 #End Region
 
@@ -42,7 +34,10 @@ Public Enum AccessTokenType
     Refresh_Token
 End Enum
 
-
+''' <summary>
+''' This application demonstrates the usage of Advertisement API of AT&T platform. 
+''' The Advertisement API is a service that returns advertisements enabling the developer to insert the advertisements into their application.
+''' </summary>
 Partial Public Class Ad_App1
     Inherits System.Web.UI.Page
 #Region "Instance Variables"
@@ -83,19 +78,14 @@ Partial Public Class Ad_App1
     Private udid As String
 
     ''' <summary>
-    ''' Specifies the mapping between API Gateway and south bound enabler.
-    ''' </summary>
-    Private psedoZone As String = Nothing
-
-    ''' <summary>
     ''' Specifies the AD type.
     ''' </summary>
     Private AdType As String = Nothing
 
     Public getAdsSuccessResponse As String = String.Empty
     Public getAdsErrorResponse As String = String.Empty
-    Public formattedResponse As New Dictionary(Of String, String)()
-    Public getAdsResponse As New Dictionary(Of String, String)()
+    Public adRequestResponse As AdsResponseObject = Nothing
+
 
 #End Region
 
@@ -375,9 +365,6 @@ Partial Public Class Ad_App1
                 Else
                     adsRequest.Headers.Add("UDID", Me.udid)
                 End If
-                If Not String.IsNullOrEmpty(Me.psedoZone) Then
-                    adsRequest.Headers.Add("psedo_zone", Me.psedoZone)
-                End If
                 adsRequest.UserAgent = Request.UserAgent
                 adsRequest.Accept = "application/json"
                 adsRequest.Method = "GET"
@@ -386,21 +373,18 @@ Partial Public Class Ad_App1
                 Using adResponseStream As New StreamReader(adsResponseObject.GetResponseStream())
                     adsResponse = adResponseStream.ReadToEnd()
                     Dim deserializeJsonObject As New JavaScriptSerializer()
-                    '
-                    '                    AdsResponseObject ads = (AdsResponseObject)deserializeJsonObject.Deserialize(adsResponse, typeof(AdsResponseObject));
-                    '                    if (null != ads && null != ads.AdsResponse && null != ads.AdsResponse.Ads)
-                    '                    {
-                    '                        this.DrawAdResponse(ads.AdsResponse.Ads);
-                    '                    }
-                    '                    else
-                    '                    {
-                    '                        this.DrawNoAdsResponse();
-                    '                    }
-
-                    If Not String.IsNullOrEmpty(adsResponse) Then
-                        Dim dict As Dictionary(Of String, Object) = deserializeJsonObject.Deserialize(Of Dictionary(Of String, Object))(adsResponse)
-                        DisplayDictionary(dict)
-                        getAdsResponse = formattedResponse
+                    adRequestResponse = DirectCast(deserializeJsonObject.Deserialize(adsResponse, GetType(AdsResponseObject)), AdsResponseObject)
+                    If adRequestResponse IsNot Nothing AndAlso adRequestResponse.AdsResponse IsNot Nothing AndAlso adRequestResponse.AdsResponse.Ads IsNot Nothing Then
+                        If ((adRequestResponse.AdsResponse.Ads.ImageUrl IsNot Nothing) AndAlso (Not String.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ImageUrl.Image))) Then
+                            hplImage.ImageUrl = adRequestResponse.AdsResponse.Ads.ImageUrl.Image
+                        End If
+                        If Not String.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.Text) Then
+                            hplImage.ImageUrl = String.Empty
+                            hplImage.Text = adRequestResponse.AdsResponse.Ads.Text
+                        End If
+                        If Not String.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ClickUrl) Then
+                            hplImage.NavigateUrl = adRequestResponse.AdsResponse.Ads.ClickUrl
+                        End If
                         getAdsSuccessResponse = " "
                     Else
                         getAdsSuccessResponse = "No ads returned"
@@ -426,27 +410,6 @@ Partial Public Class Ad_App1
         End Try
     End Sub
 
-    Private Sub DisplayDictionary(dict As Dictionary(Of String, Object))
-        For Each strKey As String In dict.Keys
-            'string strOutput = "".PadLeft(indentLevel * 8) + strKey + ":";
-
-            Dim o As Object = dict(strKey)
-            If TypeOf o Is Dictionary(Of String, Object) Then
-                DisplayDictionary(DirectCast(o, Dictionary(Of String, Object)))
-            ElseIf TypeOf o Is ArrayList Then
-                For Each oChild As Object In DirectCast(o, ArrayList)
-                    If TypeOf oChild Is String Then
-                        'formattedResponse.Add(strOutput, "");
-                        Dim strOutput As String = DirectCast(oChild, String)
-                    ElseIf TypeOf oChild Is Dictionary(Of String, Object) Then
-                        DisplayDictionary(DirectCast(oChild, Dictionary(Of String, Object)))
-                    End If
-                Next
-            Else
-                formattedResponse.Add(strKey.ToString(), o.ToString())
-            End If
-        Next
-    End Sub
     ''' <summary>
     ''' Builds query string based on user input.
     ''' </summary>
@@ -515,8 +478,11 @@ Partial Public Class Ad_App1
     End Function
 
     Protected Sub Page_Load(sender As Object, e As EventArgs)
+
         ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
         Me.ReadConfigFile()
+        hplImage.ImageUrl = String.Empty
+        hplImage.Text = String.Empty
     End Sub
 
     ''' <summary>
@@ -557,8 +523,6 @@ Partial Public Class Ad_App1
         End If
 
         Me.udid = ConfigurationManager.AppSettings("udid")
-
-        Me.psedoZone = ConfigurationManager.AppSettings("Psedo_zone")
 
         Me.accessTokenFilePath = ConfigurationManager.AppSettings("AccessTokenFilePath")
         If String.IsNullOrEmpty(Me.accessTokenFilePath) Then
@@ -664,7 +628,7 @@ End Class
 ''' <summary>
 ''' Object that containes the link to the image of the advertisement and tracking Url.
 ''' </summary>
-Public Class ImageUrl
+Public Class ImageUrlResponse
     ''' <summary>
     ''' Gets or sets the value of Image.
     ''' This parameter returns the link to the image of the advertisement.
@@ -731,15 +695,15 @@ Public Class Ad
     ''' Gets or sets the value of ImageUrl.
     ''' This parameter returns the link to the image of the advertisement.
     ''' </summary>
-    Public Property ImageUrl() As ImageUrl
+    Public Property ImageUrl() As ImageUrlResponse
         Get
             Return m_ImageUrl
         End Get
-        Set(value As ImageUrl)
+        Set(value As ImageUrlResponse)
             m_ImageUrl = Value
         End Set
     End Property
-    Private m_ImageUrl As ImageUrl
+    Private m_ImageUrl As ImageUrlResponse
 
     ''' <summary>
     ''' Gets or sets the value of Text.
