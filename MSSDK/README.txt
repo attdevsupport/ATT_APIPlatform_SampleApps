@@ -1,5 +1,4 @@
-AT&T APIPlatform MS SDK Sample Applications zip file contains csharp and vb applications
-that uses different APIs provided by AT&T APIPlatform MS SDK.
+AT&T APIPlatform MS SDK Sample Applications zip file contains csharp and vb applications that uses different APIs provided by AT&T APIPlatform MS SDK.
 
 csharp directory contains C# sample applications.
 vb directory contains VB sample applications.
