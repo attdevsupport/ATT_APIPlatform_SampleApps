@@ -11,38 +11,10 @@
 #import "ATTAdView.h"
 #import "Reachability.h"
 
-static Reachability *attAdReachability=nil;
 /**
- *
- * Obfuscated App Key and Secret are used in the below declaration.
- * The app will unobfuscate and send them to the API call.  The 
- * Developer can use the below unobfuscate method to obfuscate
- * and provide the values for app key and secret or provide their
- * own implementation for the same.
- * - (NSString *)unobfuscate:(NSString *)string withKey:(NSString *)key
- *
-*/
-
-NSString *APP_KEY = @"t7mvb5q60x7`'71$cmse2#gcx7fxgb b";
-NSString *APP_SECRET =@"#`7w06#e6sa`wcav";
-
-
-/**
- *
- * UDID to be provided by the Developer
- * Must be 30 characters 
- *
- */
-
-NSString *udid = @"012266005922565000000000000000";
-
-
-/**
- *
  * Category List currently supported by SDK.  Developer can
  * add more, if supported.
  * Make sure, no space added after comma (',').
- *
  */
 
 NSString *categoryListStr = @"auto,business,chat,communication,community,entertainment,finance,games,health,local,maps,medical,movies,music,news,personals,photos,shopping,social,sports,technology,tools,travel,tv,weather,others";
@@ -53,13 +25,52 @@ NSString *categoryListStr = @"auto,business,chat,communication,community,enterta
 
 NSInteger adMaxHeight = 50;
 
+/**
+ * Developer can use Obfuscated App Key and Secret in the below declaration.
+ * The app will unobfuscate and send them to the API call.  The
+ * Developer can use the below unobfuscate method to obfuscate
+ * and provide the values for app key and secret or provide their
+ * own implementation for the same.
+ * - (NSString *)unobfuscate:(NSString *)string withKey:(NSString *)key
+ */
 
+#define APP_KEY @ADD_YOUR_APP_KEY_HERE
+#define APP_SECRET @ADD_YOUR_APP_SECRET_HERE
+
+/**
+ * UDID to be provided by the Developer
+ * Must be 30 characters
+ */
+
+#define UDID @ADD_YOUR_UDID_HERE
 
 @interface FirstViewController ()
 
 @end
 
 @implementation FirstViewController
+
+-(ATTAdView *) startAdsViewWithWidth:(CGFloat)maxWidth
+                          withHeight:(CGFloat)maxHeight
+{
+    //Launch Ads view.
+    /****************** Use this if the keys are Obfuscated. ****************************************
+     
+     attAdView = [attAdView initWithFrame:CGRectMake(0, 0,maxWidth,maxHeight)
+     appKey:[self unobfuscate:APP_KEY withKey:@"ATT"]
+     appsecret:[self unobfuscate:APP_SECRET withKey:@"ATT"]
+     category:appDelegate.category udid:UDID];
+     
+     *************************************************************************************************/
+    
+    //Use this if the keys are not obfuscated.
+    attAdView = [attAdView initWithFrame:CGRectMake(0, 0,maxWidth,maxHeight)
+                                  appKey:APP_KEY
+                               appsecret:APP_SECRET
+                                category:appDelegate.category udid:UDID];
+    
+    return attAdView;
+}
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -210,12 +221,10 @@ NSInteger adMaxHeight = 50;
         attAdView  = nil;
     }
     
-    attAdView = [[ATTAdView alloc]init];
+    //Initialize the AttAdsView.
+    attAdView = [[ATTAdView alloc] init];
     
-    
-    ///Accessing the preferences values like KeyWords,ZipCode,Premium categories, Ad Type, Age Group, Maximum Height and width, from the AppDelegate and passing to the API to set preferences for the Ad
-    
-        
+    //Set Ads view properties.
     [attAdView setKeywords:appDelegate.keyWords];
     [attAdView setZipCode:appDelegate.zipCode];
     [attAdView setPremium:appDelegate.premium ];
@@ -223,20 +232,19 @@ NSInteger adMaxHeight = 50;
     [attAdView setMaxWidth:appDelegate.maxWidth];
     [attAdView setAgeGroup:appDelegate.ageGroup] ;
     [attAdView setLatitude:appDelegate.latitude] ;
-    [attAdView setLongitude:appDelegate.longitude]; 
+    [attAdView setLongitude:appDelegate.longitude];
     [attAdView setAdRefreshPeriod:30];  // in seconds
     [attAdView setAttAdViewDelegate:self];
     
+    
+    ///Accessing the preferences values like KeyWords,ZipCode,Premium categories, Ad Type, Age Group, Maximum Height and width, from the AppDelegate and passing to the API to set preferences for the Ad
         
     if (appDelegate.maxWidth == 300 && appDelegate.maxHeight == 250) {
         BOOL isnetWorkStatus = [self currentNetworkStatus];
         if(isnetWorkStatus)
         {
-        attAdView = [attAdView initWithFrame:CGRectMake(0, 0,appDelegate.maxWidth,appDelegate.maxHeight) 
-                                      appKey:[self unobfuscate:APP_KEY withKey:@"ATT"]
-                                   appsecret:[self unobfuscate:APP_SECRET withKey:@"ATT"]
-                                    category:appDelegate.category udid:udid];
-               
+            attAdView = [self startAdsViewWithWidth:appDelegate.maxWidth withHeight:appDelegate.maxHeight];
+            
         if(backView)
         {
             [backView removeFromSuperview];
@@ -245,8 +253,6 @@ NSInteger adMaxHeight = 50;
         backView =[[UIView alloc]initWithFrame:CGRectMake(0, 0,320, 480)];
         [self.view addSubview:backView];
         [backView setBackgroundColor:[UIColor clearColor]];
-        
-        
         
         UIView *addView =[[UIView alloc]initWithFrame:CGRectMake(10,105,300, 240)];
         [backView addSubview:addView];
@@ -278,27 +284,24 @@ NSInteger adMaxHeight = 50;
         NSLog(@"xCord = %d",xCord);
 
         if (appDelegate.maxWidth == 0 && appDelegate.maxHeight == 0) {
+            
             if(backView)
             {
                 [backView removeFromSuperview];
                 backView = nil;
             }
-            attAdView = [attAdView initWithFrame:CGRectMake(0,0,self.view.frame.size.width,adMaxHeight) 
-                                          appKey:[self unobfuscate:APP_KEY withKey:@"ATT"]
-                                       appsecret:[self unobfuscate:APP_SECRET withKey:@"ATT"]
-                                        category:appDelegate.category udid:udid];
 
-        }
+            attAdView = [self startAdsViewWithWidth:self.view.frame.size.width withHeight:adMaxHeight];
+         }
         else {
+            
             if(backView)
             {
                 [backView removeFromSuperview];
                 backView = nil;
             }
-            attAdView = [attAdView initWithFrame:CGRectMake(xCord,1 ,appDelegate.maxWidth,appDelegate.maxHeight) 
-                                          appKey:[self unobfuscate:APP_KEY withKey:@"ATT"]
-                                       appsecret:[self unobfuscate:APP_SECRET withKey:@"ATT"]
-                                        category:appDelegate.category udid:udid];
+            
+            attAdView = [self startAdsViewWithWidth:appDelegate.maxWidth withHeight:appDelegate.maxHeight];
         }
         
         [self.view addSubview:attAdView];
