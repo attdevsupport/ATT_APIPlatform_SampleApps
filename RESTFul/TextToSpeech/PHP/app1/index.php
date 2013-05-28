@@ -1,11 +1,13 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/SpeechService.php';
+require_once __DIR__ . '/src/Controller/SpeechController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$speechService = new SpeechService();
-$response = $speechService->textToSpeech();
-$error = $speechService->getError();
+
+$controller = new SpeechController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -114,7 +116,10 @@ For more information contact developer.support@att.com
                   Submit
                 </button>
               </form>
-              <?php if ($response != NULL) { ?>
+              <?php
+              if (isset($results[SpeechController::RESULT_TTS])) {
+                $response = $results[SpeechController::RESULT_TTS];
+              ?>
                 <div class="successWide" align="left">
                   <strong>SUCCESS:</strong>
                   <br>
@@ -123,7 +128,10 @@ For more information contact developer.support@att.com
                   </audio>
                   </div>
               <?php } ?>
-              <?php if ($error != NULL) { ?>
+              <?php
+              if (isset($errors[SpeechController::ERROR_TTS])) {
+                $error = $errors[SpeechController::ERROR_TTS];
+              ?>
                 <div class="errorWide">
                   <strong>ERROR:</strong>
                   <br>

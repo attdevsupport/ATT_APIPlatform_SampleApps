@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 
-September 2011
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: 
-http://developer.att.com/sdk_agreement/
+Licensed by AT&T under 'Software Development Kit Tools
+Agreement.' September 2011 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND
+DISTRIBUTION: http://developer.att.com/sdk_agreement/
 
-Copyright 2011 AT&T Intellectual Property. All rights reserved. 
+Copyright 2011 AT&T Intellectual Property. All rights reserved.
 http://developer.att.com
 
 For more information contact developer.support@att.com
 -->
-<html lang="en"><head> 
+<html lang="en">
+  <head> 
     <title>
       AT&amp;T Sample Speech Application - Speech to Text
       (Custom)
@@ -25,16 +25,27 @@ For more information contact developer.support@att.com
       _gaq.push(['_trackPageview']);
 
       (function () {
-       var ga = document.createElement('script');
-       ga.type = 'text/javascript';
-       ga.async = true;
-       ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-         : 'http://www')
-       + '.google-analytics.com/ga.js';
-       var s = document.getElementsByTagName('script')[0];
-       s.parentNode.insertBefore(ga, s);
-       })();
-     </script>
+          var ga = document.createElement('script');
+          ga.type = 'text/javascript';
+          ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+            : 'http://www')
+          + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(ga, s);
+      })();
+
+      function enableNameParam(list,nameParam){
+        var selectedValue = list.options[list.selectedIndex].value;
+        if(selectedValue == "GenericHints"){
+          document.getElementById("nameParam").disabled=false;
+        }else{
+          document.getElementById("nameParam").disabled=true;
+          var choices = document.getElementById("nameParam");
+          choices.options[0].selected = true;
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="pageContainer" class="pageContainer">
@@ -76,10 +87,16 @@ For more information contact developer.support@att.com
               <form name="SpeechToText" action="SpeechToText" method="post" enctype="multipart/form-data">
                 <div id="formData">
                   <h3>Speech Context:</h3>
-                  <select name="SpeechContext">
+                  <select name="SpeechContext" onchange="enableNameParam(this,'nameParam')">
                     <% @type_list.each do |x| %>
                       <option value="<%= x %>" <%= if x.eql? @selected_type then 'selected="selected"' end %>><%= x %></option>
                     <% end %>
+                  </select>
+                  <h3>Name Parameter:</h3>
+                  <select name="nameParam" id="nameParam">
+                    <option value="x-grammar" selected="selected">x-grammar</option>
+                    <option value="x-grammar-prefix">x-grammar-prefix</option>  
+                    <option value="x-grammar-altgram">x-grammar-altgram</option>            
                   </select>
                   <h3>Audio File:</h3>
                   <select name="audio_file">
@@ -87,9 +104,10 @@ For more information contact developer.support@att.com
                       <option value="<%= x %>" <%= if x.eql? @selected_file then 'selected="selected"' end %>><%= x %></option>
                     <% end %>
                   </select>
-                  </br>
                   <h3>X-Arg:</h3>
-                  <textarea id="x_arg" type="text" name="x_arg" readonly="readonly" rows="4" value="<%= settings.X_arg %>"><%= settings.X_arg %></textarea>
+                  <label>
+                    <%= settings.X_arg %>
+                  </label>
                   <h3>MIME Data:</h3>
                   <textarea id="mimeData" name="mimeData" type="text" readonly="readonly" rows="4"><%= @mime_data %></textarea>
                   <br><button type="submit" id="SpeechToTextCustom" name="SpeechToTextCustom">Submit</button>
@@ -106,50 +124,50 @@ For more information contact developer.support@att.com
             <table class="kvp">
               <thead>
                 <tr>
-                  <th class="label">Parameter</th>
-                  <th class="label">Value</th>
+                  <th>Parameter</th>
+                  <th>Value</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="cell" align="center"><em>ResponseId</em></td>
-                  <td class="cell" align="center"><em><%= @result['Recognition']['ResponseId'] %></em></td>
+                  <td data-value="Parameter"><em>ResponseId</em></td>
+                  <td data-value="Value"><em><%= @result['Recognition']['ResponseId'] %></em></td>
                 </tr>
                 <tr>
-                  <td class="cell" align="center"><em>Status</em></td>
-                  <td class="cell" align="center"><em><%= @result['Recognition']['Status'] %></em></td>
+                  <td data-value="Parameter"><em>Status</em></td>
+                  <td data-value="Value"><em><%= @result['Recognition']['Status'] %></em></td>
                 </tr>
                 <%
                   if @result['Recognition']['Status'].eql? "OK" then
                     nbest = @result['Recognition']['NBest']
                     nbest.each do |key| %>
                       <tr>
-                        <td class="cell" align="center"><em>Hypothesis</em></td>
-                        <td class="cell" align="center"><em><%= key['Hypothesis'] %></em></td>
+                        <td data-value="Parameter"><em>Hypothesis</em></td>
+                        <td data-value="Value"><em><%= key['Hypothesis'] %></em></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>LanguageId</em></td>
-                        <td class="cell" align="center"><em><%= key['LanguageId'] %></em></td>
+                        <td data-value="Parameter"><em>LanguageId</em></td>
+                        <td data-value="Value"><em><%= key['LanguageId'] %></em></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>Confidence</em></td>
-                        <td class="cell" align="center"><em><%= key['Confidence'] %></em></td>
+                        <td data-value="Parameter"><em>Confidence</em></td>
+                        <td data-value="Value"><em><%= key['Confidence'] %></em></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>Grade</em></td>
-                        <td class="cell" align="center"><em><%= key['Grade'] %></em></td>
+                        <td data-value="Parameter"><em>Grade</em></td>
+                        <td data-value="Value"><em><%= key['Grade'] %></em></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>ResultText</em></td>
-                        <td class="cell" align="center"><em><%= key['ResultText'] %></em></td>
+                        <td data-value="Parameter"><em>ResultText</em></td>
+                        <td data-value="Value"><em><%= key['ResultText'] %></em></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>Words</em></td>
-                        <td class="cell" align="center"><em><%= key['Words'].join(", ") %></em></td>
+                        <td data-value="Parameter"><em>Words</em></td>
+                        <td data-value="Value"><em><%= key['Words'].join(", ") %></em></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>WordScores</em></td>
-                        <td class="cell" align="center"><em><%= key['WordScores'].join(", ") %></em></td>
+                        <td data-value="Parameter"><em>WordScores</em></td>
+                        <td data-value="Value"><em><%= key['WordScores'].join(", ") %></em></td>
                       </tr>
                       <% end end %>
                     </tbody>
@@ -186,6 +204,5 @@ For more information contact developer.support@att.com
                 </div> <!-- end of ft -->
               </div> <!-- end of footer -->
             </div> <!-- end of page_container -->
-
-
-        </body></html>
+          </body>
+        </html>

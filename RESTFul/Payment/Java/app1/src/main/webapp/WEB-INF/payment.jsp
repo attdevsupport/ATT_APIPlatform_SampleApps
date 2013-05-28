@@ -11,6 +11,7 @@ For more information contact developer.support@att.com
 <html lang="en"> 
     <head> 
         <title>AT&amp;T Sample Application - Payment</title>		
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
         <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
         <link rel="stylesheet" type="text/css" href="style/common.css">
         <script src="scripts/utils.js"></script>
@@ -39,15 +40,15 @@ For more information contact developer.support@att.com
                      <a id="jump" href="#nav">Main Navigation</a>
                  </div> 
                  <ul class="links" id="nav">
-                     <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+                     <li><a href="#" target="_blank">Full Page<img src="images/max.png" alt="images/max.png" /></a>
                      <span class="divider"> |&nbsp;</span>
                      </li>
                      <li>
-                     <a href="${cfg.linkSource}" target="_blank">Source<img src="images/opensource.png" /></a>
+                     <a href="${cfg.linkSource}" target="_blank">Source<img src="images/opensource.png" alt="images/opensource.png" /></a>
                      <span class="divider"> |&nbsp;</span>
                      </li>
                      <li>
-                     <a href="${cfg.linkDownload}" target="_blank">Download<img src="images/download.png"></a>
+                     <a href="${cfg.linkDownload}" target="_blank">Download<img src="images/download.png" alt="images/download.png" /></a>
                      <span class="divider"> |&nbsp;</span>
                      </li>
                      <li>
@@ -76,9 +77,9 @@ For more information contact developer.support@att.com
                              <form method="post" name="newTransaction" action="payment">
                                  <div class="inputFields">
                                      <input type="radio" name="product" value="1" 
-                                     checked="checked">Buy product 1 for $<c:out value="${cfg.minTransactionAmount}" /></input><br>
+                                     checked="checked">Buy product 1 for $<c:out value="${cfg.minTransactionAmount}" /><br>
                                      <input type="radio" name="product" 
-                                     value="2">Buy product 2 for $<c:out value="${cfg.maxTransactionAmount}" /></input><br>
+                                     value="2">Buy product 2 for $<c:out value="${cfg.maxTransactionAmount}" /><br>
                                      <button type="submit" name="newTransaction">Buy Product</button>
                                  </div> <!-- end of inputFields -->
                              </form> <!-- end of newTransaction -->
@@ -155,20 +156,17 @@ For more information contact developer.support@att.com
                              <br>
                              <h2>Feature 3: Refund Transaction</h2>
                              <div class="inputFields">
-                                 <div id="refundIds">
-                                     <div id="transactionIds">
-                                         <strong>Transaction ID</strong><br>
-                                         <form method="post" name="refundTransactionTID" action="payment">
-                                             <select name="refundTransactionId" onChange="this.form.submit()">
-                                                 <option>Select..</option>
-                                                 <c:forEach var="entry" items="${transactions}">
-                                                 <option value="<c:out value="${entry.id}" />"><c:out value="${entry.id}" /></option>
-                                                 </c:forEach>
-                                             </select>
-                                         </form>
-                                     </div> <!-- end of transactionIds -->
-                                     <br>
-                                 </div> <!-- end of refundIds -->
+                                 <div id="refundTransIds">
+                                     <strong>Transaction ID</strong><br>
+                                     <form method="post" name="refundTransactionTID" action="payment">
+                                         <select name="refundTransactionId" onChange="this.form.submit()">
+                                             <option>Select..</option>
+                                             <c:forEach var="entry" items="${transactions}">
+                                             <option value="<c:out value="${entry.id}" />"><c:out value="${entry.id}" /></option>
+                                             </c:forEach>
+                                         </select>
+                                     </form>
+                                 </div> <!-- end of refundTransIds -->
                              </div> <!-- end of inputFields -->
                              <c:if test="${not empty errorTRefund}"> 
                              <div class="errorWide">
@@ -203,24 +201,6 @@ For more information contact developer.support@att.com
                                  </tbody>
                              </table>
                              </c:if>
-                             <h2>Feature 4: Transaction Notifications</h2>
-                             <form method="post" name="refreshTransactionNotifications" action="payment">
-                                 <div class="inputFields">
-                                     <div id="notificationDetails" class="columns">
-                                         <div id="notificationIds" class="column">
-                                             <strong>Notification ID</strong><br>
-                                         </div> <!-- end of notificationIds -->
-                                         <div id="notificationTypes" class="column">
-                                             <strong>Notification Type</strong><br>
-                                         </div> <!-- end of notificationTypes -->
-                                         <div id="transactionIds" class="column">
-                                             <strong>Transaction ID</strong><br>
-                                         </div> <!-- end of transactionIds -->
-                                         <br>
-                                         <button type="submit" name="refreshTransactionNotifications">Refresh</button>
-                                     </div> <!-- end of notificationDetails -->
-                                 </div> <!-- end of inputFields -->
-                             </form> <!-- end of refreshTransactionNotifications -->
                          </div> <!-- end of transaction -->
                          <div class="lightBorder"></div>
                          <a id="subscriptionToggle" 
@@ -310,16 +290,7 @@ For more information contact developer.support@att.com
                                      <select name="getSDetailsMSID" onChange="this.form.submit()">
                                          <option>Select..</option>
                                          <c:forEach var="subs" items="${subscriptions}">
-                                         <option value='<c:out value="${subs.merchantSubId}" />'><c:out value="${subs.merchantId}" /></option>
-                                         </c:forEach>
-                                     </select>
-                                 </form>
-                                 <strong>Consumer ID</strong><br>
-                                 <form method="post" name="fgetSDetailsConsumerId" action="payment">
-                                     <select name="getSDetailsConsumerId" onChange="this.form.submit()">
-                                         <option>Select..</option>
-                                         <c:forEach var="subs" items="${subscriptions}">
-                                         <option value='<c:out value="${subs.consumerId}" />'><c:out value="${subs.consumerId}" /></option>
+                                         <option value='<c:out value="${subs.merchantSubId}" />'><c:out value="${subs.merchantSubId}" /></option>
                                          </c:forEach>
                                      </select>
                                  </form>
@@ -358,22 +329,19 @@ For more information contact developer.support@att.com
                              </table>
                              </c:if>
                              <br>
-                             <h2>Feature 4: Cancel Subscription</h2>
+                             <h2>Feature 4: Cancel Future Subscription</h2>
                              <div class="inputFields">
-                                 <div id="refundIds">
-                                     <div id="transactionIds">
-                                         <strong>Subscription ID</strong><br>
-                                         <form method="post" name="cancelSubscriptionID" action="payment">
-                                             <select name="cancelSubscriptionId" onChange="this.form.submit()">
-                                                 <option>Select..</option>
-                                                 <c:forEach var="entry" items="${subscriptions}">
-                                                 <option value="<c:out value="${entry.id}" />"><c:out value="${entry.id}" /></option>
-                                                 </c:forEach>
-                                             </select>
-                                         </form>
-                                     </div> <!-- end of transactionIds -->
-                                     <br>
-                                 </div> <!-- end of refundIds -->
+                                 <div id="cancelIds">
+                                    <strong>Subscription ID</strong><br>
+                                    <form method="post" name="cancelSubscriptionID" action="payment">
+                                        <select name="cancelSubscriptionId" onChange="this.form.submit()">
+                                            <option>Select..</option>
+                                            <c:forEach var="entry" items="${subscriptions}">
+                                            <option value="<c:out value="${entry.id}" />"><c:out value="${entry.id}" /></option>
+                                            </c:forEach>
+                                        </select>
+                                    </form>
+                                 </div> <!-- end of cancelIds -->
                              </div> <!-- end of inputFields -->
                              <c:if test="${not empty errorSCancel}"> 
                              <div class="errorWide">
@@ -408,22 +376,19 @@ For more information contact developer.support@att.com
                                  </tbody>
                              </table>
                              </c:if>
-                             <h2>Feature 5: Refund Subscription</h2>
+                             <h2>Feature 5: Refund Current and Cancel Future Subscription</h2>
                              <div class="inputFields">
-                                 <div id="refundIds">
-                                     <div id="transactionIds">
-                                         <strong>Subscription ID</strong><br>
-                                         <form method="post" name="refundSubscriptionID" action="payment">
-                                             <select name="refundSubscriptionId" onChange="this.form.submit()">
-                                                 <option>Select..</option>
-                                                 <c:forEach var="entry" items="${subscriptions}">
-                                                 <option value="<c:out value="${entry.id}" />"><c:out value="${entry.id}" /></option>
-                                                 </c:forEach>
-                                             </select>
-                                         </form>
-                                     </div> <!-- end of transactionIds -->
-                                     <br>
-                                 </div> <!-- end of refundIds -->
+                                 <div id="refundSubIds">
+                                     <strong>Subscription ID</strong><br>
+                                     <form method="post" name="refundSubscriptionID" action="payment">
+                                         <select name="refundSubscriptionId" onChange="this.form.submit()">
+                                             <option>Select..</option>
+                                             <c:forEach var="entry" items="${subscriptions}">
+                                             <option value="<c:out value="${entry.id}" />"><c:out value="${entry.id}" /></option>
+                                             </c:forEach>
+                                         </select>
+                                     </form>
+                                 </div> <!-- end of refundSubIds -->
                              </div> <!-- end of inputFields -->
                              <c:if test="${not empty errorSRefund}"> 
                              <div class="errorWide">
@@ -458,24 +423,6 @@ For more information contact developer.support@att.com
                                  </tbody>
                              </table>
                              </c:if>
-                             <h2>Feature 5: Subscription Notifications</h2>
-                             <form method="post" name="refreshSubscriptionNotifications" action="payment">
-                                 <div class="inputFields">
-                                     <div id="notificationDetails" class="columns">
-                                         <div id="notificationIds" class="column">
-                                             <strong>Notification ID</strong><br>
-                                         </div> <!-- end of notificationIds -->
-                                         <div id="notificationTypes" class="column">
-                                             <strong>Notification Type</strong><br>
-                                         </div> <!-- end of notificationTypes -->
-                                         <div id="transactionIds" class="column">
-                                             <strong>Transaction ID</strong><br>
-                                         </div> <!-- end of transactionIds -->
-                                         <br>
-                                         <button type="submit" name="refreshSubscriptionNotifications">Refresh</button>
-                                     </div> <!-- end of notificationDetails -->
-                                 </div> <!-- end of inputFields -->
-                             </form> <!-- end of refreshSubscriptionNotifications -->
                          </div> <!-- end of subscription -->
                          <div class="lightBorder"></div>
                          <a id="notaryToggle" href="javascript:toggle('notary','notaryToggle', 'Notary');">Show Notary</a>
@@ -508,6 +455,28 @@ For more information contact developer.support@att.com
                              </div>
                              </c:if>
                          </div> <!-- end of notary -->
+                         <div class="lightBorder"></div>
+                         <a id="notificationToggle" href="javascript:toggle('notifications','notificationToggle', 'Notifications');">Show Notifications</a>
+                         <div class="toggle" id="notifications">
+                             <form method="post" name="refreshNotifications" action="payment">
+                                 <div class="inputFields">
+                                     <div id="notificationDetails" class="columns">
+                                      <c:if test="${not empty notifications}">
+                                          <c:forEach var="n" items="${notifications}" varStatus="count">
+                                              <c:if test="${count.index eq 0}" >
+                                                  <h2>Notification : <c:out value="${count.index + 1}" /> [Displays last 5 notifications]</h2>
+                                              </c:if>
+                                              <c:if test="${count.index ne 0}" >
+                                                  <h2>Notification : <c:out value="${count.index + 1}" /> </h2>
+                                              </c:if>
+                                              ${n.htmlTable}
+                                          </c:forEach>
+                                      </c:if>
+                                      <button type="submit" name="refreshNotifications">Refresh</button>
+                                    </div> <!-- end of notificationDetails -->
+                                </div> <!-- end of inputFields -->
+                             </form> <!-- end of refreshNotifications -->
+                           </div> <!-- end of notifications -->
                      </div> <!-- end of formContainer -->
                  </div> <!-- end of formBox -->
              </div> <!-- end of content -->
@@ -542,6 +511,9 @@ For more information contact developer.support@att.com
          </c:if>
          <c:if test="${not empty showNotary}">
          <script>toggle('notary', 'notaryToggle', 'Notary');</script>
+         </c:if>
+         <c:if test="${not empty showNote}">
+         <script>toggle('notifications','notificationToggle', 'Notifications');</script>
          </c:if>
      </body>
  </html>

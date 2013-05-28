@@ -1,4 +1,4 @@
-﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
+// <copyright file="Default.aspx.cs" company="AT&amp;T">
 // Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
 // TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
 // Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
@@ -137,9 +137,12 @@ public partial class Payment_App1 : System.Web.UI.Page
     public Dictionary<string, string> subscriptionRefundResponse = new Dictionary<string, string>();
     public Dictionary<string, string> getSubscriptionDetailsResponse = new Dictionary<string, string>();
 
+    public List<Dictionary<string, string>> notificationDetails = new List<Dictionary<string, string>>();
+    
     public string showTransaction = string.Empty;
     public string showSubscription = string.Empty;
     public string showNotary = string.Empty;
+    public string showNotification = string.Empty;
 
     /// <summary>
     /// This function is used to neglect the ssl handshake error with authentication server.
@@ -187,6 +190,8 @@ public partial class Payment_App1 : System.Web.UI.Page
             updateListsForSubAuthCode();
             updateListsForSubMerchantTransactionId();
         }
+
+        this.GetNotificationsFromFile();
 
         if (Session["tranType"] == null)
         {
@@ -606,6 +611,47 @@ public partial class Payment_App1 : System.Web.UI.Page
         }
     }
 
+    protected void ShowNotifications_Click(object sender, EventArgs e)
+    {
+        showNotification = "true";
+        this.GetNotificationsFromFile();        
+    }
+
+    private void GetNotificationsFromFile()
+    {
+        if (null != notificationDetails)
+        {
+            notificationDetails.Clear();
+        }
+
+        List<string> notifications = new List<string>();
+        this.GetListFromFile(this.notificationDetailsFile, ref notifications);
+
+        Dictionary<string, string> notificationPair = null;
+        int count = 1;
+        foreach (string notification in notifications)
+        {
+            if (count > this.recordsToDisplay) break;
+
+            string[] kvps = notification.Split('$');
+            notificationPair = new Dictionary<string, string>();
+            foreach (string kvp in kvps)
+            {
+                string[] values = kvp.Split('%');
+                if (null != values)
+                {
+                    if (values.Length > 1)
+                    {
+                        notificationPair.Add(values[0], values[1]);
+                    }
+                }
+            }
+
+            notificationDetails.Add(notificationPair);
+            count++;
+        }
+    }
+
     /// <summary>
     /// Reads from config file
     /// </summary>
@@ -736,7 +782,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.notificationDetailsFile = ConfigurationManager.AppSettings["notificationDetailsFile"];
         if (string.IsNullOrEmpty(this.notificationDetailsFile))
         {
-            this.notificationDetailsFile = "~\\notificationDetailsFile.txt";
+            this.notificationDetailsFile = "notificationDetailsFile.txt";
         }
 
         this.scope = ConfigurationManager.AppSettings["scope"];
@@ -894,7 +940,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         }
 
         this.description = "TrDesc" + this.transactionTimeString;
-        this.merchantTransactionId = "TrId" + this.transactionTimeString;
+        this.merchantTransactionId = "C" + this.transactionTimeString;
         Session["merTranId"] = this.merchantTransactionId.ToString();
         this.merchantProductId = "ProdId" + this.transactionTimeString;
         this.merchantApplicationId = "MerAppId" + this.transactionTimeString;
@@ -929,11 +975,11 @@ public partial class Payment_App1 : System.Web.UI.Page
         }
 
         this.description = "TrDesc" + this.transactionTimeString;
-        this.merchantTransactionId = "TrId" + this.transactionTimeString;
+        this.merchantTransactionId = "C" + this.transactionTimeString;
         Session["sub_merTranId"] = this.merchantTransactionId;
         this.merchantProductId = "ProdId" + this.transactionTimeString;
         this.merchantApplicationId = "MerAppId" + this.transactionTimeString;
-        this.merchantSubscriptionIdList = "ML" + new Random().Next();
+        this.merchantSubscriptionIdList = "CML" + new Random().Next();
         Session["MerchantSubscriptionIdList"] = this.merchantSubscriptionIdList;
 
         this.isPurchaseOnNoActiveSubscription = ConfigurationManager.AppSettings["IsPurchaseOnNoActiveSubscription"];

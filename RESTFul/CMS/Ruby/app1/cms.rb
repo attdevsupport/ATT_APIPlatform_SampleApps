@@ -11,8 +11,8 @@ require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
+require 'att_oauth_service'
 require 'cgi'
-require File.join(File.dirname(__FILE__), 'common.rb')
 
 enable :sessions
 
@@ -27,10 +27,16 @@ SCOPE = 'CMS'
 SCRIPT_METHODS = settings.script_methods.split(",")
 RestClient.proxy = settings.proxy
 
-# Obtain an OAuth access token if necessary.
-['/CreateSession', '/SendSignal'].each do |path|
-  before path do
-    obtain_tokens(settings.FQDN, settings.api_key, settings.secret_key, SCOPE, settings.tokens_file)
+#setup our oauth service
+configure do
+  begin
+    OAuth = AttCloudServices::OAuthService.new(settings.FQDN, 
+                             settings.api_key, 
+                             settings.secret_key,
+                             SCOPE,
+                             :tokens_file => settings.tokens_file)
+  rescue => e
+    @error = e.message
   end
 end
 
@@ -108,7 +114,7 @@ def create_session
   
   # Resource URL for Create Session.
   url = "#{settings.FQDN}/rest/1/Sessions"
-  response = RestClient.post url, requestbody, :Authorization => "Bearer #{@access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
+  response = RestClient.post url, requestbody, :Authorization => "Bearer #{OAuth.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
 
   if response.code == 200 || response.code == 201
     @result = JSON.parse response
@@ -126,7 +132,7 @@ def send_signal
   # Pass the signal paramater in request body.
   requestBody = '{"signal":"' + CGI.escapeHTML(params[:signal]) + '"}'
   
-  response = RestClient.post url, "#{requestBody}", :Authorization => "Bearer #{@access_token}", 
+  response = RestClient.post url, "#{requestBody}", :Authorization => "Bearer #{OAuth.access_token}", 
   :Content_Type => 'application/json', :Accept => 'application/json'
   
   @signal_result = JSON.parse response

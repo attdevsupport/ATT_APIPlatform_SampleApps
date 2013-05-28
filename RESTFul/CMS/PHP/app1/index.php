@@ -1,12 +1,13 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/CMSService.php';
+require_once __DIR__ . '/src/Controller/CMSController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$service = new CMSService();
-$createSession = $service->createSession();
-$signalStatus = $service->sendSignal();
-$sendSignalStatus = null;
+
+$controller = new CMSController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <html lang="en"> 
@@ -133,7 +134,7 @@ $sendSignalStatus = null;
                     Script Source Code:
                   </label>
                     <textarea name="txtCreateSession" rows="2" cols="20" disabled="disabled" id="txtCreateSession" >
-                      <?php echo htmlspecialchars($service->getScriptContents()); ?>
+                      <?php echo htmlspecialchars($results[CMSController::RESULT_SCRIPT_CONTENTS]); ?>
                     </textarea>
                 </div>
 
@@ -143,16 +144,21 @@ $sendSignalStatus = null;
                   </div>
                 </div>
               </form>
-              <?php if ($createSession != NULL) { ?>
+              <?php 
+              if (isset($results[CMSController::RESULT_CREATE_SESSION])) { 
+                $createSession = $results[CMSController::RESULT_CREATE_SESSION];
+              ?>
               <div class="successWide">
                 <strong>SUCCESS</strong><br>
                 id:&nbsp;<?php echo $createSession['id']; ?><br>
                 success:&nbsp;<?php echo ($createSession['success'] ? 'True' : 'False'); ?><br>
               </div>
-              <?php } else if ($service->getCreateSessionError() != NULL) { ?>
+              <?php } else if (isset($errors[CMSController::ERROR_CREATE_SESSION])) { 
+                $err = $errors[CMSController::ERROR_CREATE_SESSION];
+              ?>
               <div class="errorWide">
                 <strong>ERROR:</strong>
-                <?php echo htmlspecialchars($service->getCreateSessionError()); ?>
+                <?php echo htmlspecialchars($err); ?>
               </div>
               <?php } ?>
             </div> <!-- end of Create Session -->
@@ -164,7 +170,7 @@ $sendSignalStatus = null;
               <form method="post" name="sendSignal" action="index.php">
                 <div class="inputFields">
                   <label class="label">
-                    Session ID: <?php echo $service->getSessionId(); ?>
+                    Session ID: <?php echo $results[CMSController::RESULT_SESSION_ID]; ?>
                   </label>
 
                   <label class="label">
@@ -190,17 +196,21 @@ $sendSignalStatus = null;
 
                 </div>	
               </form>
-              <?php if ($signalStatus != NULL) { ?>
+              <?php if (isset($results[CMSController::RESULT_SEND_SIGNAL])) { 
+                $signalStatus = $results[CMSController::RESULT_SEND_SIGNAL];
+              ?>
                 <div class="successWide">
                   <strong>SUCCESS</strong><br />
                   <strong>Status:&nbsp;</strong><?php echo htmlspecialchars(json_encode($signalStatus)); ?>
                 </div>
               <?php } ?>
 
-              <?php if ($service->getSendSignalError() != NULL) { ?>
+              <?php if (isset($errors[CMSController::ERROR_SEND_SIGNAL])) { 
+                $err = $errors[CMSController::ERROR_SEND_SIGNAL]; 
+              ?>
                 <div class="errorWide">
                   <strong>ERROR:</strong>
-                  <?php echo htmlspecialchars($service->getSendSignalError()); ?>
+                  <?php echo htmlspecialchars($err); ?>
                 </div>
               <?php } ?>
             </div> <!-- end of Send Signal -->

@@ -2,7 +2,7 @@
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
 
 /**
- * Payment Library
+ * Payment Library.
  * 
  * PHP version 5.4+
  * 
@@ -14,13 +14,15 @@
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
- * @category Payment 
- * @copyright AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement/
+ * @category API
+ * @package Payment 
+ * @copyright 2013 AT&T Intellectual Property
+ * @license http://developer.att.com/sdk_agreement AT&T License
  */
 
 require_once __DIR__ . '/../../lib/Util/FileUtil.php';
 
+// TODO: Clean up
 class PaymentFileHandler {
     // TODO: Synchronize entirely
     const INDEX_TRANS_ID = 0;
@@ -64,10 +66,8 @@ class PaymentFileHandler {
             // save the Select... string
             $select = array_shift($fileArr[$index]);
 
-
             // limit on the number of entires
-            // TODO: Move to config
-            while (count($fileArr[$index]) > 5) { 
+            while (count($fileArr[$index]) > $this->_limit) { 
                 array_shift($fileArr[$index]);
             }
 

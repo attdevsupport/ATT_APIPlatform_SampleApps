@@ -1,7 +1,8 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-# TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-# For more information contact developer.support@att.com
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
+# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# Property. All rights reserved. http://developer.att.com For more information
+# contact developer.support@att.com
 
 #@author Kyle Hill <kh455g@att.com>
 module AttCloudServices
@@ -18,7 +19,7 @@ module AttCloudServices
     def initialize(access_token, expiry, refresh_token)
       @access_token = access_token
       @refresh_token = refresh_token
-      expiry = expiry.to_i
+      expiry = expiry.to_i 
 
       if expiry == HUNDRED_YEARS
         if RUBY_VERSION < "1.9"
@@ -51,7 +52,6 @@ module AttCloudServices
     end
 
     # 'Each' definition for OAuthToken object
-    # Mainly used for saving token object to file 
     #
     # @yieldparam access_token [String] The access token used for authentication
     # @yieldparam expiry [Time] the time that the access token expires
@@ -61,6 +61,14 @@ module AttCloudServices
       yield @expiry
       yield @refresh_token
     end
+
+    def eql?(other)
+      self.class.equal?(other.class) &&
+        @access_token == other.access_token &&
+        @expiry == other.expiry &&
+        @refresh_token == other.refresh_token
+    end
+    alias == eql?
 
     class << self # begin static methods
 
@@ -73,7 +81,9 @@ module AttCloudServices
         File.open(path, 'w') do |f|
           begin
             f.flock(File::LOCK_EX)
-            token.each {|x| f.puts x}
+            f.puts token.access_token
+            f.puts token.expiry.to_i
+            f.puts token.refresh_token
           ensure
             f.flock(File::LOCK_UN)
           end
@@ -89,7 +99,7 @@ module AttCloudServices
         File.open(path,'r') do |f|
           begin
             f.flock(File::LOCK_EX)
-            return self.new(*f.map.collect(&:chop))
+            return self.new(*f.map.collect(&:chomp))
           ensure
             f.flock(File::LOCK_UN)
           end

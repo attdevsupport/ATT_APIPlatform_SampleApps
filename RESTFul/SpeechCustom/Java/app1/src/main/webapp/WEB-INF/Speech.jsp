@@ -24,6 +24,17 @@
              var s = document.getElementsByTagName('script')[0];
              s.parentNode.insertBefore(ga, s);
          })();
+
+      function enableNameParam(list,nameParam){
+        var selectedValue = list.options[list.selectedIndex].value;
+        if(selectedValue == "GenericHints"){
+          document.getElementById("nameParam").disabled=false;
+        }else{
+          document.getElementById("nameParam").disabled=true;
+          var choices = document.getElementById("nameParam");
+          choices.options[0].selected = true;
+        }
+      }
     </script>
   </head>
   <body>
@@ -59,7 +70,7 @@
             <form name="SpeechToText" action="SpeechAction" method="post">
               <div id="formData">
                 <h3>Speech Context:</h3>
-                <select name="SpeechContext" onchange="javascript:document.SpeechToText.submit();">
+                <select name="SpeechContext" onchange="enableNameParam(this,'nameParam')">
                 <c:forEach var="cname" items="${speechContexts}">
                   <c:choose>
                     <c:when test="${sessionContextName eq cname}">
@@ -70,6 +81,12 @@
                     </c:otherwise>
                   </c:choose>
                 </c:forEach>
+                </select>
+                <h3>Name Parameter:</h3>
+                <select name="nameParam" id="nameParam">
+                  <option value="x-grammar" selected="selected">x-grammar</option>
+                  <option value="x-grammar-prefix">x-grammar-prefix</option>  
+                  <option value="x-grammar-altgram">x-grammar-altgram</option>            
                 </select>
                 <h3>Audio File:</h3>
                 <select name="audio_file">
@@ -85,7 +102,9 @@
                 </c:forEach>
                 </select>
                 <h3>X-Arg:</h3>
-                <textarea id="x_arg" name="x_arg" readonly="readonly" rows="4" value="${xArg}">${xArg}</textarea>
+                <label>
+                    ${xArg}
+                </label>
                 <br>
                 <h3>MIME Data:</h3>
                 <textarea id="mimeData" name="mimeData" readonly="readonly" rows="4">${mimeData}</textarea>
@@ -104,18 +123,18 @@
           <div class="successWide">
             <strong>SUCCESS:</strong> <br />Response parameters listed below.
           </div>
-          <table class="kvp">
+          <table class="kvp" class="kvp">
             <thead>
               <tr>
-                <th class="label">Parameter</th>
-                <th class="label">Value</th>
+                <th>Parameter</th>
+                <th>Value</th>
               </tr>
             </thead>
             <tbody>
             <c:forEach var="kvp" items="${resultSpeech}">
               <tr>
-                <td class="cell" align="center"><em><c:out value="${kvp[0]}" /></em></td>
-                <td class="cell" align="center"><em><c:out value="${kvp[1]}" /></em></td>
+                <td data-value="Parameter"><c:out value="${kvp[0]}" /></td>
+                <td data-value="Value"><c:out value="${kvp[1]}" /></td>
               </tr>
             </c:forEach>
             </tbody>

@@ -12,16 +12,17 @@ import org.json.JSONObject;
 import java.text.ParseException;
 
 public class PaymentFileHandler {
-    private String path;
+    private File path = null;
     private int limit;
 
-    public PaymentFileHandler(String path, int limit) {
-        this.path = path;
+    public PaymentFileHandler(String pre, String post, int limit)
+        throws IOException {
+        this.path = File.createTempFile(pre, post);
         this.limit = limit;
     }
 
-    public PaymentFileHandler(String path) {
-        this(path, 5);
+    public PaymentFileHandler(String pre, String post) throws IOException {
+        this(pre, post, 5);
     }
 
     public void addTransactionEntry(JSONObject entry, String authCode)
@@ -59,10 +60,10 @@ public class PaymentFileHandler {
         }
     }
 
-    public List<JSONObject> getTransactionEntrys() throws IOException, ParseException {
+    public List<JSONObject> getTransactionEntrys() 
+        throws IOException, ParseException {
         FileInputStream fInputStream = null;
         FileLock fLock = null;
-        new File(this.path).createNewFile();
 
         try {
             fInputStream = new FileInputStream(this.path);

@@ -1,11 +1,12 @@
 <?php
 session_start();
 require_once __DIR__ . '/lib/Util/Util.php';
-require_once __DIR__ . '/src/Sample/MMSService.php';
+require_once __DIR__ . '/src/Controller/MMSController.php';
 require_once __DIR__ . '/config.php';
-$service = new MMSService();
-$results = $service->getResults();
-$errors = $service->getErrors();
+$controller = new MMSController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 
 ?>
 <!DOCTYPE html>

@@ -1,11 +1,11 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/IMMNService.php';
-$immnService = new IMMNService();
-$msgHeaders = $immnService->getMessageHeaders();
-$msgBody = $immnService->getMessageBody();
-$immnSend = $immnService->sendMessage();
+require_once __DIR__ . '/src/Controller/IMMNController.php';
+$controller = new IMMNController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -105,7 +105,7 @@ For more information contact developer.support@att.com
                     Attachment:
                     <select name="attachment">
                       <option value="None">None</option>
-                      <?php foreach ($immnService->getAttachments() as $attachment) { ?>
+                      <?php foreach ($controller->getAttachments() as $attachment) { ?>
                         <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $attachment) { ?>
                         <option value="<?php echo $attachment; ?>"
                             selected="selected"><?php echo htmlspecialchars($attachment); ?></option>
@@ -119,17 +119,23 @@ For more information contact developer.support@att.com
                 </div> <!-- end of inputFields -->
               </form>
 
-              <?php if ($immnSend != NULL) { ?>
+              <?php 
+              if (isset($results[IMMNController::RESULT_SEND_MSG])) { 
+                $immnSend = $results[IMMNController::RESULT_SEND_MSG];
+              ?>
                 <div class="successWide">
                   <strong>SUCCESS:</strong>
                   <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
                 </div> <!-- end of successWide -->
               <?php } ?>
 
-              <?php if ($immnService->errorSend() != NULL) { ?>
+              <?php 
+              if (isset($errors[IMMNController::ERROR_SEND_MSG])) { 
+                $errSend = $errors[IMMNController::ERROR_SEND_MSG]; 
+              ?>
                 <div class="errorWide">
                   <strong>ERROR:</strong>
-                  <?php echo htmlspecialchars($immnService->errorSend()); ?>
+                  <?php echo htmlspecialchars($errSend); ?>
                 </div> <!-- end of errorWide -->
               <?php } ?>
 
@@ -186,10 +192,11 @@ For more information contact developer.support@att.com
 
           <!-- BEGIN HEADER CONTENT RESULTS -->
           <?php 
-          if ($msgBody != NULL) { 
-          $rawCType = $msgBody->getContentType();
-          $tokenCType = strtok($rawCType, ';');
-          $splitCType = strtok($rawCType, '/');
+          if (isset($results[IMMNController::RESULT_GET_BODY])) { 
+            $msgBody = $results[IMMNController::RESULT_GET_BODY];
+            $rawCType = $msgBody->getContentType();
+            $tokenCType = strtok($rawCType, ';');
+            $splitCType = strtok($rawCType, '/');
           ?> 
           <div class="successWide">
             <strong>SUCCESS:</strong>
@@ -214,7 +221,8 @@ For more information contact developer.support@att.com
 
           <!-- BEGIN HEADER RESULTS -->
           <?php 
-          if ($msgHeaders != NULL) { 
+          if (isset($results[IMMNController::RESULT_GET_HEADERS])) { 
+          $msgHeaders = $results[IMMNController::RESULT_GET_HEADERS];
           $headers = $msgHeaders->getHeaders();
           $indexCursor = $msgHeaders->getIndexCursor();
           $headerCount = $msgHeaders->getHeaderCount();
@@ -289,11 +297,18 @@ For more information contact developer.support@att.com
           <?php } ?>
 
           <!-- END HEADER RESULTS -->
-          <?php if ($immnService->errorGet() != NULL) { ?>
+          <?php 
+          $errGet = null;
+          if (isset($errors[IMMNController::ERROR_GET_HEADERS])) {
+            $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
+          } else if (isset($errors[IMMNController::ERROR_GET_BODY])) {
+            $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
+          }
 
+          if ($errGet != null) { ?>
           <div class="errorWide">
             <strong>ERROR:</strong>
-            <?php echo htmlspecialchars($immnService->errorGet()); ?>
+            <?php echo htmlspecialchars($errGet); ?>
 
           </div> <!-- end of errorWide -->
           <?php } ?>

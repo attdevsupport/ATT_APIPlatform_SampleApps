@@ -214,6 +214,10 @@ h2 {
     float: right;
     width: 50%;
 }
+
+#kvp select {
+    width: 100%
+}
 /* END APP SPECIFIC CSS */
 
 /* End of layout styles */
@@ -336,7 +340,7 @@ h2 {
         width: 100%;
     }
     #msgContentForm {
-        float: right;
+        float: none;
         width: 100%;
     }
   /* END APP SPECIFIC MEDIA QUERY CSS */

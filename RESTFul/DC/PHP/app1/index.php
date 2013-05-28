@@ -1,10 +1,12 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/DCService.php';
+require_once __DIR__ . '/src/Controller/DCController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$service = new DCService();
-$dInfo = $service->getDeviceInformation();
+$controller = new DCController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -90,7 +92,10 @@ For more information contact developer.support@att.com
               will result in an HTTP 400 error.
             </div> <!-- end note -->
 
-            <?php if ($dInfo != NULL) { ?>
+            <?php 
+            if (isset($results[DCController::RESULT_DEVICE_INFO])) { 
+              $dInfo = $results[DCController::RESULT_DEVICE_INFO];
+            ?>
               <div class="successWide">
                 <strong>SUCCESS:</strong>
                 <br />
@@ -113,8 +118,9 @@ For more information contact developer.support@att.com
                     </td>
                   </tr>
                   <?php 
-                  $arr = $dInfo['DeviceInfo']['Capabilities']; 
-                  foreach ($arr as $name => $value) {
+                  $dInfoEntry = $dInfo['DeviceInfo'];
+                  $capabilities = $dInfoEntry['Capabilities'];
+                  foreach ($capabilities as $name => $value) {
                   ?>
                     <tr>
                       <td data-value="Parameter">
@@ -129,10 +135,13 @@ For more information contact developer.support@att.com
               </table>
             <?php } ?>
               
-            <?php if ($service->getError() != NULL) { ?>
+            <?php
+            if (isset($errors[DCController::ERROR_DEVICE_INFO])) {
+              $err = $errors[DCController::ERROR_DEVICE_INFO];
+            ?>
               <div class="errorWide">
                 <b>ERROR:</b><br>
-                <?php echo htmlspecialchars($service->getError()); ?>
+                <?php echo htmlspecialchars($err); ?>
               </div>
             <?php } ?>
           </div> <!-- end of formContainer -->

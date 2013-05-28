@@ -34,6 +34,16 @@ For more information contact developer.support@att.com
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ga, s);
         })();
+        function enableNameParam(list, nameParam) {
+            var selectedValue = list.options[list.selectedIndex].value;
+            if (selectedValue == "GenericHints") {
+                document.getElementById("nameParam").disabled = false;
+            } else {
+                document.getElementById("nameParam").disabled = true;
+                var choices = document.getElementById("nameParam");
+                choices.options[0].selected = true;
+            }
+        }
     </script>
 </head>
 <body>
@@ -87,7 +97,10 @@ For more information contact developer.support@att.com
                         <h3>
                             Speech Context:
                         </h3>
-                        <asp:DropDownList ID="SpeechContext" runat="server">
+                        <asp:DropDownList ID="SpeechContext" runat="server" onchange="enableNameParam(this,'nameParam')">
+                        </asp:DropDownList>
+                        <h3>Name Parameter:</h3>
+                        <asp:DropDownList ID="nameParam" name="nameParam" runat="server">
                         </asp:DropDownList>
                         <h3>
                             Audio File:

@@ -227,6 +227,42 @@ h2 {
 }
 
 /* END APP SPECIFIC CSS */
+  /* table data */
+  #notificationDetails table, #notificationDetails thead, #notificationDetails tbody, #notificationDetails th, #notificationDetails td, #notificationDetails tr {
+    display: block;
+  }
+  #notificationDetails thead tr { 
+    position: absolute;
+    top: -2999px;
+    left: -2999px;
+  }
+  #notificationDetails tr { 
+    border: 2px solid #004A80; 
+  }
+
+  #notificationDetails tr:nth-of-type(even) {
+    background: white;
+  } 
+  
+  #notificationDetails td {
+    border-bottom: 2px solid #ccc; 
+    position: relative;
+    padding-left: 50%;
+    text-align: left;
+  }
+
+  #notificationDetails td:before {
+    content: attr(data-value);
+    position: absolute;
+    top: 1px;
+    left: 5px;
+    width: 45%;
+    padding-right: 1.25%;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+  }
+  /* end table data */
 
 /* End of layout styles */
 
