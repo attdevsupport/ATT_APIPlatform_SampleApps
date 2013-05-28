@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!-- 
+Licensed by AT&T under 'Software Development Kit Tools
+Agreement.' September 2011 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND
+DISTRIBUTION: http://developer.att.com/sdk_agreement/
+
+Copyright 2011 AT&T Intellectual Property. All rights reserved.
+http://developer.att.com
+
+For more information contact developer.support@att.com
+-->
+<html lang="en">
+  <head> 
+    <title>
+      AT&amp;T Sample Speech Application - Speech to Text
+      (Custom)
+    </title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-33466541-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function () {
+          var ga = document.createElement('script');
+          ga.type = 'text/javascript';
+          ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+            : 'http://www')
+          + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(ga, s);
+      })();
+
+      function enableNameParam(list,nameParam){
+        var selectedValue = list.options[list.selectedIndex].value;
+        if(selectedValue == "GenericHints"){
+          document.getElementById("nameParam").disabled=false;
+        }else{
+          document.getElementById("nameParam").disabled=true;
+          var choices = document.getElementById("nameParam");
+          choices.options[0].selected = true;
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="pageContainer" class="pageContainer">
+      <div id="header">
+        <div class="logo" id="top"> 
+        </div>
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a>
+        </div> 
+        <ul class="links" id="nav">
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png"></img></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png"/></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png"></a>
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="<%= settings.help_link %>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li></ul> <!-- end of links -->
+        </div> <!-- end of header -->
+        <div class="content">
+          <div class="contentHeading">
+            <h1>AT&amp;T Sample Application - Speech to Text Custom</h1>
+            <div id="introtext">
+              <div><b>Server Time:</b> <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
+              <div><b>Client Time:</b> <script>document.write("" + new Date());</script></div>
+              <div><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div>
+            </div> <!-- end of introtext -->
+          </div> <!-- end of contentHeading -->
+          <div class="formBox" id="formBox">
+            <div id="formContainer" class="formContainer">
+              <form name="SpeechToText" action="SpeechToText" method="post" enctype="multipart/form-data">
+                <div id="formData">
+                  <h3>Speech Context:</h3>
+                  <select name="SpeechContext" onchange="enableNameParam(this,'nameParam')">
+                    <% @type_list.each do |x| %>
+                      <option value="<%= x %>" <%= if x.eql? @selected_type then 'selected="selected"' end %>><%= x %></option>
+                    <% end %>
+                  </select>
+                  <h3>Name Parameter:</h3>
+                  <select name="nameParam" id="nameParam">
+                    <option value="x-grammar" selected="selected">x-grammar</option>
+                    <option value="x-grammar-prefix">x-grammar-prefix</option>  
+                    <option value="x-grammar-altgram">x-grammar-altgram</option>            
+                  </select>
+                  <h3>Audio File:</h3>
+                  <select name="audio_file">
+                    <% @audio_file_list.each do |x| %>
+                      <option value="<%= x %>" <%= if x.eql? @selected_file then 'selected="selected"' end %>><%= x %></option>
+                    <% end %>
+                  </select>
+                  <h3>X-Arg:</h3>
+                  <label>
+                    <%= settings.X_arg %>
+                  </label>
+                  <h3>MIME Data:</h3>
+                  <textarea id="mimeData" name="mimeData" type="text" readonly="readonly" rows="4"><%= @mime_data %></textarea>
+                  <br><button type="submit" id="SpeechToTextCustom" name="SpeechToTextCustom">Submit</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <% if @result %>
+            <div class="successWide" align="left">
+              <strong>SUCCESS:</strong>
+              <br />
+              Response parameters listed below.
+            </div>
+            <table class="kvp">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-value="Parameter"><em>ResponseId</em></td>
+                  <td data-value="Value"><em><%= @result['Recognition']['ResponseId'] %></em></td>
+                </tr>
+                <tr>
+                  <td data-value="Parameter"><em>Status</em></td>
+                  <td data-value="Value"><em><%= @result['Recognition']['Status'] %></em></td>
+                </tr>
+                <%
+                  if @result['Recognition']['Status'].eql? "OK" then
+                    nbest = @result['Recognition']['NBest']
+                    nbest.each do |key| %>
+                      <tr>
+                        <td data-value="Parameter"><em>Hypothesis</em></td>
+                        <td data-value="Value"><em><%= key['Hypothesis'] %></em></td>
+                      </tr>
+                      <tr>
+                        <td data-value="Parameter"><em>LanguageId</em></td>
+                        <td data-value="Value"><em><%= key['LanguageId'] %></em></td>
+                      </tr>
+                      <tr>
+                        <td data-value="Parameter"><em>Confidence</em></td>
+                        <td data-value="Value"><em><%= key['Confidence'] %></em></td>
+                      </tr>
+                      <tr>
+                        <td data-value="Parameter"><em>Grade</em></td>
+                        <td data-value="Value"><em><%= key['Grade'] %></em></td>
+                      </tr>
+                      <tr>
+                        <td data-value="Parameter"><em>ResultText</em></td>
+                        <td data-value="Value"><em><%= key['ResultText'] %></em></td>
+                      </tr>
+                      <tr>
+                        <td data-value="Parameter"><em>Words</em></td>
+                        <td data-value="Value"><em><%= key['Words'].join(", ") %></em></td>
+                      </tr>
+                      <tr>
+                        <td data-value="Parameter"><em>WordScores</em></td>
+                        <td data-value="Value"><em><%= key['WordScores'].join(", ") %></em></td>
+                      </tr>
+                      <% end end %>
+                    </tbody>
+                  </table>
+                <% end %>
+                <% if @error %>
+                  <div class="errorWide">
+                    <strong>ERROR:</strong>
+                    <br />
+                    <%= @error %>
+                  </div>
+                <% end %>
+              </div> <!-- end of content -->
+              <div id="footer">
+                <div id="ft">
+                  <div id="powered_by">
+                    Powered by AT&amp;T Cloud Architecture
+                  </div>
+                  <p>
+                  The Application hosted on this site are working examples
+                  intended to be used for reference in creating products to consume
+                  AT&amp;T Services and not meant to be used as part of your
+                  product. The data in these pages is for test purposes only and
+                  intended only for use as a reference in how the services perform.
+                  <br><br>
+                  For download of tools and documentation, please go to 
+                  <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
+                  <br> For more information contact 
+                  <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+                  <br><br>
+                  © 2013 AT&amp;T Intellectual Property. All rights reserved. 
+                  <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+                  </p>
+                </div> <!-- end of ft -->
+              </div> <!-- end of footer -->
+            </div> <!-- end of page_container -->
+          </body>
+        </html>

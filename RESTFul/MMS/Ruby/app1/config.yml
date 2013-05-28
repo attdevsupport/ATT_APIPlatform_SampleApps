@@ -1,0 +1,25 @@
+port:             4567
+proxy: 
+phone_number:     
+api_key:
+secret_key:
+registration_id:  
+tokens_file:      tokens
+FQDN:             https://api.att.com
+
+tokens_file:      tokens
+subject_file:     subject.txt
+status_file:      notifications
+phones_file:      phones.txt
+coupon_file:      images/coupon.jpg
+
+listener_limit:   5
+listener_url:     http://localhost:4567/mmslistener
+images_url:       http://localhost:4567
+momms_data_dir:   MoMmsData
+momms_image_dir:  MoMmsImages
+
+help_link: #
+download_link: #
+source_link: #
+

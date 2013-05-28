@@ -1,0 +1,10 @@
+port:             4567
+api_key:
+secret_key:
+redirect_url:     http://localhost:4567/
+default_phone:    
+FQDN:             https://api.att.com
+
+download_link: #
+source_link: #
+help_link: #

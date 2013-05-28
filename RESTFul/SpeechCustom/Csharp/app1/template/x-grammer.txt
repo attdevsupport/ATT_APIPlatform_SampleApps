@@ -1,0 +1,16 @@
+<grammar root="order_pizza" xml:lang="en-US">
+<rule id="topping">
+  <one-of>
+    <item>onions</item>
+    <item>cheese</item>
+  </one-of>
+</rule>
+
+<rule id="order_pizza" scope="public">
+   <item>
+     <ruleref uri="#topping"/>
+     <item>P1zz@</item>
+     <item>please</item>
+   </item>
+</rule>
+</grammar>
