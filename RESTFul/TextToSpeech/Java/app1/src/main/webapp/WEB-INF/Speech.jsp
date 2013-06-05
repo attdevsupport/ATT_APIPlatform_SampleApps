@@ -26,7 +26,7 @@
          })();
     </script>
   </head>
-  <body onload="javascript:doLoad();">
+  <body>
     <div id="pageContainer" class="pageContainer">
       <div id="header">
         <div class="logo" id="top"></div>
@@ -59,7 +59,7 @@
             <form name="TextToSpeech" action="SpeechAction" method="post">
               <div id="formData">
                 <h3>Content Type:</h3>
-                <select name="contentType" onchange="javascript:handleContentTypeChanged(this);">
+                <select name="contentType">
                 <c:forEach var="cname" items="${contentTypes}">
                   <c:choose>
                     <c:when test="${sessionContentType eq cname}">
@@ -72,9 +72,12 @@
                 </c:forEach>
                 </select>
                 <h3>Content:</h3>
-                <textarea id="speechText" name="speechText" rows="4"></textarea>
+                <label>text/plain</label><br>
+                    <textarea id="plaintext" name="plaintext" readonly="readonly" rows="4"><c:out value="${textContent}"/></textarea><br>
+                <label>application/ssml</label><br>
+                    <textarea id="ssml" name="ssml" readonly="readonly" rows="4"><c:out value="${ssmlContent}" /></textarea>
                 <h3>X-Arg:</h3>
-                <textarea id="x_arg" name="x_arg" rows="4" value="${xArg}">${xArg}</textarea>
+                <textarea id="x_arg" name="x_arg" readonly="readonly" rows="4" value="${xArg}">${xArg}</textarea>
                 <br>
                 <button type="submit" name="TextToSpeech">Submit</button>
               </div> <!-- end of formData -->
@@ -85,21 +88,17 @@
             <strong>ERROR:</strong><br>
             <c:out value="${errorSpeech}" />
           </div>
-          </c:if>
-          <c:if test="${not empty encodedWavBytes}">
+      </c:if>
+      <c:if test="${not empty encodedWavBytes}">
           <div class="successWide">
-            <strong>SUCCESS</strong>
+              <strong>SUCCESS</strong>
+              <br>
+              <audio controls="controls" autobuffer="autobuffer" autoplay="autoplay">
+                  <source src="data:audio/x-wav;base64,${encodedWavBytes}" >
+              </audio>
           </div>
-          <script type="text/javascript">
-              audio = document.createElement("audio");
-              audio.controls = true;
-              audio.autoplay = true;
-              audio.src = "data:audio/x-wav;base64,${encodedWavBytes}";
-              var success = document.querySelector("div.successWide");
-              success.appendChild(audio);
-          </script>
-          </c:if>
-        </div> <!-- end of formBox -->
+      </c:if>
+      </div> <!-- end of formBox -->
       </div> <!-- end of content -->
       <div id="footer">
         <div id="ft">
@@ -121,32 +120,5 @@
         </div> <!-- end of ft -->
       </div> <!-- end of footer -->
     </div> <!-- end of page_container -->
-    <script type="text/javascript">
-        function doLoad()
-        {
-            plainSpeechText = "${plainSpeechText}";
-            ssmlSpeechText = "${ssmlSpeechText}";
-            var contentElement = document.getElementById("speechText");
-            setContent(contentElement, plainSpeechText);
-        }
-        function handleContentTypeChanged(contentTypeElement)
-        {
-            var contentElement = document.getElementById("speechText");
-            var currentContent = contentElement.value;
-            if (contentTypeElement.value === "text/plain") {
-                ssmlSpeechText = currentContent;
-                setContent(contentElement, plainSpeechText);
-            }
-            else {
-                plainSpeechText = currentContent;
-                setContent(contentElement, ssmlSpeechText);
-            }
-        }
-        function setContent(contentElement, text)
-        {
-            contentElement.value = text;
-            contentElement.innerText = text;
-        }
-    </script>
   </body>
 </html>

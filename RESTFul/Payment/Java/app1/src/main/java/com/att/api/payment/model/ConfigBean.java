@@ -67,4 +67,8 @@ public class ConfigBean implements Serializable {
     public String getMaxSubscriptionAmount() throws IOException {
         return getConfig().getProperty("maxSubscriptionAmount");
     }
+
+    public String getMaxNotifications() throws IOException {
+        return getConfig().getProperty("maxNotifications");
+    }
 }

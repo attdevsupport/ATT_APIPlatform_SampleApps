@@ -1,11 +1,11 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/IMMNService.php';
-$immnService = new IMMNService();
-$msgHeaders = $immnService->getMessageHeaders();
-$msgBody = $immnService->getMessageBody();
-$immnSend = $immnService->sendMessage();
+require_once __DIR__ . '/src/Controller/IMMNController.php';
+$controller = new IMMNController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -75,11 +75,20 @@ For more information contact developer.support@att.com
         <div class="formBox" id="formBox">
           <div id="formContainer" class="formContainer">
             <div id="sendMessages">
-              <h2>Send Messages:<h2>
+              <h2>Send Messages:</h2>
               <form method="post" action="index.php" name="msgContentForm" >
                 <div class="inputFields">
+                  <?php if (isset($_SESSION['Address'])) { ?> 
+                  <input placeholder="Address" name="Address" type="text" 
+                      value="<?php echo htmlspecialchars($_SESSION['Address']); ?>" />     
+                  <?php } else { ?>
                   <input placeholder="Address" name="Address" type="text" />     
+                  <?php } ?>
+                  <?php if (isset($_SESSION['checkbox']) && $_SESSION['checkbox'] == true) { ?>
+                  <label>Group: <input name="groupCheckBox" type="checkbox" checked /></label>
+                  <?php } else { ?>
                   <label>Group: <input name="groupCheckBox" type="checkbox" /></label>
+                  <?php } ?>
                   <label>
                     Message:
                     <select name="message">
@@ -96,28 +105,38 @@ For more information contact developer.support@att.com
                     Attachment:
                     <select name="attachment">
                       <option value="None">None</option>
-                      <?php foreach ($immnService->getAttachments() as $attachment) { ?>
-                      <option value="<?php echo $attachment; ?>"><?php echo htmlspecialchars($attachment); ?></option>
+                      <?php foreach ($controller->getAttachments() as $attachment) { ?>
+                        <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $attachment) { ?>
+                        <option value="<?php echo $attachment; ?>"
+                            selected="selected"><?php echo htmlspecialchars($attachment); ?></option>
+                        <?php } else { ?>
+                        <option value="<?php echo $attachment; ?>"><?php echo htmlspecialchars($attachment); ?></option>
+                        <?php } ?>
                       <?php } ?>
                     </select>
                   </label>
                   <button type="submit" class="submit" id="sendMessage" name="sendMessage">Send Message</button>
                 </div> <!-- end of inputFields -->
               </form>
-              <?php if ($immnSend != NULL) { ?>
 
-              <div class="successWide">
-                <strong>SUCCESS:</strong>
-                <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
+              <?php 
+              if (isset($results[IMMNController::RESULT_SEND_MSG])) { 
+                $immnSend = $results[IMMNController::RESULT_SEND_MSG];
+              ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                  <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
+                </div> <!-- end of successWide -->
+              <?php } ?>
 
-              </div> <!-- end of successWide -->
-                  <?php } ?>
-                  <?php if ($immnService->errorSend() != NULL) { ?>
-
-              <div class="errorWide">
-                <strong>ERROR:</strong>
-                <?php echo htmlspecialchars($immnService->errorSend()); ?>
-              </div> <!-- end of errorWide -->
+              <?php 
+              if (isset($errors[IMMNController::ERROR_SEND_MSG])) { 
+                $errSend = $errors[IMMNController::ERROR_SEND_MSG]; 
+              ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errSend); ?>
+                </div> <!-- end of errorWide -->
               <?php } ?>
 
             </div> <!-- end of sendMessages -->
@@ -126,19 +145,45 @@ For more information contact developer.support@att.com
               <h2>Read Messages:</h2>
               <form method="post" action="index.php" name="msgHeaderForm" id="msgHeaderForm">
                 <div class="inputFields">
-                  <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
-                  <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
+
+                  <?php if (isset($_SESSION['headerCountTextBox'])) { ?>
+                    <input name="headerCountTextBox" type="text" maxlength="3" 
+                        value="<?php echo htmlspecialchars($_SESSION['headerCountTextBox']); ?>" 
+                        placeholder="Header Counter" />     
+                  <?php } else { ?>
+                    <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
+                  <?php } ?>
+
+                  <?php if (isset($_SESSION['headerCountTextBox'])) { ?>
+                    <input name="indexCursorTextBox" type="text" maxlength="30" 
+                        value="<?php echo htmlspecialchars($_SESSION['indexCursorTextBox']); ?>" 
+                        placeholder="Index Cursor" />     
+                  <?php } else { ?>
+                    <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
+                  <?php } ?>
+
                   <button type="submit" class="submit" name="getMessageHeaders" 
-                    id="getMessageHeaders">Get Message Headers</button>
+                      id="getMessageHeaders">Get Message Headers</button>
+
                 </div> <!-- end of inputFields -->
               </form>
               <form method="post" action="index.php" name="msgContentForm" id="msgContentForm">
                 <div class="inputFields">
-                  <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
-                  <input name="PartNumber" id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
-                  <button type="submit" class="submit" name="getMessageContent" id="getMessageContent">
-                    Get Message Content
-                  </button>
+                  <?php if (isset($_SESSION['MessageId'])) { ?>
+                    <input name="MessageId" id="MessageId" type="text" maxlength="30" 
+                        value="<?php echo htmlspecialchars($_SESSION['MessageId']); ?>" placeholder="Message ID" />     
+                  <?php } else { ?>
+                    <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
+                  <?php } ?>
+
+                  <?php if (isset($_SESSION['PartNumber'])) { ?>
+                    <input name="PartNumber" id="PartNumber" type="text" maxlength="30" 
+                        value="<?php echo htmlspecialchars($_SESSION['PartNumber']); ?>" placeholder="Part Number" />     
+                  <?php } else { ?>
+                    <input name="PartNumber" id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
+                  <?php } ?>
+                  <button type="submit" class="submit" name="getMessageContent" 
+                      id="getMessageContent">Get Message Content</button>
                 </div> <!-- end of inputFields -->
               </form>
               <label class="note">To use this feature, you must be a subscriber to My AT&amp;T Messages.</label>
@@ -147,12 +192,12 @@ For more information contact developer.support@att.com
 
           <!-- BEGIN HEADER CONTENT RESULTS -->
           <?php 
-          if ($msgBody != NULL) { 
-          $rawCType = $msgBody->getContentType();
-          $tokenCType = strtok($rawCType, ';');
-          $splitCType = strtok($rawCType, '/');
+          if (isset($results[IMMNController::RESULT_GET_BODY])) { 
+            $msgBody = $results[IMMNController::RESULT_GET_BODY];
+            $rawCType = $msgBody->getContentType();
+            $tokenCType = strtok($rawCType, ';');
+            $splitCType = strtok($rawCType, '/');
           ?> 
-              
           <div class="successWide">
             <strong>SUCCESS:</strong>
           </div> <!-- end of successWide -->
@@ -176,7 +221,8 @@ For more information contact developer.support@att.com
 
           <!-- BEGIN HEADER RESULTS -->
           <?php 
-          if ($msgHeaders != NULL) { 
+          if (isset($results[IMMNController::RESULT_GET_HEADERS])) { 
+          $msgHeaders = $results[IMMNController::RESULT_GET_HEADERS];
           $headers = $msgHeaders->getHeaders();
           $indexCursor = $msgHeaders->getIndexCursor();
           $headerCount = $msgHeaders->getHeaderCount();
@@ -251,11 +297,18 @@ For more information contact developer.support@att.com
           <?php } ?>
 
           <!-- END HEADER RESULTS -->
-          <?php if ($immnService->errorGet() != NULL) { ?>
+          <?php 
+          $errGet = null;
+          if (isset($errors[IMMNController::ERROR_GET_HEADERS])) {
+            $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
+          } else if (isset($errors[IMMNController::ERROR_GET_BODY])) {
+            $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
+          }
 
+          if ($errGet != null) { ?>
           <div class="errorWide">
             <strong>ERROR:</strong>
-            <?php echo htmlspecialchars($immnService->errorGet()); ?>
+            <?php echo htmlspecialchars($errGet); ?>
 
           </div> <!-- end of errorWide -->
           <?php } ?>

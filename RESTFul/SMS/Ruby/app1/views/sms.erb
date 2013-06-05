@@ -127,6 +127,9 @@ For more information contact developer.support@att.com
                 <% elsif @delivery_info %>
                   <div class="successWide">
                     <strong>SUCCESS: </strong><br>
+                    <% if @resource_url %>
+                      <strong>resourceURL: </strong><%= @resource_url %><br>
+                    <% end %>
                     </div>
                   <% end %>
                   <table>
@@ -143,7 +146,7 @@ For more information contact developer.support@att.com
                           <tr>
                             <td data-value="Message Id"><%= info['Id'] %></td>
                             <td data-value="Address"><%= info['Address'] %></td>
-                            <td data-value="Resouce Url"><%= info['DeliveryStatus'] %></td>
+                            <td data-value="Delivery Status"><%= info['DeliveryStatus'] %></td>
                           </tr>
                         <% end %>
                       <% end %>

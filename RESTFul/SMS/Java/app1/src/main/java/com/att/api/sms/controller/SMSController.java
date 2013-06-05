@@ -113,17 +113,30 @@ public class SMSController extends HttpServlet {
             request.getSession().setAttribute("statusId", msgid);
 
             final String endPoint = 
-                cfg.getFQDN() + "/rest/sms/2/messaging/outbox/" + msgid;
+                cfg.getFQDN() + "/sms/v3/messaging/outbox/" + msgid;
+
 
             SMSService service = 
                 new SMSService(getRESTConfig(endPoint, cfg), token);
             JSONObject jobj = service.getSMSDeliveryStatus();
             JSONObject jInfoList = jobj.getJSONObject("DeliveryInfoList");
-            final String status =  jInfoList.getJSONArray("DeliveryInfo")
-                .getJSONObject(0).getString("DeliveryStatus");;
+            JSONArray jstatuses =  jInfoList.getJSONArray("DeliveryInfo");
+            SMSStatus[] statuses = new SMSStatus[jstatuses.length()];
+            
+            for (int i = 0; i < jstatuses.length(); ++i) {
+                JSONObject jstatus = jstatuses.getJSONObject(i);
+                SMSStatus status = new SMSStatus
+                    (
+                     jstatus.getString("Id"),
+                     jstatus.getString("Address"),
+                     jstatus.getString("DeliveryStatus")
+                    );
+                statuses[i] = status;
+            }
+
             final String resourceURL = jInfoList.getString("ResourceUrl");
 
-            request.setAttribute("status", status);
+            request.setAttribute("resultGetStatuses", statuses);
             request.setAttribute("resourceURL", resourceURL);
         } catch (Exception e) {
             request.setAttribute("statusError", e.getMessage());

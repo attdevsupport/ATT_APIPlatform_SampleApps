@@ -8,33 +8,15 @@
 #region References
 
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Web.Script.Serialization;
-using System.Web.UI.WebControls;
 using System.Text.RegularExpressions;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Web;
 using System.Web.Script.Serialization;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.Xml;
+
 
 #endregion
 
@@ -71,12 +53,12 @@ public partial class Ad_App1 : System.Web.UI.Page
     /// Access token file path
     /// </summary>
     private string accessTokenFilePath;
-    
+
     /// <summary>
     /// OAuth access token
     /// </summary>
     private string accessToken;
-    
+
     /// <summary>
     /// OAuth refresh token
     /// </summary>
@@ -98,25 +80,20 @@ public partial class Ad_App1 : System.Web.UI.Page
     private string udid;
 
     /// <summary>
-    /// Specifies the mapping between API Gateway and south bound enabler.
-    /// </summary>
-    private string psedoZone = null;
-
-    /// <summary>
     /// Specifies the AD type.
     /// </summary>
     private string AdType = null;
 
     public string getAdsSuccessResponse = string.Empty;
     public string getAdsErrorResponse = string.Empty;
-    public Dictionary<string, string> formattedResponse = new Dictionary<string, string>();
-    public Dictionary<string, string> getAdsResponse = new Dictionary<string, string>();
+    public AdsResponseObject adRequestResponse = null;
+
 
     #endregion
 
     protected void BtnGetADS_Click(object sender, EventArgs e)
     {
-            this.GetAds();
+        this.GetAds();
     }
     /// <summary>
     /// This function get the access token based on the type parameter type values.
@@ -463,10 +440,6 @@ public partial class Ad_App1 : System.Web.UI.Page
                 {
                     adsRequest.Headers.Add("UDID", this.udid);
                 }
-                if (!string.IsNullOrEmpty(this.psedoZone))
-                {
-                    adsRequest.Headers.Add("psedo_zone", this.psedoZone);
-                }
                 adsRequest.UserAgent = Request.UserAgent;
                 adsRequest.Accept = "application/json";
                 adsRequest.Method = "GET";
@@ -476,21 +449,22 @@ public partial class Ad_App1 : System.Web.UI.Page
                 {
                     adsResponse = adResponseStream.ReadToEnd();
                     JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                    /*
-                    AdsResponseObject ads = (AdsResponseObject)deserializeJsonObject.Deserialize(adsResponse, typeof(AdsResponseObject));
-                    if (null != ads && null != ads.AdsResponse && null != ads.AdsResponse.Ads)
+                    adRequestResponse = (AdsResponseObject)deserializeJsonObject.Deserialize(adsResponse, typeof(AdsResponseObject));
+                    if (null != adRequestResponse && null != adRequestResponse.AdsResponse && null != adRequestResponse.AdsResponse.Ads)
                     {
-                        this.DrawAdResponse(ads.AdsResponse.Ads);
-                    }
-                    else
-                    {
-                        this.DrawNoAdsResponse();
-                    }*/
-                    if (!string.IsNullOrEmpty(adsResponse))
-                    {
-                        Dictionary<string, object> dict = deserializeJsonObject.Deserialize<Dictionary<string, object>>(adsResponse);
-                        DisplayDictionary(dict);
-                        getAdsResponse = formattedResponse;
+                        if (adRequestResponse.AdsResponse.Ads.ImageUrl != null && !string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ImageUrl.Image))
+                        {
+                            hplImage.ImageUrl = adRequestResponse.AdsResponse.Ads.ImageUrl.Image;
+                        }
+                        if (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.Text))
+                        {
+                            hplImage.ImageUrl = string.Empty;
+                            hplImage.Text = adRequestResponse.AdsResponse.Ads.Text;
+                        }
+                        if (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ClickUrl))
+                        {
+                            hplImage.NavigateUrl = adRequestResponse.AdsResponse.Ads.ClickUrl;
+                        }
                         getAdsSuccessResponse = " ";
                     }
                     else
@@ -526,38 +500,6 @@ public partial class Ad_App1 : System.Web.UI.Page
         }
     }
 
-    private void DisplayDictionary(Dictionary<string, object> dict)
-    {
-        foreach (string strKey in dict.Keys)
-        {
-            //string strOutput = "".PadLeft(indentLevel * 8) + strKey + ":";
-
-            object o = dict[strKey];
-            if (o is Dictionary<string, object>)
-            {
-                DisplayDictionary((Dictionary<string, object>)o);
-            }
-            else if (o is ArrayList)
-            {
-                foreach (object oChild in ((ArrayList)o))
-                {
-                    if (oChild is string)
-                    {
-                        string strOutput = ((string)oChild);
-                        //formattedResponse.Add(strOutput, "");
-                    }
-                    else if (oChild is Dictionary<string, object>)
-                    {
-                        DisplayDictionary((Dictionary<string, object>)oChild);
-                    }
-                }
-            }
-            else
-            {
-                formattedResponse.Add(strKey.ToString(), o.ToString());
-            }
-        }
-    }
     /// <summary>
     /// Builds query string based on user input.
     /// </summary>
@@ -582,7 +524,7 @@ public partial class Ad_App1 : System.Web.UI.Page
             queryParameter += "&AreaCode=" + areaCode.Value;
         }
 
-        if (!string.IsNullOrEmpty(city.Value ))
+        if (!string.IsNullOrEmpty(city.Value))
         {
             queryParameter += "&City=" + city.Value;
         }
@@ -643,6 +585,8 @@ public partial class Ad_App1 : System.Web.UI.Page
     {
         BypassCertificateError();
         this.ReadConfigFile();
+        hplImage.ImageUrl = string.Empty;
+        hplImage.Text = string.Empty;
     }
 
     private static void BypassCertificateError()
@@ -684,8 +628,6 @@ public partial class Ad_App1 : System.Web.UI.Page
         }
 
         this.udid = ConfigurationManager.AppSettings["udid"];
-
-        this.psedoZone = ConfigurationManager.AppSettings["Psedo_zone"];
 
         this.accessTokenFilePath = ConfigurationManager.AppSettings["AccessTokenFilePath"];
         if (string.IsNullOrEmpty(this.accessTokenFilePath))
@@ -791,7 +733,7 @@ public class AccessTokenResponse
 /// <summary>
 /// Object that containes the link to the image of the advertisement and tracking Url.
 /// </summary>
-public class ImageUrl
+public class ImageUrlResponse
 {
     /// <summary>
     /// Gets or sets the value of Image.
@@ -828,14 +770,14 @@ public class Ad
     /// Gets or sets the value of ImageUrl.
     /// This parameter returns the link to the image of the advertisement.
     /// </summary>
-    public ImageUrl ImageUrl { get; set; }
+    public ImageUrlResponse ImageUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the value of Text.
     /// Any ad text(either independent or below the ad)
     /// </summary>
     public string Text { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the value of TrackUrl.
     /// This parameter contains the pixel tracking URL.

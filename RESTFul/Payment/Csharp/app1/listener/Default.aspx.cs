@@ -38,6 +38,11 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
     private string notificationId;
 
     /// <summary>
+    /// Global Variable Declaration
+    /// </summary>
+    private int recordsToDisplay = 0;
+
+    /// <summary>
     /// Local variables for processing of request stream
     /// </summary>
     private StreamWriter notificationDetailsStreamWriter;
@@ -68,10 +73,11 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
     {
         BypassCertificateError();
 
+        //this.LogError("Page invoked");
         try
         {
             Stream inputStream = Request.InputStream;
-
+            
             //int streamLength = Convert.ToInt32(inputStream.Length);
             //byte[] stringArray = new byte[streamLength];
             //inputStream.Read(stringArray, 0, streamLength);
@@ -86,28 +92,38 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
             
             ArrayList listOfNotificationIds = new ArrayList();
             listOfNotificationIds = this.GetNotificationIds(inputStream);
-            
+
+            //foreach (string notificationid in listOfNotificationIds)
+            //{
+            //    this.LogError(notificationid + Environment.NewLine);
+            //}
+
             if (!this.ReadConfigFile())
             {
-                //this.LogError("Unable to read config file");
+                this.LogError("Unable to read config file");
                 return;
             }
 
-            if (!this.ReadAndGetAccessToken())
-            {
-                //this.LogError("Unable to get access token");
-                return;
-            }
+            //if (!this.ReadAndGetAccessToken())
+            //{
+            //    this.LogError("Unable to get access token");
+            //    return;
+            //}
 
-            
+            this.ReadAccessTokenFile();
+
+            //this.LogError("IAfter Access token");
             int noOfItems = listOfNotificationIds.Count;
 
             int notificationIdIndex = 0;
             while (noOfItems > 0)
             {
+                //this.LogError("Inside While Loop");
                 noOfItems--;
+
                 this.notificationId = listOfNotificationIds[notificationIdIndex].ToString();
 
+                
                 // Get notification details
                 WebRequest objRequest = (WebRequest)System.Net.WebRequest.Create(this.endPoint + "/rest/3/Commerce/Payment/Notifications/" + this.notificationId);
                 objRequest.Headers.Add("Authorization", "Bearer " + this.accessToken);
@@ -148,6 +164,8 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
                     string notificationType = string.Empty;
                     string originalTransactionId = string.Empty;
 
+                    string notificationDetails = string.Empty;
+
                     foreach (KeyValuePair<string, object> keyValue in notificationResponse)
                     {
                         if (keyValue.Key == "GetNotificationResponse")
@@ -164,16 +182,23 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
                                 {
                                     notificationType = notificationResponseKeyValue.Value.ToString();
                                 }
+
+                                notificationDetails += notificationResponseKeyValue.Key + "%" + notificationResponseKeyValue.Value + "$";
                             }
-                            using (notificationDetailsStreamWriter = File.AppendText(Request.MapPath(this.notificationDetailsFile)))
-                            {
-                                notificationDetailsStreamWriter.WriteLine(notificationId + ":" + notificationType + ":" + originalTransactionId + "$");
-                                notificationDetailsStreamWriter.Close();
-                            }
+
+                            //notificationDetails += "\n";
+                            //using (notificationDetailsStreamWriter = File.AppendText(Request.MapPath(this.notificationDetailsFile)))
+                            //{
+                            //    notificationDetailsStreamWriter.WriteLine(notificationId + ":" + notificationType + ":" + originalTransactionId + "$");
+                            //    notificationDetailsStreamWriter.Close();
+                            //}
+                            //WriteRecordToFile(notificationDetails);
+                            this.WriteRecord(notificationDetails);
+                            this.LogError(notificationDetails);
                         }
                     }
                     string acknowledgeNotificationResponseData = acknowledgeNotificationResponseStream.ReadToEnd();
-                    //this.LogError("Successfully acknowledge to " + this.notificationId + "***" + "\n");
+                    this.LogError("Successfully acknowledge to " + this.notificationId + "***" + "\n");
                     acknowledgeNotificationResponseStream.Close();
                 }
                 notificationIdIndex++;
@@ -185,14 +210,85 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
             {
                 using (Stream stream = we.Response.GetResponseStream())
                 {
-                    //this.LogError(new StreamReader(stream).ReadToEnd());                    
+                    this.LogError(new StreamReader(stream).ReadToEnd());                    
                 }
             }
         }
         catch (Exception ex)
         {
-            //this.LogError(ex.ToString());
+            this.LogError(ex.ToString());
         }
+    }
+
+    /// <summary>
+    /// Method to update file.
+    /// </summary>
+    /// <param name="transactionid">Transaction Id</param>
+    /// <param name="merchantTransactionId">Merchant Transaction Id</param>
+    public void WriteRecordToFile(string value)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["recordsToDisplay"]))
+            {
+                this.recordsToDisplay = Convert.ToInt32(ConfigurationManager.AppSettings["recordsToDisplay"]);
+            }
+            else
+            {
+                this.recordsToDisplay = 5;
+            }
+
+            List<string> list = new List<string>();
+            FileStream file = new FileStream(Request.MapPath(this.notificationDetailsFile), FileMode.Open, FileAccess.Read);
+            StreamReader sr = new StreamReader(file);
+            string line;
+
+            while ((line = sr.ReadLine()) != null)
+            {
+                list.Add(line);
+            }
+
+            sr.Close();
+            file.Close();
+
+            if (list.Count > this.recordsToDisplay)
+            {
+                int diff = list.Count - this.recordsToDisplay;
+                list.RemoveRange(0, diff);
+            }
+
+            if (list.Count == this.recordsToDisplay)
+            {
+                list.RemoveAt(0);
+            }
+
+            list.Add(value);
+            using (StreamWriter sw = File.CreateText(Request.MapPath(this.notificationDetailsFile)))
+            {
+                int tempCount = 0;
+                while (tempCount < list.Count)
+                {
+                    string lineToWrite = list[tempCount];
+                    sw.WriteLine(lineToWrite);
+                    tempCount++;
+                }
+                sw.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.LogError(ex.ToString());
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Logs error message onto file
+    /// </summary>
+    /// <param name="text">Text to be logged</param>
+    private void WriteRecord(string text)
+    {
+        File.AppendAllText(Request.MapPath(this.notificationDetailsFile), text + Environment.NewLine);
     }
 
     /// <summary>
@@ -224,6 +320,8 @@ public partial class PaymentApp1_Listener : System.Web.UI.Page
             this.refreshToken = streamReader.ReadLine();
             this.accessTokenExpiryTime = streamReader.ReadLine();
             this.refreshTokenExpiryTime = streamReader.ReadLine();
+
+            //this.LogError(this.accessToken);
         }
         catch
         {

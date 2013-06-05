@@ -1,87 +1,75 @@
-
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-# TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-# For more information contact developer.support@att.com
-
 #!/usr/bin/ruby
+
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
+# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# Property. All rights reserved. http://developer.att.com For more information
+# contact developer.support@att.com
+
 require 'rubygems'
 require 'json'
 require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'cgi'
-require File.join(File.dirname(__FILE__), 'common.rb')
+require 'att_tl_service'
+
+include AttCloudServices
 
 enable :sessions
-
-SCOPE = 'TL'
 
 config_file 'config.yml'
 
 set :port, settings.port
 set :protection, :except => :frame_options
 
-def authorize
-  # obtain an access token if necessary
-  if session[:tl_access_token].nil? then
-    redirect "#{settings.FQDN}/oauth/authorize?client_id=#{settings.api_key}&scope=TL&redirect_uri=#{settings.redirect_url}"
-  else
-    redirect "#{settings.base_url}/getDeviceLocation"
+before do
+  if session[:tl].nil?
+    session[:tl] = TL::TlService.new(settings.FQDN,
+                                     settings.api_key,
+                                     settings.secret_key,
+                                     TL::SCOPE,
+                                     :redirect_uri => settings.redirect_url,
+                                     :grant_type => GrantType::AUTHORIZATION)
   end
 end
-
-# perform the API call
-def get_device_location
-  url = "#{settings.FQDN}/2/devices/location?"
-
-  url += "requestedAccuracy=#{session[:tl_requested_accuracy]}&acceptableAccuracy=#{session[:tl_acceptable_accuracy]}&"
-  # tolerance
-  url += "tolerance=#{session[:tl_tolerance]}"
-
-  t1 = Time.now
-
-  RestClient.get url,:Authorization => "Bearer #{session[:tl_access_token]}", :Accept => 'application/json' do |response, request, code, &block|
-    @r = response
-  end
-  
-  session[:elapsed] = (Time.now-t1).truncate
-  
-  if @r.code == 200
-    @result = JSON.parse @r
-  else
-    @error = @r
-  end
-
-rescue => e
-  @error = e.message
-ensure
-  return erb :tl
-end
-
-# -- methods --
-# '/' -> '/submit' -> oAuth -> '/getDeviceLocation' -> '/'
-
 
 get '/' do
-  erb :tl
-end
-
-get '/auth/callback' do
-  response = RestClient.post "#{settings.FQDN}/oauth/access_token?", :grant_type => "authorization_code", :client_id => settings.api_key, :client_secret => settings.secret_key, :code => params[:code]
-  from_json = JSON.parse(response.to_str)
-  session[:tl_access_token] = from_json['access_token']
-  redirect "#{settings.base_url}/getDeviceLocation"
-end
-
-get '/getDeviceLocation' do
-  get_device_location
+  begin
+    #something went wrong with authentication display error
+    if params[:error] then
+      @error = params[:error] + ": " + params[:error_description]
+      #if code is present then get location
+    elsif params[:code] then
+      get_location(session[:requestedAccuracy],
+                   session[:acceptableAccuracy],
+                   session[:tolerance],
+                   params[:code])
+    end
+  rescue => e
+    @error = e.message
+  ensure 
+    return erb :tl
+  end
 end
 
 post '/submit' do
-    session[:tl_requested_accuracy] = params[:requestedAccuracy]
-    session[:tl_acceptable_accuracy] = params[:acceptableAccuracy]
-    session[:tl_tolerance] = params[:tolerance]
-    authorize
+  if session[:tl].authenticated?
+    #get location if authenticated
+    get_location(params[:requestedAccuracy],
+                 params[:acceptableAccuracy],
+                 params[:tolerance])
+  else
+    #save params and authenticate
+    session[:requestedAccuracy] = params[:requestedAccuracy]
+    session[:acceptableAccuracy] = params[:acceptableAccuracy]
+    session[:tolerance] = params[:tolerance]
+    redirect session[:tl].consentFlow
+  end
+end
+
+def get_location(ra, aa, tol, code=nil)
+  response = session[:tl].getDeviceLocation(code, ra, aa, tol)
+  @result = JSON.parse(response)
 end
 

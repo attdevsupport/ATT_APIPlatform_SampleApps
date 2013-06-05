@@ -12,7 +12,7 @@ stored in the AT&T Messages environment.
 
 This file describes how to set up, configure and run the C# Applications of the 
 AT&T APIPlatform Restful sample applications. 
-It covers all steps required to register the application on DevConnect and, based
+It covers all steps required to register the application on developer site and, based
 on the generated API keys and secrets, create and run one's own full-fledged 
 sample applications.
 
@@ -25,10 +25,10 @@ sample applications.
 1. Configuration
 
   Configuration consists of a few steps necessary to get an application registered
-  on DevConnect with the proper services and endpoints, depending on the type of 
+  on developer site with the proper services and endpoints, depending on the type of 
   client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login with
+  To register an application, go to https://developer.att.com/ and login with
   your valid username and password. Next, choose "My Apps" from the bar at the top
   of the page and click the "Setup a New Application" button. 
 
@@ -47,10 +47,7 @@ order to use this sample application code.
    secret, so these values in your application should be adjusted accordingly.
 
   Depending on the kind of authentication used, an application may be based on 
-  either the Autonomous Client or the Web-Server Client OAuth flow 
-  (see https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow or
-  https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow 
-  respectively).
+  either the Autonomous Client or the Web-Server Client OAuth flow.
 
 
 

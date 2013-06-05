@@ -12,6 +12,7 @@ For more information contact developer.support@att.com
 <!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
 <!--[if gt IE 8]><!-->
 <html lang="en">
+<!--<![endif]-->
 <head>
     <title>AT&amp;T Sample Application - Advertisement</title>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
@@ -135,9 +136,9 @@ For more information contact developer.support@att.com
                         <label>
                             Age Group:</label>
                         <select name="ageGroup" id="ageGroup" runat="server">
-                            <option value=""></option>
+                            <option value="" selected="selected"></option>
                             <option value="1-13">1-13</option>
-                            <option value="14-25" selected="selected">14-25</option>
+                            <option value="14-25" >14-25</option>
                             <option value="26-35">26-35</option>
                             <option value="36-55">36-55</option>
                             <option value="55-100">55-100</option>
@@ -157,9 +158,9 @@ For more information contact developer.support@att.com
                         <label>
                             Gender:</label>
                         <select name="gender" id="gender" runat="server">
-                            <option value=""></option>
+                            <option value="" selected="selected"></option>
                             <option value="M">Male</option>
-                            <option value="F" selected="selected">Female</option>
+                            <option value="F">Female</option>
                         </select>
                         <div class="inputSeperator">
                         </div>
@@ -167,7 +168,7 @@ For more information contact developer.support@att.com
                             Over 18 Ad Content:</label>
                         <select name="over18" id="over18" runat="server">
                             <option value=""></option>
-                            <option value="0">Deny Over 1</option>
+                            <option value="0">Deny Over 18</option>
                             <option value="2">Only Over 18</option>
                             <option value="3">Allow All Ads</option>
                         </select>
@@ -216,14 +217,88 @@ For more information contact developer.support@att.com
                        { %>
                     <div class="successWide">
                         <strong>SUCCESS:</strong><br /><%= getAdsSuccessResponse%>
-                    <% foreach (var pair in getAdsResponse)
-                       {%>
-                    <b>
-                        <%= pair.Key.ToString()%>: </b>
-                    <%= pair.Value.ToString()%>
-                    <br />
-                    <% } %>
                     </div>
+                    <% if (adRequestResponse != null && adRequestResponse.AdsResponse != null && adRequestResponse.AdsResponse.Ads != null)
+                       { %>
+                       <table class="kvp" id="kvp">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Parameter
+                                </th>
+                                <th>
+                                    Value
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.Type))
+                               {%>
+                            <tr>
+                                <td data-value="Parameter">
+                                    Type
+                                </td>
+                                <td data-value="Value">
+                                    <%= adRequestResponse.AdsResponse.Ads.Type%>
+                                </td>
+                            </tr>
+                            <% } %>
+                            <% if (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ClickUrl))
+                               {%>
+                            <tr>
+                                <td data-value="Parameter">
+                                    ClickUrl
+                                </td>
+                                <td data-value="Value">
+                                    <%= adRequestResponse.AdsResponse.Ads.ClickUrl%>
+                                </td>
+                            </tr>
+                            <% } %>
+
+                            <% if ( adRequestResponse.AdsResponse.Ads.ImageUrl != null && !string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ImageUrl.Image))
+                               {%>
+                            <tr>
+                                <td data-value="Parameter">
+                                    ImageUrl
+                                </td>
+                                <td data-value="Value">
+                                    <%= adRequestResponse.AdsResponse.Ads.ImageUrl.Image %>
+                                </td>
+                            </tr>
+                            <% } %>
+
+                            <% if (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.Text))
+                               {%>
+                            <tr>
+                                <td data-value="Parameter">
+                                    Text
+                                </td>
+                                <td data-value="Value">
+                                    <%= adRequestResponse.AdsResponse.Ads.Text %>
+                                </td>
+                            </tr>
+                            <% } %>
+
+                            <% if (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.Content))
+                               {%>
+                            <tr>
+                                <td data-value="Parameter">
+                                    Content
+                                </td>
+                                <td data-value="Value">
+                                    <%= adRequestResponse.AdsResponse.Ads.Content %>
+                                </td>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                    <%if ( ((adRequestResponse.AdsResponse.Ads.ImageUrl != null) &&
+                           (!string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.ImageUrl.Image))) ||
+                          !string.IsNullOrEmpty(adRequestResponse.AdsResponse.Ads.Text))
+                      {%>
+                    <asp:HyperLink ID="hplImage" runat="server" Target="_blank"></asp:HyperLink>
+                    <%} %>
+                    <%} %>
                     <%} %>
                     <% if (!string.IsNullOrEmpty(getAdsErrorResponse))
                        { %>
@@ -254,14 +329,14 @@ For more information contact developer.support@att.com
                 and intended only for use as a reference in how the services perform.
                 <br />
                 <br />
-                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
+                For download of tools and documentation, please go to <a href="https://developer.att.com/"
+                    target="_blank">https://developer.att.com</a>
                 <br />
                 For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
                 <br />
                 <br />
-                &copy; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
-                    target="_blank">http://developer.att.com</a>
+                &copy; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
+                    target="_blank">https://developer.att.com</a>
             </p>
         </div>
         <!-- end of footer -->

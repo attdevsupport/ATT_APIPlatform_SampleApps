@@ -21,6 +21,20 @@ public class PaymentService {
         String signature = notary.getSignature();
         return URL + "?clientid=" + cid + "&SignedPaymentDetail=" + signedDoc + "&Signature=" + signature;
     }
+    
+    private JSONObject putURL(String body) throws ServiceException {
+        try {
+            APIResponse response = 
+                new RESTClient(cfg)
+                .setHeader("Accept", "application/json")
+                .addAuthorizationHeader(this.token)
+                .httpPut(body);
+
+            return new JSONObject(response.getResponseBody());
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
 
     private JSONObject getInfo() throws ServiceException {
         try {
@@ -75,6 +89,14 @@ public class PaymentService {
         return this.getInfo();
     }
 
+    public JSONObject getNotification() throws ServiceException {
+        return this.getInfo();
+    }
+
+    public JSONObject deleteNotification() throws ServiceException {
+        return this.putURL("");
+    }
+
     public JSONObject cancelSubscription(String reasonTxt, int reasonCode)
             throws ServiceException {
 
@@ -94,6 +116,7 @@ public class PaymentService {
         return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded");
     }
 
+
     public static String getNewTransactionURL(String FQDN, String clientId,
             Notary notary) {
         return PaymentService.getURL(FQDN, clientId, notary, true);
@@ -103,4 +126,5 @@ public class PaymentService {
             Notary notary) {
         return PaymentService.getURL(FQDN, clientId, notary, false);
     }
+
 }

@@ -12,4 +12,8 @@ $maxSubscriptionValue = '2.99';
 $linkDownload='#';
 $linkSource='#';
 $linkHelp='#';
+
+// $proxy_host = 'proxy.host';
+// $proxy_port = 8080;
+// $accept_all_certs = false;
 ?>

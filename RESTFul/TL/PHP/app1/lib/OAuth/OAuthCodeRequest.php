@@ -14,57 +14,92 @@
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
- * @category Authentication 
- * @package OAuth
- * @copyright AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement/
+ * @category  Authentication 
+ * @package   OAuth
+ * @author    Pavel Kazakov <pk9069@att.com>
+ * @copyright 2013 AT&T Intellectual Property
+ * @license   http://developer.att.com/sdk_agreement AT&T License
+ * @link      http://developer.att.com
  */
 
 require_once __DIR__ . '/OAuthCode.php';
 require_once __DIR__ . '/OAuthException.php';
-require_once __DIR__ . '../../Common/RESTFulRequest.php';
 
 /**
  * Implements the OAuth 2.0 Authorization Framework for requesting OAuth codes,
- * which can then be used to request an OAuth access token.
+ * which can then be used to request OAuth tokens.
  *
- * @see https://tools.ietf.org/html/rfc6749
+ * Redirection works as follows: 
+ * The browser is redirected to the consent flow screen using the specified 
+ * URL, client id, and scope. After the consent flow is is either successful or
+ * unsuccessful, the browser is then redirected to the specified redirect URI.
  * 
- * @package OAuth 
+ * @category Authentication 
+ * @package  OAuth 
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @link     http://developer.att.com
+ * @link     https://tools.ietf.org/html/rfc6749
  */
-class OAuthCodeRequest extends RESTFulRequest {
+class OAuthCodeRequest
+{
+    /**
+     * URL used for determining redirect URL. 
+     * 
+     * @var string
+     */
     private $_URL;
+
+    /**
+     * Client id.
+     *
+     * @var string
+     */
     private $_clientId;
+
+    /**
+     * Scope.
+     * 
+     * @var string
+     */
     private $_scope;
+
+    /**
+     * URI the the consent flow will redirect to after attempting to obtain
+     * an authorization code.
+     * 
+     * @var string
+     */
     private $_redirectURI;
-    private $_params;
 
     /**
      * Creates an OAuthCodeRequest object for requesting authorization codes. 
      * These codes may then be used to request access tokens.
      *
-     * @param $URL string URL from which to request code
-     * @param $clientId client id to use when requesting code
-     * @param $scope string scope to use
-     * @param $redirectURI string redirect URI to use
+     * @param string $URL         URL from which to request code
+     * @param string $clientId    client id to use when requesting code
+     * @param string $scope       scope to use
+     * @param string $redirectURI URI sent to API that will be used for 
+     *                            redirecting browser after consent flow. 
      */
-    public function __construct($URL, $clientId, $scope = NULL, 
-            $redirectURI = NULL) {
+    public function __construct(
+        $URL, $clientId, $scope = null, $redirectURI = null
+    ) {
 
         $this->_URL = $URL;
         $this->_clientId = $clientId;
         $this->_scope = $scope;
         $this->_redirectURI = $redirectURI;
-        $this->_params = array();
     }
 
     /**
      * Returns the location from which to redirect the browser in order to get
-     * an authorization code
+     * an authorization code.
      *
      * @return string redirect location
      */
-    public function getCodeLocation() {
+    public function getCodeLocation()
+    {
         $location = $this->_URL . 
             "?client_id=" . urlencode($this->_clientId) .
             "&scope=" . urlencode($this->_scope) .
@@ -79,9 +114,10 @@ class OAuthCodeRequest extends RESTFulRequest {
      * @return OAuthCode authorization code if in request parameters
      * @throws OAuthException if there was an error getting code
      */
-    public function getCode() {
+    public function getCode()
+    {
         // check for code in request params
-        if(isset($_REQUEST['code'])) { 
+        if (isset($_REQUEST['code'])) { 
             return new OAuthCode($_REQUEST['code']);
         }
 
@@ -98,8 +134,4 @@ class OAuthCodeRequest extends RESTFulRequest {
 
         header("Location: $location");
     }
-
-//    public function addParameter() {
-//        //TODO: Implement
-//    }
 }

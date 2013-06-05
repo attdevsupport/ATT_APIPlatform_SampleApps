@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 import com.att.api.payment.model.ConfigBean;
-import com.att.api.payment.file.TransactionEntry;
+import com.att.api.payment.model.NotificationPool;
 import com.att.api.payment.file.SubscriptionEntry;
 
 import java.io.IOException;
@@ -35,8 +35,8 @@ import java.util.TreeMap;
 public class PaymentController extends HttpServlet {
 
     private static final long serialVersionUID = 5677394140665947979L;
-    private PaymentFileHandler transactionFile;
-    private PaymentFileHandler subscriptionFile;
+    private static PaymentFileHandler transactionFile = null;
+    private static PaymentFileHandler subscriptionFile = null;
     private AppConfig cfg;
 
     private Map<String, String> JSONToMap(JSONObject obj) {
@@ -67,8 +67,15 @@ public class PaymentController extends HttpServlet {
     }
 
     private void createFileHandler() {
-        transactionFile = new PaymentFileHandler("trans.db");
-        subscriptionFile = new PaymentFileHandler("subs.db");
+        try {
+            if (transactionFile == null || subscriptionFile == null) {
+                transactionFile = new PaymentFileHandler("trans", "db");
+                subscriptionFile = new PaymentFileHandler("subs", "db");
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private RESTConfig getRESTConfig(String endpoint) {
@@ -84,7 +91,7 @@ public class PaymentController extends HttpServlet {
         trans.setAmount(price);
         trans.setCategory("5"); // 5 = category application other 
         trans.setDescription("SAMPLE APP");
-        trans.setTransactionId("mtid" + System.currentTimeMillis());
+        trans.setTransactionId("J" + System.currentTimeMillis());
         trans.setProductId("mpid" + System.currentTimeMillis());
         trans.setPaymentRedirectUrl(cfg.getProperty("paymentRedirectURL"));
 
@@ -101,7 +108,7 @@ public class PaymentController extends HttpServlet {
         sub.setAmount(price);
         sub.setCategory("5"); // 5 = category application other 
         sub.setDescription("SAMPLE APP");
-        sub.setTransactionId("mtid" + System.currentTimeMillis());
+        sub.setTransactionId("J" + System.currentTimeMillis());
         sub.setProductId("mpid" + System.currentTimeMillis());
         sub.setPaymentRedirectUrl(cfg.getProperty("paymentRedirectURL"));
 
@@ -237,7 +244,7 @@ public class PaymentController extends HttpServlet {
                 if (request.getParameter(name) != null) {
                     String value = request.getParameter(name);
                     JSONObject info = this.getTransactionInfo(types[i], value);
-            request.setAttribute("showSub", true);
+                    request.setAttribute("showSub", true);
                     request.setAttribute("resultSubInfo", this.JSONToMap(info));
                     return;
                 }
@@ -275,8 +282,14 @@ public class PaymentController extends HttpServlet {
                 return;
 
             OAuthToken token = this.getToken();
-            String endpoint = cfg.getFQDN() + "/rest/3/Commerce/Payment/Subscriptions/" + merch + "/Detail/" + consumer; 
-            JSONObject info = new PaymentService(this.getRESTConfig(endpoint), token).getSubscriptionDetails();
+
+            String endpoint = cfg.getFQDN()
+                + "/rest/3/Commerce/Payment/Subscriptions/" + merch 
+                + "/Detail/" + consumer; 
+
+            JSONObject info = new PaymentService(this.getRESTConfig(endpoint), 
+                    token).getSubscriptionDetails();
+
             request.setAttribute("showSub", true);
             request.setAttribute("resultSubDetail", this.JSONToMap(info));
         } catch (Exception e) {
@@ -432,11 +445,21 @@ public class PaymentController extends HttpServlet {
         }
     }
 
+    private void handleNotifications(HttpServletRequest request) {
+        NotificationPool pool = NotificationPool.getInstance();
+        request.setAttribute("notifications", pool.getNotifications());
+        if (request.getParameter("refreshNotifications") != null)
+            request.setAttribute("showNote", true);
+    }
+
     private void setFileResults(HttpServletRequest request) {
         this.createFileHandler();
         try {
-            request.setAttribute("transactions", createTransactionEntries(transactionFile.getTransactionEntrys()));
-            request.setAttribute("subscriptions", createSubscriptionEntries(subscriptionFile.getTransactionEntrys()));
+            request.setAttribute("transactions", createTransactionEntries(
+                        transactionFile.getTransactionEntrys()));
+
+            request.setAttribute("subscriptions", createSubscriptionEntries(
+                        subscriptionFile.getTransactionEntrys()));
         } catch (IOException e) {
             // don't handle, print stack trace
             e.printStackTrace();
@@ -465,6 +488,10 @@ public class PaymentController extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse 
             response) throws ServletException, IOException {
 
+        request.setAttribute("cfg", new ConfigBean());
+
+        this.handleNotifications(request);
+
         // handle transactions
         if (this.handleNewTransaction(request, response)) {
             return;
@@ -487,8 +514,6 @@ public class PaymentController extends HttpServlet {
         this.handleSubscriptionCancel(request);
 
         this.setFileResults(request);
-
-        request.setAttribute("cfg", new ConfigBean());
 
         // forward to view
         String forwardStr = "/WEB-INF/payment.jsp";

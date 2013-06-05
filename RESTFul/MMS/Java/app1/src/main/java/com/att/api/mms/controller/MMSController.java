@@ -5,6 +5,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.json.JSONObject;
 
@@ -34,8 +35,8 @@ public class MMSController extends HttpServlet {
     }
 
     private RESTConfig getRESTConfig(final String endpoint) {
-        final String proxyHost = cfg.getProxyHost(); 
-        final int proxyPort = cfg.getProxyPort(); 
+        final String proxyHost = cfg.getProxyHost();
+        final int proxyPort = cfg.getProxyPort();
         final boolean trustAllCerts = cfg.getTrustAllCerts();
 
         return new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts);
@@ -67,8 +68,8 @@ public class MMSController extends HttpServlet {
     private String[] getFileNames() {
         String attachmentsDir = cfg.getProperty("attachmentsDir");
 
-        String dir = getServletContext().getRealPath("/")  + attachmentsDir;
-        
+        String dir = getServletContext().getRealPath("/") + attachmentsDir;
+
         File[] files = new File(dir).listFiles();
         List<String> fnames = new LinkedList<String>();
         fnames.add(""); // no attachment
@@ -90,7 +91,6 @@ public class MMSController extends HttpServlet {
 
         try {
             String addr = request.getParameter("address");
-            request.getSession().setAttribute("addr", addr);
             String subject = request.getParameter("subject");
             String attachment = request.getParameter("attachment");
             String dir = cfg.getProperty("attachmentsDir");
@@ -98,11 +98,17 @@ public class MMSController extends HttpServlet {
             String[] fnames;
             if (attachment.equals("")) {
                 fnames = new String[] {};
-            } else  {
-                fnames = new String[] { 
-                    getServletContext().getRealPath("/") + dir + "/" + attachment 
-                };
+            } else {
+                fnames = new String[] { getServletContext().getRealPath("/")
+                        + dir + "/" + attachment };
             }
+
+            /* save input to session */
+            HttpSession session = request.getSession();
+            session.setAttribute("addr", addr);
+            session.setAttribute("subject", subject);
+            session.setAttribute("notify", notify);
+            session.setAttribute("attachment", attachment);
 
             OAuthToken token = this.getToken();
             String endpoint = cfg.getFQDN() + "/mms/v3/messaging/outbox";
@@ -141,6 +147,8 @@ public class MMSController extends HttpServlet {
             String mmsId = request.getParameter("mmsId");
             String endpoint = cfg.getFQDN() 
                 + "/mms/v3/messaging/outbox/" + mmsId;
+
+            request.getSession().setAttribute("resultId", mmsId);
 
             MMSService srvc = new MMSService(getRESTConfig(endpoint), token);
             JSONObject jstatus = srvc.getMMSStatus();

@@ -89,6 +89,16 @@ public class AppConfig {
     }
 
     /**
+     * Convenience method for getting the max notifications or -1 if not set
+     *
+     * @return int max notifications allowed
+     */
+    public int getMaxNotifications() {
+        String val = config.properties.getProperty("maxNotifications", "-1");
+        return Integer.parseInt(val);
+    }
+
+    /**
      * Convenience method for getting the fully qualified domain name or null if
      * no FQDN has been set.
      *

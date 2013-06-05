@@ -1,13 +1,9 @@
 port:             4567
 api_key:
 secret_key:
-redirect_url:     http://localhost:4567/auth/callback
+redirect_url:     http://localhost:4567/
 default_phone:    
 FQDN:             https://api.att.com
-
-
-#The url that is hosting the ruby file (include the path to the root page)
-base_url:       http://localhost:4567/base/path  #Do not include a trailing slash
 
 download_link: #
 source_link: #

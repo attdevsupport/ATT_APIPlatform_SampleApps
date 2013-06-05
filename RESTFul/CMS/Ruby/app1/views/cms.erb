@@ -71,25 +71,25 @@
                 <div class="inputFields">
                   <label>
                     Make call to:
-                    <input type="text" name="txtNumberToDial" value="" placeholder="Address" title="telephone number or sip address"/>
+                    <input type="text" name="txtNumberToDial" value="<%= session[:txtNumberToDial] %>" placeholder="Address" title="telephone number or sip address"/>
                   </label>
                   <label>
                     Script Function:
                     <select name="scriptType">
                       <% SCRIPT_METHODS.each do |m| %>
-                        <option value="<%= m %>" <% if (params[:scriptType] && params[:scriptType] == m)%>selected<%end%>><%= m %></option>
+                        <option value="<%= m %>" <% if (session[:scriptType] && session[:scriptType] == m)%>selected<%end%>><%= m %></option>
                     <% end %>
                     </select>
                   </label>
 
                   <label>
                     Number parameter for Script Function:
-                    <input type="text" name="txtNumber" value="" placeholder="Number" title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
+                    <input type="text" name="txtNumber" value="<%= session[:txtNumber] %>" placeholder="Number" title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
                   </label>
 
                   <label>
                     Message To Play:
-                    <input type="text" name="txtMessageToPlay" value="" placeholder="Message" title="enter long message or mp3 audio url, this is used as music on hold"/>
+                    <input type="text" name="txtMessageToPlay" value="<%= session[:txtMessageToPlay] %>" placeholder="Message" title="enter long message or mp3 audio url, this is used as music on hold"/>
                   </label>
 
                   <div id="scriptText">

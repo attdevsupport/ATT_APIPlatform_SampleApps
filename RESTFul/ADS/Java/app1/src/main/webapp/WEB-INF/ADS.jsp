@@ -79,80 +79,56 @@ For more information contact developer.support@att.com
               <div id="getAds">
                 <label>Category</label>
                 <select name="category" id="category">
-                  <option value="auto" selected="selected">auto</option>
-                  <option value="business">business</option>
-                  <option value="chat">chat</option>
-                  <option value="communication">communication</option>
-                  <option value="community">community</option>
-                  <option value="entertainment">entertainment</option>
-                  <option value="finance">finance</option>
-                  <option value="games">games</option>
-                  <option value="health">health</option>
-                  <option value="local">local</option>
-                  <option value="maps">maps</option>
-                  <option value="medical">medical</option>
-                  <option value="movies">movies</option>
-                  <option value="music">music</option>
-                  <option value="news">news</option>
-                  <option value="other">other</option>
-                  <option value="personals">personals</option>
-                  <option value="photos">photos</option>
-                  <option value="shopping">shopping</option>
-                  <option value="social">social</option>
-                  <option value="sports">sports</option>
-                  <option value="technology">technology</option>
-                  <option value="tools">tools</option>
-                  <option value="travel">travel</option>
-                  <option value="tv">tv</option>
-                  <option value="video">video</option>
-                  <option value="weather">weather</option>
+                <c:forEach var="category" items="${categories}">
+                  <option value="${category}">${category}</option>
+                </c:forEach>
                 </select>
                 <div class="inputSeperator"></div>
                   <label>MMA Size:</label>
                   <select name="MMA" id="MMA">
-                    <option value=""></option>
-                    <option value="120 x 20">120 x 20</option>
-                    <option value="168 x 28">168 x 28</option>
-                    <option value="216 x 36">216 x 36</option>
-                    <option value="300 x 50">300 x 50</option>
-                    <option value="300 x 250">300 x 250</option>
-                    <option value="320 x 50">320 x 50</option>
+                  <c:forEach var="mmaSize" items="${mmaSizes}">
+                    <option value="${mmaSize}">${mmaSize}</option>
+                  </c:forEach>
                   </select>
                 <div class="inputSeperator"></div>
                 <label>Age Group:</label>
                 <select name="ageGroup" id="ageGroup">
-                  <option value=""></option>
-                  <option value="1-13">1-13</option>
-                  <option value="14-25" selected="selected">14-25</option>
-                  <option value="26-35">26-35</option>
-                  <option value="36-55">36-55</option>
-                  <option value="55-100">55-100</option>
+                  <c:forEach var="ageGroup" items="${ageGroups}">
+                    <option value="${ageGroup}">${ageGroup}</option>
+                  </c:forEach>
                 </select>
                 <div class="inputSeperator"></div>
                 <label>Premium:</label>
                 <select name="Premium" id="Premium">
-                  <option value=""></option>
-                  <option value="0" >NonPremium</option>
-                  <option value="1" >Premium Only</option>
-                  <option value="2" >Both</option>
+                  <c:forEach var="entry" items="${premiums}">
+                    <option value="${entry.key}">${entry.value}</option>
+                  </c:forEach>
                 </select>
                 <div class="inputSeperator"></div>
                 <label>Gender:</label>
                 <select name="gender" id="gender">
-                  <option value=""></option>
-                  <option value="M" >Male</option>
-                  <option value="F"  selected="selected">Female</option>
+                  <c:forEach var="entry" items="${genders}">
+                    <option value="${entry.key}">${entry.value}</option>
+                  </c:forEach>
                 </select>
                 <div class="inputSeperator"></div>
                 <label>Over 18 Ad Content:</label>
                 <select name="over18" id="over18">
-                  <option value=""></option>
-                  <option value="0" >Deny Over 1</option>
-                  <option value="2" >Only Over 18</option>
-                  <option value="3" >Allow All Ads</option>
+                  <c:forEach var="entry" items="${over18s}">
+                    <option value="${entry.key}">${entry.value}</option>
+                  </c:forEach>
                 </select>
                 <div class="inputSeperator"></div>
-                <label>Zip Code:&nbsp;</label><input placeholder="Zip Code" type="text" id="zipCode" name="zipCode" />
+                <label>Zip Code:&nbsp;</label>
+
+                <c:if test="${not empty zipCode}">
+                <input placeholder="Zip Code" value="<c:out value="${zipCode}" />" type="text" id="zipCode" 
+                  name="zipCode" />
+                </c:if>
+                <c:if test="${empty zipCode}" >
+                <input placeholder="Zip Code" type="text" id="zipCode" name="zipCode" />
+                </c:if>
+
                 <div class="inputSeperator"></div>
                 <label>City:&nbsp;</label><input placeholder="City" type="text" id="city" name="city" />
                 <div class="inputSeperator"></div>
@@ -170,31 +146,40 @@ For more information contact developer.support@att.com
               </div> <!-- end of getAds -->
             </form>
 
-            <c:if test="${not empty type}">
+            <c:if test="${not empty resultAds}">
               <div class="successWide">
                 <strong>SUCCESS:</strong><br>
-                <b>Type:&nbsp;</b><c:out value="${type}" /><br>
-                <b>Click URL:&nbsp;</b><c:out value="${clickUrl}" /><br>
-                <c:if test="${not empty text}">
-                <b>Text:&nbsp;</b><c:out value="${text}" /><br>
-                </c:if>
-                <c:if test="${not empty content}">
-                <b>Content:&nbsp;</b>${content}<br>
-                </c:if>
-                <c:if test="${not empty image}">
-                <b>Image:&nbsp;</b>${image}<br>
+                <c:if test="${not empty noAds}">
+                  <c:out value="${noAds}" />
                 </c:if>
               </div>
-            </c:if>
-            <c:if test="${not empty error}">
-              <div class="errorWide">
-                <strong>ERROR:</strong>
-                <br />
-                <c:out value="${error}" />
-              </div>
+              <c:if test="${not empty type}">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td data-value="Parameter">Type</td>
+                    <td data-value="Value">${type}</td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">ClickUrl</td>
+                    <td data-value="Value">${clickUrl}</td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">ImageUrl</td>
+                    <td data-value="Value">${image}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <a id="hplImage" href="${clickUrl}" target="_blank"><img src="${image}" alt="" /></a>
+              </c:if>
             </c:if>
           <!-- SAMPLE APP CONTENT ENDS HERE! -->
-
           </div> <!-- end of formContainer -->
         </div> <!-- end of formBox -->
       </div> <!-- end of content -->

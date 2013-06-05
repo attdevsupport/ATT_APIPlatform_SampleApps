@@ -119,7 +119,7 @@ For more information contact developer.support@att.com
                     <select name="ageGroup" id="ageGroup">
                       <option value=""></option>
                       <option value="1-13">1-13</option>
-                      <option value="14-25" selected="selected">14-25</option>
+                      <option value="14-25">14-25</option>
                       <option value="26-35">26-35</option>
                       <option value="36-55">36-55</option>
                       <option value="55-100">55-100</option>
@@ -137,7 +137,7 @@ For more information contact developer.support@att.com
                     <select name="gender" id="gender">
                       <option value=""></option>
                       <option value="M" >Male</option>
-                      <option value="F"  selected="selected">Female</option>
+                      <option value="F" >Female</option>
                     </select>
                     <div class="inputSeperator"></div>
                     <label>Over 18 Ad Content:</label>
@@ -166,23 +166,46 @@ For more information contact developer.support@att.com
                   </div> <!-- end of getAds -->
                 </form>
 
-                <% if @result %>
+                <% if @result or @no_ads %>
                   <div class="successWide">
                     <strong>SUCCESS:</strong>
-                    <br>
-                  <b>Type:&nbsp;</b><%= @result["Type"] %>
-                  <br>
-                  <b>Click URL:&nbsp;</b><%= @result["ClickUrl"] %>
-                  <br>
-                  <% if @result["Text"] %>
-                  <b>Text:&nbsp;</b><%= @result["Text"] %>
-                  <br>
-                  <% end %>
-                  <% if @result["ImageUrl"]["Image"] %>
-                    <b>Image:&nbsp;</b><%= @result["ImageUrl"]["Image"] %>
-                    <br>
-                  <% end %>
+                    <% if @no_ads %>
+                      <%= @no_ads %>
+                    <% end %>
                   </div>
+                  <% if @result %>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Parameter</th>
+                          <th>Value</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td data-value="Parameter">Type</td>
+                          <td data-value="Value"><%= @result["Type"] %></td>
+                        </tr>
+                        <tr>
+                          <td data-value="Parameter">ClickUrl</td>
+                          <td data-value="Value"><%= @result["ClickUrl"] %></td>
+                        </tr>
+                        <% if @result["ImageUrl"] %>
+                          <% @result["ImageUrl"].each do |key, value| %>
+                            <tr>
+                              <td data-value="Parameter">ImageUrl</td>
+                              <td data-value="Value"><%= value %></td>
+                            </tr>
+                          <% end %>
+                        <% end %>
+                      </tbody>
+                    </table>
+                    <% if @result["ImageUrl"] %>
+                      <% @result["ImageUrl"].each do |key, value| %>
+                        <a id="hplImage" href="<%= @result["ClickUrl"] %>" target="_blank"><img src="<%= value %>" alt="<%= value %>" /></a>
+                      <% end %>
+                    <% end %>
+                  <% end %>
                 <% end %>
                 <% if @error %>
                   <div class="errorWide">

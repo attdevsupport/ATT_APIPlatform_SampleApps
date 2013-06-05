@@ -206,6 +206,17 @@ Partial Public Class Speech_App1
                     SpeechContext.Items(0).Selected = True
                 End If
             End If
+
+            If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("NameParameters")) Then
+                Dim nameParameters As String() = ConfigurationManager.AppSettings("NameParameters").ToString().Split(";"c)
+                For Each nameParameter As String In nameParameters
+                    nameParam.Items.Add(nameParameter)
+                Next
+                If nameParameters.Length > 0 Then
+                    nameParam.Items(0).Selected = True
+                End If
+            End If
+
             If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("X-ArgGeneric")) Then
                 x_arg.Text = ConfigurationManager.AppSettings("X-ArgGeneric")
             End If
@@ -541,22 +552,29 @@ Partial Public Class Speech_App1
                 If Not String.IsNullOrEmpty(parXArgs) Then
                     httpRequest.Headers.Add("X-Arg", parXArgs)
                 End If
+                Dim filenameArgument As String = "filename"
+                If Not String.IsNullOrEmpty(SpeechContext.SelectedValue) Then
+                    If String.Compare("GenericHints", SpeechContext.SelectedValue) = 0 Then
+                        filenameArgument = nameParam.SelectedValue.ToString()
+                    End If
+                End If
 
                 Dim contentType As String = Me.MapContentTypeFromExtension(Path.GetExtension(parSpeechFilePath))
 
                 Dim data As String = String.Empty
 
-                data += "--" & boundary & vbCr & vbLf & "Content-Disposition: form-data; name=""x-dictionary""; filename=""speech_alpha.pls""" & vbCr & vbLf & "Content-Type: application/pls+xml" & vbCr & vbLf
+
+                data += "--" & boundary & vbCr & vbLf & "Content-Disposition: form-data; name=""x-dictionary""; " & filenameArgument & "=""speech_alpha.pls""" & vbCr & vbLf & "Content-Type: application/pls+xml" & vbCr & vbLf
 
                 data += vbCr & vbLf & xdictionaryContent & vbCr & vbLf & vbCr & vbLf & vbCr & vbLf
 
-                data += "--" & boundary & vbCr & vbLf & "Content-Disposition: form-data; name=""x-grammar""; "
+                data += "--" & boundary & vbCr & vbLf & "Content-Disposition: form-data; name=""x-grammar"""
 
-                data += "filename=""prefix.srgs"" "
+                'data += "filename=\"prefix.srgs\" ";
 
                 data += vbCr & vbLf & "Content-Type: application/srgs+xml " & vbCr & vbLf & vbCr & vbLf & xgrammerContent & vbCr & vbLf & vbCr & vbLf & vbCr & vbLf & "--" & boundary & vbCr & vbLf
 
-                data += "Content-Disposition: form-data; name=""x-voice""; filename=""" + audio_file.SelectedValue & """"
+                data += ("Content-Disposition: form-data; name=""x-voice""; " & filenameArgument & "=""") + audio_file.SelectedValue & """"
                 data += vbCr & vbLf & "Content-Type: " & contentType & vbCr & vbLf & vbCr & vbLf
                 Dim encoding As New UTF8Encoding()
                 Dim firstPart As Byte() = encoding.GetBytes(data)

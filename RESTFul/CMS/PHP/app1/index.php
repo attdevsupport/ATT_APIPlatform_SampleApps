@@ -1,12 +1,13 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/CMSService.php';
+require_once __DIR__ . '/src/Controller/CMSController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$service = new CMSService();
-$createSession = $service->createSession();
-$signalStatus = $service->sendSignal();
-$sendSignalStatus = null;
+
+$controller = new CMSController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <html lang="en"> 
@@ -81,26 +82,51 @@ $sendSignalStatus = null;
 
                   <label>
                     Make call to:
-                    <input type="text" name="txtNumberToDial" value="" placeholder="Address" title="telephone number or sip address"/>
+                    <?php if (isset($_SESSION['txtNumberToDial'])) { ?>
+                    <input type="text" name="txtNumberToDial" 
+                        value="<?php echo htmlspecialchars($_SESSION['txtNumberToDial']); ?>" placeholder="Address" 
+                        title="telephone number or sip address" />
+                    <?php } else { ?>
+                    <input type="text" name="txtNumberToDial" value="" placeholder="Address" 
+                        title="telephone number or sip address" />
+                    <?php } ?>
                   </label>
                   <label>
                     Script Function:
                     <select name="scriptType">
                       <?php foreach ($scriptFunctions as $sfunc) { ?>
+                        <?php if (isset($_SESSION['scriptType']) && $_SESSION['scriptType'] == $sfunc) { ?>
+                        <option value="<?php echo $sfunc; ?>" selected="selected"><?php echo $sfunc ?></option>
+                        <?php } else { ?>
                         <option value="<?php echo $sfunc; ?>"><?php echo $sfunc ?></option>
+                        <?php } ?>
                       <?php } ?>
                     </select>
                   </label>
 
                   <label>
                     Number parameter for Script Function:
-                    <input type="text" name="txtNumber" value="" placeholder="Number" 
-                    title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
+                    <?php if (isset($_SESSION['txtNumber'])) { ?>
+                    <input type="text" name="txtNumber" 
+                        value="<?php echo htmlspecialchars($_SESSION['txtNumber']); ?>" placeholder="Number" 
+                        title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
+                    <?php } else { ?>
+                    <input type="text" name="txtNumber" 
+                        value="" placeholder="Number" 
+                        title="If message or transfer or wait or reject is selected as script function, enter number for transfer-to or message-to or wait-from or reject-from"/>
+                    <?php } ?>
                   </label>
 
                   <label>
                     Message To Play:
-                    <input type="text" name="txtMessageToPlay" value="" placeholder="Message" title="enter long message or mp3 audio url, this is used as music on hold"/>
+                    <?php if (isset($_SESSION['txtNumber'])) { ?>
+                    <input type="text" name="txtMessageToPlay" 
+                      value="<?php echo htmlspecialchars($_SESSION['txtMessageToPlay']); ?>" 
+                      placeholder="Message" title="enter long message or mp3 audio url, this is used as music on hold"/>
+                    <?php } else { ?>
+                    <input type="text" name="txtMessageToPlay" 
+                      value="" placeholder="Message" title="enter long message or mp3 audio url, this is used as music on hold"/>
+                    <?php } ?>
                   </label>
 
                   <div id="scriptText">
@@ -108,7 +134,7 @@ $sendSignalStatus = null;
                     Script Source Code:
                   </label>
                     <textarea name="txtCreateSession" rows="2" cols="20" disabled="disabled" id="txtCreateSession" >
-                      <?php echo htmlspecialchars($service->getScriptContents()); ?>
+                      <?php echo htmlspecialchars($results[CMSController::RESULT_SCRIPT_CONTENTS]); ?>
                     </textarea>
                 </div>
 
@@ -118,16 +144,21 @@ $sendSignalStatus = null;
                   </div>
                 </div>
               </form>
-              <?php if ($createSession != NULL) { ?>
+              <?php 
+              if (isset($results[CMSController::RESULT_CREATE_SESSION])) { 
+                $createSession = $results[CMSController::RESULT_CREATE_SESSION];
+              ?>
               <div class="successWide">
                 <strong>SUCCESS</strong><br>
                 id:&nbsp;<?php echo $createSession['id']; ?><br>
                 success:&nbsp;<?php echo ($createSession['success'] ? 'True' : 'False'); ?><br>
               </div>
-              <?php } else if ($service->getCreateSessionError() != NULL) { ?>
+              <?php } else if (isset($errors[CMSController::ERROR_CREATE_SESSION])) { 
+                $err = $errors[CMSController::ERROR_CREATE_SESSION];
+              ?>
               <div class="errorWide">
                 <strong>ERROR:</strong>
-                <?php echo htmlspecialchars($service->getCreateSessionError()); ?>
+                <?php echo htmlspecialchars($err); ?>
               </div>
               <?php } ?>
             </div> <!-- end of Create Session -->
@@ -139,15 +170,21 @@ $sendSignalStatus = null;
               <form method="post" name="sendSignal" action="index.php">
                 <div class="inputFields">
                   <label class="label">
-                    Session ID: <?php echo $service->getSessionId(); ?>
+                    Session ID: <?php echo $results[CMSController::RESULT_SESSION_ID]; ?>
                   </label>
 
                   <label class="label">
                     Signal to Send:
                     <select name="signal"> 
-                      <option value="exit" selected="selected">exit</option>
-                      <option value="stopHold">stopHold</option>
-                      <option value="dequeue">dequeue</option>
+                      <?php $signals = array('exit', 'stopHold', 'dequeue');
+                        foreach ($signals as $signal) { 
+                          if (isset($_SESSION['signal']) && $signal == $_SESSION['signal']) {
+                            ?>
+                            <option value="<?php echo $signal; ?>" selected="selected"><?php echo $signal; ?></option>
+                      <?php } else { ?>
+                            <option value="<?php echo $signal; ?>"><?php echo $signal; ?></option>
+                      <?php } ?>
+                      <?php } /* end of foreach */ ?>
                     </select>
                   </label>
 
@@ -159,17 +196,21 @@ $sendSignalStatus = null;
 
                 </div>	
               </form>
-              <?php if ($signalStatus != NULL) { ?>
+              <?php if (isset($results[CMSController::RESULT_SEND_SIGNAL])) { 
+                $signalStatus = $results[CMSController::RESULT_SEND_SIGNAL];
+              ?>
                 <div class="successWide">
                   <strong>SUCCESS</strong><br />
                   <strong>Status:&nbsp;</strong><?php echo htmlspecialchars(json_encode($signalStatus)); ?>
                 </div>
               <?php } ?>
 
-              <?php if ($service->getSendSignalError() != NULL) { ?>
+              <?php if (isset($errors[CMSController::ERROR_SEND_SIGNAL])) { 
+                $err = $errors[CMSController::ERROR_SEND_SIGNAL]; 
+              ?>
                 <div class="errorWide">
                   <strong>ERROR:</strong>
-                  <?php echo htmlspecialchars($service->getSendSignalError()); ?>
+                  <?php echo htmlspecialchars($err); ?>
                 </div>
               <?php } ?>
             </div> <!-- end of Send Signal -->
