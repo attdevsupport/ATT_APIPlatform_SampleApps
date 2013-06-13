@@ -50,6 +50,9 @@
     // Choose the speech recognition package.
     speechService.speechContext = @"WebSearch";
     
+    // Enable the Speex codec, which provides better speech recognition accuracy.
+    speechService.audioFormat = ATTSKAudioFormatSpeex_WB;
+    
     // Start the OAuth background operation, disabling the Talk button until 
     // it's done.
     talkButton.enabled = NO;
