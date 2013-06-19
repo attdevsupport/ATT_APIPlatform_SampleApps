@@ -1,0 +1,26 @@
+# VCS ignores
+.svn
+
+# Mac ignores
+.DS_Store
+
+# Rails ignores
+*.log
+tmp/
+
+# Xcode ignores
+build/
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.swp
+*~.nib
+*.pbxuser
+*.perspective
+*.perspectivev3
+
+# Xcode 4.0 ignores
+DerivedData/
+xcuserdata/
+*.xcuserstate
