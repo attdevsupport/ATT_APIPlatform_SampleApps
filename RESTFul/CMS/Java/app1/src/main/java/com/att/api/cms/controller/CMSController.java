@@ -8,7 +8,6 @@ import java.util.HashMap;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -16,26 +15,12 @@ import javax.servlet.http.HttpSession;
 import com.att.api.cms.model.CallControlResponse;
 import com.att.api.cms.model.ConfigBean;
 import com.att.api.cms.service.CMSService;
-import com.att.api.config.AppConfig;
-import com.att.api.oauth.OAuthService;
-import com.att.api.oauth.OAuthToken;
-import com.att.api.rest.RESTConfig;
-import com.att.api.rest.RESTException;
+import com.att.api.cms.service.CMSSessionResponse;
+import com.att.api.controller.APIController;
 
-public class CMSController extends HttpServlet {
+public class CMSController extends APIController {
     private static final long serialVersionUID = 6832764701357295887L;
     private static volatile String scriptContent;
-
-    private CMSService cmsService;
-    private AppConfig appConfig;
-
-    private RESTConfig getRESTConfig(final String endpoint) {
-
-        final String proxyHost = appConfig.getProxyHost();
-        final int proxyPort = appConfig.getProxyPort();
-        final boolean trustAllCerts = appConfig.getTrustAllCerts();
-        return (new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts));
-    }
 
     private String getScriptContent(final String localPath) throws IOException {
         if (scriptContent != null)
@@ -63,40 +48,6 @@ public class CMSController extends HttpServlet {
         }
     }
 
-    private OAuthToken getToken() throws RESTException {
-        try {
-            final String path = "WEB-INF/token.properties";
-            final String tokenFile = getServletContext().getRealPath(path);
-
-            OAuthToken token = OAuthToken.loadToken(tokenFile);
-            if (token == null || token.isAccessTokenExpired()) {
-                final String endpoint 
-                    = appConfig.getFQDN() + OAuthService.API_URL;
-                final String clientId = appConfig.getClientId();
-                final String clientSecret = appConfig.getClientSecret();
-                final OAuthService service = new OAuthService(getRESTConfig(
-                            endpoint), clientId, clientSecret);
-
-                token = service.getToken(appConfig.getProperty("scope"));
-                token.saveToken(tokenFile);
-            }
-            return token;
-        } catch (IOException ioe) {
-            throw new RESTException(ioe);
-        }
-    }
-
-    @Override
-    public void init() {
-        this.cmsService = new CMSService();
-        try {
-            this.appConfig = AppConfig.getInstance();
-        } catch (IOException ioe) {
-            //don't handle, just print stacktrace
-            ioe.printStackTrace();
-        }
-    }
-
     private HashMap<String, String> buildScriptVariables(CMSCommand command,
             String phoneNumber) {
 
@@ -116,7 +67,7 @@ public class CMSController extends HttpServlet {
     }
 
     private CallControlResponse processRequest(HttpServletRequest request)
-        throws IOException {
+            throws IOException {
 
         final HttpSession session = request.getSession();
         final String phoneNumber = appConfig.getProperty("number");
@@ -136,34 +87,30 @@ public class CMSController extends HttpServlet {
 
         if (command.isCreateSession()) {
             try {
-                final String url = appConfig.getFQDN() + "/rest/1/Sessions";
-                final RESTConfig cfg = getRESTConfig(url);
-                final CallControlResponse ccresponse = cmsService.createSession
-                    (cfg, buildScriptVariables(command, phoneNumber), getToken());
-
-                final String sessionId = ccresponse.getSessionId();
+                CMSService cmsService = new CMSService(appConfig.getFQDN(), getFileToken());
+                HashMap<String, String> svars = buildScriptVariables(command, phoneNumber);
+                CMSSessionResponse csr = cmsService.createSession(svars);
+                final String sessionId = csr.getId();
                 if (sessionId != null) {
                     request.getSession().setAttribute("sessionId", sessionId);
                 }
-                return ccresponse;
+                return CallControlResponse
+                    .sessionIdResponse(sessionId, csr.getSuccess());
             } catch (Exception e) {
                 final String errMsg = e.getMessage();
                 return CallControlResponse.sessionErrorResponse(errMsg);
             }
         } else if (command.isSendSignal()) {
             try {
-                final String sessionId = (String) session.getAttribute("sessionId");
+                final String sessionId 
+                    = (String) session.getAttribute("sessionId");
 
-                final String endpoint = "/rest/1/Sessions/" + sessionId
-                    + "/Signals";
-
-                final String url = appConfig.getFQDN() + endpoint;
-                final RESTConfig cfg = getRESTConfig(url);
-                return cmsService.sendSignal(cfg, sessionId,
-                        command.getSignalType(), getToken());
+                CMSService cmsService = new CMSService(appConfig.getFQDN(), getFileToken());
+                String status = cmsService.sendSignal(sessionId, command.getSignalType());
+                return CallControlResponse.signalStatusResponse(status);
             } catch (Exception e) {
                 final String errMsg = e.getMessage();
-                return CallControlResponse.sessionErrorResponse(errMsg);
+                return CallControlResponse.signalErrorResponse(errMsg);
             }
         }
 

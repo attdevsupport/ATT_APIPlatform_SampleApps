@@ -90,9 +90,9 @@ class SMSController extends APIController
             $srvc = new SMSService($this->FQDN, $this->getFileToken());
             $result = $srvc->getMessages($shortCode);
             $result = json_decode(json_encode($result));
-            $this->results[SMSService::RESULT_GET_MSGS] = $result;
+            $this->results[SMSController::RESULT_GET_MSGS] = $result;
         } catch (Exception $e) {
-            $this->errors[SMSService::ERROR_GET_MSGS] = $e->getMessage();
+            $this->errors[SMSController::ERROR_GET_MSGS] = $e->getMessage();
         }
     }
 

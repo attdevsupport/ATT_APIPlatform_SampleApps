@@ -18,7 +18,7 @@
  * @package   Controller 
  * @author    Pavel Kazakov <pk9069@att.com>
  * @copyright 2013 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&T License
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
@@ -36,7 +36,7 @@ require_once __DIR__ . '../../Srvc/Service.php';
  * @category MVC 
  * @package  Controller 
  * @author   Pavel Kazakov <pk9069@att.com>
- * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     http://developer.att.com
  */

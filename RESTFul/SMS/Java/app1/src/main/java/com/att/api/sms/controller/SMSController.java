@@ -2,18 +2,14 @@ package com.att.api.sms.controller;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.att.api.config.AppConfig;
-import com.att.api.oauth.OAuthService;
+import com.att.api.controller.APIController;
 import com.att.api.oauth.OAuthToken;
-import com.att.api.rest.RESTConfig;
-import com.att.api.rest.RESTException;
 import com.att.api.sms.model.ConfigBean;
 import com.att.api.sms.model.SMSMessage;
 import com.att.api.sms.model.SMSReceiveMsg;
@@ -23,42 +19,8 @@ import com.att.api.sms.service.SMSService;
 
 import java.io.IOException;
 
-public class SMSController extends HttpServlet {
+public class SMSController extends APIController {
     private static final long serialVersionUID = 1L;
-
-    private RESTConfig getRESTConfig(final String endpoint, 
-            final AppConfig acfg) {
-
-        final String proxyHost = acfg.getProxyHost(); 
-        final int proxyPort = acfg.getProxyPort(); 
-        final boolean trustAllCerts = acfg.getTrustAllCerts();
-
-        return new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts);
-    }
-
-    private OAuthToken getToken() throws RESTException {
-        try {
-            final AppConfig cfg = AppConfig.getInstance();
-            final String path = "WEB-INF/token.properties";
-            final String tokenFile = getServletContext().getRealPath(path);
-
-            OAuthToken token = OAuthToken.loadToken(tokenFile);
-            if (token == null || token.isAccessTokenExpired()) {
-                final String endpoint = cfg.getFQDN() + OAuthService.API_URL;
-                final String clientId = cfg.getClientId();
-                final String clientSecret = cfg.getClientSecret();
-                final OAuthService service = new OAuthService(
-                        getRESTConfig(endpoint, cfg), clientId, clientSecret);
-
-                token = service.getToken(cfg.getProperty("scope"));
-                token.saveToken(tokenFile);
-            }
-
-            return token;
-        } catch (IOException ioe) {
-            throw new RESTException(ioe);
-        }
-    }
 
     private void handleSendSMS(final HttpServletRequest request) {
         if (request.getParameter("sendSMS") == null) {
@@ -66,23 +28,18 @@ public class SMSController extends HttpServlet {
         }
 
         try {
-            final AppConfig cfg = AppConfig.getInstance();
-            final OAuthToken token = this.getToken();
-            final String endpoint = cfg.getFQDN()
-                + "/sms/v3/messaging/outbox";
+            OAuthToken token = getFileToken();
+            SMSService service = new SMSService(appConfig.getFQDN(), token);
 
-            SMSService service 
-                = new SMSService(getRESTConfig(endpoint, cfg), token);
-
-            final String addr = request.getParameter("address");
+            String addr = request.getParameter("address");
             request.getSession().setAttribute("addr", addr);
-            final String msg = request.getParameter("message");
-            final boolean getNotification 
+            String msg = request.getParameter("message");
+            boolean getNotification 
                 = request.getParameter("chkGetOnlineStatus") != null;
             
             JSONObject jresponse = service.sendSMS(addr, msg, getNotification);
-            JSONObject smsResponse = jresponse
-                .getJSONObject("outboundSMSResponse");
+            JSONObject smsResponse 
+                = jresponse.getJSONObject("outboundSMSResponse");
             String sendId = smsResponse.getString("messageId"); 
             request.setAttribute("sendId", sendId);
 
@@ -107,18 +64,12 @@ public class SMSController extends HttpServlet {
         }
 
         try {
-            final AppConfig cfg = AppConfig.getInstance();
-            final OAuthToken token = this.getToken();
+            final OAuthToken token = getFileToken();
             final String msgid = request.getParameter("messageId");
             request.getSession().setAttribute("statusId", msgid);
 
-            final String endPoint = 
-                cfg.getFQDN() + "/sms/v3/messaging/outbox/" + msgid;
-
-
-            SMSService service = 
-                new SMSService(getRESTConfig(endPoint, cfg), token);
-            JSONObject jobj = service.getSMSDeliveryStatus();
+            SMSService service = new SMSService(appConfig.getFQDN(), token);
+            JSONObject jobj = service.getSMSDeliveryStatus(msgid);
             JSONObject jInfoList = jobj.getJSONObject("DeliveryInfoList");
             JSONArray jstatuses =  jInfoList.getJSONArray("DeliveryInfo");
             SMSStatus[] statuses = new SMSStatus[jstatuses.length()];
@@ -149,28 +100,22 @@ public class SMSController extends HttpServlet {
         }
 
         try {
-            final AppConfig cfg = AppConfig.getInstance();
-            String shortCode = cfg.getProperty("getMsgsShortCode");
+            String shortCode = appConfig.getProperty("getMsgsShortCode");
             if (shortCode == null) return;
 
-            final OAuthToken token = this.getToken();
+            OAuthToken token = getFileToken();
 
-            final String endPoint = 
-                cfg.getFQDN() + "/rest/sms/2/messaging/inbox";
-
-            SMSService service = 
-                new SMSService(getRESTConfig(endPoint, cfg), token);
+            SMSService service = new SMSService(appConfig.getFQDN(), token);
             JSONObject jobj = service.getSMSReceive(shortCode);
             JSONObject msgList = jobj.getJSONObject("InboundSmsMessageList");
 
-            final String numbMessages = 
+            String numbMessages = 
                 msgList.getString("NumberOfMessagesInThisBatch");
 
-            final String numbPending = 
+            String numbPending = 
                 msgList.getString("TotalNumberOfPendingMessages");
 
-            final JSONArray msgs =
-                msgList.getJSONArray("InboundSmsMessage"); 
+            JSONArray msgs = msgList.getJSONArray("InboundSmsMessage"); 
 
             SMSMessage[] smsMsgs = new SMSMessage[msgs.length()];
             for (int i = 0; i < msgs.length(); ++i) {
@@ -191,28 +136,30 @@ public class SMSController extends HttpServlet {
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-            handleSendSMS(request);
+            throws ServletException, IOException {
 
-            handleGetStatus(request);
+        handleSendSMS(request);
 
-            handleGetMsgs(request);
+        handleGetStatus(request);
 
-            final SMSStatus[] statuses = SMSFileUtil.getStatuses();
-            request.setAttribute("resultStatuses", statuses);
+        handleGetMsgs(request);
 
-            final SMSReceiveMsg[] receiveMsgs = SMSFileUtil.getReceiveMsgs();
-            request.setAttribute("resultReceiveMsgs", receiveMsgs);
+        final SMSStatus[] statuses = SMSFileUtil.getStatuses();
+        request.setAttribute("resultStatuses", statuses);
 
-            request.setAttribute("cfg", new ConfigBean());
+        final SMSReceiveMsg[] receiveMsgs = SMSFileUtil.getReceiveMsgs();
+        request.setAttribute("resultReceiveMsgs", receiveMsgs);
 
-            final String forward = "/WEB-INF/SMS.jsp";
-            RequestDispatcher dispatcher = request.getRequestDispatcher(forward);
-            dispatcher.forward(request, response);
-        }
+        request.setAttribute("cfg", new ConfigBean());
+
+        final String forward = "/WEB-INF/SMS.jsp";
+        RequestDispatcher dispatcher = request.getRequestDispatcher(forward);
+        dispatcher.forward(request, response);
+
+    }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-            doPost(request, response);
-        }
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
 }

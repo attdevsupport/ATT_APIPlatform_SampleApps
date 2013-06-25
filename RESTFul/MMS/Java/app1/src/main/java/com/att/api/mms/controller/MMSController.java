@@ -10,6 +10,7 @@ import javax.servlet.http.HttpSession;
 import org.json.JSONObject;
 
 import com.att.api.config.AppConfig;
+import com.att.api.controller.APIController;
 import com.att.api.oauth.OAuthService;
 import com.att.api.oauth.OAuthToken;
 import com.att.api.rest.RESTConfig;
@@ -26,47 +27,15 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MMSController extends HttpServlet {
+public class MMSController extends APIController {
     private static final long serialVersionUID = 1L;
-    private volatile AppConfig cfg;
 
     private String getPath() {
         return getServletContext().getRealPath("/") + "MMSImages";
     }
 
-    private RESTConfig getRESTConfig(final String endpoint) {
-        final String proxyHost = cfg.getProxyHost();
-        final int proxyPort = cfg.getProxyPort();
-        final boolean trustAllCerts = cfg.getTrustAllCerts();
-
-        return new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts);
-    }
-
-    private OAuthToken getToken() throws RESTException {
-        try {
-            final AppConfig cfg = AppConfig.getInstance();
-            final String path = "WEB-INF/token.properties";
-            final String tokenFile = getServletContext().getRealPath(path);
-
-            OAuthToken token = OAuthToken.loadToken(tokenFile);
-            if (token == null || token.isAccessTokenExpired()) {
-                final String endpoint = cfg.getFQDN() + OAuthService.API_URL;
-                final String clientId = cfg.getClientId();
-                final String clientSecret = cfg.getClientSecret();
-                final OAuthService service = new OAuthService(
-                        getRESTConfig(endpoint), clientId, clientSecret);
-
-                token = service.getToken(cfg.getProperty("scope"));
-                token.saveToken(tokenFile);
-            }
-            return token;
-        } catch (IOException ioe) {
-            throw new RESTException(ioe);
-        }
-    }
-
     private String[] getFileNames() {
-        String attachmentsDir = cfg.getProperty("attachmentsDir");
+        String attachmentsDir = appConfig.getProperty("attachmentsDir");
 
         String dir = getServletContext().getRealPath("/") + attachmentsDir;
 
@@ -93,7 +62,7 @@ public class MMSController extends HttpServlet {
             String addr = request.getParameter("address");
             String subject = request.getParameter("subject");
             String attachment = request.getParameter("attachment");
-            String dir = cfg.getProperty("attachmentsDir");
+            String dir = appConfig.getProperty("attachmentsDir");
             boolean notify = request.getParameter("chkGetOnlineStatus") != null;
             String[] fnames;
             if (attachment.equals("")) {
@@ -110,10 +79,8 @@ public class MMSController extends HttpServlet {
             session.setAttribute("notify", notify);
             session.setAttribute("attachment", attachment);
 
-            OAuthToken token = this.getToken();
-            String endpoint = cfg.getFQDN() + "/mms/v3/messaging/outbox";
-            RESTConfig restCfg = this.getRESTConfig(endpoint);
-            MMSService srvc = new MMSService(restCfg, token);
+            OAuthToken token = getFileToken();
+            MMSService srvc = new MMSService(appConfig.getFQDN(), token);
             JSONObject response = srvc.sendMMS(addr, fnames, subject, 
                     null, notify); /* priority = null... for now */
             JSONObject outboundMR 
@@ -143,15 +110,13 @@ public class MMSController extends HttpServlet {
         }
 
         try {
-            OAuthToken token = this.getToken();
+            OAuthToken token = getFileToken();
             String mmsId = request.getParameter("mmsId");
-            String endpoint = cfg.getFQDN() 
-                + "/mms/v3/messaging/outbox/" + mmsId;
 
             request.getSession().setAttribute("resultId", mmsId);
 
-            MMSService srvc = new MMSService(getRESTConfig(endpoint), token);
-            JSONObject jstatus = srvc.getMMSStatus();
+            MMSService srvc = new MMSService(appConfig.getFQDN(), token);
+            JSONObject jstatus = srvc.getMMSStatus(mmsId);
             JSONObject infoList = jstatus.getJSONObject("DeliveryInfoList");
             String resultStatus = infoList.getJSONArray("DeliveryInfo")
                 .getJSONObject(0).getString("DeliveryStatus");
@@ -160,15 +125,6 @@ public class MMSController extends HttpServlet {
             request.setAttribute("resultResourceUrl", resourceURL);
         } catch (Exception e) {
             request.setAttribute("errorGetStatus", e.getMessage());
-        }
-    }
-
-    public void init() {
-        try {
-            this.cfg = AppConfig.getInstance();
-        } catch (IOException e) {
-            // print stack trace instead of handling
-            e.printStackTrace();
         }
     }
 

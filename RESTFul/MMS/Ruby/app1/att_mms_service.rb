@@ -15,7 +15,7 @@ module AttCloudServices
       end
 
       def getDeliveryStatus(mms_id)
-        url = "#{@oauth.fqdn}#{Endpoints::MMS}/#{mms_id}"
+        url = "#{@oauth.fqdn}#{Endpoints::SEND}/#{mms_id}"
 
         RestClient.get url, :Authorization => "Bearer #{@oauth.access_token}", :Accept => 'application/json'
       end
@@ -43,7 +43,6 @@ module AttCloudServices
         headers = {
           'Content-Type' => 'application/json',
           'Content-ID' => '<startpart>',
-          'Content-Disposition' => 'form-data; name="root-fields"'
         }
 
         data = {
@@ -55,20 +54,20 @@ module AttCloudServices
 
         if attachments && !attachments.empty? then
           attachment_count = 0
-          attachments.each do |file|
-            file_path = File.join(ATTACH_DIR,file)
-            File.open(file_path, "rb") do |file|
+          attachments.each do |attach|
+            File.open(attach, "rb") do |file|
+              filename = file.path.split("/").last
 
               headers = {
                 'Content-Type' => 'image/gif',
-                'Content-ID' => "<attachment#{attachment_count}",
-                'Content-Transfer-Encoding' => 'base64',
-                'Content-Disposition' => 'attachment; name=""; filename=""'      
+                'Content-ID' => "attachment#{attachment_count}",
+                'Content-Transfer-Encoding' => 'binary',
+                'Content-Disposition' => "attachment; name=\"file#{attachment_count}\"; filename=\"#{filename}\""
               }
 
               data = { 
                 :headers => headers,
-                :data => "#{Base64.encode64(file.read)}"
+                :data => "#{file.read}"
               }
 
               multipart_data << data
@@ -80,9 +79,11 @@ module AttCloudServices
 
         multipart_body = self.generateMultiPart(boundary, multipart_data)
 
-        url = "#{@oauth.fqdn}#{Endpoints::MMS}"
+        url = "#{@oauth.fqdn}#{Endpoints::SEND}"
 
-        RestClient.post url, multipart_body, :Authorization => "Bearer #{@oauth.access_token}", :Accept => 'application/json', :Content_Type => 'multipart/form-data; type="application/json"; start=""; boundary="' + boundary + '"'
+        content_type = 'multipart/related; type="application/json"; start="<startpart>"; boundary="' + boundary + '"'
+
+        self.postRequest(url, multipart_body, :Content_Type => content_type)
       end
 
       def handleInput(input, boundary="--Nokia-mm-messageHandler-BoUnDaRy")

@@ -18,9 +18,15 @@
  * @package   Restful
  * @author    Pavel Kazakov <pk9069@att.com>
  * @copyright 2013 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&T License
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
+
+// CURL is required for this class to work 
+if (!function_exists('curl_init')) {
+    $err = 'RESTFulRequest class requires the CURL extension for PHP.';
+    throw new Exception($err);
+}
 
 require_once __DIR__ . '/Multipart.php';
 require_once __DIR__ . '/RESTFulResponse.php';
@@ -31,7 +37,7 @@ require_once __DIR__ . '/RESTFulResponse.php';
  * @category Network
  * @package  Restful 
  * @author   Pavel Kazakov <pk9069@att.com>
- * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
 class RESTFulRequest
@@ -419,7 +425,6 @@ class RESTFulRequest
     {
         self::$_defaultProxyHost = $proxyHost;
         self::$_defaultProxyPort = $proxyPort;
-
     }
 
     /**

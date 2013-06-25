@@ -50,16 +50,10 @@ end
 post '/CreateSession' do
   read_script
   if params[:btnCreateSession] != nil
-  numberScript = CGI.escapeHTML(params[:txtNumberToDial])
-    if numberScript.empty?
-      read_script
-      @error = 'You must enter in a telephone number or sip address.'
-      return erb :cms
-    else
-      read_script
-      create_session
-      return erb :cms
-    end
+    numberScript = CGI.escapeHTML(params[:txtNumberToDial])
+    read_script
+    create_session
+    return erb :cms
   else
     erb :cms
   end

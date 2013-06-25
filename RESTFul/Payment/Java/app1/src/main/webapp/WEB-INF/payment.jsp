@@ -146,7 +146,14 @@ For more information contact developer.support@att.com
                                              <c:out value="${kvp.key}" />
                                          </td>
                                          <td data-value="Value">
-                                             <c:out value="${kvp.value}" />
+                                             <c:choose>
+                                                 <c:when test="${not empty kvp.value}" >
+                                                     <c:out value="${kvp.value}" default="-" />
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <c:out value="-" />
+                                                 </c:otherwise>
+                                             </c:choose>
                                          </td>
                                      </tr>
                                      </c:forEach>
@@ -194,7 +201,14 @@ For more information contact developer.support@att.com
                                              <c:out value="${kvp.key}" />
                                          </td>
                                          <td data-value="Value">
-                                             <c:out value="${kvp.value}" />
+                                             <c:choose>
+                                                 <c:when test="${not empty kvp.value}" >
+                                                     <c:out value="${kvp.value}" default="-" />
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <c:out value="-" />
+                                                 </c:otherwise>
+                                             </c:choose>
                                          </td>
                                      </tr>
                                      </c:forEach>
@@ -275,7 +289,14 @@ For more information contact developer.support@att.com
                                              <c:out value="${kvp.key}" />
                                          </td>
                                          <td data-value="Value">
-                                             <c:out value="${kvp.value}" />
+                                             <c:choose>
+                                                 <c:when test="${not empty kvp.value}" >
+                                                     <c:out value="${kvp.value}" default="-" />
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <c:out value="-" />
+                                                 </c:otherwise>
+                                             </c:choose>
                                          </td>
                                      </tr>
                                      </c:forEach>
@@ -321,7 +342,14 @@ For more information contact developer.support@att.com
                                              <c:out value="${kvp.key}" />
                                          </td>
                                          <td data-value="Value">
-                                             <c:out value="${kvp.value}" />
+                                             <c:choose>
+                                                 <c:when test="${not empty kvp.value}" >
+                                                     <c:out value="${kvp.value}" default="-" />
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <c:out value="-" />
+                                                 </c:otherwise>
+                                             </c:choose>
                                          </td>
                                      </tr>
                                      </c:forEach>
@@ -369,7 +397,14 @@ For more information contact developer.support@att.com
                                              <c:out value="${kvp.key}" />
                                          </td>
                                          <td data-value="Value">
-                                             <c:out value="${kvp.value}" />
+                                             <c:choose>
+                                                 <c:when test="${not empty kvp.value}" >
+                                                     <c:out value="${kvp.value}" default="-" />
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <c:out value="-" />
+                                                 </c:otherwise>
+                                             </c:choose>
                                          </td>
                                      </tr>
                                      </c:forEach>
@@ -416,7 +451,14 @@ For more information contact developer.support@att.com
                                              <c:out value="${kvp.key}" />
                                          </td>
                                          <td data-value="Value">
-                                             <c:out value="${kvp.value}" />
+                                             <c:choose>
+                                                 <c:when test="${not empty kvp.value}" >
+                                                     <c:out value="${kvp.value}" default="-" />
+                                                 </c:when>
+                                                 <c:otherwise>
+                                                     <c:out value="-" />
+                                                 </c:otherwise>
+                                             </c:choose>
                                          </td>
                                      </tr>
                                      </c:forEach>
@@ -431,7 +473,7 @@ For more information contact developer.support@att.com
                              <form method="post" name="signContent" action="payment">
                                  <div class="inputFields">
                                      <label>Request:
-                                         <textarea id="payload" name="payload" placeholder="Payload"><c:if test="${not empty notaryPayload}"><c:out value="${notaryPayload}" /></c:if></textarea>
+                                         <textarea id="payload" name="payload" placeholder="Payload"><c:if test="${not empty notaryPayload}">${notaryPayload}</c:if></textarea>
                                      </label>
                                      <div id="notaryInfo">
                                          <strong>Signed Payload:</strong><br>

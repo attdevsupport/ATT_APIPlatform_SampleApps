@@ -18,7 +18,7 @@
  * @package   IMMN 
  * @author    Pavel Kazakov <pk9069@att.com>
  * @copyright 2013 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&T License
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
@@ -29,7 +29,7 @@
  * @category API
  * @package  IMMN
  * @author   Pavel Kazakov <pk9069@att.com>
- * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number
  */
@@ -298,7 +298,7 @@ class IMMNHeader
  * @category API
  * @package  IMMN
  * @author   Pavel Kazakov <pk9069@att.com>
- * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number
  */
@@ -359,7 +359,7 @@ class IMMNBody
  * @category API
  * @package  IMMN
  * @author   Pavel Kazakov <pk9069@att.com>
- * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number
  */

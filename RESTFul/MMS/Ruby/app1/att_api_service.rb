@@ -35,7 +35,7 @@ module AttCloudServices
         end
         body += "\r\n" + part[:data].to_s + "\r\n\r\n"
       end
-      body += "#{boundary}--\r\n"
+      body += "--#{boundary}--\r\n"
     end
 
     # Send a post request with standard headers

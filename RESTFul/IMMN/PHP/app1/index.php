@@ -276,7 +276,7 @@ For more information contact developer.support@att.com
                 <td data-value="Contents">
                 <?php if ($header->getMmsContent() != NULL) { ?>
 
-                  <select id="attachments" onchange='chooseSelect("<?php echo 'row' . $i; ?>", this)'>
+                  <select id="row<?php echo $i; ?>attachments" onchange='chooseSelect("<?php echo 'row' . $i; ?>", this)'>
                     <option>More..</option>
                     <?php foreach ($header->getMmsContent() as $p) { ?>
 
@@ -302,7 +302,7 @@ For more information contact developer.support@att.com
           if (isset($errors[IMMNController::ERROR_GET_HEADERS])) {
             $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
           } else if (isset($errors[IMMNController::ERROR_GET_BODY])) {
-            $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
+            $errGet = $errors[IMMNController::ERROR_GET_BODY];
           }
 
           if ($errGet != null) { ?>

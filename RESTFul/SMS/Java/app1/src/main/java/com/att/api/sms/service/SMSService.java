@@ -1,52 +1,67 @@
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+
+/*
+ * ====================================================================
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2013.
+ * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
+ * http://developer.att.com/sdk_agreement/
+ *
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * For more information contact developer.support@att.com
+ * ====================================================================
+ */
+
 package com.att.api.sms.service;
 
 import com.att.api.oauth.OAuthToken;
 import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
-import com.att.api.rest.RESTConfig;
 import com.att.api.rest.RESTException;
+import com.att.api.service.APIService;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.text.ParseException;
 
-public class SMSService {
-    private final OAuthToken token;
-    private final RESTConfig cfg;
+/**
+ * Used to interact with version 3 of the SMS API.
+ *
+ * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
+ * @version 3.0
+ * @since 2.2
+ * @see <a href="https://developer.att.com/docs/apis/rest/3/SMS">SMS Documentation</a>
+ */
+public class SMSService extends APIService {
+    // TODO (pk9069): the json objects need to be moved to explicit models
 
-    public SMSService(final RESTConfig cfg, final OAuthToken token) { 
-        this.token = token;
-        this.cfg = cfg;
+    /**
+     * Creates an SMSService object.
+     *
+     * @param fqdn fully qualified domain name to use for sending requests
+     * @param token OAuth token to use for authorization
+     */
+    public SMSService(String fqdn, OAuthToken token) {
+        super(fqdn, token);
     }
 
-    private String formatAddr(String address) {
-        // Check for a few known formats the user could have entered the
-        // address, adjust accordingly
-        if ((address.indexOf("-") == 3) && (address.length() == 12))
-            return "tel:" + address.substring(0, 3) + address.substring(4, 7)
-                    + address.substring(8, 12);
-        else if ((address.indexOf(":") == 3) && (address.length() == 14))
-            return address;
-        else if ((address.indexOf("-") == -1) && (address.length() == 10))
-            return "tel:" + address;
-        else if ((address.indexOf("-") == -1) && (address.length() == 11))
-            return "tel:" + address.substring(1);
-        else if ((address.indexOf("-") == -1) && (address.indexOf("+") == 0)
-                && (address.length() == 12))
-            return "tel:" + address.substring(2);
-        else
-            return "";
-    }
-
-    public JSONObject sendSMS(String rawAddr, String msg, 
+    /**
+     * Sends a request to the API for sending an SMS.
+     *
+     * @param rawAddr addresses to send sms to
+     * @param msg message to send
+     * @param notifyDeliveryStatus whether to notify of delivery status
+     * @return api response
+     * @throws RESTException if API request was not successful
+     */
+    public JSONObject sendSMS(String rawAddr, String msg,
             boolean notifyDeliveryStatus) throws RESTException {
 
-        String[] addrs = rawAddr.split(",");
+        String[] addrs = APIService.formatAddresses(rawAddr);
         JSONArray jaddrs = new JSONArray();
         for (String addr : addrs) {
-            jaddrs.put(formatAddr(addr));
+            jaddrs.put(addr);
         }
 
         // Build the request body
@@ -54,19 +69,17 @@ public class SMSService {
         JSONObject body = new JSONObject();
         body.put("message", msg);
 
-        if (addrs.length == 1) {
-            body.put("address", formatAddr(addrs[0]));
-        } else {
-            body.put("address", jaddrs);
-        }
+        Object addrStr = addrs.length == 1 ? addrs[0] : jaddrs;
+        body.put("address", addrStr);
 
         body.put("notifyDeliveryStatus", notifyDeliveryStatus);
         rpcObject.put("outboundSMSRequest", body);
 
-        APIResponse response = 
-            new RESTClient(this.cfg)
+        String endpoint = getFQDN() + "/sms/v3/messaging/outbox";
+        APIResponse response =
+            new RESTClient(endpoint)
             .addHeader("Content-Type", "application/json")
-            .addAuthorizationHeader(token)
+            .addAuthorizationHeader(getToken())
             .addHeader("Accept", "application/json")
             .httpPost(rpcObject.toString());
 
@@ -76,18 +89,25 @@ public class SMSService {
         try {
             jsonResponse = new JSONObject(responseBody);
         } catch (ParseException pe) {
-            throw new RESTException (
-                    "Invalid response from API Server" + ". ParseError: "
-                    + pe.getMessage());
+            throw new RESTException("Invalid response from API Server"
+                    + ". ParseError: " + pe.getMessage());
         }
 
         return jsonResponse;
     }
 
-    public JSONObject getSMSDeliveryStatus() throws RESTException {
-        APIResponse response = 
-            new RESTClient(this.cfg)
-            .addAuthorizationHeader(token)
+    /**
+     * Sends a request for getting delivery status information about an SMS.
+     *
+     * @param msgId message id used to get status
+     * @return api response
+     * @throws RESTException if API request was not successful
+     */
+    public JSONObject getSMSDeliveryStatus(String msgId) throws RESTException {
+        String endpoint = getFQDN() + "/sms/v3/messaging/outbox/" + msgId;
+        APIResponse response =
+            new RESTClient(endpoint)
+            .addAuthorizationHeader(getToken())
             .addHeader("Accept", "application/json")
             .httpGet();
 
@@ -97,19 +117,27 @@ public class SMSService {
         try {
             jsonResponse = new JSONObject(responseBody);
         } catch (ParseException pe) {
-            throw new RESTException (
-                "Invalid response from API Server. ParseError: " 
+            throw new RESTException(
+                "Invalid response from API Server. ParseError: "
                 + pe.getMessage());
         }
         return jsonResponse;
     }
 
-    public JSONObject getSMSReceive(String registrationID) 
-            throws RESTException {
+    /**
+     * Sends a request to the API for getting any messages sent to the
+     * specified shortcode.
+     *
+     * @param registrationID registration id (registered shortcode)
+     * @return api response
+     * @throws RESTException if API request was not successful
+     */
+    public JSONObject getSMSReceive(String registrationID) throws RESTException {
 
-        APIResponse response = 
-            new RESTClient(this.cfg)
-            .addAuthorizationHeader(token)
+        String endpoint = getFQDN() + "/rest/sms/2/messaging/inbox";
+        APIResponse response =
+            new RESTClient(endpoint)
+            .addAuthorizationHeader(getToken())
             .addHeader("Accept", "application/json")
             .addParameter("RegistrationID", registrationID)
             .httpGet();
@@ -120,9 +148,9 @@ public class SMSService {
         try {
             jsonResponse = new JSONObject(responseBody);
         } catch (ParseException pe) {
-            throw new RESTException("Invalid response from API Server" 
+            throw new RESTException("Invalid response from API Server"
                     + ". ParseError: " + pe.getMessage());
         }
             return jsonResponse;
-        }
+    }
 }

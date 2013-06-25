@@ -18,7 +18,7 @@
  * @package   Restful
  * @author    Pavel Kazakov <pk9069@att.com>
  * @copyright 2013 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&T License
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
@@ -31,7 +31,7 @@ require_once __DIR__ . '/../Util/Util.php';
  * @category Network
  * @package  Restful
  * @author   Pavel Kazakov <pk9069@att.com>
- * @license  http://developer.att.com/sdk_agreement AT&T License
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
 class MultipartBody

@@ -17,7 +17,7 @@
  * @category API
  * @package Payment 
  * @copyright 2013 AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement AT&T License
+ * @license http://developer.att.com/sdk_agreement AT&amp;T License
  */
 
 require_once __DIR__ . '/../../lib/Util/FileUtil.php';

@@ -1,9 +1,16 @@
-// 
-//Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-//TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-//Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-//For more information contact developer.support@att.com
-//
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+
+/*
+ * ====================================================================
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2013.
+ * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
+ * http://developer.att.com/sdk_agreement/
+ *
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * For more information contact developer.support@att.com
+ * ====================================================================
+ */
 
 package com.att.api.util;
 
@@ -11,19 +18,53 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+/**
+ * Provides a set of utility date methods.
+ *
+ * @version 3.0
+ * @since 2.2
+ */
 public class DateUtil {
 
-    private static final String UTC_DATE_FORMAT = "EEE, MMMM dd, yyyy HH:mm:ss zzz";
-	
-	/**
-	 * Returns UTC formatted Server time
-	 * @return
-	 */
-	public String getServerTime() {
-		SimpleDateFormat df = new SimpleDateFormat(UTC_DATE_FORMAT);
-		df.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String serverDate = df.format(new Date());
-		return serverDate;
-	}
+    /** Default date format. */
+    private static final String D_FORMAT = "EEE, MMMM dd, yyyy HH:mm:ss zzz";
 
+    /**
+     * Creates a DateUtil object.
+     *
+     * <p>
+     * Constructor is made public instead of private for backwards
+     * compatibility.
+     * </p>
+     * @deprecated methods should be called from a static context
+     */
+    @Deprecated
+    public DateUtil() {
+    }
+
+    /**
+     * Alias for <code>getTime()</code>.
+     *
+     * @return UTC time
+     * @deprecated replaced by {@link #getTime()}
+     */
+    @Deprecated
+    public String getServerTime() {
+        return DateUtil.getTime();
+    }
+
+    /**
+     * Returns the current time using UTC with following format.
+     * <code>EEE, MMMM dd, yyyy HH:mm:ss zzz</code>
+     *
+     * @return UTC time
+     * @since 3.0
+     * @see java.text.SimpleDateFormat
+     */
+    public static String getTime() {
+        SimpleDateFormat df = new SimpleDateFormat(D_FORMAT);
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String serverDate = df.format(new Date());
+        return serverDate;
+    }
 }

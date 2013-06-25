@@ -46,8 +46,8 @@ For more information contact developer.support@att.com
              s.parentNode.insertBefore(ga, s);
          })();
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div id="pageContainer" class="pageContainer">
         <div id="header">
             <div class="logo" id="top"></div>

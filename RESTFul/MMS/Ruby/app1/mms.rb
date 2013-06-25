@@ -67,14 +67,22 @@ post '/sendMms' do
     notify = false
     notify = true if params[:chkGetOnlineStatus]
 
-    response  = Service.sendMms(params[:address], params[:subject], params[:attachment], notify)
+    if params[:attachment] and params[:attachment].empty?
+      attachment = nil
+    else
+      attachment  = File.join(ATTACH_DIR, params[:attachment])
+    end
+
+    response  = Service.sendMms(params[:address], params[:subject], attachment, notify)
 
     @mms_id = JSON.parse(response)['outboundMessageResponse']['messageId']
     @mms_url = JSON.parse(response)['outboundMessageResponse']['resourceReference']['resourceURL']
     session[:mms_id] = @mms_id unless notify
 
+  rescue RestClient::Exception => e
+      @send_error = e.response 
   rescue => e
-    @send_error = e.response
+      @send_error = e.message
   ensure
     return erb :mms
   end

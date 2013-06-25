@@ -111,7 +111,7 @@ For more information contact developer.support@att.com
                         <h3>
                             X-Arg:
                         </h3>
-                        <asp:TextBox ID="x_arg" runat="server" type="text" TextMode="MultiLine" Enabled="False" Rows="4" name="x_arg"></asp:TextBox>
+                        <asp:Label ID="x_arg" runat="server" name="x_arg"></asp:Label>
                         <br />
                         <h3>
                             MIME Data:
