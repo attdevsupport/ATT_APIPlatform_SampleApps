@@ -1,17 +1,17 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-# TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-# For more information contact developer.support@att.com
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
+# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# Property. All rights reserved. http://developer.att.com For more information
+# contact developer.support@att.com
 
 require 'json'
 require 'rest_client'
+require 'att_api_service'
 require 'att_oauth_token'
 require 'att_oauth_service'
 
 #@author Kyle Hill <kh455g@att.com>
 module AttCloudServices
-
-  class ServiceException < StandardError; end
 
   module Payment
 
@@ -20,6 +20,7 @@ module AttCloudServices
       TRANSACTIONS = "/rest/3/Commerce/Payment/Transactions"
       NOTARY_SIGNATURE = "/Security/Notary/Rest/1/SignedPayload"
       SUBSCRIPTIONS = "/rest/3/Commerce/Payment/Subscriptions"
+      NOTIFICATIONS = "/rest/3/Commerce/Payment/Notifications"
     end
 
     module Categories
@@ -66,13 +67,93 @@ module AttCloudServices
       Subscriber_Other = 16
     end
 
-    class PaymentService < OAuthService
+    class Notification
+      def initialize(json, id)
+        @json = json
+        @json = JSON.parse @json if json.is_a? String
+        @id = id
+      end
+
+      def notification_id
+        @id
+      end
+
+      def each
+        yield "NotificationId", @id
+        @json.each do |key, value|
+          if key == "GetNotificationResponse" then
+            value.each do |skey, svalue|
+              yield skey, svalue
+            end
+          else
+            yield key, value
+          end
+        end
+      end
+
+      def generateHtmlTable(table_tag='<table>')
+        table = table_tag
+        headers = Array.new
+
+        tbody = '<tbody>'
+        tbody << '<tr>'
+        self.each do |key, value|
+          headers << key
+          if value.to_s.empty?
+          tbody << "<td data-value=\"#{key}\">-</td>"
+          else
+          tbody << "<td data-value=\"#{key}\">#{value}</td>"
+          end
+        end
+        tbody << '</tr>'
+        tbody << '</tbody>'
+
+        theaders = '<thead><tr>'
+        headers.each do |key|
+          theaders << "<th>#{key}</th>"
+        end 
+        theaders << '</tr></thead>'
+        
+        table << theaders
+        table << tbody
+        table << '</table>'
+      end
+
+      def notification_type
+        response = @json["GetNotificationResponse"]
+        response["NotificationType"]
+      end
+
+      def transaction_id
+        response = @json["GetNotificationResponse"]
+        response["OriginalTransactionId"]
+      end
+
+      def to_json(*a)
+        {
+          "json_class" => self.class.name,
+          "data" => {"raw_json" => @json, "notification_id" => @id}
+        }.to_json(*a)
+      end
+
+      def self.json_create(o)
+        new(o["data"]["raw_json"],o["data"]["notification_id"])
+      end
+    end
+
+    class PaymentService  < AttApiService
 
       # Creates a new Payment service
+      # If the first/only parameter set is an OAuthSerice, 
+      # then it will use that instance for OAuth calls
       #
       # (see #AttService.new)
       def initialize(*args)
-        super(*args)
+        if args.first.instance_of? OAuthService
+          @oauth = args.first
+        else
+          @oauth = OAuthService.new(*args)
+        end
       end
 
       # Create a new transaction and return a url for authentication
@@ -87,7 +168,7 @@ module AttCloudServices
       # @option opts [String] :channel defines the merchant user interface, currently only one option so ignore
       # @return [String] a url that can be redirected to for completing authentication of a payment
       def newTransaction(amount, category, desc, merch_trans_id, merch_prod_id, opts={})
-        redirect_uri = (opts[:redirect_uri] || @redirect_uri)
+        redirect_uri = (opts[:redirect_uri] || @oauth.redirect_uri)
         channel = (opts[:channel] || "MOBILE_WEB")
 
         payload = {
@@ -104,9 +185,9 @@ module AttCloudServices
 
         from_json = JSON.parse response
 
-        parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@client_id}"
+        parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@oauth.client_id}"
 
-        @fqdn + Endpoints::TRANSACTIONS + parameters
+        @oauth.fqdn + Endpoints::TRANSACTIONS + parameters
       end
 
       # Create a new transaction and return a url for authentication
@@ -124,7 +205,7 @@ module AttCloudServices
       # @option opts [Boolean] :iponas Current documentation is unclear, currently only one option so ignore
       # @return [String] a url that can be redirected to for completing authentication of a subscription
       def newSubscription(amount, category, desc, merch_trans_id, merch_prod_id, merch_sub_id_list, sub_recurrances, opts={})
-        redirect_uri = (opts[:redirect_uri] || @redirect_uri)
+        redirect_uri = (opts[:redirect_uri] || @oauth.redirect_uri)
         sub_period_amount = (opts[:sub_period_amount] || 1) 
         sub_period = (opts[:sub_period] || 'MONTHLY')
         is_purchase_on_no_active_sub = (opts[:iponas] || false)
@@ -149,9 +230,9 @@ module AttCloudServices
 
         from_json = JSON.parse response
 
-        parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@client_id}"
+        parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@oauth.client_id}"
 
-        @fqdn + Endpoints::SUBSCRIPTIONS + parameters
+        @oauth.fqdn + Endpoints::SUBSCRIPTIONS + parameters
       end
 
       # Get the transaction status based on type and id
@@ -162,11 +243,9 @@ module AttCloudServices
       # @raise [ServiceException] raised when issue with transaction type
       def getTransaction(transaction_type, transaction_id)
         raise ServiceException, "Unknown Transaction type: " + transaction_type unless TransactionType.const_defined? transaction_type
-        url = @fqdn + Endpoints::TRANSACTIONS + "/" + transaction_type + "/" + transaction_id
+        url = @oauth.fqdn + Endpoints::TRANSACTIONS + "/" + transaction_type + "/" + transaction_id
 
-        @oauth_token = generateToken(:old_token => @oauth_token) if @oauth_token.expired?
-
-        RestClient.get url, :Authorization => "Bearer #{@oauth_token.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
+        RestClient.get url, :Authorization => "Bearer #{@oauth.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
       end
 
       # Get the Subscription object specified
@@ -176,11 +255,9 @@ module AttCloudServices
       # @return [RestClient::Response] a parsed response object
       def getSubscription(subscription_type, subscription_id)
         raise ServiceException, "Unknown Subscription type: " + subscription_type unless SubscriptionType.const_defined? subscription_type
-        url = @fqdn + Endpoints::SUBSCRIPTIONS + "/" + subscription_type + "/" + subscription_id
+        url = @oauth.fqdn + Endpoints::SUBSCRIPTIONS + "/" + subscription_type + "/" + subscription_id
 
-        @oauth_token = generateToken(:old_token => @oauth_token) if @oauth_token.expired?
-
-        RestClient.get url, :Authorization => "Bearer #{@oauth_token.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
+        RestClient.get url, :Authorization => "Bearer #{@oauth.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
       end
 
       # Get the Subscription Details from a transaction
@@ -189,11 +266,9 @@ module AttCloudServices
       # @param merchant_subscription_id [String] the subscription product id of the merchant
       # @return [RestClient::Response] a parsed response object
       def getSubscriptionDetails(consumer_id, merchant_subscription_id)
-        url = @fqdn + Endpoints::SUBSCRIPTIONS + "/" + merchant_subscription_id + "/Detail/" + consumer_id
+        url = @oauth.fqdn + Endpoints::SUBSCRIPTIONS + "/" + merchant_subscription_id + "/Detail/" + consumer_id
 
-        @oauth_token = generateToken(:old_token => @oauth_token) if @oauth_token.expired?
-
-        RestClient.get url, :Authorization => "Bearer #{@oauth_token.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
+        RestClient.get url, :Authorization => "Bearer #{@oauth.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
       end
 
       # Refund a previous transaction
@@ -213,11 +288,9 @@ module AttCloudServices
           :RefundReasonText => refund_reason_text,
         }.to_json
 
-        url = @fqdn + Endpoints::TRANSACTIONS + "/" + transaction_id + "?Action=#{action}"
+        url = @oauth.fqdn + Endpoints::TRANSACTIONS + "/" + transaction_id + "?Action=#{action}"
 
-        @oauth_token = generateToken(:old_token => @oauth_token) if @oauth_token.expired?
-
-        RestClient.put url, payload, :Authorization => "Bearer #{@oauth_token.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
+        RestClient.put url, payload, :Authorization => "Bearer #{@oauth.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
       end
       alias_method :refundSubscription, :refundTransaction
 
@@ -232,13 +305,39 @@ module AttCloudServices
       #
       # @param payload [JSON] a json object that defines the payload to sign.
       def signPayload(payload)
-        RestClient.post @fqdn + Endpoints::NOTARY_SIGNATURE, 
+        RestClient.post @oauth.fqdn + Endpoints::NOTARY_SIGNATURE, 
           payload, 
           :Accept => 'application/json', 
           :Content_Type => 'application/json', 
-          'client_id' => @client_id, 
-          'client_secret' => @client_secret
+          'client_id' => @oauth.client_id, 
+          'client_secret' => @oauth.client_secret
       end
+
+      # Get the notification details for specified id                            
+      #                                                                          
+      # @param notification_id [String] the notification id to request
+      def getNotification(notification_id, accept="application/json")                                     
+        url = @oauth.fqdn + Endpoints::NOTIFICATIONS + "/" + notification_id           
+
+        headers = {
+          :Authorization => "Bearer #{@oauth.access_token}",
+          :Accept => accept,
+        }
+
+        RestClient.get url, headers
+
+      end                                                                        
+
+      def ackNotification(notification_id, accept="application/json")                                       
+        url = @oauth.fqdn + Endpoints::NOTIFICATIONS + "/" + notification_id           
+
+        headers = {
+          :Authorization => "Bearer #{@oauth.access_token}",
+          :Accept => accept,
+        }
+
+        RestClient.put url, "", headers
+      end    
 
     end
   end

@@ -39,6 +39,11 @@ Partial Public Class PaymentApp1_Listener
 
     ''' <summary>
     ''' Local variables for processing of request stream
+    ''' </summary>  
+    Private recordsToDisplay As Integer = 0
+
+    ''' <summary>
+    ''' Local variables for processing of request stream
     ''' </summary>
     Private notificationDetailsStreamWriter As StreamWriter
 
@@ -87,15 +92,16 @@ Partial Public Class PaymentApp1_Listener
             listOfNotificationIds = Me.GetNotificationIds(inputStream)
 
             If Not Me.ReadConfigFile() Then
-                'this.LogError("Unable to read config file");
+                Me.LogError("Unable to read config file")
                 Return
             End If
 
-            If Not Me.ReadAndGetAccessToken() Then
+            'If Not Me.ReadAndGetAccessToken() Then
                 'this.LogError("Unable to get access token");
-                Return
-            End If
+            '   Return
+            'End If
 
+            Me.ReadAccessTokenFile()
 
             Dim noOfItems As Integer = listOfNotificationIds.Count
 
@@ -141,6 +147,7 @@ Partial Public Class PaymentApp1_Listener
                 Using acknowledgeNotificationResponseStream As New StreamReader(acknowledgeNotificationRespone.GetResponseStream())
                     Dim notificationType As String = String.Empty
                     Dim originalTransactionId As String = String.Empty
+                    Dim notificationDetails As String = String.Empty
 
                     For Each keyValue As KeyValuePair(Of String, Object) In notificationResponse
                         If keyValue.Key = "GetNotificationResponse" Then
@@ -153,15 +160,19 @@ Partial Public Class PaymentApp1_Listener
                                 If notificationResponseKeyValue.Key = "NotificationType" Then
                                     notificationType = notificationResponseKeyValue.Value.ToString()
                                 End If
+                                notificationDetails += notificationResponseKeyValue.Key + "%" + notificationResponseKeyValue.Value & "$"
                             Next
-                            Using notificationDetailsStreamWriter = File.AppendText(Request.MapPath(Me.notificationDetailsFile))
-                                notificationDetailsStreamWriter.WriteLine(notificationId & ":" & notificationType & ":" & originalTransactionId & "$")
-                                notificationDetailsStreamWriter.Close()
-                            End Using
+                            'Using notificationDetailsStreamWriter = File.AppendText(Request.MapPath(Me.notificationDetailsFile))
+                            'notificationDetailsStreamWriter.WriteLine(notificationId & ":" & notificationType & ":" & originalTransactionId & "$")
+                            'notificationDetailsStreamWriter.Close()
+                            'End Using
+
+                            Me.WriteRecord(notificationDetails)
+                            Me.LogError(notificationDetails)
                         End If
                     Next
                     Dim acknowledgeNotificationResponseData As String = acknowledgeNotificationResponseStream.ReadToEnd()
-                    'this.LogError("Successfully acknowledge to " + this.notificationId + "***" + "\n");
+                    Me.LogError("Successfully acknowledge to " + Me.notificationId + "***" + "\n")
                     acknowledgeNotificationResponseStream.Close()
                 End Using
                 notificationIdIndex += 1
@@ -170,12 +181,64 @@ Partial Public Class PaymentApp1_Listener
             If we.Response IsNot Nothing Then
                 'this.LogError(new StreamReader(stream).ReadToEnd());                    
                 Using stream As Stream = we.Response.GetResponseStream()
+                    Me.LogError(New StreamReader(stream).ReadToEnd())
                 End Using
             End If
             'this.LogError(ex.ToString());
         Catch ex As Exception
+            Me.LogError(ex.ToString())
         End Try
     End Sub
+
+    Public Sub WriteRecordToFile(value As String)
+        Try
+            If Not String.IsNullOrEmpty(ConfigurationManager.AppSettings("recordsToDisplay")) Then
+                Me.recordsToDisplay = Convert.ToInt32(ConfigurationManager.AppSettings("recordsToDisplay"))
+            Else
+                Me.recordsToDisplay = 5
+            End If
+
+            Dim list As New List(Of String)()
+            Dim file__1 As New FileStream(Request.MapPath(Me.notificationDetailsFile), FileMode.Open, FileAccess.Read)
+            Dim sr As New StreamReader(file__1)
+            Dim line As String = String.Empty
+
+            While (line = sr.ReadLine())
+                list.Add(line)
+            End While
+
+            sr.Close()
+            file__1.Close()
+
+            If list.Count > Me.recordsToDisplay Then
+                Dim diff As Integer = list.Count - Me.recordsToDisplay
+                list.RemoveRange(0, diff)
+            End If
+
+            If list.Count = Me.recordsToDisplay Then
+                list.RemoveAt(0)
+            End If
+
+            list.Add(value)
+            Using sw As StreamWriter = File.CreateText(Request.MapPath(Me.notificationDetailsFile))
+                Dim tempCount As Integer = 0
+                While tempCount < list.Count
+                    Dim lineToWrite As String = list(tempCount)
+                    sw.WriteLine(lineToWrite)
+                    tempCount += 1
+                End While
+                sw.Close()
+            End Using
+        Catch ex As Exception
+            Me.LogError(ex.ToString())
+            Return
+        End Try
+    End Sub
+
+    Private Sub WriteRecord(text As String)
+        File.AppendAllText(Request.MapPath(Me.notificationDetailsFile), text + Environment.NewLine)
+    End Sub
+
 
     ''' <summary>
     ''' Logs error message onto file

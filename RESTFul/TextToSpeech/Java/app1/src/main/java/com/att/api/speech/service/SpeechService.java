@@ -16,7 +16,6 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.util.EntityUtils;
 
 import com.att.api.rest.RESTConfig;
-import javax.servlet.jsp.jstl.core.Config;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.StringEntity;
 

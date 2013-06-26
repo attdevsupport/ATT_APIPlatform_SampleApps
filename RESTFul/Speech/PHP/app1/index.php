@@ -1,10 +1,12 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/SpeechService.php';
+require_once __DIR__ . '/src/Controller/SpeechController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$speechService = new SpeechService();
-$response = $speechService->speechToText();
+$controller = new SpeechController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -97,10 +99,10 @@ For more information contact developer.support@att.com
                             <h3>Speech Context:</h3>
                             <select name="SpeechContext">
                               <?php
-                              $speechContexts = $speechService->getSpeechContexts();
+                              $speechContexts = $controller->getSpeechContexts();
                               foreach ($speechContexts as $sname) { 
                               $selected = '';
-                              if ($speechService->isSpeechContextSelected($sname)) $selected = 'selected ';
+                              if ($controller->isSpeechContextSelected($sname)) $selected = 'selected ';
                               ?>
                               <option <?php echo $selected; ?>value="<?php echo $sname ?>"><?php echo $sname ?></option>
                               <?php } ?>
@@ -111,10 +113,10 @@ For more information contact developer.support@att.com
                             <h3>Audio File:</h3>
                             <select name="audio_file">
                               <?php 
-                              $audioFiles = $speechService->getAudioFiles();
+                              $audioFiles = $controller->getAudioFiles();
                               foreach ($audioFiles as $fname) { 
                               $selected = '';
-                              if ($speechService->isAudioFileSelected($fname)) $selected ='selected ';
+                              if ($controller->isAudioFileSelected($fname)) $selected ='selected ';
                               ?>
                               <option <?php echo $selected; ?>value="<?php echo $fname ?>"><?php echo $fname ?></option>
                               <?php } ?>
@@ -124,7 +126,7 @@ For more information contact developer.support@att.com
 
                                 <br>
                                 <b>Send Chunked:</b>
-                                <?php $chked = $speechService->isChunkedSelected() ? ' checked'  : ''; ?>
+                                <?php $chked = $controller->isChunkedSelected() ? ' checked'  : ''; ?>
 
                                 <input name="chkChunked" value="Send Chunked" type="checkbox"<?php echo $chked; ?>>
                             </div>
@@ -140,14 +142,16 @@ For more information contact developer.support@att.com
                     </form> <!-- end of SpeechToText form -->
                 </div> <!-- end of formContainer -->
                 <?php 
-                $error = $speechService->getError();
-                if ($error) {
+                if (isset($errors[SpeechController::ERROR_SPEECH_TO_TEXT])) {
+                  $error = $errors[SpeechController::ERROR_SPEECH_TO_TEXT];
                 ?>
 
                 <div class="errorWide">
                     <strong>ERROR:</strong><br><?php echo htmlspecialchars($error); ?>
                 </div>
-                <?php } else if ($response) { ?>
+                <?php } else if (isset($results[SpeechController::RESULT_SPEECH_TO_TEXT])) { 
+                  $response = $results[SpeechController::RESULT_SPEECH_TO_TEXT];
+                ?>
 
                 <div class="successWide">
                     <strong>SUCCESS:</strong> <br>Response parameters listed below.

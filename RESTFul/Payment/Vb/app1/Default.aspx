@@ -196,22 +196,7 @@ For more information contact developer.support@att.com
                   </tbody>
                 </table>
               <%End If%>
-              <h2>Feature 4: Transaction Notifications</h2>
-                <div class="inputFields">
-                  <div id="tnotificationDetails" class="columns">
-                    <div id="tnotificationIds" class="column">
-                      <strong>Notification ID</strong><br/>
-                    </div> <!-- end of notificationIds -->
-                    <div id="tnotificationTypes" class="column">
-                      <strong>Notification Type</strong><br/>
-                    </div> <!-- end of notificationTypes -->
-                    <div id="ttransactionIds" class="column">
-                      <strong>Transaction ID</strong><br/>
-                    </div> <!-- end of transactionIds -->
-                    <br/>
-                    <button type="submit" name="refreshTransactionNotifications">Refresh</button>
-                  </div> <!-- end of notificationDetails -->
-                </div> <!-- end of inputFields -->
+
             </div> <!-- end of transaction -->
 
             <div class="lightBorder"></div>
@@ -326,7 +311,7 @@ For more information contact developer.support@att.com
                 </table>
               <% End If%>
               <br/>
-              <h2>Feature 4: Cancel Subscription</h2>
+              <h2>Feature 4: Cancel Future Subscription</h2>
               <div class="inputFields">
                 <div id="cancelIds">
                   <div id="cancelTransactionIds">
@@ -371,7 +356,7 @@ For more information contact developer.support@att.com
                 </tbody>
               </table>
               <%End If%>
-              <h2>Feature 5: Refund Subscription</h2>
+              <h2>Feature 5: Refund Current and Cancel Future Subscription</h2>
               <div class="inputFields">
                 <div id="refundIds">
                   <div id="12transactionIds">
@@ -416,22 +401,7 @@ For more information contact developer.support@att.com
                 </tbody>
               </table>
               <%End If%>
-              <h2>Feature 6: Subscription Notifications</h2>
-                <div class="inputFields">
-                  <div id="notificationDetails" class="columns">
-                    <div id="notificationIds" class="column">
-                      <strong>Notification ID</strong><br/>
-                    </div> <!-- end of notificationIds -->
-                    <div id="notificationTypes" class="column">
-                      <strong>Notification Type</strong><br/>
-                    </div> <!-- end of notificationTypes -->
-                    <div id="transactionIds" class="column">
-                      <strong>Transaction ID</strong><br/>
-                    </div> <!-- end of transactionIds -->
-                    <br/>
-                    <button type="submit" name="refreshSubscriptionNotifications">Refresh</button>
-                  </div> <!-- end of notificationDetails -->
-                </div> <!-- end of inputFields -->
+              
             </div> <!-- end of subscription -->
             <div class="lightBorder"></div>
             <a id="notaryToggle" href="javascript:toggle('notary','notaryToggle', 'Notary');">Show Notary</a>
@@ -461,6 +431,39 @@ For more information contact developer.support@att.com
               <% End If%>
             </div> <!-- end of notary -->
 
+              <div class="lightBorder"></div>
+
+                        <a id="notificationToggle" href="javascript:toggle('notification','notificationToggle', 'Notification');">Show Notifications</a>
+                        <div class="toggle" id="notification">
+
+                            <% Dim count As Integer = 1
+                                For Each notificationDetail In notificationDetails
+                                    
+                               %>
+                            <h2>Notification: <%= count %> <% If count = 1 Then %> [ Displays last 5 notifications ]  <% End If %></h2>
+                            <table class="kvp" id="Table1">
+                                <tbody>
+                                    <%   For Each pair As KeyValuePair(Of String, String) In notificationDetail
+                                          %>
+                                    <tr>
+                                        <td data-value="Parameter">
+                                            <%= pair.Key.ToString()%>
+                                        </td>
+                                        <td data-value="Value">
+                                            <%= pair.Value.ToString()%>
+                                        </td>
+                                    </tr>
+                                    <% 
+                                    Next
+                                    count = count + 1 %>
+                                    </tbody>
+                            </table>
+                         <% Next %>
+                                
+                            <button id="Button1" type="submit" name="refreshNotifications" runat="server" onserverclick="ShowNotifications_Click">Refresh</button>
+                      
+
+                    </div>
           </div> <!-- end of formContainer -->
         </div> <!-- end of formBox -->
       </div> <!-- end of content -->
@@ -495,6 +498,9 @@ For more information contact developer.support@att.com
     <% End If%>
     <% If Not String.IsNullOrEmpty(showNotary) Then%>
     <script type="text/javascript">        toggle('notary', 'notaryToggle', 'Notary');</script>
+    <% End If%>
+    <% If Not String.IsNullOrEmpty(showNotification) Then %>
+    <script type="text/javascript">        toggle('notification', 'notificationToggle', 'Notification');</script>
     <% End If%>
     </form>
   </body>

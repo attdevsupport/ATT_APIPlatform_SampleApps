@@ -2,12 +2,11 @@
 session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-require_once __DIR__ . '/src/Sample/SMSService.php';
-$smsService = new SMSService();
-$sendSms = $smsService->sendSMS();
-$getStatus = $smsService->getSMSDeliveryStatus();
-$getMsgs = $smsService->getMessages();
-$results = $smsService->getResults();
+require_once __DIR__ . '/src/Controller/SMSController.php';
+$controller = new SMSController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -97,13 +96,17 @@ For more information contact developer.support@att.com
                   </label>
                   <button type="submit" class="submit" name="sendSMS" id="sendSMS">Send SMS</button>
                 </form>
-                <?php if ($smsService->getSendError() != NULL) { ?>
+                <?php 
+                if (isset($errors[SMSController::ERROR_SEND_SMS])) { 
+                  $sendErr = $errors[SMSController::ERROR_SEND_SMS]; 
+                ?>
                 <div class="errorWide">
                   <strong>ERROR: </strong><br>
-                  <?php echo htmlspecialchars($smsService->getSendError()); ?>
+                  <?php echo htmlspecialchars($sendErr); ?>
                 </div>
-                <?php } else if ($sendSms != NULL) {
-                $msgId = $sendSms->outboundSMSResponse->messageId;
+                <?php } else if (isset($results[SMSController::RESULT_SEND_SMS])) {
+                  $sendSms = $results[SMSController::RESULT_SEND_SMS];
+                  $msgId = $sendSms->outboundSMSResponse->messageId;
                 ?>
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br>
@@ -122,12 +125,16 @@ For more information contact developer.support@att.com
                       value="<?php echo isset($_SESSION['SmsId']) ? $_SESSION['SmsId'] : '' ?>">
                   <button type="submit" class="submit" name="getStatus" id="getStatus">Get Status</button>
                 </form>
-                <?php if ($smsService->getDeliveryStatusError() != NULL) { ?>
+                <?php 
+                if (isset($errors[SMSController::ERROR_SMS_DELIVERY])) { 
+                  $deliveryErr = $errors[SMSController::ERROR_SMS_DELIVERY];
+                ?>
                 <div class="errorWide">
                   <strong>ERROR: </strong><br>
-                  <?php echo htmlspecialchars($smsService->getDeliveryStatusError()); ?>
+                  <?php echo htmlspecialchars($deliveryErr); ?>
                 </div>
-                <?php } else if($getStatus != NULL) { 
+                <?php } else if(isset($results[SMSController::RESULT_SMS_DELIVERY])) { 
+                $getStatus = $results[SMSController::RESULT_SMS_DELIVERY];
                 $statuses = $getStatus->DeliveryInfoList->DeliveryInfo;
                 $resourceURL = $getStatus->DeliveryInfoList->ResourceUrl;
                 ?>
@@ -171,7 +178,7 @@ For more information contact developer.support@att.com
                     </tr>
                   </thead>
                   <tbody>
-                  <?php foreach ($results['resultStatusN'] as $statusNotification) { 
+                  <?php foreach ($results[SMSController::RESULT_STATUS_ARR] as $statusNotification) { 
                     $dInfoNotification = $statusNotification['deliveryInfoNotification']; 
                     $dInfo = $dInfoNotification['deliveryInfo'];
                   ?>
@@ -191,12 +198,16 @@ For more information contact developer.support@att.com
                   <button type="submit" class="submit" name="getMessages" id="getMessages">
                     Get Messages</button>
                 </form>
-                <?php if ($smsService->getMessagesError() != NULL) { ?>
+                <?php 
+                if (isset($errors[SMSController::ERROR_GET_MSGS])) { 
+                  $getMsgsErr = $errors[SMSController::ERROR_GET_MSGS];
+                ?>
                 <div class="errorWide">
                   <strong>ERROR: </strong><br>
-                  <?php echo htmlspecialchars($smsService->getMessagesError()); ?>
+                  <?php echo htmlspecialchars($getMsgsErr); ?>
                 </div>
-                <?php } else if ($getMsgs != NULL) {
+                <?php } else if (isset($results[SMSController::RESULT_GET_MSGS])) {
+                  $getMsgs = $results[SMSController::RESULT_GET_MSGS];
                   $msgList = $getMsgs->InboundSmsMessageList;
                   $numMessages = $msgList->NumberOfMessagesInThisBatch;
                   $numPending = $msgList->TotalNumberOfPendingMessages;
@@ -245,7 +256,7 @@ For more information contact developer.support@att.com
                       </tr>
                     </thead>
                     <tbody>
-                      <?php foreach ($results['resultMsgs'] as $msg) { ?>
+                      <?php foreach ($results[SMSController::RESULT_MSGS_ARR] as $msg) { ?>
                         <tr>
                           <td data-value="DateTime"> <?php echo $msg['DateTime']; ?></td>
                           <td data-value="Message Id"> <?php echo $msg['MessageId'] == '' ? '-' : $msg['MessageId']; ?></td>

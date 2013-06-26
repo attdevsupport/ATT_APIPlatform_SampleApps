@@ -14,55 +14,83 @@
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
- * @category Authentication 
- * @package OAuth
- * @copyright AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement/
+ * @category  Authentication 
+ * @package   OAuth
+ * @author    Pavel Kazakov <pk9069@att.com>
+ * @copyright 2013 AT&T Intellectual Property
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
+ * @link      http://developer.att.com
  */
 
 /**
  * Immutable class used to hold OAuth token information. This information 
  * includes:
  * <ul>
- * <li>Access Token
- * <li>Time Access Token Expires (in milliseconds)
- * <li>Refresh Token
+ * <li>Access Token</li>
+ * <li>Time Access Token Expires (in seconds)</li>
+ * <li>Refresh Token</li>
  * </ul>
  *
- * @package OAuth 
+ * @category Authentication 
+ * @package  OAuth 
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @link     http://developer.att.com
  */
-class OAuthToken { 
-    // access token
-    private $_accessToken;
-
-    // expiration time of access token
-    private $_accessTokenExpiry;
-
-    // refresh token used access token has expired
-    private $_refreshToken;
-
+class OAuthToken
+{
     // used to indicate an access token has no expiration
     const NO_EXPIRATION = 0;
 
     /**
-     * Creates an OAuthToken object with the specified parameters. The 
-     * expires_in parameter should be set to when the access token expires and 
-     * should be set in milliseconds since the Unix Epoch 
-     * (January 1 1970 00:00:00 GMT).
-     * <p>
-     * Note: To make the access token never expire, set the accessTokenExpiry
-     * to OAuthToken::NO_EXPIRATION.
-     * 
-     * @param string $accessToken access token
-     * @param string $accessTokenExpiry expiration of access token
-     * @param string $refreshToken refresh token
+     * Access token.
+     *
+     * @var string
      */
-    public function __construct($accessToken, $accessTokenExpiry,
-            $refreshToken) {
+    private $_accessToken;
+
+    /**
+     * Refresh token used access token has expired.
+     *
+     * @var string
+     */
+    private $_refreshToken;
+
+    /**
+     * UNIX timestamp to measure when access token expires.
+     */
+    private $_accessTokenExpiry;
+
+    /**
+     * Creates an OAuthToken object with the specified parameters. 
+     * 
+     * Note: To make the access token never expire, set the expiresIn to 
+     * OAuthToken::NO_EXPIRATION.
+     * 
+     * @param string $accessToken  access token
+     * @param long   $expiresIn    the number of seconds until token 
+     *                             expires (relative to token creation 
+     *                             time)
+     * @param string $refreshToken refresh token
+     * @param long   $creationTime creation time of token as measured by 
+     *                             the number of seconds since the Unix
+     *                             Epoch (January 1 1970 00:00:00 GMT).
+     */
+    public function __construct(
+        $accessToken, $expiresIn, $refreshToken, $creationTime = null
+    ) {
+        if ($creationTime == null) {
+            $creationTime = time();
+        }
 
         $this->_accessToken = $accessToken;
-        $this->_accessTokenExpiry = $accessTokenExpiry;
         $this->_refreshToken = $refreshToken;
+
+        if ($expiresIn == OAuthToken::NO_EXPIRATION) {
+            $this->_accessTokenExpiry = OAuthToken::NO_EXPIRATION;
+        } else {
+            $this->_accessTokenExpiry = $expiresIn + $creationTime;
+        }
     }
 
     /**
@@ -70,7 +98,8 @@ class OAuthToken {
      * 
      * @return string access token
      */
-    public function getAccessToken() {
+    public function getAccessToken()
+    {
         return $this->_accessToken;
     }
 
@@ -87,14 +116,20 @@ class OAuthToken {
      * 
      * @return boolean true if access token is expired, false otherwise
      */
-    public function isAcccessTokenExpired() {
-        if ($this->_accessTokenExpiry == NO_EXPIRATION) {
+    public function isAccessTokenExpired()
+    {
+        if ($this->_accessTokenExpiry == OAuthToken::NO_EXPIRATION) {
             return false;
         }
 
-        $tnow = time() * 1000; // Get the current time in milliseconds
+        // Get the current time in seconds 
+        $tnow = time(); 
 
-        return $tnow >= $this->_accessTokenExpiry;
+        // make the expiration time 20 seconds sooner to account for any 
+        // latency issues
+        $expiry = $this->_accessTokenExpiry - 20;
+
+        return $tnow >= $expiry;
     }
 
     /**
@@ -102,32 +137,40 @@ class OAuthToken {
      *
      * @return string refresh token
      */
-    public function getRefreshToken() {
+    public function getRefreshToken()
+    {
         return $this->_refreshToken;
     }
 
     /**
-     * Saves this token to the specified location in a synchronized 
-     * (thread-safe) manner by using file locks and will block. 
+     * Saves this token to the specified location in a synchronized manner by 
+     * using file locks. This method will block waiting for file lock. 
      * Example $location: /tmp/token.php 
-     * <p>
-     * Note: For security reasons, it is recommended that the file ending end
-     * in '.php' because the saving method prepends and appends the file 
-     * content with comment tags. In the event that the file permissions are 
-     * too open, the server will interpret the file, thereby preventing an 
-     * unauthorized user from gaining access.
-     *
+     * 
+     * Note: if the file can not be saved in a secure location, for security 
+     * reasons, it is recommended that the file ending end in '.php' because 
+     * the saving method prepends and appends the file content with comment 
+     * tags. In the event that the file permissions are too open, the server 
+     * will interpret the file, thereby preventing an unauthorized user from 
+     * gaining access.
+     * 
      * @param string $location location of file
-     * @see http://php.net/manual/en/function.flock.php
+     *
+     * @return void
+     * @link http://php.net/manual/en/function.flock.php
+     * @throws Exception if unable to open file or obtain file lock.
      */
-    public function saveToken($location) {
+    public function saveToken($location)
+    {
+        // TODO: Better error handling if open or lock fails
         $handle = fopen($location, 'w');
         if (!$handle) {
-            throw new RuntimeException('Unable to open file: '. $location);
+            throw new Exception('Unable to open file: '. $location);
         }
 
         if (!flock($handle, LOCK_EX)) {
-            throw new RuntimeException('Unable to get lock on ' . $location);
+            fclose($handle);
+            throw new Exception('Unable to get lock on ' . $location);
         }
 
         fwrite($handle, '<?php /*' . "\n");
@@ -141,25 +184,32 @@ class OAuthToken {
     }
 
     /**
-     * Attempts to load an access token from the specified location. This method
-     * is done in a synchronized (thread-safe) manner by using file locks and
-     * will block.
+     * Attempts to load an access token from the specified location. This 
+     * method is done in a synchronized manner using file locks. This method 
+     * will block while waiting for the file lock. 
+     *
+     * @param string $location file path used to load token
      *
      * @return OAuthToken the token loaded if successful, null otherwise
-     * @see http://php.net/manual/en/function.flock.php
+     * @link http://php.net/manual/en/function.flock.php
+     * @throws Exception if unable to open file or obtain file lock.
      */
-    public static function loadToken($location) {
+    public static function loadToken($location)
+    {
         if (!file_exists($location)) {
-            return NULL;
+            return null;
         }
+
+        // TODO: Better error handling if open or lock fails
 
         $handle = fopen($location, 'r');
         if (!$handle) {
-            throw RuntimeException('Unable to open file: '. $location);
+            throw Exception('Unable to open file: '. $location);
         }
        
         if (!flock($handle, LOCK_SH)) { 
-            throw RuntimeException('Unable to get lock on ' . $location);
+            fclose($handle);
+            throw Exception('Unable to get lock on ' . $location);
         }
 
         fgets($handle); // ignore php starting comment
@@ -171,7 +221,9 @@ class OAuthToken {
         flock($handle, LOCK_UN);
         fclose($handle);
 
-        return new OAuthToken($aToken, $expiry, $rToken);
+        $token = new OAuthToken($aToken, 0, $rToken);
+        $token->_accessTokenExpiry = $expiry;
+        return $token;
     }
 }
 

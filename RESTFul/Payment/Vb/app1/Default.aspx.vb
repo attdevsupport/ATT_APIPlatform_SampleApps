@@ -76,6 +76,8 @@ Partial Public Class Payment_App1
     ''' </summary>
     Private refundList As New List(Of KeyValuePair(Of String, String))()
 
+    Public notificationDetails As New List(Of Dictionary(Of String, String))()
+
     ''' <summary>
     ''' Gets or sets the value of refreshTokenExpiresIn
     ''' </summary>
@@ -139,6 +141,7 @@ Partial Public Class Payment_App1
     Public showTransaction As String = String.Empty
     Public showSubscription As String = String.Empty
     Public showNotary As String = String.Empty
+    Public showNotification As String = String.Empty
 
 
     ''' <summary>
@@ -154,7 +157,7 @@ Partial Public Class Payment_App1
         Return True
     End Function
 
-    Protected Sub Page_Load(sender As Object, e As EventArgs)
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
         ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
         Dim ableToReadFromConfig As Boolean = Me.ReadConfigFile()
 
@@ -172,6 +175,8 @@ Partial Public Class Payment_App1
             'return;
             Me.ProcessCreateSubscriptionResponse()
         End If
+
+        GetNotificationsFromFile()
 
         If Not IsPostBack Then
             updateListForTransactionIds()
@@ -764,7 +769,7 @@ Partial Public Class Payment_App1
         End If
 
         Me.description = "TrDesc" & Me.transactionTimeString
-        Me.merchantTransactionId = "TrId" & Me.transactionTimeString
+        Me.merchantTransactionId = "V" & Me.transactionTimeString
         Session("vb_merTranId") = Me.merchantTransactionId.ToString()
         Me.merchantProductId = "ProdId" & Me.transactionTimeString
         Me.merchantApplicationId = "MerAppId" & Me.transactionTimeString
@@ -793,11 +798,11 @@ Partial Public Class Payment_App1
         End If
 
         Me.description = "TrDesc" & Me.transactionTimeString
-        Me.merchantTransactionId = "TrId" & Me.transactionTimeString
+        Me.merchantTransactionId = "V" & Me.transactionTimeString
         Session("vb_sub_merTranId") = Me.merchantTransactionId
         Me.merchantProductId = "ProdId" & Me.transactionTimeString
         Me.merchantApplicationId = "MerAppId" & Me.transactionTimeString
-        Me.merchantSubscriptionIdList = "ML" & New Random().[Next]()
+        Me.merchantSubscriptionIdList = "VML" & New Random().[Next]()
         Session("vb_MerchantSubscriptionIdList") = Me.merchantSubscriptionIdList
 
         Me.isPurchaseOnNoActiveSubscription = ConfigurationManager.AppSettings("IsPurchaseOnNoActiveSubscription")
@@ -1171,6 +1176,40 @@ Partial Public Class Payment_App1
         Catch ex As Exception
             Return
         End Try
+    End Sub
+
+    Protected Sub ShowNotifications_Click(sender As Object, e As EventArgs)
+        showNotification = "true"
+        GetNotificationsFromFile()
+        
+    End Sub
+
+    Private Sub GetNotificationsFromFile()
+        Dim notifications As New List(Of String)()
+        Me.GetListFromFile(Me.notificationDetailsFile, notifications)
+
+        Me.notificationDetails.Clear()
+        Dim notificationPair As Dictionary(Of String, String) = Nothing
+        Dim count As Integer = 1
+        For Each notification As String In notifications
+            If count > Me.recordsToDisplay Then
+                Exit For
+            End If
+
+            Dim kvps As String() = notification.Split("$"c)
+            notificationPair = New Dictionary(Of String, String)()
+            For Each kvp As String In kvps
+                Dim values As String() = kvp.Split("%"c)
+                If values IsNot Nothing Then
+                    If values.Length > 1 Then
+                        notificationPair.Add(values(0), values(1))
+                    End If
+                End If
+            Next
+
+            notificationDetails.Add(notificationPair)
+            count += 1
+        Next
     End Sub
 
     ''' <summary>

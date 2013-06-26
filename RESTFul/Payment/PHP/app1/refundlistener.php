@@ -1,78 +1,81 @@
 <?php
-require_once __DIR__ . '/lib/Payment/PaymentRequest.php';
+require_once __DIR__ . '/lib/OAuth/OAuthTokenService.php';
+require_once __DIR__ . '/lib/Payment/PaymentService.php';
 require_once __DIR__ . '/lib/Util/FileUtil.php';
 
-function getToken() {
-    require __DIR__ . '/config.php';
-    // Try loading token from file
+function getFileToken() 
+{
+    include __DIR__ . '/config.php';
+
+    if (!isset($oauth_file)) {
+        // set default if can't load
+        $oauth_file = 'token.php';
+    }
+
     $token = OAuthToken::loadToken($oauth_file);
-
-    // No token saved or token is expired... send token request
-    if (!$token || $token->isAccessTokenExpired()) {
-        $URL = $FQDN . '/oauth/token';
-        $id = $api_key;
-        $secret = $secret_key;
-        $tokenRequest = new OAuthTokenRequest($URL, $id, $secret);
-        $token = $tokenRequest->getTokenUsingScope($scope);
-
-        // Save token for future use 
+    if ($token == null || $token->isAccessTokenExpired()) {
+        $tokenSrvc = new OAuthTokenService(
+            $FQDN,
+            $api_key,
+            $secret_key
+        );
+        $token = $tokenSrvc->getTokenUsingScope($scope);
+        // save token for future use
         $token->saveToken($oauth_file);
     }
 
     return $token;
 }
 
-function getNotificationId($xmlstr) {
+function getNotificationIds($xmlstr) {
     $xmlparser = xml_parser_create();
     xml_parse_into_struct($xmlparser, $xmlstr, $vals);
     xml_parser_free($xmlparser);
+    $ids = array();
     foreach ($vals as $val) {
         if (is_string($val['tag']) 
                 && strcmp($val['tag'], 'HUB:NOTIFICATIONID') == 0) {
-            return $val['value'];
+            $ids[] = $val['value'];
         }
     }
 
-    throw new Exception('Notification Id not found!');
+    return $ids;
 }
+
+// TODO: Avoid accepting all certs
+RESTFulRequest::setDefaultAcceptAllCerts(true);
 
 $refundXML = file_get_contents('php://input');
-$notificationId = getNotificationId($refundXML);
+$notificationIds = getNotificationIds($refundXML);
 
 require __DIR__ . '/config.php';
-$token = getToken();
+$token = getFileToken();
 
-// get notificatio info
-$req = new PaymentRequest($FQDN . '/rest/3/Commerce/Payment/Notifications/' 
-        . $notificationId, $token);
-$refundNotification = $req->getNotificationInfo();
- FileUtil::saveArray($refundNotification, 'blah.db');
+foreach ($notificationIds as $notificationId) {
+    // get notificatio info
+    $req = new PaymentService($FQDN, $token);
+    $refundNotification = $req->getNotificationInfo($notificationId);
+    $savedNotifications = FileUtil::loadArray('notifications.db');
+    $nResponse = $refundNotification['GetNotificationResponse'];
 
-$nResponse = $refundNotification['GetNotificationResponse'];
-if (empty($nResponse['MerchantSubscriptionId'])) {
-    // transaction
-    $savedRefundTrans = FileUtil::loadArray('refundtrans.db');
-    $refundTrans = array(
-            'NotificationId' => $notificationId,
-            'NotificationType' => $nResponse['NotificationType'],
-            'TransactionId' => $nResponse['OriginalTransactionId']
-            );  
-    $savedRefundTrans[] = $refundTrans;
-    FileUtil::saveArray($savedRefundTrans, 'refundtrans.db');
-} else {
-    // subscription
-    $savedRefundSubs = FileUtil::loadArray('refundsubs.db');
+    $notification = array();
+    $notification['NotificationId'] = $notificationId;
+    foreach ($nResponse as $k => $v) {
+        $notification[$k] = $v;
+    }
 
-    $refundSub = array(
-            'NotificationId' => $notificationId,
-            'NotificationType' => $nResponse['NotificationType'],
-            'TransactionId' => $nResponse['OriginalTransactionId']
-            );  
-    $savedRefundSubs[] = $refundSub;
-    FileUtil::saveArray($savedRefundSubs, 'refundsubs.db');
+    $savedNotifications[] = $notification;
+
+    // limit on the number of entires
+    // TODO: Get limit from config
+    while (count($savedNotifications) > 5) { 
+        array_shift($savedNotifications);
+    }
+
+    FileUtil::saveArray($savedNotifications, 'notifications.db');
+
+    // obtained notification info; stop server from sending it again
+    $req->deleteNotification($notificationId);
 }
-
-// obtained notification info, stop server from sending it again
-$req->deleteNotification();
 
 ?>

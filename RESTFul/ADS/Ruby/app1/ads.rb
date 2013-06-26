@@ -11,7 +11,7 @@ require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
-require File.join(File.dirname(__FILE__), 'common.rb')
+require 'att_oauth_service'
 
 enable :sessions
 
@@ -23,9 +23,15 @@ set :protection, :except => :frame_options
 SCOPE = 'ADS'
 RestClient.proxy = settings.proxy
 
-['/getAds'].each do |path|
-  before path do
-    obtain_tokens(settings.FQDN, settings.api_key, settings.secret_key, SCOPE, settings.tokens_file)
+configure do
+  begin
+    OAuth = AttCloudServices::OAuthService.new(settings.FQDN, 
+                                           settings.api_key, 
+                                           settings.secret_key,
+                                           SCOPE,
+                                           :tokens_file => settings.tokens_file)
+  rescue => e
+    @error = e.message
   end
 end
 
@@ -49,7 +55,7 @@ def get_ads
   if invalidParams.any?
     @error = "Invalid parameters: " + invalidParams.join(", ")
   else
-    response = RestClient.get(url, :Authorization => "BEARER #{@access_token}", :User_Agent => "#{@env["HTTP_USER_AGENT"]}", :UDID => "012266005922565000000000000000", :Content_Type => 'application/json', :Accept => 'application/json') 
+    response = RestClient.get(url, :Authorization => "BEARER #{OAuth.access_token}", :User_Agent => "#{@env["HTTP_USER_AGENT"]}", :UDID => "012266005922565000000000000000", :Content_Type => 'application/json', :Accept => 'application/json') 
 
       case response.code
       when 204

@@ -11,7 +11,9 @@ require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'base64'
-require File.join(File.dirname(__FILE__), 'common.rb')
+require 'att_tts_service'
+
+include AttCloudServices
 
 enable :sessions
 
@@ -20,53 +22,46 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
-SCOPE = 'TTS'
 TEXT_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/text")
 
 RestClient.proxy = settings.proxy
 
-before '*' do
-  #load files 
-  load_content
-
-  #obtain oauth tokens
-  obtain_tokens(settings.FQDN, settings.api_key, settings.secret_key, SCOPE, settings.tokens_file)
+configure do
+  Service = TTS::TtsService.new(settings.FQDN,
+                                settings.api_key,
+                                settings.secret_key,
+                                TTS::SCOPE,
+                                :tokens_file => settings.tokens_file)
 end
+
+before do
+  @ssml_content = load_content("SSMLWithPhoneme.txt")
+  @text_content = load_content("PlainText.txt")
+end
+
 
 get '/' do
   erb :tts
 end
 
 post '/TextToSpeech' do
-  text_to_speech params[:ContentType], params[:x_arg]
+  begin
+    type = params[:ContentType]
+    content = case type
+              when "application/ssml+xml" then load_content("SSMLWithPhoneme.txt")
+              when "text/plain" then load_content("PlainText.txt")
+              end
+
+    response = Service.textToSpeech(params[:x_arg], content, type)
+    #the binary audio file
+    @audio = response
+  rescue => e
+    @error = e.response
+  ensure
+    return erb :tts
+  end
 end
 
-def text_to_speech(type, x_args="")
-  x_arg_val = URI.escape(x_args)
-
-  url = "#{settings.FQDN}/speech/v3/textToSpeech"
-
-  content = case type
-            when "application/ssml+xml" then @ssml_content
-            when "text/plain" then @text_content
-            end
-
-  response = RestClient.post url, "#{content}",
-    :Authorization => "Bearer #{@access_token}", 
-    :Accept => "audio/x-wav",
-    :X_arg => "#{x_arg_val}", 
-    :Content_Type => "#{type}"
-
-  #the binary audio file
-  @audio = response
-
-rescue => e
-  @error = e.response
-ensure
-  return erb :tts
-end
-
-def load_content
-  @text_content = File.readlines(File.join(TEXT_DIR,"PlainText.txt"))
-  @ssml_content = File.readlines(File.join(TEXT_DIR, "SSMLWithPhoneme.txt"))
+def load_content(text_file)
+  File.readlines(File.join(TEXT_DIR,text_file))
 end

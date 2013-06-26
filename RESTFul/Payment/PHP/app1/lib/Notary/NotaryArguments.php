@@ -14,27 +14,82 @@
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
- * @category Notary 
- * @copyright AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement/
+ * @category  API
+ * @package   Notary 
+ * @author    Pavel Kazakov <pk9069@att.com>
+ * @copyright 2013 AT&T Intellectual Property
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
+ * @link      http://developer.att.com
  */
 
-class NotaryArguments {
+/**
+ * Base class used to hold the arguments for generating a signed document and 
+ * signature.
+ *
+ * @category API
+ * @package  Notary 
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@ 
+ * @link     http://developer.att.com
+ */
+abstract class NotaryArguments
+{
     const CATEGORY_IN_APP_GAMES = 1;
     const CATEGORY_IN_APP_VIRTUAL_GOODS = 2;
     const CATEGORY_IN_APP_OTHER = 3;
     const CATEGORY_APPLICATION_GAMES = 4;
     const CATEGORY_APPLICATION_OTHER = 5;
 
+    /**
+     * Price.
+     */
     private $_amt;
+
+    /**
+     * Payment category.
+     */
     private $_category;
+
+    /**
+     * Payment channel.
+     */
     private $_channel;
+
+    /**
+     * Payment description.
+     */
     private $_desc;
+
+    /**
+     * Merchant transaction id.
+     */
     private $_mTransId;
+
+    /**
+     * Merchant product id.
+     */
     private $_mProductId;
+
+    /**
+     * Merchant redirect url.
+     */
     private $_mRedirectUrl;
 
-    public function __construct() {
+    /**
+     * Creates a NotaryArguments object with the following default values:
+     * <ul>
+     * <li>Amount: 0.00</li>
+     * <li>Category: CATEGORY_APPLICATION_OTHER</li>
+     * <li>Channel: MOBILE_WEB</li>
+     * <li>Description: Description</li>
+     * <li>Merchant Transaction Id: T + current time</li>
+     * <li>Merchant Product Id: 0</li>
+     * <li>Merchant Redirect URL: localhost</li>
+     * </ul>
+     */
+    public function __construct()
+    {
         $this->_amt = "0.00";
         $this->_category = 5;
         $this->_channel = "MOBILE_WEB";
@@ -44,100 +99,270 @@ class NotaryArguments {
         $this->_mRedirectUrl = "localhost";
     }
 
-    public function setAmount($amt) {
+    /**
+     * Sets the amount.
+     * 
+     * @param string $amt amount
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setAmount($amt)
+    {
         $this->_amt = $amt;
         return $this;
     }
 
-    public function setCategory($category) {
+    /**
+     * Sets the category. 
+     * 
+     * The following options are currently supported.
+     * <ul>
+     * <li>CATEGORY_IN_APP_GAMES</li>
+     * <li>CATEGORY_IN_APP_VIRTUAL_GOODS</li>
+     * <li>CATEGORY_IN_APP_OTHER</li>
+     * <li>CATEGORY_APPLICATION_GAMES</li>
+     * <li>CATEGORY_APPLICATION_OTHER</li>
+     * </ul>
+     *
+     * @param const $category category
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setCategory($category)
+    {
         $this->_category = $category;
         return $this;
     }
 
-    //    Can only be MOBILE_WEB for now
-    public function setChannel($channel) {
+    /**
+     * Sets the channel. Only MOBILE_WEB is currently supported.
+     *
+     * @param string $channel channel
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setChannel($channel)
+    {
         $this->_channel = $channel;
         return $this;
     }
 
-    public function setDescription($desc) {
+    /**
+     * Sets description.
+     * 
+     * @param string $desc description
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setDescription($desc)
+    {
         $this->_desc = $desc;
         return $this;
     }
     
-    public function setMerchantTransactionId($mTransId) {
+    /**
+     * Sets the merchant transaction id.
+     *
+     * @param string $mTransId merchant transaction id
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setMerchantTransactionId($mTransId)
+    {
         $this->_mTransId= $mTransId;
         return $this;
     }
 
-    public function setMerchantProductId($mProductId) {
+    /**
+     * Sets the merchant product id.
+     *
+     * @param string $mProductId merchant product id
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setMerchantProductId($mProductId)
+    {
         $this->_mProductId= $mProductId;
         return $this;
     }
 
-    public function setMerchantRedirectUrl($mRedirectUrl) {
+    /**
+     * Sets the merchant redirect URL.
+     *
+     * @param string $mRedirectUrl merchant redirect URL
+     *
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function setMerchantRedirectUrl($mRedirectUrl)
+    {
         $this->_mRedirectUrl= $mRedirectUrl;
         return $this;
     }
 
-    public function getAmount() {
+    /**
+     * Gets amount.
+     *
+     * @return string amount
+     * @return NotaryArguments a reference to this (used for method chaining)
+     */
+    public function getAmount()
+    {
         return $this->_amt;
     }
 
-    public function getCategory() {
+    /**
+     * Gets category.
+     *
+     * @return string category.
+     */
+    public function getCategory()
+    {
         return $this->_category;
     }
 
-    public function getChannel() {
+    /**
+     * Gets channel.
+     *
+     * @return string channel
+     */
+    public function getChannel()
+    {
         return $this->_channel;
     }
 
-    public function getDescription() {
+    /**
+     * Gets description.
+     *
+     * @return string description
+     */
+    public function getDescription()
+    {
         return $this->_desc;
     }
     
-    public function getMerchantTransactionId() {
+    /** 
+     * Gets merchant transaction id.
+     *
+     * @return string merchant transaction id
+     */
+    public function getMerchantTransactionId()
+    {
         return $this->_mTransId;
     }
 
-    public function getMerchantProductId() {
+    /**
+     * Gets merchant product id.
+     *
+     * @return string merchant product id
+     */
+    public function getMerchantProductId()
+    {
         return $this->_mProductId;
     }
 
-    public function getMerchantRedirectUrl() {
+    /**
+     * Gets merchant redirect URL
+     *
+     * @return string merchant redirect URL
+     */
+    public function getMerchantRedirectUrl()
+    {
         return $this->_mRedirectUrl;
     }
 }
 
-class TransactionNotaryArguments extends NotaryArguments {
-    //wrapper
+/**
+ * Class used to hold the arguments for generating a signed document and 
+ * signature to use with payment transactions.
+ *
+ * @category API
+ * @package  Notary 
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@ 
+ * @link     http://developer.att.com
+ */
+class TransactionNotaryArguments extends NotaryArguments
+{
+    /* currently is just a wrapper */
 }
 
-class SubscriptionNotaryArguments extends NotaryArguments {
+/**
+ * Class used to hold the arguments for generating a signed document and 
+ * signature to use with payment subscriptions.
+ *
+ * @category API
+ * @package  Notary 
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@ 
+ * @link     http://developer.att.com
+ */
+class SubscriptionNotaryArguments extends NotaryArguments
+{
+    /**
+     * Generated merchant subscription id list.
+     */
     private $_idList;
 
-    public function __construct() {
+    /** 
+     * Creates a SubscriptionNotaryArguments object.
+     * 
+     * Merchant subscription id list is set to P + current time.
+     */
+    public function __construct()
+    {
         parent::__construct();
-        $this->_idList = 'S' . time();
+        $this->_idList = 'P' . time();
     }
 
-    public function getMerchantSubscriptionIdList() {
+    /**
+     * Gets the merchant subscription id list.
+     *
+     * @return string id list
+     */
+    public function getMerchantSubscriptionIdList()
+    {
         return $this->_idList;
     }
 
-    public function isPurchaseOnNoActiveSubscription() {
+    /**
+     * Gets whether the purchase has no active subscription.
+     * 
+     * @return boolean true if no active subscription, false otherwise
+     */
+    public function isPurchaseOnNoActiveSubscription()
+    {
         return false;
     }
 
-    public function getSubscriptionRecurrences() {
+    /**
+     * Gets the number of subscription recurrances.
+     *
+     * @return int subscription reccurences
+     */
+    public function getSubscriptionRecurrences()
+    {
         return 99999;
     }
 
-    public function getSubscriptionPeriod() {
+    /**
+     * Gets subscription period.
+     * 
+     * @return string subscription period.
+     */
+    public function getSubscriptionPeriod()
+    {
         return "MONTHLY";
     }
 
-    public function getSubscriptionPeriodAmount() {
+    /**
+     * Gets how many times to charge during subscription period.
+     *
+     * @return int subscription period amount
+     */
+    public function getSubscriptionPeriodAmount()
+    {
         return 1;
     }
 }

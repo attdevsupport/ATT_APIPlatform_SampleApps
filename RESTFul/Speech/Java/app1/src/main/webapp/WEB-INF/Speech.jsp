@@ -45,7 +45,7 @@
           <li id="back"><a href="#top">Back to top</a></li>
         </ul> <!-- end of links -->
       </div> <!-- end of header -->
-      <div class="content">
+      <div id="content" class="content">
         <div class="contentHeading">
           <h1>AT&amp;T Sample Application - Speech to Text</h1>
           <div id="introtext">

@@ -15,7 +15,7 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using ATT_MSSDK;
-using ATT_MSSDK.IMMNv1;
+using ATT_MSSDK.MOBOv1;
 #endregion
 
 /* 
@@ -381,7 +381,7 @@ public partial class MOBO_app1 : System.Web.UI.Page
 
         try
         {
-            SendMessageResponse response = this.requestFactory.SendIMMN(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group);
+            SendMessageResponse response = this.requestFactory.SendMessage(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group);
             if (null != response)
             {
                 this.DrawPanelForSuccess(statusPanel, response.Id);

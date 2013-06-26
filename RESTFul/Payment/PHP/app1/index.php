@@ -3,16 +3,19 @@ session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/Notary/Notary.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-require_once __DIR__ . '/src/Sample/PaymentService.php';
+require_once __DIR__ . '/src/Controller/PaymentController.php';
 
-$service = new PaymentService();
-$results = $service->getResults();
-$errors = $service->getErrors();
+$controller = new PaymentController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
+
 ?>
 <!DOCTYPE html>
 <html lang="en"> 
   <head> 
     <title>AT&amp;T Sample Application - Payment</title>		
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <link rel="stylesheet" type="text/css" href="style/common.css">
     <script src="scripts/utils.js"></script>
@@ -41,15 +44,17 @@ $errors = $service->getErrors();
           <a id="jump" href="#nav">Main Navigation</a>
         </div> 
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" alt="max.png"/></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-          <a href="<?php echo $linkSource; ?>" target="_blank">Source<img src="images/opensource.png" /></a>
+          <a href="<?php echo $linkSource; ?>" 
+              target="_blank">Source<img src="images/opensource.png" alt="opensource.png" /></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-          <a href="<?php echo $linkDownload; ?>" target="_blank">Download<img src="images/download.png"></a>
+          <a href="<?php echo $linkDownload; ?>" 
+              target="_blank">Download<img src="images/download.png" alt="download.png"></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
@@ -78,9 +83,9 @@ $errors = $service->getErrors();
               <form method="post" name="newTransaction" action="index.php">
                 <div class="inputFields">
                   <input type="radio" name="product" value="1" 
-                      checked="checked">Buy product 1 for $<?php echo $minTransactionValue; ?></input><br>
+                      checked="checked">Buy product 1 for $<?php echo $minTransactionValue; ?><br>
                   <input type="radio" name="product" 
-                      value="2">Buy product 2 for $<?php echo $maxTransactionValue; ?></input><br>
+                      value="2">Buy product 2 for $<?php echo $maxTransactionValue; ?><br>
                   <button type="submit" name="newTransaction">Buy Product</button>
                 </div> <!-- end of inputFields -->
               </form> <!-- end of newTransaction -->
@@ -157,19 +162,16 @@ $errors = $service->getErrors();
               <br>
               <h2>Feature 3: Refund Transaction</h2>
               <div class="inputFields">
-                <div id="refundIds">
-                  <div id="transactionIds">
-                    <strong>Transaction ID</strong><br>
-                    <form method="post" name="refundTransactionTID" action="index.php">
-                      <select name="refundTransactionId" onChange="this.form.submit()">
-                        <?php foreach ($results['t_transIds'] as $id) { ?>
-                        <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
-                        <?php } ?>
-                      </select>
-                    </form>
-                  </div> <!-- end of transactionIds -->
-                  <br>
-                </div> <!-- end of refundIds -->
+                <div id="refundTransIds">
+                  <strong>Transaction ID</strong><br>
+                  <form method="post" name="refundTransactionTID" action="index.php">
+                    <select name="refundTransactionId" onChange="this.form.submit()">
+                      <?php foreach ($results['t_transIds'] as $id) { ?>
+                      <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
+                      <?php } ?>
+                    </select>
+                  </form>
+                </div> <!-- end of refundTransIds -->
               </div> <!-- end of inputFields -->
               <?php if(isset($errors['t_refund'])) { ?> 
               <div class="errorWide">
@@ -207,32 +209,6 @@ $errors = $service->getErrors();
                 </tbody>
               </table>
               <?php } ?>
-              <h2>Feature 4: Transaction Notifications</h2>
-              <div class="inputFields">
-                <div id="notificationDetails" class="columns">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Notification ID</th>
-                        <th>Notification Type</th>
-                        <th>Transaction ID</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($results['refundTrans'] as $refundTrans) { ?>
-                        <tr>
-                          <td data-value="Notification ID"><?php echo $refundTrans['NotificationId']; ?></td>
-                          <td data-value="Notification Type"><?php echo $refundTrans['NotificationType']; ?></td>
-                          <td data-value="Transaction ID"><?php echo $refundTrans['TransactionId']; ?></td>
-                        </tr>
-                    <?php } ?>
-                    </tbody>
-                  </table>
-                  <form method="post" name="refreshTransactionNotifications" action="index.php">
-                    <button type="submit" name="refreshTransactionNotifications">Refresh</button>
-                  </form> <!-- end of refreshTransactionNotifications -->
-                </div> <!-- end of notificationDetails -->
-              </div> <!-- end of inputFields -->
             </div> <!-- end of transaction -->
             <div class="lightBorder"></div>
             <a id="subscriptionToggle" 
@@ -329,7 +305,7 @@ $errors = $service->getErrors();
               <?php if(isset($errors['subDetails'])) { ?> 
               <div class="errorWide">
                 <strong>ERROR: </strong><br>
-                <?php echo htmlspecialchars($errors['subInfo']); ?>
+                <?php echo htmlspecialchars($errors['subDetails']); ?>
               </div>
               <?php } ?>
               <?php if (isset($results['subDetails'])) { ?>
@@ -363,21 +339,18 @@ $errors = $service->getErrors();
               </table>
               <?php } ?>
               <br>
-              <h2>Feature 4: Cancel Subscription</h2>
+              <h2>Feature 4: Cancel Future Subscription</h2>
               <div class="inputFields">
-                <div id="refundIds">
-                  <div id="transactionIds">
-                    <strong>Subscription ID</strong><br>
-                    <form method="post" name="cancelSubscriptionID" action="index.php">
-                      <select name="cancelSubscriptionId" onChange="this.form.submit()">
-                        <?php foreach ($results['s_subIds'] as $id) { ?>
-                        <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
-                        <?php } ?>
-                      </select>
-                    </form>
-                  </div> <!-- end of transactionIds -->
-                  <br>
-                </div> <!-- end of refundIds -->
+                <div id="cancelIds">
+                  <strong>Subscription ID</strong><br>
+                  <form method="post" name="cancelSubscriptionID" action="index.php">
+                    <select name="cancelSubscriptionId" onChange="this.form.submit()">
+                      <?php foreach ($results['s_subIds'] as $id) { ?>
+                      <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
+                      <?php } ?>
+                    </select>
+                  </form>
+                </div> <!-- end of cancelIds-->
               </div> <!-- end of inputFields -->
               <?php if(isset($errors['s_cancel'])) { ?> 
               <div class="errorWide">
@@ -415,21 +388,18 @@ $errors = $service->getErrors();
                 </tbody>
               </table>
               <?php } ?>
-              <h2>Feature 5: Refund Subscription</h2>
+              <h2>Feature 5: Refund Current and Cancel Future Subscription</h2>
               <div class="inputFields">
-                <div id="refundIds">
-                  <div id="transactionIds">
-                    <strong>Subscription ID</strong><br>
-                    <form method="post" name="refundSubscriptionID" action="index.php">
-                      <select name="refundSubscriptionId" onChange="this.form.submit()">
-                        <?php foreach ($results['s_subIds'] as $id) { ?>
-                        <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
-                        <?php } ?>
-                      </select>
-                    </form>
-                  </div> <!-- end of transactionIds -->
-                  <br>
-                </div> <!-- end of refundIds -->
+                <div id="refundSubIds">
+                  <strong>Subscription ID</strong><br>
+                  <form method="post" name="refundSubscriptionID" action="index.php">
+                    <select name="refundSubscriptionId" onChange="this.form.submit()">
+                      <?php foreach ($results['s_subIds'] as $id) { ?>
+                      <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
+                      <?php } ?>
+                    </select>
+                  </form>
+                </div> <!-- end of refundSubIds -->
               </div> <!-- end of inputFields -->
               <?php if(isset($errors['s_refund'])) { ?> 
               <div class="errorWide">
@@ -467,32 +437,6 @@ $errors = $service->getErrors();
                 </tbody>
               </table>
               <?php } ?>
-              <h2>Feature 6: Subscription Notifications</h2>
-              <div class="inputFields">
-                <div id="notificationDetails" class="columns">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Notification ID</th>
-                        <th>Notification Type</th>
-                        <th>Transaction ID</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($results['refundSubs'] as $refundTrans) { ?>
-                      <tr>
-                        <td data-value="Notification ID"><?php echo $refundTrans['NotificationId']; ?></td>
-                        <td data-value="Notification Type"><?php echo $refundTrans['NotificationType']; ?></td>
-                        <td data-value="Transaction ID"><?php echo $refundTrans['TransactionId']; ?></td>
-                      </tr>
-                    <?php } ?>
-                    </tbody>
-                  </table>
-                  <form method="post" name="refreshSubscriptionNotifications" action="index.php">
-                    <button type="submit" name="refreshSubscriptionNotifications">Refresh</button>
-                  </form> <!-- end of refreshSubscriptionNotifications -->
-                </div> <!-- end of notificationDetails -->
-              </div> <!-- end of inputFields -->
             </div> <!-- end of subscription -->
             <div class="lightBorder"></div>
             <a id="notaryToggle" href="javascript:toggle('notary','notaryToggle', 'Notary');">Show Notary</a>
@@ -530,6 +474,50 @@ $errors = $service->getErrors();
               </div>
               <?php } ?>
             </div> <!-- end of notary -->
+            <div class="lightBorder"></div>
+            <a id="notificationToggle" 
+                href="javascript:toggle('notifications','notificationToggle', 'Notifications');">Show Notifications</a>
+            <div class="toggle" id="notifications">
+              <div class="inputFields">
+                <div id="notificationDetails" class="columns">
+                  <?php
+                  $notifications = $results['notifications'];
+                  for ($i = 0; $i < count($notifications); ++$i) {
+                  $notification = $notifications[$i];
+                  $notifInfo = $i == 0 ? ' [ Displays last 5 notifications ]' : '';
+                  ?>
+                    <h2>Notification : <?php echo(($i + 1) . $notifInfo); ?></h2>
+                    <table>
+                      <thead>
+                        <tr>
+                          <?php 
+                          foreach ($notification as $k => $v) { 
+                            $k = htmlspecialchars($k); 
+                          ?>
+                            <th><?php echo $k; ?></th>
+                          <?php } ?>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <?php 
+                          foreach ($notification as $k => $v) { 
+                            $v = $v == '' ? '-' : $v;
+                            $v = htmlspecialchars($v);
+                            $k = htmlspecialchars($k);
+                          ?>
+                            <td data-value="<?php echo $k; ?>"><?php echo $v; ?></td>
+                          <?php } ?>
+                        </tr>
+                      </tbody>
+                    </table>
+                  <?php } ?>
+                  <form method="post" name="refreshNotifications" action="index.php">
+                    <button type="submit" name="refreshNotifications">Refresh</button>
+                  </form> <!-- end of refreshNotifications -->
+                </div> <!-- end of notificationDetails -->
+              </div> <!-- end of inputFields -->
+            </div> <!-- end of notifications -->
           </div> <!-- end of formContainer -->
         </div> <!-- end of formBox -->
       </div> <!-- end of content -->
@@ -556,14 +544,17 @@ $errors = $service->getErrors();
         </p>
       </div> <!-- end of footer -->
     </div> <!-- end of page_container -->
-    <?php if ($service->showTransaction()) { ?>
+    <?php if ($controller->showTransaction()) { ?>
       <script>toggle('transaction', 'transactionToggle', 'Transaction');</script>
     <?php } ?>
-    <?php if ($service->showSubscription()) { ?>
+    <?php if ($controller->showSubscription()) { ?>
       <script>toggle('subscription', 'subscriptionToggle', 'Subscription');</script>
     <?php } ?>
-    <?php if ($service->showNotary()) { ?>
+    <?php if ($controller->showNotary()) { ?>
       <script>toggle('notary', 'notaryToggle', 'Notary');</script>
+    <?php } ?>
+    <?php if ($controller->showNotifications()) { ?>
+      <script>toggle('notifications', 'notificationToggle', 'Notifications');</script>
     <?php } ?>
   </body>
 </html>

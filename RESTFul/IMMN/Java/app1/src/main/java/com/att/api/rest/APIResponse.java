@@ -1,73 +1,216 @@
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+
+/*
+ * ====================================================================
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2013.
+ * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
+ * http://developer.att.com/sdk_agreement/
+ *
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * For more information contact developer.support@att.com
+ * ====================================================================
+ */
+
 package com.att.api.rest;
 
-import org.apache.commons.collections.map.MultiValueMap;
-import java.io.InputStream;
+import java.io.IOException;
+
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 
 /**
- * Created with IntelliJ IDEA.
- * User: sendhilc
- * Date: 1/16/13
- * Time: 9:23 AM
- * To change this template use File | Settings | File Templates.
+ * Immutable class that holds API response information.
+ *
+ * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
+ * @version 3.0
+ * @since 2.2
  */
 public class APIResponse {
 
-    private String reasonPhrase;
-    private byte[] rawBody = null;
-    private int statusCode;
-    private String httpVersion;
-    private String responseBody;
-    private MultiValueMap responseHeaders;
+    /** HTTP status code. */
+    private final int statusCode;
 
-    public APIResponse(){
+    /** HTTP response body. */
+    private final String responseBody;
+
+    /** Array of HTTP headers. */
+    private final HttpHeader[] headers;
+
+    /**
+     * Given an HttpResponse object, this method generates an array of HTTP
+     * headers.
+     *
+     * @param httpResponse used for building HTTP headers
+     * @return array of http headers
+     */
+    private static HttpHeader[] buildHeaders(final HttpResponse httpResponse) {
+        final Header[] headers = httpResponse.getAllHeaders();
+
+        HttpHeader[] httpHeaders = new HttpHeader[headers.length];
+        for (int i = 0; i < headers.length; ++i) {
+            final Header header = headers[i];
+            final String name = header.getName();
+            final String value = header.getValue();
+            final HttpHeader httpHeader = new HttpHeader(name, value);
+            httpHeaders[i] = httpHeader;
+        }
+
+        return httpHeaders;
     }
 
-    public String getReasonPhrase() {
-        return this.reasonPhrase;
+    /**
+     * Creates an API response with the specified status code, response body,
+     * and http headers.
+     *
+     * @param statusCode status code
+     * @param responseBody response body
+     * @param headers http headers
+     */
+    public APIResponse(int statusCode, String responseBody,
+            HttpHeader[] headers) {
+
+        this.statusCode = statusCode;
+        this.responseBody = responseBody;
+
+        // avoid potentially exposing internals
+        this.headers = APIResponse.copyHeaders(headers);
     }
 
-    public void setReasonPhrase(String reasonPhrase) {
-        this.reasonPhrase = reasonPhrase;
+    /**
+     * Create an API response from an <code>HttpResponse</code> object.
+     *
+     * @param httpResponse used for creating API response
+     * @throws RESTException if unable to parse http response
+     * @see org.apache.http.HttpResponse
+     * @deprecated replaced by {@link #valueOf(HttpResponse)}
+     */
+    public APIResponse(HttpResponse httpResponse) throws RESTException {
+        try {
+            statusCode = httpResponse.getStatusLine().getStatusCode();
+            responseBody = EntityUtils.toString(httpResponse.getEntity());
+            headers = APIResponse.buildHeaders(httpResponse);
+        } catch (IOException ioe) {
+            throw new RESTException(ioe);
+        }
     }
 
+    /**
+     * Gets HTTP status code.
+     *
+     * @return http status code
+     */
     public int getStatusCode() {
         return this.statusCode;
     }
 
-    public void setStatusCode(int statusCode) {
-        this.statusCode = statusCode;
-    }
-
-    public String getHttpVersion() {
-        return this.httpVersion;
-    }
-
-    public void setHttpVersion(String httpVersion) {
-        this.httpVersion = httpVersion;
-    }
-
+    /**
+     * Gets HTTP response body.
+     *
+     * @return http response body
+     */
     public String getResponseBody() {
         return this.responseBody;
     }
 
-    public void setResponseBody(String responseBody) {
-        this.responseBody = responseBody;
+    /**
+     * Gets an array of all http headers returned.
+     *
+     * <p>
+     * <strong>NOTE</strong>: Use <code>getHeader()</code> to obtain a specific
+     * header instead of this function, for performance reasons.
+     * </p>
+     *
+     * @return array of http headers
+     * @see #getHeader(String)
+     */
+    public HttpHeader[] getAllHeaders() {
+        // Avoid exposing internals at the cost of a performance hit
+        return APIResponse.copyHeaders(this.headers);
     }
 
-    public MultiValueMap getAllHeaders() {
-        return this.responseHeaders;
+    /**
+     * Gets the the value of the specified http header name or <tt>null</tt> if
+     * none is found.
+     *
+     * @param name header name
+     * @return http header value
+     */
+    public String getHeader(String name) {
+        // Linear search is used for finding value.
+        // Although asympotically this is O(n), where n is the number of
+        // headers, linear search is in practice faster for a sufficiently
+        // small array than an algorithm that would require building a data
+        // structure.
+        HttpHeader[] headers = getAllHeaders();
+        for (HttpHeader header : headers) {
+            if (header.getName().equals(name)) {
+                return header.getValue();
+            }
+        }
+
+        return null;
     }
 
-    public void setResponseHeaders(MultiValueMap responseHeaders) {
-        this.responseHeaders = responseHeaders;
+    /**
+     * Alias for <code>valueOf()</code>.
+     *
+     * @param httpResponse used for creating API response
+     * @return response
+     * @throws RESTException if unable to parse http response
+     * @see #valueOf(HttpResponse)
+     * @since 3.0
+     */
+    public static APIResponse fromHttpResponse(HttpResponse httpResponse)
+            throws RESTException {
+
+        return APIResponse.valueOf(httpResponse);
     }
 
-    public byte[] getRawBody(){
-      return this.rawBody;
+    /**
+     * Factory method for creating an API response from an
+     * <code>HttpResponse</code> object.
+     *
+     * @param httpResponse used for creating API response
+     * @return response
+     * @throws RESTException if unable to parse http response
+     * @see org.apache.http.HttpResponse
+     * @since 3.0
+     */
+    public static APIResponse valueOf(HttpResponse httpResponse)
+            throws RESTException {
+
+        try {
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            String rb = EntityUtils.toString(httpResponse.getEntity());
+            HttpHeader[] headers = APIResponse.buildHeaders(httpResponse);
+            return new APIResponse(statusCode, rb, headers);
+        } catch (IOException ioe) {
+            throw new RESTException(ioe);
+        }
     }
 
-    public void setRawBody(byte[] data) {
-      this.rawBody = data;
-      this.setResponseBody(new String(rawBody));
+    /**
+     * Utility method for copying an array of headers.
+     *
+     * <p>
+     * <strong>NOTE</strong>: Since <code>HttpHeader</code> objects are 
+     * immutable, the objects themselves are not copied, only the array.
+     * </p>
+     *
+     * @param headers HTTP headers to copy
+     * @return copy of http headers
+     * @since 3.0
+     */
+    public static HttpHeader[] copyHeaders(final HttpHeader[] headers) {
+        final HttpHeader[] headersCopy = new HttpHeader[headers.length];
+        for (int i = 0; i < headers.length; ++i) {
+            // beauty of immutability :)
+            // since HttpHeader is immutable, no need to provide a copy
+            headersCopy[i] = headers[i];
+        }
+        return headersCopy;
     }
+
 }

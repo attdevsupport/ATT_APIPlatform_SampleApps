@@ -2,7 +2,7 @@
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
 
 /**
- * OAuth Library
+ * OAuth Library.
  * 
  * PHP version 5.4+
  * 
@@ -14,36 +14,48 @@
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
- * @category Authentication 
- * @package OAuth
- * @copyright AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement/
+ * @category  Authentication 
+ * @package   OAuth
+ * @author    Pavel Kazakov <pk9069@att.com>
+ * @copyright 2013 AT&T Intellectual Property
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
+ * @link      http://developer.att.com
  */
 
 /**
  * Basic class for storing any exceptions related to OAuth.
  * 
- * @package OAuth 
+ * @category Authentication 
+ * @package  OAuth 
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @link     http://developer.att.com
  */
-class OAuthException extends Exception {
-    // error returned by OAuth 
+class OAuthException extends Exception
+{
+    /**
+     * error returned by OAuth.
+     */
     private $_error;
 
-    // error description returned by Oauth
+    /** 
+     * error description returned by Oauth.
+     */
     private $_errorDesc;
 
 
     /**
      * Creates a new OAuth Exception object.
      *
-     * @param string $error the OAuth error
-     * @param string $errorDesc the OAuth error description
-     * @param string $msg optional exception message
-     * @param code int optional exception code
-     * @param Exception optional previous exception
+     * @param string    $error     the OAuth error
+     * @param string    $errorDesc the OAuth error description
+     * @param string    $msg       optional exception message
+     * @param int       $code      optional exception code
+     * @param Exception $previous  optional previous exception
      */
-    public function __construct($error, $errorDesc, $msg = NULL, $code = 0, 
-            Exception $previous = NULL) {
+    public function __construct(
+        $error, $errorDesc, $msg = null, $code = 0, Exception $previous = null
+    ) {
 
         if (!isset($msg)) {
             $msg = 'Error: ' . $error . ' Error Description: ' . $errorDesc; 
@@ -59,7 +71,8 @@ class OAuthException extends Exception {
      * 
      * @return string error
      */
-    public function getError() {
+    public function getError()
+    {
         return $this->_error;
     }
 
@@ -68,7 +81,8 @@ class OAuthException extends Exception {
      * 
      * @return string error description
      */
-    public function getErrorDescription() {
+    public function getErrorDescription() 
+    {
         return $this->_errorDesc;
     }
 }

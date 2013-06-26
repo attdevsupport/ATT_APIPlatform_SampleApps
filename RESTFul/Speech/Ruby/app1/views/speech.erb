@@ -62,7 +62,7 @@ For more information contact developer.support@att.com
           <li id="back"><a href="#top">Back to top</a>
           </li></ul> <!-- end of links -->
         </div> <!-- end of header -->
-        <div class="content">
+        <div id="content" class="content">
           <div class="contentHeading">
             <h1>AT&amp;T Sample Application - Speech to Text</h1>
             <div id="introtext">
@@ -102,58 +102,58 @@ For more information contact developer.support@att.com
             </div>
           </div>
           <% if @result %>
-            <div class="successWide" align="left">
+            <div class="successWide" >
               <strong>SUCCESS:</strong>
               <br />
               Response parameters listed below.
             </div>
-            <table class="kvp">
+            <table class="kvp" id="kvp">
               <thead>
                 <tr>
-                  <th class="label">Parameter</th>
-                  <th class="label">Value</th>
+                  <th>Parameter</th>
+                  <th>Value</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="cell" align="center"><em>ResponseId</em></td>
-                  <td class="cell" align="center"><em><%= @result['Recognition']['ResponseId'] %></em></td>
+                  <td data-value="Parameter">ResponseId</td>
+                  <td data-value="Value"><%= @result['Recognition']['ResponseId'] %></td>
                 </tr>
                 <tr>
-                  <td class="cell" align="center"><em>Status</em></td>
-                  <td class="cell" align="center"><em><%= @result['Recognition']['Status'] %></em></td>
+                  <td data-value="Parameter">Status</td>
+                  <td data-value="Value"><%= @result['Recognition']['Status'] %></td>
                 </tr>
                 <%
                   if @result['Recognition']['Status'].eql? "OK" then
                     nbest = @result['Recognition']['NBest']
                     nbest.each do |key, val| %>
                       <tr>
-                        <td class="cell" align="center"><em>Hypothesis</em></td>
-                        <td class="cell" align="center"><em><%= key['Hypothesis'] %></em></td>
+                        <td data-value="Parameter">Hypothesis</td>
+                        <td data-value="Value"><%= key['Hypothesis'] %></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>LanguageId</em></td>
-                        <td class="cell" align="center"><em><%= key['LanguageId'] %></em></td>
+                        <td data-value="Parameter">LanguageId</td>
+                        <td data-value="Value"><%= key['LanguageId'] %></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>Confidence</em></td>
-                        <td class="cell" align="center"><em><%= key['Confidence'] %></em></td>
+                        <td data-value="Parameter">Confidence</td>
+                        <td data-value="Value"><%= key['Confidence'] %></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>Grade</em></td>
-                        <td class="cell" align="center"><em><%= key['Grade'] %></em></td>
+                        <td data-value="Parameter">Grade</td>
+                        <td data-value="Value"><%= key['Grade'] %></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>ResultText</em></td>
-                        <td class="cell" align="center"><em><%= key['ResultText'] %></em></td>
+                        <td data-value="Parameter">ResultText</td>
+                        <td data-value="Value"><%= key['ResultText'] %></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>Words</em></td>
-                        <td class="cell" align="center"><em><%= key['Words'].join(", ") %></em></td>
+                        <td data-value="Parameter">Words</td>
+                        <td data-value="Value"><%= key['Words'].join(", ") %></td>
                       </tr>
                       <tr>
-                        <td class="cell" align="center"><em>WordScores</em></td>
-                        <td class="cell" align="center"><em><%= key['WordScores'].join(", ") %></em></td>
+                        <td data-value="Parameter">WordScores</td>
+                        <td data-value="Value"><%= key['WordScores'].join(", ") %></td>
                       </tr>
                       <% end end %>
                     </tbody>

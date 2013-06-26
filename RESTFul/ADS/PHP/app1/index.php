@@ -1,11 +1,11 @@
 <?php
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/ADSService.php';
+require_once __DIR__ . '/src/Controller/ADSController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$service = new ADSService();
-$service->getAdvertisement();
-$error = $service->getError();
-$result = $service->getResult();
+$controller = new ADSController();
+$controller->handleRequest();
+$errors = $controller->getErrors();
+$results = $controller->getResults();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -244,7 +244,10 @@ For more information contact developer.support@att.com
                 <button type="submit" name="btnGetAds">Get Advertisement</button>
               </div> <!-- end of getAds -->
             </form>
-              <?php if ($result != NULL) { ?>
+              <?php 
+              if (isset($results[ADSController::RESULT_AD])) {
+                $result = $results[ADSController::RESULT_AD];
+              ?>
               <div class="successWide">
                 <strong>SUCCESS:</strong><br>
                 <?php 
@@ -286,11 +289,11 @@ For more information contact developer.support@att.com
               <a id="hplImage" href="<?php echo $clickURL; ?>" target="_blank"><img src="<?php echo $img; ?>" alt="" /></a>
               <?php } ?>
               <?php } ?>
-            <?php if ($error != NULL) { ?>
+            <?php if (isset($errors[ADSController::ERROR_AD])) { ?>
               <div class="errorWide">
                 <strong>ERROR:</strong>
                 <br />
-                <?php echo htmlspecialchars($service->getError()); ?>
+                <?php echo htmlspecialchars($errors[ADSController::ERROR_AD]); ?>
               </div>
             <?php } ?>
           <!-- SAMPLE APP CONTENT ENDS HERE! -->

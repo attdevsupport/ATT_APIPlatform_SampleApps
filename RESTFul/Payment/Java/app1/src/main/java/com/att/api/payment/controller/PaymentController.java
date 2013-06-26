@@ -1,43 +1,39 @@
 package com.att.api.payment.controller;
 
-import com.att.api.config.AppConfig;
-import com.att.api.exception.ServiceException;
-import com.att.api.oauth.OAuthService;
-import com.att.api.oauth.OAuthToken;
-import com.att.api.payment.file.PaymentFileHandler;
-import com.att.api.payment.file.TransactionEntry;
-import com.att.api.payment.service.Notary;
-import com.att.api.payment.service.NotaryService;
-import com.att.api.payment.service.PaymentService;
-import com.att.api.payment.service.Transaction;
-import com.att.api.payment.service.Subscription;
-import com.att.api.rest.RESTConfig;
-import com.att.api.rest.RESTException;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
-import com.att.api.payment.model.ConfigBean;
-import com.att.api.payment.file.TransactionEntry;
+
+import com.att.api.controller.APIController;
+import com.att.api.oauth.OAuthToken;
+import com.att.api.payment.file.PaymentFileHandler;
 import com.att.api.payment.file.SubscriptionEntry;
+import com.att.api.payment.file.TransactionEntry;
+import com.att.api.payment.model.AppCategory;
+import com.att.api.payment.model.ConfigBean;
+import com.att.api.payment.model.Notary;
+import com.att.api.payment.model.NotificationPool;
+import com.att.api.payment.model.Subscription;
+import com.att.api.payment.model.Transaction;
+import com.att.api.payment.service.NotaryService;
+import com.att.api.payment.service.PaymentService;
+import com.att.api.rest.RESTException;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.TreeMap;
-
-public class PaymentController extends HttpServlet {
+public class PaymentController extends APIController {
 
     private static final long serialVersionUID = 5677394140665947979L;
-    private PaymentFileHandler transactionFile;
-    private PaymentFileHandler subscriptionFile;
-    private AppConfig cfg;
+    private static PaymentFileHandler transactionFile = null;
+    private static PaymentFileHandler subscriptionFile = null;
 
     private Map<String, String> JSONToMap(JSONObject obj) {
         Map<String, String> map = new TreeMap<String, String>();
@@ -67,107 +63,72 @@ public class PaymentController extends HttpServlet {
     }
 
     private void createFileHandler() {
-        transactionFile = new PaymentFileHandler("trans.db");
-        subscriptionFile = new PaymentFileHandler("subs.db");
+        try {
+            if (transactionFile == null || subscriptionFile == null) {
+                transactionFile = new PaymentFileHandler("trans", "db");
+                subscriptionFile = new PaymentFileHandler("subs", "db");
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
-    private RESTConfig getRESTConfig(String endpoint) {
-        final String proxyHost = cfg.getProxyHost();
-        final int proxyPort = cfg.getProxyPort();
-        final boolean trustAllCerts = cfg.getTrustAllCerts();
+    private Notary getTransactionNotary(double price) throws RESTException {
+        String transId = "J" + System.currentTimeMillis();
+        String prodId = "mpid" + System.currentTimeMillis();
+        String redirectUrl = appConfig.getProperty("paymentRedirectURL");
+        Transaction trans = new Transaction.Builder(price, AppCategory.APP_OTHER,
+                "Sample App", transId, prodId, redirectUrl).build();
 
-        return new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts);
-    }
-
-    private Notary getTransactionNotary(String price) throws ServiceException {
-        Transaction trans = new Transaction();
-        trans.setAmount(price);
-        trans.setCategory("5"); // 5 = category application other 
-        trans.setDescription("SAMPLE APP");
-        trans.setTransactionId("mtid" + System.currentTimeMillis());
-        trans.setProductId("mpid" + System.currentTimeMillis());
-        trans.setPaymentRedirectUrl(cfg.getProperty("paymentRedirectURL"));
-
-        String endpoint = cfg.getFQDN() 
-            + "/Security/Notary/Rest/1/SignedPayload";
-        RESTConfig nCfg = this.getRESTConfig(endpoint);
-        NotaryService srvc = new NotaryService(nCfg, cfg.getClientId(), 
-                cfg.getClientSecret());
+        NotaryService srvc = new NotaryService(appConfig.getFQDN(), appConfig.getClientId(), 
+                appConfig.getClientSecret());
         return srvc.getTransactionNotary(trans);
     }
 
-    private Notary getSubscriptionNotary(String price) throws ServiceException {
-        Subscription sub = new Subscription();
-        sub.setAmount(price);
-        sub.setCategory("5"); // 5 = category application other 
-        sub.setDescription("SAMPLE APP");
-        sub.setTransactionId("mtid" + System.currentTimeMillis());
-        sub.setProductId("mpid" + System.currentTimeMillis());
-        sub.setPaymentRedirectUrl(cfg.getProperty("paymentRedirectURL"));
+    private Notary getSubscriptionNotary(double price) throws RESTException {
+        String transId = "J" + System.currentTimeMillis();
+        String mpid = "mpid" + System.currentTimeMillis();
+        String redirectUrl = appConfig.getProperty("paymentRedirectURL");
+        String merchSubIdList = "J" + (System.currentTimeMillis() % 100000000);
 
-        String endpoint = cfg.getFQDN() + "/Security/Notary/Rest/1/SignedPayload";
-        RESTConfig nCfg = this.getRESTConfig(endpoint);
-        NotaryService srvc = new NotaryService(nCfg, cfg.getClientId(), cfg.getClientSecret());
+        Subscription sub = new Subscription.Builder(price, AppCategory.APP_OTHER,
+                "Sample App", transId, mpid, redirectUrl, merchSubIdList).build();
+
+        NotaryService srvc = new NotaryService(appConfig.getFQDN(), appConfig.getClientId(), 
+                appConfig.getClientSecret());
         return srvc.getSubscriptionNotary(sub);
     }
 
-    private OAuthToken getToken() throws RESTException {
-        try {
-            final String path = "WEB-INF/token.properties";
-            final String tokenFile = getServletContext().getRealPath(path);
-
-            OAuthToken token = OAuthToken.loadToken(tokenFile);
-            if (token == null || token.isAccessTokenExpired()) {
-                final String endpoint = cfg.getFQDN() + OAuthService.API_URL;
-                final String clientId = cfg.getClientId();
-                final String clientSecret = cfg.getClientSecret();
-                final OAuthService service = new OAuthService(
-                        getRESTConfig(endpoint), clientId, clientSecret);
-
-                token = service.getToken(cfg.getProperty("scope"));
-                token.saveToken(tokenFile);
-            }
-
-            return token;
-        } catch (IOException ioe) {
-            throw new RESTException(ioe);
-        }
-    }
-
     private JSONObject getTransactionInfo(String type, String value)
-            throws RESTException, ServiceException {
+            throws RESTException {
 
-        OAuthToken token = this.getToken();
-        String subURL = "TransactionAuthCode";
+        //TODO: update this to enums
+        String transType = "TransactionAuthCode";
         if (type.equals("2")) {
-            subURL = "TransactionId";
+            transType = "TransactionId";
         } else if (type.equals("3")) {
-            subURL = "MerchantTransactionId";
+            transType = "MerchantTransactionId";
         }
 
-        String endpoint = cfg.getFQDN() + 
-            "/rest/3/Commerce/Payment/Transactions/" + subURL + "/" + value; 
-        PaymentService srvc = new PaymentService(this.getRESTConfig(endpoint),
-                token);
-        return srvc.getTransactionStatus();
+        PaymentService srvc = new PaymentService(appConfig.getFQDN(),
+                getFileToken());
+        return srvc.getTransactionStatus(transType, value);
     }
 
     private JSONObject getSubscriptionInfo(String type, String value)
-        throws RESTException, ServiceException {
+        throws RESTException {
 
-        OAuthToken token = this.getToken();
-        String subURL = "SubscriptionAuthCode";
+        String subType = "SubscriptionAuthCode";
         if (type.equals("2")) {
-            subURL = "SubscriptionId";
+            subType = "SubscriptionId";
         } else if (type.equals("3")) {
-            subURL = "MerchantTransactionId";
+            subType = "MerchantTransactionId";
         }
 
-        String endpoint = cfg.getFQDN() + 
-            "/rest/3/Commerce/Payment/Subscriptions/" + subURL + "/" + value; 
-        PaymentService srvc = new PaymentService(this.getRESTConfig(endpoint),
-                token);
-        return srvc.getTransactionStatus();
+        PaymentService srvc = new PaymentService(appConfig.getFQDN(),
+                getFileToken());
+        return srvc.getSubscriptionStatus(subType, value);
     }
 
     private void handleTransactionAuthCode(HttpServletRequest request) {
@@ -193,7 +154,7 @@ public class PaymentController extends HttpServlet {
                 return;
             }
             String authCode = (String) request.getParameter("SubscriptionAuthCode");
-            JSONObject info = this.getTransactionInfo("1", authCode);
+            JSONObject info = this.getSubscriptionInfo("1", authCode);
             subscriptionFile.addTransactionEntry(info, authCode);
             request.setAttribute("showSub", true);
             request.setAttribute("resultSubInfo", this.JSONToMap(info));
@@ -236,8 +197,8 @@ public class PaymentController extends HttpServlet {
                 String name = names[i];
                 if (request.getParameter(name) != null) {
                     String value = request.getParameter(name);
-                    JSONObject info = this.getTransactionInfo(types[i], value);
-            request.setAttribute("showSub", true);
+                    JSONObject info = this.getSubscriptionInfo(types[i], value);
+                    request.setAttribute("showSub", true);
                     request.setAttribute("resultSubInfo", this.JSONToMap(info));
                     return;
                 }
@@ -250,33 +211,26 @@ public class PaymentController extends HttpServlet {
 
     private void handleGetSubscriptionDetail(HttpServletRequest request) {
         try {
-            String cid = request.getParameter("getSDetailsConsumerId");
             String mid = request.getParameter("getSDetailsMSID");
-            List<SubscriptionEntry> subList = createSubscriptionEntries(subscriptionFile.getTransactionEntrys());
 
-            String merch = "";
-            String consumer = "";
-            //TODO: set merchid and consumerid
-            if (cid != null){
-                consumer = cid;
-                for (SubscriptionEntry sub : subList){
-                    if (sub.getConsumerId().equals(cid))
-                        merch = sub.getMerchantSubId();
-                }
-            }
-            else if (mid != null){
-                merch = mid;
-                for (SubscriptionEntry sub : subList){
-                    if (sub.getMerchantSubId().equals(mid))
-                        consumer = sub.getConsumerId();
-                }
-            }
-            else
+            if (mid == null)
                 return;
 
-            OAuthToken token = this.getToken();
-            String endpoint = cfg.getFQDN() + "/rest/3/Commerce/Payment/Subscriptions/" + merch + "/Detail/" + consumer; 
-            JSONObject info = new PaymentService(this.getRESTConfig(endpoint), token).getSubscriptionDetails();
+            List<SubscriptionEntry> subList = createSubscriptionEntries(subscriptionFile.getTransactionEntrys());
+
+            String merch = mid;
+            String consumer = "";
+
+            for (SubscriptionEntry sub : subList){
+                if (sub.getMerchantSubId().equals(mid))
+                    consumer = sub.getConsumerId();
+            }
+
+            OAuthToken token = this.getFileToken();
+
+            JSONObject info = new PaymentService(appConfig.getFQDN(), 
+                    token).getSubscriptionDetails(merch, consumer);
+
             request.setAttribute("showSub", true);
             request.setAttribute("resultSubDetail", this.JSONToMap(info));
         } catch (Exception e) {
@@ -295,17 +249,16 @@ public class PaymentController extends HttpServlet {
             }
 
             String prod = (String) request.getParameter("product");
-            String cost = cfg.getProperty("minTransactionAmount");
+            String cost = appConfig.getProperty("minTransactionAmount");
             if (prod.equals("2")) {
-                cost = cfg.getProperty("maxTransactionAmount");
+                cost = appConfig.getProperty("maxTransactionAmount");
             }
 
-            Notary notary = this.getTransactionNotary(cost);
+            Notary notary = this.getTransactionNotary(Double.valueOf(cost));
             request.getSession().setAttribute("notary", notary);
 
-            String FQDN = cfg.getFQDN();
-            String cid = cfg.getClientId();
-            String URL = PaymentService.getNewTransactionURL(FQDN, cid, notary);
+            String URL = PaymentService.getNewTransactionURL(
+                    appConfig.getFQDN(), appConfig.getClientId(), notary);
             response.sendRedirect(URL);
             // redirect required
             return true;
@@ -325,17 +278,16 @@ public class PaymentController extends HttpServlet {
             }
 
             String prod = (String) request.getParameter("product");
-            String cost = cfg.getProperty("minSubscriptionAmount");
+            String cost = appConfig.getProperty("minSubscriptionAmount");
             if (prod.equals("2")) {
-                cost = cfg.getProperty("maxSubscriptionAmount");
+                cost = appConfig.getProperty("maxSubscriptionAmount");
             }
 
-            Notary notary = this.getSubscriptionNotary(cost);
+            Notary notary = this.getSubscriptionNotary(Double.valueOf(cost));
             request.getSession().setAttribute("notary", notary);
 
-            String FQDN = cfg.getFQDN();
-            String cid = cfg.getClientId();
-            String URL = PaymentService.getNewSubscriptionURL(FQDN, cid, notary);
+            String URL = PaymentService.getNewSubscriptionURL(
+                    appConfig.getFQDN(), appConfig.getClientId(), notary);
             response.sendRedirect(URL);
             // redirect required
             return true;
@@ -351,12 +303,13 @@ public class PaymentController extends HttpServlet {
                 return;
             }
             String tid = (String) request.getParameter("refundTransactionId");
-            OAuthToken token = this.getToken();
-            String endpoint = cfg.getFQDN() + 
-                "/rest/3/Commerce/Payment/Transactions/" + tid; 
-            PaymentService srvc 
-                = new PaymentService(this.getRESTConfig(endpoint), token);
-            JSONObject info = srvc.refundTransaction("Sample App Test", 1);
+
+            PaymentService srvc = new PaymentService(appConfig.getFQDN(), 
+                    this.getFileToken());
+
+            JSONObject info = srvc.refundTransaction(tid, 
+                    "Sample App Test", 1);
+
             request.setAttribute("showTrans", true);
             request.setAttribute("resultTRefund", this.JSONToMap(info));
         } catch (Exception e) {
@@ -371,12 +324,12 @@ public class PaymentController extends HttpServlet {
                 return;
             }
             String sid = (String) request.getParameter("refundSubscriptionId");
-            OAuthToken token = this.getToken();
-            String endpoint = cfg.getFQDN() + 
-                "/rest/3/Commerce/Payment/Transactions/" + sid; 
-            PaymentService srvc 
-                = new PaymentService(this.getRESTConfig(endpoint), token);
-            JSONObject info = srvc.refundSubscription("Sample App Test", 1);
+
+            PaymentService srvc = new PaymentService(appConfig.getFQDN(), 
+                    getFileToken());
+
+            JSONObject info = srvc.refundSubscription(sid, "Sample App Test", 1);
+
             request.setAttribute("showSub", true);
             request.setAttribute("resultSRefund", this.JSONToMap(info));
         } catch (Exception e) {
@@ -391,12 +344,11 @@ public class PaymentController extends HttpServlet {
                 return;
             }
             String sid = (String) request.getParameter("cancelSubscriptionId");
-            OAuthToken token = this.getToken();
-            String endpoint = cfg.getFQDN() + 
-                "/rest/3/Commerce/Payment/Transactions/" + sid; 
-            PaymentService srvc 
-                = new PaymentService(this.getRESTConfig(endpoint), token);
-            JSONObject info = srvc.cancelSubscription("Sample App Test", 1);
+
+            PaymentService srvc = new PaymentService(appConfig.getFQDN(), 
+                    getFileToken());
+
+            JSONObject info = srvc.cancelSubscription(sid, "Sample App Test", 1);
             request.setAttribute("showSub", true);
             request.setAttribute("resultSCancel", this.JSONToMap(info));
         } catch (Exception e) {
@@ -418,12 +370,13 @@ public class PaymentController extends HttpServlet {
                 return;
             }
             String payload = (String) request.getParameter("payload");
-            String endpoint = cfg.getFQDN() 
-                + "/Security/Notary/Rest/1/SignedPayload";
-            NotaryService srvc = new NotaryService(this.getRESTConfig(endpoint)
-                    , cfg.getClientId(), cfg.getClientSecret());
+
+            NotaryService srvc = new NotaryService(appConfig.getFQDN(), 
+                    appConfig.getClientId(), appConfig.getClientSecret());
+
             Notary notary = srvc.getNotary(payload);
             request.setAttribute("showNotary", true);
+            request.setAttribute("notaryPayload", notary.getPayload().trim());
             request.setAttribute("resultNotaryDoc", notary.getSignedDocument());
             request.setAttribute("resultNotarySig", notary.getSignature());
         } catch (Exception e) {
@@ -432,28 +385,27 @@ public class PaymentController extends HttpServlet {
         }
     }
 
+    private void handleNotifications(HttpServletRequest request) {
+        NotificationPool pool = NotificationPool.getInstance();
+        request.setAttribute("notifications", pool.getNotifications());
+        if (request.getParameter("refreshNotifications") != null)
+            request.setAttribute("showNote", true);
+    }
+
     private void setFileResults(HttpServletRequest request) {
         this.createFileHandler();
         try {
-            request.setAttribute("transactions", createTransactionEntries(transactionFile.getTransactionEntrys()));
-            request.setAttribute("subscriptions", createSubscriptionEntries(subscriptionFile.getTransactionEntrys()));
+            request.setAttribute("transactions", createTransactionEntries(
+                        transactionFile.getTransactionEntrys()));
+
+            request.setAttribute("subscriptions", createSubscriptionEntries(
+                        subscriptionFile.getTransactionEntrys()));
         } catch (IOException e) {
             // don't handle, print stack trace
             e.printStackTrace();
         } catch (ParseException e){
             // don't handle, print stack trace
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void init() {
-        try {
-            cfg = AppConfig.getInstance();
-            this.createFileHandler();
-        } catch (IOException ioe) {
-            // don't handle, just print stack trace
-            ioe.printStackTrace();
         }
     }
 
@@ -464,6 +416,10 @@ public class PaymentController extends HttpServlet {
 
     public void doGet(HttpServletRequest request, HttpServletResponse 
             response) throws ServletException, IOException {
+
+        request.setAttribute("cfg", new ConfigBean());
+
+        this.handleNotifications(request);
 
         // handle transactions
         if (this.handleNewTransaction(request, response)) {
@@ -487,8 +443,6 @@ public class PaymentController extends HttpServlet {
         this.handleSubscriptionCancel(request);
 
         this.setFileResults(request);
-
-        request.setAttribute("cfg", new ConfigBean());
 
         // forward to view
         String forwardStr = "/WEB-INF/payment.jsp";

@@ -1,106 +1,144 @@
 package com.att.api.payment.service;
 
-import com.att.api.exception.ServiceException;
+import java.text.ParseException;
+
 import com.att.api.oauth.OAuthToken;
+import com.att.api.payment.model.Notary;
 import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
-import com.att.api.rest.RESTConfig;
+import com.att.api.rest.RESTException;
+import com.att.api.service.APIService;
+
 import org.json.JSONObject;
 
+public class PaymentService extends APIService {
+    private static final String TRANS_SUBURL = 
+        "/rest/3/Commerce/Payment/Transactions";
+    private static final String SUBSCRIPTION_SUBURL = 
+        "/rest/3/Commerce/Payment/Subscriptions";
+    public static final String NOTIFICATION_SUBURL = 
+        "/rest/3/Commerce/Payment/Notifications"; 
+    public static final String SIG_SUBURL = 
+        "/Security/Notary/Rest/1/SignedPayload";
 
-public class PaymentService {
-    private RESTConfig cfg;
-    private OAuthToken token;
-
-    private static String getURL(String FQDN, String cid, Notary notary, 
-            boolean isTrans) {
-        String type = isTrans ? "Transactions" : "Subscriptions";
-
+    private static String generateUrl(String FQDN, String cid, Notary notary, 
+            String type) {
         String URL = FQDN + "/rest/3/Commerce/Payment/" + type;
         String signedDoc = notary.getSignedDocument();
         String signature = notary.getSignature();
-        return URL + "?clientid=" + cid + "&SignedPaymentDetail=" + signedDoc + "&Signature=" + signature;
+        return URL + "?clientid=" + cid + "&SignedPaymentDetail=" + 
+            signedDoc + "&Signature=" + signature;
     }
 
-    private JSONObject getInfo() throws ServiceException {
-        try {
-            APIResponse response = 
-                new RESTClient(cfg)
-                .setHeader("Accept", "application/json")
-                .addAuthorizationHeader(this.token)
-                .httpGet();
+    private JSONObject getPaymentInfo(final String suburl) throws RESTException {
+        final String url = getFQDN() + suburl;
+        APIResponse response = 
+            new RESTClient(url)
+            .setHeader("Accept", "application/json")
+            .addAuthorizationHeader(getToken())
+            .httpGet();
 
+        try {
             return new JSONObject(response.getResponseBody());
-        } catch (Exception e) {
-            throw new ServiceException(e);
+        } catch (ParseException e) {
+            throw new RESTException(e);
         }
     }
 
     private JSONObject sendTransOptStatus(String rReasonTxt, int rReasonCode, 
-            String transOptStatus) throws ServiceException {
+            String transOptStatus, String suburl) throws RESTException {
+        JSONObject req = new JSONObject();
+        req.put("TransactionOperationStatus", transOptStatus);
+        req.put("RefundReasonCode", rReasonCode);
+        req.put("RefundReasonText", rReasonTxt);
+
+        String url = getFQDN() + suburl;
+        APIResponse response = 
+            new RESTClient(url)
+            .setHeader("Accept", "application/json")
+            .setHeader("Content-Type", "application/json")
+            .addAuthorizationHeader(getToken())
+            .httpPut(req.toString());
 
         try {
-            JSONObject req = new JSONObject();
-            req.put("TransactionOperationStatus", transOptStatus);
-            req.put("RefundReasonCode", rReasonCode);
-            req.put("RefundReasonText", rReasonTxt);
-
-            APIResponse response = 
-                new RESTClient(this.cfg)
-                .setHeader("Accept", "application/json")
-                .setHeader("Content-Type", "application/json")
-                .addAuthorizationHeader(this.token)
-                .httpPut(req.toString());
-
             return new JSONObject(response.getResponseBody());
-        } catch (Exception e) {
-            throw new ServiceException(e);
+        } catch (ParseException e) {
+            throw new RESTException(e);
         }
     } 
         
-    public PaymentService(RESTConfig cfg, OAuthToken token) {
-        this.cfg = cfg;
-        this.token = token;
+    public PaymentService(String fqdn, OAuthToken token) {
+        super(fqdn, token);
     }
 
-    public JSONObject getTransactionStatus() throws ServiceException {
-        return this.getInfo();
+    public JSONObject getTransactionStatus(String type, String id) throws RESTException {
+        String surl = TRANS_SUBURL + "/" + type + "/" + id;
+        return this.getPaymentInfo(surl);
     }
 
-    public JSONObject getSubscriptionStatus() throws ServiceException {
-        return this.getInfo();
+    public JSONObject getSubscriptionStatus(String type, String id) throws RESTException {
+        String surl = SUBSCRIPTION_SUBURL + "/" + type + "/" + id;
+        return this.getPaymentInfo(surl);
     }
 
-    public JSONObject getSubscriptionDetails() throws ServiceException {
-        return this.getInfo();
+    public JSONObject getSubscriptionDetails(String merchId, 
+            String consumerId) throws RESTException {
+        String surl = SUBSCRIPTION_SUBURL + "/" + merchId + "/Detail/" + consumerId;
+        return this.getPaymentInfo(surl);
     }
 
-    public JSONObject cancelSubscription(String reasonTxt, int reasonCode)
-            throws ServiceException {
-
-        String type = "SubscriptionCancelled";
-        return this.sendTransOptStatus(reasonTxt, reasonCode, type);
+    public JSONObject getNotification(String id) throws RESTException {
+        String surl = NOTIFICATION_SUBURL + "/" + id;
+        return this.getPaymentInfo(surl);
     }
 
-    public JSONObject refundSubscription(String reasonTxt, int reasonCode)
-            throws ServiceException {
+    public JSONObject deleteNotification(String id) throws RESTException {
+        final String url = getFQDN() + PaymentService.NOTIFICATION_SUBURL + 
+            "/" + id;
+        APIResponse response = 
+            new RESTClient(url)
+            .setHeader("Accept", "application/json")
+            .addAuthorizationHeader(getToken())
+            .httpPut("");
 
-        return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded");
+        try {
+            return new JSONObject(response.getResponseBody());
+        } catch (ParseException e) {
+            throw new RESTException(e);
+        }
     }
 
-    public JSONObject refundTransaction(String reasonTxt, int reasonCode)
-            throws ServiceException {
-
-        return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded");
+    public JSONObject cancelSubscription(String subId, String reasonTxt, 
+            int reasonCode) throws RESTException {
+        String surl = TRANS_SUBURL + "/" + subId;
+        return this.sendTransOptStatus(reasonTxt, reasonCode, 
+                "SubscriptionCancelled", surl);
     }
+
+    public JSONObject refundSubscription(String subId, String reasonTxt, 
+            int reasonCode) throws RESTException {
+        String surl = TRANS_SUBURL + "/" + subId;
+        return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded", surl);
+    }
+
+    public JSONObject refundTransaction(String transId, String reasonTxt, 
+            int reasonCode) throws RESTException {
+        String surl = TRANS_SUBURL + "/" + transId;
+
+        return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded", surl);
+    }
+
 
     public static String getNewTransactionURL(String FQDN, String clientId,
             Notary notary) {
-        return PaymentService.getURL(FQDN, clientId, notary, true);
+        return PaymentService.generateUrl(FQDN, clientId, notary, 
+                "Transactions");
     }
         
     public static String getNewSubscriptionURL(String FQDN, String clientId,
             Notary notary) {
-        return PaymentService.getURL(FQDN, clientId, notary, false);
+        return PaymentService.generateUrl(FQDN, clientId, notary, 
+                "Subscriptions");
     }
+
 }

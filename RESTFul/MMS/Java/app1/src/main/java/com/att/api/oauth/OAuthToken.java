@@ -1,14 +1,16 @@
-/*                                                                             
- * ==================================================================== 
- * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools          
- * Agreement.' 2013.                                                            
- * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:               
- * http://developer.att.com/sdk_agreement/                                      
- *                                                                              
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.              
- * For more information contact developer.support@att.com                       
- * ==================================================================== 
- */  
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+
+/*
+ * ====================================================================
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2013.
+ * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
+ * http://developer.att.com/sdk_agreement/
+ *
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * For more information contact developer.support@att.com
+ * ====================================================================
+ */
 
 package com.att.api.oauth;
 
@@ -21,11 +23,14 @@ import java.util.HashMap;
 import java.util.Properties;
 
 /**
- * An immutable OAuthToken object that encapsulates an OAuth 2.0 token, which 
- * can be used for accessing protected resources. This class also offers 
- * convenience methods for checking whether the token is expired, and 
- * saving/loading token from file in an asynchronous-safe manner.
+ * An immutable OAuthToken object that encapsulates an OAuth 2.0 token, which
+ * can be used for accessing protected resources.
+ *
  * <p>
+ * This class also offers convenience methods for checking whether the token is
+ * expired, and saving/loading token from file in an asynchronous-safe manner.
+ * </p>
+ *
  * An example of usage can be found below:
  * <pre>
  * // declare variables
@@ -43,56 +48,96 @@ import java.util.Properties;
  * token.saveToken("/tmp/token.properties");
  *
  * // load token
- * token = OAuthToken.loadToken("/tmp/token.properties"); 
+ * token = OAuthToken.loadToken("/tmp/token.properties");
  *
  * </pre>
  *
- * @version 2.2
+ * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
+ * @version 3.0
  * @since 2.2
- * @see https://tools.ietf.org/html/rfc6749
+ * @see <a href="https://tools.ietf.org/html/rfc6749">OAuth 2.0 Framework</a>
  */
 public class OAuthToken {
-    // Allow synchronization
-    private final static Object lockObj = new Object();
 
-    // instead of reading from file, cache to speed up loading time
+    /** Static synchronization object. */
+    private final static Object LOCK_OBJECT = new Object();
+
+    /** Cache tokens loaded from file to speed up load times. */
     private static HashMap<String, OAuthToken> cachedTokens = null;
 
+    /** Access token. */
     private final String accessToken;
+
+    /** Unix timestamp, in seconds, to denote access token expiry. */
     private final long accessTokenExpiry;
+
+    /** Refresh token. */
     private final String refreshToken;
 
-    // indicates this access token does not expire
-    public static long NO_EXPIRATION = -1;
+    /** Whether to cache OAuth tokens, thereby saving file IO. */
+    private static volatile boolean useCaching = true;
+
+    /** Used to indicate access token does not expire. */
+    public static final long NO_EXPIRATION = -1;
 
     /**
-     * Creates an OAuthToken object with the specified access token, access
-     * token expiry, and refresh token.
+     * Gets the current time as a Unix timestamp.
+     *
+     * @return seconds since Unix epoch
+     */
+    private static long xtimestamp() {
+        return System.currentTimeMillis() / 1000;
+    }
+
+    /**
+     * Creates an OAuthToken object with the specified parameters.
+     *
+     * <p>
+     * <strong>NOTE:</strong> To make an access token never expire, set the
+     * <code>expiresIn</code> parameter to <code>OAuthToken.NO_EXPIRATION</code>
+     * </p>
      *
      * @param accessToken access token
-     * @param accessTokenExpiry access token expiry
+     * @param expiresIn time in seconds token expires since
+     *                  <code>creationTime</code>
      * @param refreshToken refresh token
+     * @param creationTime access token creation time as a Unix timestamp
      */
-    public OAuthToken(final String accessToken, final long accessTokenExpiry,
-            final String refreshToken) {
+    public OAuthToken(String accessToken, long expiresIn, String refreshToken,
+            long creationTime) {
+
+        if (expiresIn == OAuthToken.NO_EXPIRATION) {
+            this.accessTokenExpiry = OAuthToken.NO_EXPIRATION;
+        } else {
+            this.accessTokenExpiry = expiresIn + creationTime;
+        }
 
         this.accessToken = accessToken;
-        this.accessTokenExpiry = accessTokenExpiry;
         this.refreshToken = refreshToken;
+    }
+
+    /**
+     * Creates an OAuthToken object with the <code>creationTime</code> set to
+     * the current time.
+     *
+     * @param accessToken access token
+     * @param expiresIn time in seconds token expires from current time
+     * @param refreshToken refresh token
+     * @see #OAuthToken(String, long, String, long)
+     */
+    public OAuthToken(String accessToken, long expiresIn, String refreshToken) {
+        this(accessToken, expiresIn, refreshToken, xtimestamp());
     }
 
     /**
      * Gets whether the access token is expired.
      *
-     * @return true if access token is expired, false otherwise
+     * @return <tt>true</tt> if access token is expired, <tt>false</tt>
+     *         otherwise
      */
     public boolean isAccessTokenExpired() {
-        if (this.accessTokenExpiry == NO_EXPIRATION) {
-            return false;
-        }
-
-        long currentTime = System.currentTimeMillis();
-        return currentTime >= accessTokenExpiry;
+        return accessTokenExpiry != NO_EXPIRATION
+            && xtimestamp() >= accessTokenExpiry;
     }
 
     /**
@@ -114,7 +159,7 @@ public class OAuthToken {
     }
 
     /**
-     * Saves this token to a file in an asynchronous-safe manner. 
+     * Saves this token to a file in an asynchronous-safe manner.
      *
      * @param fpath file path
      * @throws IOException if unable to save token
@@ -124,11 +169,11 @@ public class OAuthToken {
         FileLock fLock = null;
 
         // save to cached tokens
-        synchronized (lockObj) {
+        synchronized (LOCK_OBJECT) {
+            // lazy init
             if (cachedTokens == null) {
                 cachedTokens = new HashMap<String, OAuthToken>();
             }
-
             OAuthToken.cachedTokens.put(fpath, this);
         }
 
@@ -143,36 +188,38 @@ public class OAuthToken {
         } catch (IOException e) {
             throw e; // pass along exception
         } finally {
-            // will be called before return/throw
-            // attempt to clean up
-            if (fLock != null) fLock.release();
-            if (fOutputStream != null) fOutputStream.close();
+            if (fLock != null) { fLock.release(); }
+            if (fOutputStream != null) { fOutputStream.close(); }
         }
     }
 
     /**
-     * Attempts to loads an OAuthToken from a file in an asynchronous-safe 
-     * manner. If specified file path is not found or access token can not be 
-     * loaded, null is returned.
-     * <p>
-     * WARNING: Because caching is used, manually modifying the saved token
-     * properties file may yield unexpected results. Therefore, only the
-     * token's saveToken() method should be used for modifying the file.
+     * Attempts to load an OAuthToken from a file in an asynchronous-safe
+     * manner.
      *
-     * @return OAuthToken an OAuthToken object if successful, null otherwise 
+     * <p>
+     * If <code>fpath</code> does not exist, null is returned.
+     * </p>
+     *
+     * <p>
+     * <strong>WARNING</strong>: Because caching may be used, manually modifying
+     * the saved token properties file may yield unexpected results unless
+     * caching is disabled.
+     * </p>
+     *
+     * @param fpath file path from which to load token
+     * @return OAuthToken an OAuthToken object if successful, null otherwise
      * @throws IOException if there was an error loading the token
+     * @see #useTokenCaching(boolean)
      */
     public static OAuthToken loadToken(String fpath) throws IOException {
         FileInputStream fInputStream = null;
         FileLock fLock = null;
 
         // attempt to load from cached tokens, thereby saving file I/O
-        synchronized (lockObj) {
-            OAuthToken cachedToken;
-            if (cachedTokens != null
-                    && (cachedToken = cachedTokens.get(fpath)) != null) {
-
-                return cachedToken;
+        synchronized (LOCK_OBJECT) {
+            if (cachedTokens != null && cachedTokens.get(fpath) != null) {
+                return cachedTokens.get(fpath);
             }
         }
 
@@ -187,7 +234,7 @@ public class OAuthToken {
             Properties props = new Properties();
             props.load(fInputStream);
             String accessToken = props.getProperty("accessToken");
-            if (accessToken == null || accessToken == "") {
+            if (accessToken == null || accessToken.equals("")) {
                 return null;
             }
             String sExpiry = props.getProperty("accessTokenExpiry", "0");
@@ -197,10 +244,18 @@ public class OAuthToken {
         } catch (IOException e) {
             throw e; // pass along exception
         } finally {
-            // will be called before return/throw
-            // attempt to clean up
-            if (fLock != null) fLock.release();
-            if (fInputStream != null) fInputStream.close();
+            if (fLock != null) { fLock.release(); }
+            if (fInputStream != null) { fInputStream.close(); }
         }
+    }
+
+    /**
+     * Not yet implemented.
+     *
+     * @param useCaching not yet implemented
+     */
+    public static void useTokenCaching(boolean useCaching) {
+        // TODO (pk9069): Implement
+        throw new UnsupportedOperationException();
     }
 }

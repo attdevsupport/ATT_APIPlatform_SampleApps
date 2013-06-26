@@ -160,7 +160,6 @@ public class SpeechController extends HttpServlet {
     }
 
     private String readContent(String contentFile){
-
         StringBuilder content = new StringBuilder("");
         String path = getPath()+ "/" + contentFile;
         BufferedReader brdr;

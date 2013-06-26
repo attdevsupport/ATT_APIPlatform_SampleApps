@@ -235,6 +235,16 @@ public partial class Speech_App1 : System.Web.UI.Page
                 if (speechContexts.Length > 0)
                     SpeechContext.Items[0].Selected = true;
             }
+            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["NameParameters"]))
+            {
+                string[] nameParameters = ConfigurationManager.AppSettings["NameParameters"].ToString().Split(';');
+                foreach (string nameParameter in nameParameters)
+                {
+                    nameParam.Items.Add(nameParameter);
+                }
+                if (nameParameters.Length > 0)
+                    nameParam.Items[0].Selected = true;
+            }
             if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["X-ArgGeneric"]))
             {
                 x_arg.Text = ConfigurationManager.AppSettings["X-ArgGeneric"];
@@ -643,22 +653,31 @@ public partial class Speech_App1 : System.Web.UI.Page
                 {
                     httpRequest.Headers.Add("X-Arg", parXArgs);
                 }
+                string filenameArgument = "filename";
+                if (!string.IsNullOrEmpty(SpeechContext.SelectedValue))
+                {
+                    if (string.Compare("GenericHints", SpeechContext.SelectedValue) == 0)
+                    {
+                        filenameArgument = nameParam.SelectedValue.ToString();
+                    }
+                }
 
                 string contentType = this.MapContentTypeFromExtension(Path.GetExtension(parSpeechFilePath));
 
                 string data = string.Empty;
 
-                data += "--" +boundary + "\r\n" + "Content-Disposition: form-data; name=\"x-dictionary\"; filename=\"speech_alpha.pls\"\r\nContent-Type: application/pls+xml\r\n";
+
+                data += "--" +boundary + "\r\n" + "Content-Disposition: form-data; name=\"x-dictionary\"; " + filenameArgument + "=\"speech_alpha.pls\"\r\nContent-Type: application/pls+xml\r\n";
 
                 data += "\r\n" + xdictionaryContent + "\r\n\r\n\r\n";
 
-                data += "--" + boundary + "\r\n" + "Content-Disposition: form-data; name=\"x-grammar\"; ";
+                data += "--" + boundary + "\r\n" + "Content-Disposition: form-data; name=\"x-grammar\"";
 
-                data += "filename=\"prefix.srgs\" ";
+                //data += "filename=\"prefix.srgs\" ";
 
                 data += "\r\nContent-Type: application/srgs+xml \r\n" + "\r\n" + xgrammerContent + "\r\n\r\n\r\n" + "--" + boundary + "\r\n";
 
-                data += "Content-Disposition: form-data; name=\"x-voice\"; filename=\"" + audio_file.SelectedValue + "\"";
+                data += "Content-Disposition: form-data; name=\"x-voice\"; " + filenameArgument + "=\"" + audio_file.SelectedValue + "\"";
                 data += "\r\nContent-Type: " + contentType + "\r\n\r\n";
                 UTF8Encoding encoding = new UTF8Encoding();
                 byte[] firstPart = encoding.GetBytes(data);

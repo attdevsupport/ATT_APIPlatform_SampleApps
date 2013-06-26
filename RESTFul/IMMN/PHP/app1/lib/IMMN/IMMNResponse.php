@@ -2,7 +2,7 @@
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
 
 /**
- * IMMN API Library
+ * IMMN Library
  * 
  * PHP version 5.4+
  * 
@@ -14,46 +14,141 @@
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
- * @category IMMNAPI 
- * @package IMMN 
- * @copyright AT&T Intellectual Property
- * @license http://developer.att.com/sdk_agreement/
+ * @category  API
+ * @package   IMMN 
+ * @author    Pavel Kazakov <pk9069@att.com>
+ * @copyright 2013 AT&T Intellectual Property
+ * @license   http://developer.att.com/sdk_agreement AT&amp;T License
+ * @link      http://developer.att.com
  */
 
 /**
- * Holds a single message header.
- * 
- * @package IMMN
+ * Used to hold the IMMNHeader response of version 1 of the In-app Messaging 
+ * from Mobile Number (IMMN) API.
+ *
+ * @category API
+ * @package  IMMN
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@ 
+ * @link     https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number
  */
-class IMMNHeader {
+class IMMNHeader
+{
+    /**
+     * Message id.
+     *
+     * @var string
+     */
     private $_messageId;
+
+    /**
+     * Origin of message.
+     *
+     * @var string
+     */
     private $_from;
+
+    /**
+     * Destination of message.
+     *
+     * @var string
+     */
     private $_to;
+
+    /**
+     * Subject of message.
+     *
+     * @var string
+     */
     private $_subject;
+
+    /**
+     * Text of message.
+     *
+     * @var string
+     */
     private $_text;
+
+    /**
+     * MMS Content of message.
+     *
+     * @var string
+     */
     private $_mmsContent;
+
+    /**
+     * Message id.
+     *
+     * @var string
+     */
     private $_received;
+
+    /**
+     * If message is favorited.
+     *
+     * @var string
+     */
     private $_favorite;
+
+    /**
+     * If message is read.
+     *
+     * @var string
+     */
     private $_read;
+
+    /**
+     * Type of message.
+     *
+     * @var string
+     */
     private $_type;
+
+    /**
+     * Direction of message.
+     *
+     * @var string
+     */
     private $_direction;
+
+    /**
+     * Content name of message.
+     *
+     * @var string
+     */
     private $_contentName;
+
+    /**
+     * Content type of message.
+     *
+     * @var string
+     */
     private $_contentType;
+
+    /**
+     * Part number of message.
+     *
+     * @var string
+     */
     private $_partNumber;
 
     /**
      * Creates an IMMNHeader object.
      *
-     * @param $arr array an array of strings from which this object will be
-     * created.
+     * @param array $arr an array of strings from which this object will be
+     *                   created.
      */
-    public function __construct($arr) {
+    public function __construct($arr) 
+    {
+        // TODO: Move to explicit variable names
+
         $vals = array('MessageId', 'From', 'To', 'Subject', 'Text',
                 'MmsContent', 'Received', 'Favorite', 'Read', 'Type', 'Direction',
                 'ContentName', 'ContentType', 'PartNumber');
         foreach ($vals as $val) {
             if (!isset($arr[$val])) {
-                $arr[$val] = NULL;
+                $arr[$val] = null;
             }
         }
 
@@ -75,7 +170,8 @@ class IMMNHeader {
      *
      * @return string message header id
      */
-    public function getMessageId() {
+    public function getMessageId()
+    {
         return $this->_messageId;
     }
 
@@ -84,7 +180,8 @@ class IMMNHeader {
      *
      * @return string from 
      */
-    public function getFrom() {
+    public function getFrom() 
+    {
         return $this->_from;
     }
 
@@ -93,7 +190,8 @@ class IMMNHeader {
      *
      * @return string to 
      */
-    public function getTo() {
+    public function getTo() 
+    {
         return $this->_to;
     }
 
@@ -102,7 +200,8 @@ class IMMNHeader {
      *
      * @return string subject of this message header 
      */
-    public function getSubject() {
+    public function getSubject()
+    {
         return $this->_subject;
     }
 
@@ -111,7 +210,8 @@ class IMMNHeader {
      *
      * @return string text body
      */
-    public function getText() {
+    public function getText()
+    {
         return $this->_text;
     }
 
@@ -120,7 +220,8 @@ class IMMNHeader {
      *
      * @return string MMS content
      */
-    public function getMmsContent() {
+    public function getMmsContent()
+    {
         return $this->_mmsContent;
     }
 
@@ -129,7 +230,8 @@ class IMMNHeader {
      * 
      * @return string whether message header was received
      */
-    public function getReceived() {
+    public function getReceived()
+    {
         return $this->_received;
     }
 
@@ -138,7 +240,8 @@ class IMMNHeader {
      * 
      * @return string whether message header is a favorite message header. 
      */
-    public function getFavorite() {
+    public function getFavorite()
+    {
         return $this->_favorite;
     }
 
@@ -147,7 +250,8 @@ class IMMNHeader {
      * 
      * @return string whether message header was read. 
      */
-    public function getRead() {
+    public function getRead()
+    {
         return $this->_read;
     }
 
@@ -156,7 +260,8 @@ class IMMNHeader {
      * 
      * @return string message header's type. 
      */
-    public function getType() {
+    public function getType()
+    {
         return $this->_type;
     }
 
@@ -165,7 +270,8 @@ class IMMNHeader {
      * 
      * @return string message header's direction. 
      */
-    public function getDirection() {
+    public function getDirection()
+    {
         return $this->_direction;
     }
 
@@ -173,33 +279,54 @@ class IMMNHeader {
      * Convenience method that builds a IMMNHeader object from the specified
      * JSON string.
      *
-     * @param $jsonStr string JSON string
+     * @param string $jsonStr JSON string
+     * 
      * @return IMMNHeader IMMNHeader object built using the specified JSON 
-     * string
+     *                    string
      */
-    public static function buildFromJSON($jsonStr) {
+    public static function buildFromJSON($jsonStr)
+    {
         $arr = json_decode($jsonStr, true);
         return new IMMNHeader($arr); 
     }
 }
 
 /**
- * Holds a single message body.
- * 
- * @package IMMN
+ * Used to hold a IMMNBody response of version 1 of the In-app Messaging 
+ * from Mobile Number (IMMN) API.
+ *
+ * @category API
+ * @package  IMMN
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@ 
+ * @link     https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number
  */
-class IMMNBody {
+class IMMNBody
+{
+    /**
+     * Message body content type.
+     *
+     * @var string
+     */
     private $_contentType;
+
+    /**
+     * Message body.
+     * 
+     * @var string
+     */
     private $_data;
 
     /**
      * Creates an IMMBody object with the specified content type and content
      * data.
      *
-     * @param $contentType string content type
-     * @param $data string content data
+     * @param string $contentType content type
+     * @param string $data        content data
      */
-    public function __construct($contentType, $data) {
+    public function __construct($contentType, $data)
+    {
         $this->_contentType = $contentType; 
         $this->_data = $data;
     }
@@ -209,7 +336,8 @@ class IMMNBody {
      *
      * @return string content type
      */
-    public function getContentType() {
+    public function getContentType()
+    {
         return $this->_contentType;
     }
 
@@ -218,30 +346,56 @@ class IMMNBody {
      *
      * @return string content data
      */
-    public function getData() {
+    public function getData() 
+    {
         return $this->_data;
     }
 }
 
 /**
- * Holds IMMN response variables returned by AT&T's IMMN API.
+ * Imuttable class used to hold a IMMNBody response of version 1 of the In-app 
+ * Messaging from Mobile Number (IMMN) API.
  *
- * @package IMMN
+ * @category API
+ * @package  IMMN
+ * @author   Pavel Kazakov <pk9069@att.com>
+ * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@ 
+ * @link     https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number
  */
-class IMMNResponse {
+class IMMNResponse
+{
+    /**
+     * Array of IMMN headers.
+     *
+     * @var array
+     */
     private $_headers;
+
+    /** 
+     * Index cursor used to sent request.
+     *
+     * @var string
+     */
     private $_indexCursor;
+
+    /**
+     * Number of IMMN headers contained in this IMMN Response object.
+     *
+     * @var int
+     */
     private $_headerCount;
 
     /**
-     * Creates an IMMNResponse object with the specified headers, indexCursor, 
-     * and headerCount.
+     * Creates an IMMNResponse object with the specified headers, index cursor, 
+     * and header count.
      *
-     * @param $headers array an array of IMMNHeader objects
-     * @param $indexCursor string index cursor
-     * @param $headerCount int header count
+     * @param array  $headers     array of IMMNHeader objects
+     * @param string $indexCursor index cursor
+     * @param int    $headerCount header count
      */
-    public function __construct($headers, $indexCursor, $headerCount) {
+    public function __construct($headers, $indexCursor, $headerCount) 
+    {
         $this->_headers = $headers;
         $this->_indexCursor = $indexCursor;
         $this->_headerCount = $headerCount;
@@ -252,7 +406,8 @@ class IMMNResponse {
      * 
      * @return array an array of IMMNHeader objects
      */
-    public function getHeaders() {
+    public function getHeaders() 
+    {
         return $this->_headers;
     }
 
@@ -261,7 +416,8 @@ class IMMNResponse {
      *
      * @return string index cursor
      */
-    public function getIndexCursor() { 
+    public function getIndexCursor() 
+    { 
         return $this->_indexCursor;
     }
 
@@ -270,7 +426,8 @@ class IMMNResponse {
      *
      * @return int header count 
      */
-    public function getHeaderCount() {
+    public function getHeaderCount() 
+    {
         return $this->_headerCount;
     }
 
@@ -278,10 +435,12 @@ class IMMNResponse {
      * Convenience method that can be used to build an IMMNResponse object from
      * a JSON string.
      *
-     * @param $jsonStr string JSON string 
+     * @param string $jsonStr JSON string 
+     *
      * @return IMMNResponse IMMNResponse object built from JSON string
      */
-    public static function buildFromJSON($jsonStr) {
+    public static function buildFromJSON($jsonStr) 
+    {
         $jsonObj = json_decode($jsonStr);
         $headersList = $jsonObj->MessageHeadersList;
         $indexCursor = $headersList->IndexCursor;

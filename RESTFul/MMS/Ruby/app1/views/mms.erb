@@ -97,7 +97,7 @@ For more information contact developer.support@att.com
                     <select name="attachment" id="attachment">
                       <% if @attachments %>
                         <% @attachments.each do |file| %>
-                          <option <%= "selected" if file == session[:selected] %>><%= file %></option>
+                          <option <%= "selected" if file == session[:selected_file] %>><%= file %></option>
                         <% end %>
                       <% end %>
                     </select>

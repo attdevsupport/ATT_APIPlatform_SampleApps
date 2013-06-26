@@ -1,10 +1,13 @@
 <?php
 session_start();
 require __DIR__ . '/config.php';
-require_once __DIR__ . '/src/Sample/TLService.php';
+require_once __DIR__ . '/src/Controller/TLController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
-$service = new TLService();
-$tLocation= $service->getTerminalLocation();
+
+$controller = new TLController();
+$controller->handleRequest();
+$results = $controller->getResults();
+$errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
 <!-- 
@@ -115,7 +118,8 @@ For more information contact developer.support@att.com
               </div> <!-- end of Device Location -->
             </form>
 
-            <?php if ($tLocation != null) { 
+            <?php if (isset($results[TLController::RESULT_LOCATION])) { 
+              $tLocation = $results[TLController::RESULT_LOCATION];
               $latitude = $tLocation['latitude']; 
               $longitude= $tLocation['longitude']; 
               $accuracy = $tLocation['accuracy']; 
@@ -135,11 +139,11 @@ For more information contact developer.support@att.com
                 <iframe width="600" height="400" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
                   src="http://maps.google.com/?q=<?php echo $latitude . '+' . $longitude . '&output=embed'; ?>"></iframe>
               </div>
-            <?php } else if ($service->getError() != null) { ?>
+            <?php } else if (isset($errors[TLController::ERROR_LOCATION])) { ?>
               <div class="errorWide">
                 <strong>ERROR:</strong>
                 <br />
-                <?php echo htmlspecialchars($service->getError()); ?>
+                <?php echo htmlspecialchars($errors[TLController::ERROR_LOCATION]); ?>
               </div>
             <?php } ?>
           <!-- SAMPLE APP CONTENT ENDS HERE! -->

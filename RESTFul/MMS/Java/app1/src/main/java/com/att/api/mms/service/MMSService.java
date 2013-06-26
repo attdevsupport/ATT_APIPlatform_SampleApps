@@ -1,3 +1,16 @@
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+
+/*
+ * ====================================================================
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2013.
+ * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
+ * http://developer.att.com/sdk_agreement/
+ *
+ * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * For more information contact developer.support@att.com
+ * ====================================================================
+ */
 package com.att.api.mms.service;
 
 import java.text.ParseException;
@@ -5,53 +18,57 @@ import java.text.ParseException;
 import com.att.api.oauth.OAuthToken;
 import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
-import com.att.api.rest.RESTConfig;
 import com.att.api.rest.RESTException;
+import com.att.api.service.APIService;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class MMSService {
-    private final OAuthToken token;
-    private final RESTConfig cfg;
+/**
+ * Used to interact with version 3 of the MMS API.
+ *
+ * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
+ * @version 3.0
+ * @since 2.2
+ * @see <a href="https://developer.att.com/docs/apis/rest/3/MMS">MMS Documentation</a>
+ */
+public class MMSService extends APIService {
 
-    private String formatAddr(String address) {
-        if ((address.indexOf("-") == 3) && (address.length() == 12))
-            return "tel:" + address.substring(0, 3) + address.substring(4, 7)
-                + address.substring(8, 12);
-        else if ((address.indexOf(":") == 3) && (address.length() == 14))
-            return address;
-        else if ((address.indexOf("-") == -1) && (address.length() == 10))
-            return "tel:" + address;
-        else if ((address.indexOf("-") == -1) && (address.length() == 11))
-            return "tel:" + address.substring(1);
-        else if ((address.indexOf("-") == -1) && (address.indexOf("+") == 0)
-                && (address.length() == 12))
-            return "tel:" + address.substring(2);
-        else
-            return "";
+    /**
+     * Creates an MMSService object.
+     *
+     * @param fqdn fully qualified domain name to use for sending requests
+     * @param token OAuth token to use for authorization
+     */
+    public MMSService(String fqdn, OAuthToken token) {
+        super(fqdn, token);
     }
 
-    public MMSService(final RESTConfig cfg, final OAuthToken token) { 
-        this.token = token;
-        this.cfg = cfg;
-    }
-
-    public JSONObject sendMMS(String rawAddr, String[] fnames, String subject, 
+    /**
+     * Sends request to the API for sending an MMS using the specified
+     * parameters.
+     *
+     * @param rawAddrs addresses to use for sending mms
+     * @param fnames path of attachments
+     * @param subject subject
+     * @param priority priority
+     * @param notifyDelStatus whether to notify of delivery status
+     * @return API response
+     * @throws RESTException if API request was not successful
+     */
+    public JSONObject sendMMS(String rawAddrs, String[] fnames, String subject,
             String priority, boolean notifyDelStatus) throws RESTException {
-        JSONObject jvars = new JSONObject();
+        // TODO (pk9069): avoid returning a JSONObject and move to explicit
+        // model
         JSONObject outboundRequest = new JSONObject();
-        String[] addrs = rawAddr.split(","); 
+        String[] addrs = APIService.formatAddresses(rawAddrs);
         JSONArray jaddrs = new JSONArray();
         for (String addr : addrs) {
-            jaddrs.put(formatAddr(addr));
+            jaddrs.put(addr);
         }
 
-        if (addrs.length == 1) {
-            outboundRequest.put("address", formatAddr(addrs[0]));
-        } else {
-            outboundRequest.put("address", jaddrs);
-        }
+        Object addrStr = addrs.length == 1 ? addrs[0] : jaddrs;
+        outboundRequest.put("address", addrStr);
 
         if (subject != null) {
             outboundRequest.put("subject", subject);
@@ -61,14 +78,15 @@ public class MMSService {
         }
         outboundRequest.put("notifyDeliveryStatus", notifyDelStatus);
 
+        JSONObject jvars = new JSONObject();
         jvars.put("outboundMessageRequest", outboundRequest);
-        
         try {
-            APIResponse response = 
-                new RESTClient(cfg)
+            final String endpoint = getFQDN() + "/mms/v3/messaging/outbox";
+            APIResponse response =
+                new RESTClient(endpoint)
                 .setHeader("Content-Type", "application/json")
                 .setHeader("Accept", "application/json")
-                .addAuthorizationHeader(this.token)
+                .addAuthorizationHeader(getToken())
                 .httpPost(jvars, fnames);
 
             return new JSONObject(response.getResponseBody());
@@ -77,12 +95,22 @@ public class MMSService {
         }
     }
 
-    public JSONObject getMMSStatus() throws RESTException {
+    /**
+     * Sends a request to the API for getting MMS status.
+     *
+     * @param mmsId MMS id to get status for
+     * @return API response
+     * @throws RESTException if API request was not successful
+     */
+    public JSONObject getMMSStatus(String mmsId) throws RESTException {
+        // TODO (pk9069): avoid returning a JSONObject and move to explicit
+        // model
         try {
-            APIResponse response = 
-                new RESTClient(cfg)
+            String endpoint = getFQDN() + "/mms/v3/messaging/outbox/" + mmsId;
+            APIResponse response =
+                new RESTClient(endpoint)
                 .setHeader("Accept", "application/json")
-                .addAuthorizationHeader(this.token)
+                .addAuthorizationHeader(getToken())
                 .httpGet();
             return new JSONObject(response.getResponseBody());
         } catch (ParseException e) {
