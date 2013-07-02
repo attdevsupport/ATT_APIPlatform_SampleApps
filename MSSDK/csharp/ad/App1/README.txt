@@ -90,6 +90,8 @@ web.config as specified below:
 5) udid			: The UDID Parameter is used for ad tracking purpose and 
 			  should be atleast 30 characters.
 
+6) Psedo_zone		: This parameter specifies the mapping between API Gateway 
+			  and south bound enabler.
 
 Note: If your application is promoted from Sandbox environment to Production
 environment and you decide to use production application settings, you must update

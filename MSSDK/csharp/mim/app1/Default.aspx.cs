@@ -1,6 +1,6 @@
 ﻿// <copyright file="Default.aspx.cs" company="AT&amp;T Intellectual Property">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+// Licensed by AT&amp;T under 'AT&T SDK Tools Agreement' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
 // Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
@@ -293,27 +293,27 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
         catch (TokenExpiredException te)
         {
-            this.DrawPanelForFailure(statusPanel, te.Message);
+            this.DrawPanelForFailure(ContentPanelStatus, te.Message);
         }
         catch (UnauthorizedRequest ur)
         {
-            this.DrawPanelForFailure(statusPanel, ur.Message);
+            this.DrawPanelForFailure(ContentPanelStatus, ur.Message);
         }
         catch (InvalidResponseException ie)
         {
-            this.DrawPanelForFailure(statusPanel, ie.Body);
+            this.DrawPanelForFailure(ContentPanelStatus, ie.Body);
         }
         catch (ArgumentNullException are)
         {
-            this.DrawPanelForFailure(statusPanel, are.Message);
+            this.DrawPanelForFailure(ContentPanelStatus, are.Message);
         }
         catch (ArgumentException ae)
         {
-            this.DrawPanelForFailure(statusPanel, ae.Message);
+            this.DrawPanelForFailure(ContentPanelStatus, ae.Message);
         }
         catch (Exception ex)
         {
-            this.DrawPanelForFailure(statusPanel, ex.Message);
+            this.DrawPanelForFailure(ContentPanelStatus, ex.Message);
         }
     }
 

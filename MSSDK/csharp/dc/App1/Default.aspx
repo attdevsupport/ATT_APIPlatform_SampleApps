@@ -13,32 +13,32 @@
         <!-- open HEADER -->
         <div id="header">
             <div>
+                <div class="hcRight">
+                    <asp:Label ID="lblServerTime" runat="server"></asp:Label>
+                </div>
                 <div class="hcLeft">
                     Server Time:</div>
-                <div class="hcRight">
-                    <asp:Label ID="lblServerTime" runat="server" Text="Label"></asp:Label>
-                </div>
             </div>
             <div>
-                <div class="hcLeft">
-                    Client Time:</div>
                 <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
+                    <script language="JavaScript" type="text/javascript">                        
                         var myDate = new Date();
                         document.write(myDate);
                     </script>
                 </div>
+                <div class="hcLeft">
+                    Client Time:</div>
             </div>
             <div>
-                <div class="hcLeft">
-                    User Agent:</div>
                 <div class="hcRight">
-                    <script language="JavaScript" type="text/javascript">
-                        document.write("" + navigator.userAgent);
+                    <script language="JavaScript" type="text/javascript">                        
+                    document.write("" + navigator.userAgent);
                     </script>
                 </div>
+                <div class="hcLeft">
+                    User Agent:</div>
             </div>
-            <br style="clear: both;" />
+            <br clear="all" />
         </div>
         <!-- close HEADER -->
         <div>
@@ -197,7 +197,7 @@
             <div style="float: right; width: 20%; font-size: 9px; text-align: right">
                 Powered by AT&amp;T Cloud Architecture</div>
             <p>
-                &#169; 2012 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+                &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
                     target="_blank">http://developer.att.com</a>
                 <br />
                 The Application hosted on this site are working examples intended to be used for
@@ -205,8 +205,9 @@
                 used as part of your product. The data in these pages is for test purposes only
                 and intended only for use as a reference in how the services perform.
                 <br />
-                For download of tools and documentation, please go to <a href="https://devconnect-api.att.com/"
-                    target="_blank">https://devconnect-api.att.com</a>
+                For download of tools and documentation, please go to <a href="http://developer.att.com/SDK"
+                    target="_blank">https://developer.att.com/SDK</a> and <a href="http://developer.att.com/docs" 
+                    target="_blank">https://developer.att.com/docs</a>
                 <br />
                 For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a></p>
         </div>

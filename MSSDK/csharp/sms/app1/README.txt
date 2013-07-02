@@ -83,10 +83,6 @@ web.config as specified below:
 4) short_code		: This is mandatory parameter, set the value as per your
 			  registered application 'Short Code' field value.
 
-5) deiveryStatusFilePath : This is mandatory key, which will point to the file, which is used by application to store
-         the received online delivery status messages.
-
-6) numberOfDeliveryStatusToStore : This is optional parameter, these many records will be stored in file
 
 Note: If your application is promoted from Sandbox environment to Production
 environment and you decide to use production application settings, you must update

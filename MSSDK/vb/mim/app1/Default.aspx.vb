@@ -1,6 +1,6 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T Intellectual Property">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+' Licensed by AT&amp;T under 'AT&T SDK Tools Agreement' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
 ' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
@@ -208,17 +208,17 @@ Partial Public Class MIM_App1
                 End If
             End If
         Catch te As TokenExpiredException
-            Me.DrawPanelForFailure(statusPanel, te.Message)
+            Me.DrawPanelForFailure(ContentPanelStatus, te.Message)
         Catch ur As UnauthorizedRequest
-            Me.DrawPanelForFailure(statusPanel, ur.Message)
+            Me.DrawPanelForFailure(ContentPanelStatus, ur.Message)
         Catch ie As InvalidResponseException
-            Me.DrawPanelForFailure(statusPanel, ie.Body)
+            Me.DrawPanelForFailure(ContentPanelStatus, ie.Body)
         Catch are As ArgumentNullException
-            Me.DrawPanelForFailure(statusPanel, are.Message)
+            Me.DrawPanelForFailure(ContentPanelStatus, are.Message)
         Catch ae As ArgumentException
-            Me.DrawPanelForFailure(statusPanel, ae.Message)
+            Me.DrawPanelForFailure(ContentPanelStatus, ae.Message)
         Catch ex As Exception
-            Me.DrawPanelForFailure(statusPanel, ex.Message)
+            Me.DrawPanelForFailure(ContentPanelStatus, ex.Message)
         End Try
     End Sub
 

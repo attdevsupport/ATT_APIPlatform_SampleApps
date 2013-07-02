@@ -1,6 +1,6 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+' Licensed by AT&amp;T under 'AT&T SDK Tools Agreement' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
 ' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
@@ -178,11 +178,6 @@ Partial Public Class Payment_App1
     ''' </summary>
     Private refundFilePath As String
 
-    ''' <summary>
-    ''' Gets or sets the value of transaction amount.
-    ''' </summary>
-    Private MinTransactionAmount As String, MaxTransactionAmount As String
-
 #End Region
 
 #Region "Payment Application events"
@@ -231,9 +226,9 @@ Partial Public Class Payment_App1
             Me.transactionTime = DateTime.UtcNow
             Me.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", Me.transactionTime)
             If Radio_TransactionProductType.SelectedIndex = 0 Then
-                Me.amount = Convert.ToDouble(Me.MinTransactionAmount)
+                Me.amount = 0.99
             ElseIf Radio_TransactionProductType.SelectedIndex = 1 Then
-                Me.amount = Convert.ToDouble(Me.MaxTransactionAmount)
+                Me.amount = 2.99
             End If
 
             Session("tranType") = Radio_TransactionProductType.SelectedIndex.ToString()
@@ -399,17 +394,6 @@ Partial Public Class Payment_App1
     ''' </summary>
     ''' <returns>Returns Boolean</returns>
     Private Function Initialize() As Boolean
-        Me.MinTransactionAmount = ConfigurationManager.AppSettings("MinTransactionAmount")
-        If String.IsNullOrEmpty(Me.MinTransactionAmount) Then
-            Me.MinTransactionAmount = "0.00"
-        End If
-        lstMinAmount.Text = "Buy product 1 for $" + Me.MinTransactionAmount
-
-        Me.MaxTransactionAmount = ConfigurationManager.AppSettings("MaxTransactionAmount")
-        If String.IsNullOrEmpty(Me.MaxTransactionAmount) Then
-            Me.MaxTransactionAmount = "2.99"
-        End If
-        lstMaxAmount.Text = "Buy product 2 for $" + Me.MaxTransactionAmount
         If Me.requestFactory Is Nothing Then
             Me.apiKey = ConfigurationManager.AppSettings("api_key")
             If String.IsNullOrEmpty(Me.apiKey) Then
@@ -461,7 +445,7 @@ Partial Public Class Payment_App1
             Me.latestFive = True
 
             Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-            scopes.Add(requestFactory.ScopeTypes.Payment)
+            scopes.Add(RequestFactory.ScopeTypes.Payment)
 
             Me.requestFactory = New RequestFactory(Me.endPoint, Me.apiKey, Me.secretKey, scopes, Nothing, Nothing)
         End If

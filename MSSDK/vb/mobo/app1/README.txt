@@ -1,18 +1,18 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' June 2012
+* Licensed by AT&T under 'AT&T SDK Tools Agreement' 2013
 * Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 * For more information contact developer.support@att.com<mailto:developer.support@att.com>
 ******************************************************************************************
 
-  AT&T API Samples - IMMN app 1
+  AT&T API Samples - MOBO app 1
  --------------------------------
 
 This application allows the user to send SMS and MMS on behalf of subscriber, 
-with subscriber’s consent, using the IMMN API.
+with subscriber’s consent, using the MOBO API.
 
 This file describes how to set up, configure and run AT&T MSSDK VB.Net sample 
 applications. It covers all steps required to register the application on 
-DevConnect and, based on the generated API keys and secrets, create and run 
+https://developer.att.com/ and, based on the generated API keys and secrets, create and run 
 one's own full-fledged sample applications.
 
   1. Configuration
@@ -24,16 +24,16 @@ one's own full-fledged sample applications.
 1. Configuration
 
   Configuration consists of a few steps necessary to get an application registered
-  on DevConnect with the proper services and endpoints, depending on the type of 
+  on https://developer.att.com/ with the proper services and endpoints, depending on the type of 
   client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login with
+  To register an application, go to https://developer.att.com/ and login with
   your valid username and password. Next, choose "My Apps" from the bar at the top
   of the page and click the "Setup a New Application" button. 
 
   Fill in the form, in particular all fields marked as "required".
 
-NOTE: You MUST select In App Messaging from Mobile Number (IMMN) in the list of services under 
+NOTE: You MUST select Messaging On Behalf Of (MOBO) in the list of services under 
 field 'Services' in order to use this sample application code. 
 
   Having your application registered, you will get back an important pair of data: 
@@ -47,9 +47,9 @@ field 'Services' in order to use this sample application code.
 
   Depending on the kind of authentication used, an application may be based on 
   either the Autonomous Client or the Web-Server Client OAuth flow 
-  (see https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow or
-  https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow 
-  respectively).
+  (see OAuth section in https://developer.att.com/docs).
+   
+  
 
 
 
@@ -80,7 +80,7 @@ web.config as specified below:
                            of AT&T Service.
 
 4) authorize_redirect_uri: This is mandatory key and value should be equal
-         		   to IMMN Service registered application 'OAuth Redirect URL'
+         		   to MOBO Service registered application 'OAuth Redirect URL'
 
 5) max_addresses	 : This is optional key specifying the maximum number of addresses, 
 			   user can specify. Default value is 10.
@@ -93,7 +93,7 @@ environment to 'Production' environment.
 
 4. Running the application
 
-Suppose you copied the sample app files in your IIS server webroot/immn/app1/ folder.
-In order to run the sample application, type in'http://IIS_HOSTNAME:8080/immn/app1/Default.aspx'
+Suppose you copied the sample app files in your IIS server webroot/mobo/app1/ folder.
+In order to run the sample application, type in'http://IIS_HOSTNAME:8080/mobo/app1/Default.aspx'
 (assuming you're using a HOSTNAME machine with IIS Server and have not changed the 
 default port number, otherwise adjust accordingly) on your browser.

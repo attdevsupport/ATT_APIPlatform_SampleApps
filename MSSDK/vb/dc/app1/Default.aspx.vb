@@ -1,6 +1,6 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T Intellectual Property">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+' Licensed by AT&amp;T under 'AT&T SDK Tools Agreement' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
 ' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
@@ -48,8 +48,6 @@ Partial Public Class DC_App1
     ''' <param name="e"></param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
         ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-        Dim currentServerTime As DateTime = DateTime.UtcNow
-        serverTimeLabel.Text = (String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC")
         Dim ableToReadConfigFile As Boolean = Me.ReadConfigFile()
         If Not ableToReadConfigFile Then
             tbDeviceCapabError.Visible = True
@@ -64,13 +62,6 @@ Partial Public Class DC_App1
                     If Not String.IsNullOrEmpty(Request("code")) Then
                         Me.requestFactory.GetAuthorizeCredentials(Request("code"))
                         Session("VBDC_ACCESS_TOKEN") = Me.requestFactory.AuthorizeCredential
-                    End If
-                    If Request.QueryString("error") IsNot Nothing AndAlso Session("mssdk_vb_dc_state") IsNot Nothing Then
-                        Session("mssdk_vb_dc_state") = Nothing
-                        Dim errorString As String = Request.Url.Query.Remove(0, 1)
-                        lblErrorMessage.Text = HttpUtility.UrlDecode(errorString)
-                        tbDeviceCapabError.Visible = True
-                        Return
                     End If
                 End If
             End If
@@ -162,10 +153,9 @@ Partial Public Class DC_App1
         End If
 
         If Me.requestFactory.AuthorizeCredential Is Nothing Then
-            Session("mssdk_vb_dc_state") = "FetchAuthCode"
             Response.Redirect(Me.requestFactory.GetOAuthRedirect().ToString())
         End If
-        Session("mssdk_vb_dc_state") = Nothing
+
         Dim deviceCapabilities As DeviceCapabilities = Me.requestFactory.GetDeviceCapabilities()
         Me.DisplayDeviceCapabilities(deviceCapabilities)
     End Sub

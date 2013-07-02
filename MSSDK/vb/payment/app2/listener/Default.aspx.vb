@@ -1,7 +1,7 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
+' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2012
 ' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
+' Copyright 2012 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
 
@@ -18,7 +18,7 @@ Imports ATT_MSSDK.Paymentv3
 ''' <summary>
 '''  PaymentApp1_Listener class to process request and response of notification objects.
 ''' </summary>
-Partial Public Class PaymentApp1_Listener
+Partial Public Class PaymentApp2_Listener
     Inherits System.Web.UI.Page
 #Region "Instance Variables"
 
@@ -134,40 +134,40 @@ Partial Public Class PaymentApp1_Listener
                 Me.LogError(ex.Message)
             End Try
 
-                notificationType__1 = notificationObject.NotificationObjectType.ToString()
+            notificationType__1 = notificationObject.NotificationObjectType.ToString()
 
-                If notificationType__1.Equals(NotificationType.CancelSubscription.ToString()) Then
-                    Dim cancelSubscriptionNotificationObject As CancelSubscriptionNotificationObject = DirectCast(notificationObject, CancelSubscriptionNotificationObject)
-                    originalTransactionId = cancelSubscriptionNotificationObject.OriginalTransactionId
-                End If
+            If notificationType__1.Equals(NotificationType.CancelSubscription.ToString()) Then
+                Dim cancelSubscriptionNotificationObject As CancelSubscriptionNotificationObject = DirectCast(notificationObject, CancelSubscriptionNotificationObject)
+                originalTransactionId = cancelSubscriptionNotificationObject.OriginalTransactionId
+            End If
 
-                If notificationType__1.Equals(NotificationType.FreePeriodConversion.ToString()) Then
-                    Dim freePeriodConversionNotificationObject As FreePeriodConversionNotificationObject = DirectCast(notificationObject, FreePeriodConversionNotificationObject)
-                    originalTransactionId = freePeriodConversionNotificationObject.OriginalTransactionId
-                End If
+            If notificationType__1.Equals(NotificationType.FreePeriodConversion.ToString()) Then
+                Dim freePeriodConversionNotificationObject As FreePeriodConversionNotificationObject = DirectCast(notificationObject, FreePeriodConversionNotificationObject)
+                originalTransactionId = freePeriodConversionNotificationObject.OriginalTransactionId
+            End If
 
-                If notificationType__1.Equals(NotificationType.SubscriptionRecurrence.ToString()) Then
-                    Dim subscriptionRecurrenceNotificationObject As SubscriptionRecurrenceNotificationObject = DirectCast(notificationObject, SubscriptionRecurrenceNotificationObject)
-                    originalTransactionId = subscriptionRecurrenceNotificationObject.OriginalTransactionId
-                End If
+            If notificationType__1.Equals(NotificationType.SubscriptionRecurrence.ToString()) Then
+                Dim subscriptionRecurrenceNotificationObject As SubscriptionRecurrenceNotificationObject = DirectCast(notificationObject, SubscriptionRecurrenceNotificationObject)
+                originalTransactionId = subscriptionRecurrenceNotificationObject.OriginalTransactionId
+            End If
 
-                If notificationType__1.Equals(NotificationType.StopSubscription.ToString()) Then
-                    Dim stopSubscriptionNotificationObject As StopSubscriptionNotificationObject = DirectCast(notificationObject, StopSubscriptionNotificationObject)
-                    originalTransactionId = stopSubscriptionNotificationObject.OriginalTransactionId
-                End If
+            If notificationType__1.Equals(NotificationType.StopSubscription.ToString()) Then
+                Dim stopSubscriptionNotificationObject As StopSubscriptionNotificationObject = DirectCast(notificationObject, StopSubscriptionNotificationObject)
+                originalTransactionId = stopSubscriptionNotificationObject.OriginalTransactionId
+            End If
 
-                If notificationType__1.Equals(NotificationType.SuccesfulRefund.ToString()) Then
-                    Dim successfulRefundObject As SuccessfulRefundNotificationObject = DirectCast(notificationObject, SuccessfulRefundNotificationObject)
-                    originalTransactionId = successfulRefundObject.OriginalTransactionId
-                End If
+            If notificationType__1.Equals(NotificationType.SuccesfulRefund.ToString()) Then
+                Dim successfulRefundObject As SuccessfulRefundNotificationObject = DirectCast(notificationObject, SuccessfulRefundNotificationObject)
+                originalTransactionId = successfulRefundObject.OriginalTransactionId
+            End If
 
-                If notificationType__1.Equals(NotificationType.RestoreSubscription.ToString()) Then
-                    Dim restoreSubscriptionNotificationObject As RestoreSubscriptionNotificationObject = DirectCast(notificationObject, RestoreSubscriptionNotificationObject)
-                    originalTransactionId = String.Empty
-                End If
+            If notificationType__1.Equals(NotificationType.RestoreSubscription.ToString()) Then
+                Dim restoreSubscriptionNotificationObject As RestoreSubscriptionNotificationObject = DirectCast(notificationObject, RestoreSubscriptionNotificationObject)
+                originalTransactionId = String.Empty
+            End If
 
-                Dim detailsToSave As String = String.Format("{0}:{1}:{2}$", notificationId, notificationType__1, originalTransactionId)
-                Me.SaveDetailsToFie(detailsToSave)
+            Dim detailsToSave As String = String.Format("{0}:{1}:{2}$", notificationId, notificationType__1, originalTransactionId)
+            Me.SaveDetailsToFie(detailsToSave)
         Next
     End Sub
 

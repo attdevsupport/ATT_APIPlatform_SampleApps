@@ -1,6 +1,6 @@
 ﻿' <copyright file="Default.aspx.vb" company="AT&amp;T Intellectual Property">
-' Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+' Licensed by AT&amp;T under 'AT&T SDK Tools Agreement' 2013
+' TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
 ' Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 ' For more information contact developer.support@att.com
 ' </copyright>
@@ -14,41 +14,41 @@ Imports System.Web
 Imports System.Web.UI
 Imports System.Web.UI.WebControls
 Imports ATT_MSSDK
-Imports ATT_MSSDK.IMMNv1
+Imports ATT_MSSDK.MOBOv1
 #End Region
 
 ''' <summary>
 ''' This application allows the user to send SMS and MMS on behalf of subscriber, 
-''' with subscriber’s consent, using the IMMN API.
+''' with subscriber’s consent, using the MOBO API.
 ''' </summary>
 Partial Public Class MOBO_App1
     Inherits System.Web.UI.Page
 
-    '* \addtogroup IMMN_App1
-    '* Description of the application can be referred at \ref IMMN_app1 example
+    '* \addtogroup MOBO_App1
+    '* Description of the application can be referred at \ref MOBO_app1 example
     '* @{
     '* 
-    '*  \example IMMN_app1 immn\app1\Default.aspx.vb
-    '* \n \n This application allows the user to send SMS and MMS on behalf of subscriber, with subscriber's consent, using the IMMN API.
+    '*  \example MOBO_app1 mobo\app1\Default.aspx.vb
+    '* \n \n This application allows the user to send SMS and MMS on behalf of subscriber, with subscriber's consent, using the MOBO API.
     '*  
     '* <b>Send Message:</b>
-    '* \li Import \c ATT_MSSDK and \c ATT_MSSDK.IMMNv1 NameSpace.
+    '* \li Import \c ATT_MSSDK and \c ATT_MSSDK.MOBOv1 NameSpace.
     '* \li Create an instance of \c RequestFactory class provided in MS SDK library. The \c RequestFactory manages the connections and calls to the AT&T API Platform.
     '* Pass clientId, ClientSecret and scope as arguments while creating \c RequestFactory instance.
-    '* \li Invoke \c SendIMMN() exposed in the \c RequestFactory class of MS SDK library.
+    '* \li Invoke \c SendMessage() exposed in the \c RequestFactory class of MS SDK library.
     '* 
     '* <b>Sample code:</b>
     '* <pre>
     '*    Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-    '*    scopes.Add(requestFactory.ScopeTypes.IMMN)   
+    '*    scopes.Add(requestFactory.ScopeTypes.MOBO)   
     '*    Dim requestFactory As New RequestFactory(endPoint, apiKey, secretKey, scopes, redirectUrl, Nothing)
-    '*    Dim response As SendMessageResponse = requestFactory.SendIMMN(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group)
+    '*    Dim response As SendMessageResponse = requestFactory.SendMessage(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group)
     '* </pre>
     '*
     '* Installing and running the application, refer \ref Application 
     '* \n \n <b>Parameters in web.config</b> refer \ref parameters_sec section
     '* 
-    '* \n Documentation can be referred at \ref IMMN_App1 section
+    '* \n Documentation can be referred at \ref MOBO_App1 section
     '* @{
 
 #Region "Instance Variables"
@@ -121,7 +121,7 @@ Partial Public Class MOBO_App1
     End Sub
 
     ''' <summary>
-    ''' Method will be called when the user clicks on send message button. This method calls SendIMMN function of Request Factory
+    ''' Method will be called when the user clicks on send message button. This method calls SendMessage function of Request Factory
     ''' </summary>
     ''' <param name="sender">object pointing to the caller</param>
     ''' <param name="e">Event arguments</param>
@@ -197,7 +197,7 @@ Partial Public Class MOBO_App1
     ''' </summary>
     Private Sub InitializeRequestFactory()
         Dim scopes As New List(Of RequestFactory.ScopeTypes)()
-        scopes.Add(requestFactory.ScopeTypes.IMMN)
+        scopes.Add(requestFactory.ScopeTypes.MOBO)
 
         Me.requestFactory = New RequestFactory(Me.endPoint, Me.apiKey, Me.secretKey, scopes, Me.redirectUrl, Nothing)
 
@@ -277,7 +277,7 @@ Partial Public Class MOBO_App1
         End If
 
         Try
-            Dim messageResponse As SendMessageResponse = Me.requestFactory.SendIMMN(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group)
+            Dim messageResponse As SendMessageResponse = Me.requestFactory.SendMessage(msgToSend.Addresses, msgToSend.Attachments, msgToSend.Message, msgToSend.Subject, msgToSend.Group)
             If messageResponse IsNot Nothing Then
                 Me.DrawPanelForSuccess(statusPanel, messageResponse.Id)
             End If

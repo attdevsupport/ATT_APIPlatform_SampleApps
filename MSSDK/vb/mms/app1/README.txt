@@ -83,11 +83,6 @@ web.config as specified below:
 3) endPoint		  	: This is mandatory parameter, Set it to the end point
 				  URI of AT&T Service.
 
-4) deiveryStatusFilePath : This is mandatory key, which will point to the file, which is 
-				used by application to store the received online delivery status messages.
-
-5) numberOfDeliveryStatusToStore : This is optional parameter, these many records will be stored in file
-
 Note: If your application is promoted from Sandbox environment to Production environment 
 and you decide to use production application settings, you must update parameters 1-2 
 as per production application details.

@@ -1,6 +1,6 @@
 ﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+// Licensed by AT&amp;T under 'AT&T SDK Tools Agreement' 2013
+// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com
 // Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
 // For more information contact developer.support@att.com
 // </copyright>
@@ -181,11 +181,6 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// Local Variables
     /// </summary>
     private List<KeyValuePair<string, string>> subsRefundList = new List<KeyValuePair<string, string>>();
-
-    /// <summary>
-    /// Gets or sets the value of transaction amount.
-    /// </summary>
-    private string MinSubscriptionAmount, MaxSubscriptionAmount;
 
     #endregion
 
@@ -631,11 +626,11 @@ public partial class Payment_App2 : System.Web.UI.Page
         this.transactionTimeString = String.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (Radio_SubscriptionProductType.SelectedIndex == 0)
         {
-            this.amount = Convert.ToDouble(this.MinSubscriptionAmount);
+            this.amount = 1.99;
         }
         else if (Radio_SubscriptionProductType.SelectedIndex == 1)
         {
-            this.amount = Convert.ToDouble(this.MaxSubscriptionAmount);
+            this.amount = 3.99;
         }
 
         this.description = "TrDesc" + this.transactionTimeString;
@@ -941,20 +936,6 @@ public partial class Payment_App2 : System.Web.UI.Page
     /// <returns>true/false; true if able to read from config file and able to instantiate values; else false</returns>
     private bool Initialize()
     {
-        this.MinSubscriptionAmount = ConfigurationManager.AppSettings["MinSubscriptionAmount"];
-        if (string.IsNullOrEmpty(this.MinSubscriptionAmount))
-        {
-            this.MinSubscriptionAmount = "0.00";
-        }
-        lstMinAmount.Text = "Subscribe for " + this.MinSubscriptionAmount + " per month";
-
-        this.MaxSubscriptionAmount = ConfigurationManager.AppSettings["MaxSubscriptionAmount"];
-        if (string.IsNullOrEmpty(this.MaxSubscriptionAmount))
-        {
-            this.MaxSubscriptionAmount = "3.99";
-        }
-        lstMaxAmount.Text = "Subscribe for " + this.MaxSubscriptionAmount + " per month";
-
         this.apiKey = ConfigurationManager.AppSettings["api_key"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
