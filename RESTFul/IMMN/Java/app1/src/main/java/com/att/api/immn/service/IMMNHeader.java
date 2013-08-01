@@ -72,6 +72,7 @@ public final class IMMNHeader {
      * @param jobj json object used to create the immn header
      * @deprecated replaced by {@link #valueOf(JSONObject)}
      */
+    @Deprecated
     public IMMNHeader(JSONObject jobj) {
         String[] vals = {
             "MessageId", "From", "To", "Subject", "Text", "Received",

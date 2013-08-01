@@ -15,7 +15,7 @@ module AttCloudServices
     SCOPE = "DC"
 
     module ENDPOINTS 
-      DC = "/rest/2/Devices/Info/"
+      DC = "/rest/2/Devices/Info"
     end
 
     class DCService < AttApiService

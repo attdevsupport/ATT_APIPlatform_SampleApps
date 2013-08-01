@@ -456,7 +456,7 @@ Partial Public Class Payment_App1
         If String.Compare(getSubscriptionAuthCode.SelectedValue.ToString(), "Select") = 0 Then
             Return
         End If
-        Dim resourcePathString As String = String.Empty & Me.endPoint & "/rest/3/Commerce/Payment/Subscriptions/TransactionAuthCode/" & getSubscriptionAuthCode.SelectedValue.ToString()
+        Dim resourcePathString As String = String.Empty & Me.endPoint & "/rest/3/Commerce/Payment/Subscriptions/SubscriptionAuthCode/" & getSubscriptionAuthCode.SelectedValue.ToString()
         Me.getSubscriptionStatus(resourcePathString, subscription_status_error, subscription_status_success)
     End Sub
     Protected Sub GetSubscriptionStatusForMerTranId_Click(sender As Object, e As EventArgs)
@@ -704,7 +704,7 @@ Partial Public Class Payment_App1
 
     Protected Sub createNewSubscription(sender As Object, e As EventArgs)
         Me.ReadSubscriptionParametersFromConfigurationFile()
-        Dim payLoadString As String = "{""Amount"":" & Me.amount & ",""Category"":" & Me.category & ",""Channel"":""" & Me.channel & """,""Description"":""" & Me.description & """,""MerchantTransactionId"":""" & Me.merchantTransactionId & """,""MerchantProductId"":""" & Me.merchantProductId & """,""MerchantPaymentRedirectUrl"":""" & Convert.ToString(Me.merchantRedirectURI) & """,""MerchantSubscriptionIdList"":""" & Me.merchantSubscriptionIdList & """,""IsPurchaseOnNoActiveSubscription"":""" & Me.isPurchaseOnNoActiveSubscription & """,""SubscriptionRecurrences"":" & Me.subscriptionRecurringNumber & ",""SubscriptionPeriod"":""" & Me.subscriptionRecurringPeriod & """,""SubscriptionPeriodAmount"":" & Me.subscriptionRecurringPeriodAmount & "}"
+        Dim payLoadString As String = "{""Amount"":" & Me.amount & ",""Category"":" & Me.category & ",""Channel"":""" & Me.channel & """,""Description"":""" & Me.description & """,""MerchantTransactionId"":""" & Me.merchantTransactionId & """,""MerchantProductId"":""" & Me.merchantProductId & """,""MerchantPaymentRedirectUrl"":""" & Convert.ToString(Me.merchantRedirectURI) & """,""MerchantSubscriptionIdList"":""" & Me.merchantSubscriptionIdList & """,""IsPurchaseOnNoActiveSubscription"":" & Me.isPurchaseOnNoActiveSubscription & ",""SubscriptionRecurrences"":" & Me.subscriptionRecurringNumber & ",""SubscriptionPeriod"":""" & Me.subscriptionRecurringPeriod & """,""SubscriptionPeriodAmount"":" & Me.subscriptionRecurringPeriodAmount & "}"
         SubmitToNotary(payLoadString, new_subscription_error, new_subscription_success)
         Session("vb_signedData") = payLoadString
         Session("vb_signedPayload") = signedPayload

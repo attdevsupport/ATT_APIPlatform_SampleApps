@@ -118,8 +118,7 @@ public class IMMNController extends APIController {
             IMMNService srvc = new IMMNService(appConfig.getFQDN(), token);
             IMMNResponse immnResponse = srvc.getMessageHeaders(headerC, indexC);
             IMMNHeader[] immnHeaders = immnResponse.getHeaders();
-            if (!immnHeaders[0].getFrom().equals("+14258028620"))
-                throw new Exception(immnHeaders[0].getFrom());
+
             request.setAttribute("mimResponse", immnResponse);
             request.setAttribute("mimHeaders", immnHeaders);
             clearSession(request, this.msgHeaderParams);

@@ -11,6 +11,7 @@ For more information contact developer.support@att.com
 <!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
 <!--[if gt IE 8]><!-->
 <html lang="en">
+<!--<![endif]-->
 <head>
     <title>AT&amp;T Sample DC Application - Get Device Capabilities Application</title>
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />

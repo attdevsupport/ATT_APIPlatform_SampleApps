@@ -78,7 +78,7 @@ class IMMNController extends APIController {
             $checkbox = isset($_REQUEST['groupCheckBox']);
             $_SESSION['checkbox'] = $checkbox;
 
-            $immnSrvc = new IMMNService($this->FQDN, $this->getSessionToken());
+            $immnSrvc = new IMMNService($this->apiFQDN, $this->getSessionToken());
             $this->clearSession(array('sendMessage'));
             $id = $immnSrvc->sendMessage($addr, $msg, $subject, $attachment);
             $this->results[IMMNController::RESULT_SEND_MSG] = $id;
@@ -100,7 +100,7 @@ class IMMNController extends APIController {
         $partNum = $_SESSION['PartNumber'];
 
         try {
-            $immnSrvc = new IMMNService($this->FQDN, $this->getSessionToken());
+            $immnSrvc = new IMMNService($this->apiFQDN, $this->getSessionToken());
             $this->clearSession(array('getMessageContent'));
             $result = $immnSrvc->getMessageBody($msgId, $partNum); 
             $this->results[IMMNController::RESULT_GET_BODY] = $result;
@@ -123,7 +123,7 @@ class IMMNController extends APIController {
         $indexCursor = $_SESSION['indexCursorTextBox'];
 
         try {
-            $immnSrvc = new IMMNService($this->FQDN, $this->getSessionToken());
+            $immnSrvc = new IMMNService($this->apiFQDN, $this->getSessionToken());
             $this->clearSession(array('getMessageHeaders'));
             $result = $immnSrvc->getMessageHeaders($headerCount, $indexCursor);
             $this->results[IMMNController::RESULT_GET_HEADERS] = $result;

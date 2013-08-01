@@ -54,7 +54,9 @@ public class ADSController extends APIController {
 
             ADSService srvc = new ADSService(appConfig.getFQDN(), token);
             String category = request.getParameter("category");
-            String uagent = request.getHeader("User-Agent");
+            // String uagent = request.getHeader("User-Agent");
+            String uagent = "Mozilla/5.0 (Android; Mobile; rv:13.0) Gecko/13.0 Firefox/13.0";
+
 
             //String[] inputs = { "MMA", "ageGroup", "Premium", "gender",
             //        "over18", "zipCode", "city", "areaCode", "country", 

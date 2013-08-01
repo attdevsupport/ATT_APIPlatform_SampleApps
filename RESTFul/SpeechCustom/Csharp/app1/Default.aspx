@@ -68,8 +68,8 @@ For more information contact developer.support@att.com
             </ul>
         </div>
         <form id="form1" runat="server">
-        <div class="content">
-            <div class="contentHeading">
+        <div id="content" class="content">
+            <div id="contentHeading" class="contentHeading">
                 <h1>
                     AT&amp;T Sample Application - Speech to Text Custom</h1>
                 <div id="introtext">
@@ -125,14 +125,13 @@ For more information contact developer.support@att.com
                     </div>
                 </div>
             </div>
-            <br clear="all" />
           <% if (!string.IsNullOrEmpty (speechSuccessMessage)){ %>
             <div class="successWide" align="left">
               <strong>SUCCESS:</strong>
               <br />
               Response parameters listed below.
             </div>
-            <table class="kvp">
+            <table id="kvp" class="kvp">
               <thead>
                 <tr>
                   <th class="label">Parameter</th>

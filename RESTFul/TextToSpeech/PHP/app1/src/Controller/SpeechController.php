@@ -29,7 +29,7 @@ class SpeechController extends APIController
                 $txt = file_get_contents(__DIR__ . '/../../text/SSMLWithPhoneme.txt');
             }
 
-            $srvc = new SpeechService($this->FQDN, $this->getFileToken());
+            $srvc = new SpeechService($this->apiFQDN, $this->getFileToken());
             $response = $srvc->textToSpeech($ctype, $txt, $this->_xArgs);
             $this->results[SpeechController::RESULT_TTS] = $response;
 

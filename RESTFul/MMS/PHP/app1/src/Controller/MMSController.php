@@ -14,7 +14,7 @@ class MMSController extends APIController {
         }
 
         try {
-            $srvc = new MMSService($this->FQDN, $this->getFileToken());
+            $srvc = new MMSService($this->apiFQDN, $this->getFileToken());
             $rawAddr = $_REQUEST['address']; 
             $addr = Util::convertAddresses($rawAddr);
             $addr = count($addr) == 1 ? $addr[0] : $addr;
@@ -60,7 +60,7 @@ class MMSController extends APIController {
 
         try {
             $mmsId = $_REQUEST['mmsId'];
-            $srvc = new MMSService($this->FQDN, $this->getFileToken());
+            $srvc = new MMSService($this->apiFQDN, $this->getFileToken());
             $response = $srvc->getMMSStatus($mmsId);
             $this->results['getStatus'] = $response;
         } catch (Exception $e) {

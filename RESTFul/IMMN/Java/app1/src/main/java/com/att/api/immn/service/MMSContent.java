@@ -41,6 +41,7 @@ public final class MMSContent {
      * @param jobj json object used to create MMS object.
      * @deprecated replaced by {@link #valueOf(JSONObject)}
      */
+    @Deprecated
     public MMSContent(JSONObject jobj) {
         this.contentType = jobj.getString("ContentType");
         this.contentName = jobj.getString("ContentName");

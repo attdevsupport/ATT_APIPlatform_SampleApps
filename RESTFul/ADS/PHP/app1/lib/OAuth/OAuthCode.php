@@ -33,7 +33,6 @@
  */
 class OAuthCode
 {
-
     /**
      * Authorization code.
      */
@@ -48,13 +47,9 @@ class OAuthCode
      */
     public function __construct($code)
     {
-        if ($code == null) {
-            throw new InvalidArgumentException('Code must not be null.');
-        } 
-        
-        if ($code == '') {
+        if ($code == null || $code == '') {
             throw new InvalidArgumentException('Code must not be empty.');
-        }
+        } 
 
         $this->_code = $code;
     }

@@ -182,7 +182,7 @@ public class OAuthToken {
             fLock = fOutputStream.getChannel().lock();
             Properties props = new Properties();
             props.setProperty("accessToken", accessToken);
-            props.setProperty("accessTokenExpiry", "" + accessTokenExpiry);
+            props.setProperty("accessTokenExpiry", String.valueOf(accessTokenExpiry));
             props.setProperty("refreshToken", refreshToken);
             props.store(fOutputStream, "Token Information");
         } catch (IOException e) {
@@ -238,7 +238,7 @@ public class OAuthToken {
                 return null;
             }
             String sExpiry = props.getProperty("accessTokenExpiry", "0");
-            long expiry = Long.parseLong(sExpiry);
+            long expiry = new Long(sExpiry).longValue();
             String refreshToken = props.getProperty("refreshToken");
             return new OAuthToken(accessToken, expiry, refreshToken);
         } catch (IOException e) {

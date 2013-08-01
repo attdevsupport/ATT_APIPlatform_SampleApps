@@ -45,7 +45,7 @@ class SMSController extends APIController
             $addr = count($addrArray) == 1 ? $addrArray[0] : $addrArray;
             $msg = $_REQUEST['message'];
             $getNotification = isset($_REQUEST['chkGetOnlineStatus']);
-            $srvc = new SMSService($this->FQDN, $this->getFileToken());
+            $srvc = new SMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->sendSMS($addr, $msg, $getNotification);
             $result = json_decode(json_encode($result));
 
@@ -69,7 +69,7 @@ class SMSController extends APIController
             $id = $_REQUEST['messageId'];
             $_SESSION['SmsId'] = $id;
 
-            $srvc = new SMSService($this->FQDN, $this->getFileToken());
+            $srvc = new SMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->getSMSDeliveryStatus($id);
             $result = json_decode(json_encode($result));
             $this->results[SMSController::RESULT_SMS_DELIVERY] = $result;
@@ -87,7 +87,7 @@ class SMSController extends APIController
         $shortCode = $this->_getMsgsShortCode;
 
         try {
-            $srvc = new SMSService($this->FQDN, $this->getFileToken());
+            $srvc = new SMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->getMessages($shortCode);
             $result = json_decode(json_encode($result));
             $this->results[SMSController::RESULT_GET_MSGS] = $result;

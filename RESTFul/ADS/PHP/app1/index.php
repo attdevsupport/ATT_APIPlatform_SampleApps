@@ -261,8 +261,7 @@ For more information contact developer.support@att.com
               $ads = $response['Ads'];
               $type = $ads['Type'];
               $clickURL = $ads['ClickUrl'];
-              $imgurl = $ads['ImageUrl'];
-              $img = $imgurl['Image'];
+              $content = $ads['Content'];
               ?>
               <table>
                 <thead>
@@ -280,13 +279,10 @@ For more information contact developer.support@att.com
                     <td data-value="Parameter">ClickUrl</td>
                     <td data-value="Value"><?php echo htmlspecialchars($clickURL); ?></td>
                   </tr>
-                  <tr>
-                    <td data-value="Parameter">ImageUrl</td>
-                    <td data-value="Value"><?php echo htmlspecialchars($img); ?></td>
-                  </tr>
                 </tbody>
               </table>
-              <a id="hplImage" href="<?php echo $clickURL; ?>" target="_blank"><img src="<?php echo $img; ?>" alt="" /></a>
+              <?php echo $content; ?>
+
               <?php } ?>
               <?php } ?>
             <?php if (isset($errors[ADSController::ERROR_AD])) { ?>

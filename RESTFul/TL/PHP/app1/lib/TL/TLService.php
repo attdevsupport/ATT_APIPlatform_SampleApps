@@ -85,7 +85,7 @@ class TLService extends APIService
     public function getLocation(
         $rAccuracy = 1000, $aAccuracy = 10000, $tolerance = 'NoDelay'
     ) {
-        $endpoint = $this->FQDN . '/2/devices/location/';
+        $endpoint = $this->FQDN . '/2/devices/location';
 
         $req = new RESTFulRequest($endpoint);
         $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);

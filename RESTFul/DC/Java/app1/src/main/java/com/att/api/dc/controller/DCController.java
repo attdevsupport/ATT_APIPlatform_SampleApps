@@ -21,13 +21,6 @@ public class DCController extends APIController {
             HttpServletResponse response, OAuthToken token) {
             
         try {
-            final String error = (String) request.getParameter("error");
-            if (error != null) {
-                String errorDesc = request.getParameter("error_description");
-                throw new RESTException("error=" + error 
-                        + "&error_description=" + errorDesc);
-            }
-
             DCService service = new DCService(appConfig.getFQDN(), token);
             DCResponse dcResponse = service.getDeviceCapabilities();
 
@@ -38,28 +31,35 @@ public class DCController extends APIController {
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
+            throws ServletException, IOException {
 
-            OAuthToken token = null;
-            try {
-                token = this.getSessionToken(request, response);
-                if (token == null) {
-                    return;
-                }
-            } catch (RESTException e) {
-                request.setAttribute("error", e.getMessage());
+        OAuthToken token = null;
+        try {
+            final String error = (String) request.getParameter("error");
+            if (error != null) {
+                String errorDesc = request.getParameter("error_description");
+                throw new RESTException("error=" + error 
+                        + "&error_description=" + errorDesc);
             }
 
+            token = this.getSessionToken(request, response);
+            if (token == null) {
+                return;
+            }
             handleGetDeviceInfo(request, response, token);
-
-            final String forward = "WEB-INF/DC.jsp";
-            request.setAttribute("cfg", new ConfigBean());
-            RequestDispatcher dispatcher = request.getRequestDispatcher(forward);
-            dispatcher.forward(request, response);
+        } catch (RESTException e) {
+            request.setAttribute("error", e.getMessage());
         }
+
+        final String forward = "WEB-INF/DC.jsp";
+        request.setAttribute("cfg", new ConfigBean());
+        RequestDispatcher dispatcher = request.getRequestDispatcher(forward);
+        dispatcher.forward(request, response);
+    }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-            doPost(request, response);
-        }
+            throws ServletException, IOException {
+
+        doPost(request, response);
+    }
 }

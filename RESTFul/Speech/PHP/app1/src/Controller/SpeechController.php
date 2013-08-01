@@ -40,7 +40,7 @@ class SpeechController extends APIController
                 $subContext = $this->_xSpeechSubContext;
             }
 
-            $srvc = new SpeechService($this->FQDN, $this->getFileToken());
+            $srvc = new SpeechService($this->apiFQDN, $this->getFileToken());
             $response = $srvc->speechToText(
                 $flocation, $context, $subContext, $this->_xArgs, $chunked
             );

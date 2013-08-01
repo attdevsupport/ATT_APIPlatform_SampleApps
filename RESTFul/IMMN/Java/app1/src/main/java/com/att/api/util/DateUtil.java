@@ -38,6 +38,7 @@ public class DateUtil {
      * </p>
      * @deprecated methods should be called from a static context
      */
+    @Deprecated
     public DateUtil() {
     }
 
@@ -47,6 +48,7 @@ public class DateUtil {
      * @return UTC time
      * @deprecated replaced by {@link #getTime()}
      */
+    @Deprecated
     public String getServerTime() {
         return DateUtil.getTime();
     }

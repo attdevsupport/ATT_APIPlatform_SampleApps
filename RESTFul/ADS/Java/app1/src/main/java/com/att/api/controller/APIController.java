@@ -50,7 +50,7 @@ public abstract class APIController extends HttpServlet {
                 final String clientId = cfg.getClientId();
                 final String clientSecret = cfg.getClientSecret();
                 final OAuthService service = new OAuthService(
-                        appConfig.getFQDN(), clientId, clientSecret);
+                        appConfig.getOauthFQDN(), clientId, clientSecret);
 
                 token = service.getToken(cfg.getProperty("scope"));
                 token.saveToken(tokenFile);
@@ -71,14 +71,14 @@ public abstract class APIController extends HttpServlet {
             return token;
         }
         
-        final String FQDN = appConfig.getFQDN();
+        final String FQDN = appConfig.getOauthFQDN();
         final String clientId = appConfig.getClientId();
         final String clientSecret = appConfig.getClientSecret(); 
 
         final String code = (String) request.getParameter("code");
         if (code != null) {
             final OAuthService service = new OAuthService(
-                    appConfig.getFQDN(), clientId, clientSecret);
+                    appConfig.getOauthFQDN(), clientId, clientSecret);
             token = service.getTokenUsingCode(code);
             session.setAttribute("token", token);
             return token;

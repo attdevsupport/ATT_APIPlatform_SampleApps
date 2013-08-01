@@ -23,7 +23,7 @@ class DCController extends APIController
                         . 'error_description=' . $_REQUEST['error_description']);
             }
 
-            $srvc = new DCService($this->FQDN, $this->getSessionToken());
+            $srvc = new DCService($this->apiFQDN, $this->getSessionToken());
             $deviceInfo = $srvc->getDeviceInformation();
             $this->results[DCController::RESULT_DEVICE_INFO] = $deviceInfo;
         } catch (Exception $e) {

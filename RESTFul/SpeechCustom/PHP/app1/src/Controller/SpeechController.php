@@ -33,7 +33,7 @@ class SpeechController extends APIController
             $xGrammar = $path . 'x-grammar.txt';
             $xDictionary = $path . 'x-dictionary.txt';
 
-            $srvc = new SpeechService($this->FQDN, $this->getFileToken());
+            $srvc = new SpeechService($this->apiFQDN, $this->getFileToken());
             $response = $srvc->speechToTextCustom(
                 $context, $flocation, $xGrammar, $xDictionary, $this->_xArgs
             );

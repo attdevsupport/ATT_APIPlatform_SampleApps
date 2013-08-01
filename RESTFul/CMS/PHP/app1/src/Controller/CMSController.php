@@ -68,7 +68,7 @@ class CMSController extends APIController {
                     'messageToPlay' => $txtMessageToPlay
                     );
                             
-            $cmsSrvc = new CMSService($this->FQDN, $this->getFileToken());
+            $cmsSrvc = new CMSService($this->apiFQDN, $this->getFileToken());
             $result = $cmsSrvc->createSession($vals);
 
             // Save session id
@@ -101,7 +101,7 @@ class CMSController extends APIController {
             /* save signal to session */
             $_SESSION['signal'] = $signal;
 
-            $srvc = new CMSService($this->FQDN, $this->getFileToken());
+            $srvc = new CMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->sendSignal($signal, $sessionId);
             $this->results[CMSController::RESULT_SEND_SIGNAL] = $result;
         } catch (Exception $e) {

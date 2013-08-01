@@ -95,9 +95,9 @@ module AttCloudServices
       headers = default_headers.merge(headers)
 
       response = RestClient.post "#{@fqdn}#{@endpoint}", headers
-
       json = JSON.parse(response)
-      return OAuthToken.new(json['access_token'], json['expires_in'], json['refresh_token'])
+      expiry = Time.now.to_i + json['expires_in'].to_i
+      return OAuthToken.new(json['access_token'], expiry, json['refresh_token'])
     end
     alias_method :generateToken, :createToken
 

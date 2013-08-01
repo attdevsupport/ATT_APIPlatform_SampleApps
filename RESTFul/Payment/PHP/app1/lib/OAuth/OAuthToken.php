@@ -23,13 +23,17 @@
  */
 
 /**
- * Immutable class used to hold OAuth token information. This information 
- * includes:
+ * Immutable class that holds OAuth token information. 
+ *
+ * This information includes:
  * <ul>
  * <li>Access Token</li>
  * <li>Time Access Token Expires (in seconds)</li>
  * <li>Refresh Token</li>
  * </ul>
+ *
+ * This class also provides utility methods for saving and loading OAuth
+ * tokens.
  *
  * @category Authentication 
  * @package  OAuth 
@@ -58,6 +62,8 @@ class OAuthToken
 
     /**
      * UNIX timestamp to measure when access token expires.
+     * 
+     * @var float
      */
     private $_accessTokenExpiry;
 
@@ -68,11 +74,11 @@ class OAuthToken
      * OAuthToken::NO_EXPIRATION.
      * 
      * @param string $accessToken  access token
-     * @param long   $expiresIn    the number of seconds until token 
+     * @param float  $expiresIn    the number of seconds until token 
      *                             expires (relative to token creation 
      *                             time)
      * @param string $refreshToken refresh token
-     * @param long   $creationTime creation time of token as measured by 
+     * @param float  $creationTime creation time of token as measured by 
      *                             the number of seconds since the Unix
      *                             Epoch (January 1 1970 00:00:00 GMT).
      */
@@ -104,15 +110,10 @@ class OAuthToken
     }
 
     /**
-     * Gets whether the access token has expired. This function uses the 
-     * expires_in parameter in order to calculate when the access token 
-     * expires. Note: This function uses the system's current time, which may 
-     * not be totally accurate. Furthermore, the server does not have to honor 
-     * the time set in expires_in (the access token could potentially be valid
-     * even after it's expired according to expires_in). Therefore, an 
-     * alternative approach would be to wait until the server returns a 401 
-     * error with the error_description set to 'token expired' before 
-     * attempting to refresh token.
+     * Gets whether the access token has expired. 
+     * 
+     * This function uses the <var>$expiresIn</var> and
+     * <var>$creationTime</var> parameters to calculate access token expiry.
      * 
      * @return boolean true if access token is expired, false otherwise
      */
@@ -144,8 +145,9 @@ class OAuthToken
 
     /**
      * Saves this token to the specified location in a synchronized manner by 
-     * using file locks. This method will block waiting for file lock. 
-     * Example $location: /tmp/token.php 
+     * using file locks. 
+     
+     * This method will block waiting for file lock. 
      * 
      * Note: if the file can not be saved in a secure location, for security 
      * reasons, it is recommended that the file ending end in '.php' because 
@@ -184,9 +186,10 @@ class OAuthToken
     }
 
     /**
-     * Attempts to load an access token from the specified location. This 
-     * method is done in a synchronized manner using file locks. This method 
-     * will block while waiting for the file lock. 
+     * Attempts to load an access token from the specified location. 
+     *
+     * Token loading is done in a synchronized manner using file locks. This
+     * method will block while waiting for the file lock. 
      *
      * @param string $location file path used to load token
      *

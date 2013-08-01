@@ -109,7 +109,7 @@ public class OAuthService {
 
             final String accessToken = rpcObj.getString("access_token");
             final String refreshToken = rpcObj.getString("refresh_token");
-            long expiresIn = Long.parseLong(rpcObj.getString("expires_in"));
+            long expiresIn = rpcObj.getLong("expires_in");
 
             // 0 indicates no expiry
             if (expiresIn == 0) {

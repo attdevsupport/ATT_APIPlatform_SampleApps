@@ -58,10 +58,10 @@ class TLController extends APIController {
             $requestedAccuracy = $_SESSION['requestedAccuracy'];
             $tolerance = $_SESSION['tolerance'];
 
-            $tlSrvc = new TLService($this->FQDN, $this->getSessionToken());
+            $tlSrvc = new TLService($this->apiFQDN, $this->getSessionToken());
             $this->clearSession(Array('getLocation'));
             $location = $tlSrvc->getLocation(
-                $acceptableAccuracy, $requestedAccuracy, $tolerance
+                $requestedAccuracy, $acceptableAccuracy, $tolerance
             );
             $this->results[TLController::RESULT_LOCATION] = $location;
         } catch (Exception $e) {

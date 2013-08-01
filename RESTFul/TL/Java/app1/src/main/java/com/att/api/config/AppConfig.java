@@ -8,7 +8,7 @@ import java.util.Properties;
  * configuration values.
  *
  */
-public class AppConfig {
+public final class AppConfig {
     private static final String CONFIG_NAME = "application.properties";
 
     private Properties properties;
@@ -93,9 +93,37 @@ public class AppConfig {
      * no FQDN has been set.
      *
      * @return String fully qualifed domain name or null
+     * @deprecated replaced by {@link #getOauthFQDN()} and {@link #getApiFQDN()}
      */
+    @Deprecated
     public String getFQDN() {
-        return config.properties.getProperty("FQDN");
+        return getApiFQDN();
+    }
+
+    /**
+     * Convenience method for getting the fully qualified domain name for
+     * api or null if no api FQDN has been set.
+     */
+    public String getApiFQDN() {
+        final String fqdn = config.properties.getProperty("apiFQDN");
+        if (fqdn == null) // backwards compatible
+            return config.properties.getProperty("FQDN");
+
+        return fqdn;
+    }
+
+    /**
+     * Convenience method for getting the fully qualified domain name for
+     * oauth or null if no oauth FQDN has been set.
+     *
+     * @return String fully qualifed domain name or null
+     */
+    public String getOauthFQDN() {
+        final String fqdn = config.properties.getProperty("oauthFQDN");
+        if (fqdn == null) // backwards compatible
+            return config.properties.getProperty("FQDN");
+
+        return fqdn;
     }
 
     /**

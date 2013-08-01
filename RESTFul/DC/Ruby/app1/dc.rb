@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
@@ -31,11 +31,11 @@ before do
   #create our service if isn't present
   if session[:dc].nil?
     session[:dc] = DC::DCService.new(settings.FQDN, 
-                                 settings.api_key, 
-                                 settings.secret_key,
-                                 DC::SCOPE,
-                                 :grant_type => GrantType::AUTHORIZATION,
-                                 :redirect_uri => settings.redirect_url) 
+                                     settings.api_key, 
+                                     settings.secret_key,
+                                     DC::SCOPE,
+                                     :grant_type => GrantType::AUTHORIZATION,
+                                     :redirect_uri => settings.redirect_url) 
   end
 end
 
@@ -47,7 +47,7 @@ get '/' do
 
     #something went wrong with authentication display error
     elsif params[:error]
-      @error = params[:error] + ": " + params[:error_description]
+      @error = params[:error] + ": " #+ params[:error_description] 
 
     #Authenticate if neccessary
     else

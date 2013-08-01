@@ -86,6 +86,7 @@ public class APIResponse {
      * @see org.apache.http.HttpResponse
      * @deprecated replaced by {@link #valueOf(HttpResponse)}
      */
+    @Deprecated
     public APIResponse(HttpResponse httpResponse) throws RESTException {
         try {
             statusCode = httpResponse.getStatusLine().getStatusCode();

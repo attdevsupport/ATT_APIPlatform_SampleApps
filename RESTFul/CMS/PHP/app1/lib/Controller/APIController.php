@@ -44,11 +44,18 @@ abstract class APIController
 {
 
     /**
-     * Fully qualified domain name.
+     * Fully qualified domain name for APIs.
      *
      * @var string
      */
-    protected $FQDN;
+    protected $apiFQDN;
+
+    /**
+     * Fully qualified domain name for oauth.
+     *
+     * @var string
+     */
+    protected $oauthFQDN;
 
     /**
      * Client id used for authenticaton.
@@ -105,7 +112,7 @@ abstract class APIController
 
         // No token or token is expired... send token request
         if (!$token || $token->isAccessTokenExpired()) {
-            $codeURL = $this->FQDN . '/oauth/authorize';
+            $codeURL = $this->oauthFQDN . '/oauth/authorize';
             $codeRequest = new OAuthCodeRequest(
                 $codeURL, $this->clientId, $this->scope, 
                 $authorize_redirect_uri
@@ -113,7 +120,7 @@ abstract class APIController
             $code = $codeRequest->getCode();
 
             $tokenSrvc = new OAuthTokenService(
-                $this->FQDN, $this->clientId, $this->clientSecret
+                $this->oauthFQDN, $this->clientId, $this->clientSecret
             );
             $token = $tokenSrvc->getTokenUsingCode($code);
             $_SESSION['token'] = serialize($token);
@@ -146,7 +153,7 @@ abstract class APIController
         $token = OAuthToken::loadToken($oauth_file);
         if ($token == null || $token->isAccessTokenExpired()) {
             $tokenSrvc = new OAuthTokenService(
-                $this->FQDN, 
+                $this->oauthFQDN, 
                 $this->clientId,
                 $this->clientSecret
             );
@@ -196,7 +203,8 @@ abstract class APIController
     {
         // Copy config values to member variables
         include __DIR__ . '/../../config.php';
-        $this->FQDN = $FQDN;
+        $this->oauthFQDN = isset($oauthFQDN) ? $oauthFQDN : $FQDN;
+        $this->apiFQDN = isset($apiFQDN) ? $apiFQDN : $FQDN;
         $this->clientId = $api_key;
         $this->clientSecret = $secret_key;
         $this->scope = $scope;
@@ -208,8 +216,10 @@ abstract class APIController
         $proxyHost = isset($proxy_host) ? $proxy_host : null;
         $proxyPort = isset($proxy_port) ? $proxy_port : -1;
         $trustAllCerts = isset($accept_all_certs) ? $accept_all_certs : false;
-        RESTFulRequest::setDefaultProxy($proxyHost, $proxyPort);
-        RESTFulRequest::setDefaultAcceptAllCerts($trustAllCerts);
+        if ($proxyHost != null)
+            RESTFulRequest::setDefaultProxy($proxyHost, $proxyPort);
+        if ($trustAllCerts)
+            RESTFulRequest::setDefaultAcceptAllCerts($trustAllCerts);
     }
 
     /**

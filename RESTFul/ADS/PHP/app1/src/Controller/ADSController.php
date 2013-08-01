@@ -41,7 +41,7 @@ class ADSController extends APIController
 
             $category = $_REQUEST['category'];
 
-            $adsService= new ADSService($this->FQDN, $this->getFileToken());
+            $adsService= new ADSService($this->apiFQDN, $this->getFileToken());
 
             $inputs = array('MMA', 'ageGroup', 'Premium', 'gender',
                     'over18', 'zipCode', 'city', 'areaCode', 'country', 
@@ -61,7 +61,9 @@ class ADSController extends APIController
                 }
             }
 
-            $ua = $_SERVER['HTTP_USER_AGENT'];
+            //$ua = $_SERVER['HTTP_USER_AGENT'];
+            // TODO (pk9069): move values to config
+            $ua = 'Mozilla/5.0 (Android; Mobile; rv:13.0) Gecko/13.0 Firefox/13.0';
             $udid = md5('RANDOM TRUST ME');
             $result = $adsService->getAdvertisement(
                 $category, $ua, $udid, $optVals

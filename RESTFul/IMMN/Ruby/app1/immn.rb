@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
@@ -52,7 +52,7 @@ get '/' do
     session[:immn].updateAccessToken(params[:code]) unless params[:code].nil?
     session[:mim].updateAccessToken(params[:code]) unless params[:code].nil?
     if session[:sending] then
-      sendMessage(session[:address], session[:subject], session[:message], session[:attachment], session[:groupCheckBox], true)
+      sendMessage(session[:Address], session[:subject], session[:message], session[:attachment], session[:groupCheckBox], true)
     elsif session[:getting] then
       getMessageHeaders(session[:headerCountTextBox], session[:indexCursorTextBox], true)
     elsif session[:getting_content] then
@@ -69,7 +69,7 @@ end
 post '/submit' do
   # if auth'd then send the message
   if session[:immn].authenticated? then
-    sendMessage(params[:address], params[:subject], params[:message], params[:attachment], params[:groupCheckBox])
+    sendMessage(params[:Address], params[:subject], params[:message], params[:attachment], params[:groupCheckBox])
     # otherwise save our session and do consent flow
   else
     storeSendingParams
@@ -173,7 +173,7 @@ def load_attachments
 end
 
 def storeSendingParams
-  session[:address] = params[:address] if params[:address]
+  session[:Address] = params[:Address] if params[:Address]
   session[:message] = params[:message] if params[:message]
   session[:subject] = params[:subject] if params[:subject]
   session[:attachment] = params[:attachment] if params[:attachment]
@@ -182,7 +182,7 @@ def storeSendingParams
 end
 
 def clearSendingParams
-  session[:address] = nil
+  session[:Address] = nil
   session[:message] = nil
   session[:subject] = nil
   session[:attachment] = nil

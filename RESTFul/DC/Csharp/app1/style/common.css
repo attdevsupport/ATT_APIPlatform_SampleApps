@@ -218,43 +218,6 @@ h2 {
   h1 { 
     font-size: 1.125em;
   }
-  /* table data */
-  #content table, #content thead, #content tbody, #content th, #content td, #content tr {
-    display: block;
-  }
-  #content thead tr { 
-    position: absolute;
-    top: -2999px;
-    left: -2999px;
-  }
-  #content tr { 
-    border: 2px solid #004A80; 
-  }
-
-  #content tr:nth-of-type(even) {
-    background: white;
-  } 
-  
-  #content td {
-    border-bottom: 2px solid #ccc; 
-    position: relative;
-    padding-left: 50%;
-    text-align: left;
-  }
-
-  #content td:before {
-    content: attr(data-value);
-    position: absolute;
-    top: 1px;
-    left: 5px;
-    width: 45%;
-    padding-right: 1.25%;
-    white-space: nowrap;
-    text-align: left;
-    font-weight: bold;
-  }
-  /* end table data */
-
   /* change menu to icon */
 	#menuButton {
 		display: block;

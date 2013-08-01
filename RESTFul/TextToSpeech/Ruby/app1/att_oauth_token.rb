@@ -11,6 +11,13 @@ module AttCloudServices
   class OAuthToken
     include Enumerable
 
+    # # # # # # #
+    # CONSTANTS #
+    # # # # # # #
+    HUNDRED_YEARS = 0
+    NEVER_EXPIRES = -1
+
+
     # Construct an OAuthToken object
     #
     # @param access_token [String] token used for authentication
@@ -19,6 +26,7 @@ module AttCloudServices
     def initialize(access_token, expiry, refresh_token)
       @access_token = access_token
       @refresh_token = refresh_token
+
       expiry = expiry.to_i 
 
       if expiry == HUNDRED_YEARS
@@ -31,17 +39,16 @@ module AttCloudServices
       elsif expiry == NEVER_EXPIRES
         @expiry = NEVER_EXPIRES
       else
-        @expiry = Time.at(expiry.to_i)
+        #check that ruby can handle large numbers
+        begin
+          @expiry = Time.at(expiry.to_i)
+        rescue RangeError => e
+          @expiry = NEVER_EXPIRES
+        end
       end
     end
 
     attr_reader :access_token, :refresh_token, :expiry
-
-    # # # # # # #
-    # CONSTANTS #
-    # # # # # # #
-    HUNDRED_YEARS = 0
-    NEVER_EXPIRES = -1
 
     # Check if access token is expired or not
     #

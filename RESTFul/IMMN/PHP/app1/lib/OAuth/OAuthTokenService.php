@@ -3,18 +3,18 @@
 
 /**
  * OAuth Library
- * 
+ *
  * PHP version 5.4+
- * 
- * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ *
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2013.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
  * Copyright 2013 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
- * 
- * @category  Authentication 
+ *
+ * @category  Authentication
  * @package   OAuth
  * @author    Pavel Kazakov <pk9069@att.com>
  * @copyright 2013 AT&T Intellectual Property
@@ -26,23 +26,27 @@ require_once __DIR__ . '/OAuthException.php';
 require_once __DIR__ . '../../Srvc/Service.php';
 
 /**
- * Implements the OAuth 2.0 Authorization Framework for requesting access 
- * tokens. This implementation of the OAuth 2.0 Framework provides two models
- * for obtaining an access token, which can then be used for requesting access
- * to protected resources. These models are:
+ * Implements the OAuth 2.0 Authorization Framework for requesting access
+ * tokens.
+ *
+ * This implementation of the OAuth 2.0 Framework provides two models for
+ * obtaining an access token, which can then be used for requesting access to
+ * protected resources.
+ *
+ * These models are:
  * <ul>
  * <li>
- * Authorization Code - Uses a subscriber context by requesting an 
+ * Authorization Code - Uses a subscriber context by requesting an
  * authorization code before requesting an access token.
  * </li>
  * <li>
- * Client Credentials - Sends a direct request for an access token using a 
+ * Client Credentials - Sends a direct request for an access token using a
  * client id, client secret, and scope.
  * </li>
  * </ul>
- * 
- * @category Authentication 
- * @package  OAuth 
+ *
+ * @category Authentication
+ * @package  OAuth
  * @author   Pavel Kazakov <pk9069@att.com>
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
@@ -60,7 +64,7 @@ class OAuthTokenService extends Service
     private $_url;
 
 
-    /** 
+    /**
      * Client id.
      *
      * @var string
@@ -75,12 +79,12 @@ class OAuthTokenService extends Service
     private $_clientSecret;
 
     /**
-     * Creates a RESTFulRequest object contains common information that all 
-     * OAuth method calls share. 
-     * 
+     * Creates a RESTFulRequest object contains common information that all
+     * OAuth method calls share.
+     *
      * @return RESTFulRequest created request
      */
-    private function _createRESTFulRequest() 
+    private function _createRESTFulRequest()
     {
         $req = new RESTFulRequest($this->_url);
         $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_POST);
@@ -90,7 +94,7 @@ class OAuthTokenService extends Service
     }
 
     /**
-     * Parses the result received from sending an API request for an OAuth 
+     * Parses the result received from sending an API request for an OAuth
      * token.
      *
      * @param array $result the result returned from a restful request
@@ -102,6 +106,16 @@ class OAuthTokenService extends Service
     protected function parseResult($result)
     {
         $tokenResponse = parent::parseResult($result);
+    
+        if (!isset($tokenResponse['access_token']))
+            throw new ServiceException('No access token in response.');
+
+        if (!isset($tokenResponse['expires_in']))
+            throw new ServiceException('No expires_in in response.');
+
+        if (!isset($tokenResponse['refresh_token']))
+            throw new ServiceException('No refresh_token in response.');
+
         return new OAuthToken(
             $tokenResponse['access_token'],
             $tokenResponse['expires_in'],
@@ -110,14 +124,14 @@ class OAuthTokenService extends Service
     }
 
     /**
-     * Creates an OAuthTokenService object with the specified FQDN, client id, 
-     * and client secret. These values will then be used when requesting an
-     * access token. 
-     * 
-     * The request will be sent to the FQDN + OAuthTokenService::URL_PATH 
-     * unless overriden using the setURL() method.
-     * 
-     * @param string $FQDN         fully qualified domain name 
+     * Creates an OAuthTokenService object with the specified FQDN, client id,
+     * and client secret.
+     *
+     * These values will then be used when requesting an access token. The
+     * request will be sent to <var>FQDN + OAuthTokenService::URL_PATH</var>
+     * unless overriden using {@link #setURL()}
+     *
+     * @param string $FQDN         fully qualified domain name
      * @param string $clientId     client id
      * @param string $clientSecret client secret
      *
@@ -129,7 +143,7 @@ class OAuthTokenService extends Service
         $this->_clientId = $clientId;
         $this->_clientSecret = $clientSecret;
     }
-    
+
     /**
      * Sets the URL to send request to.
      *
@@ -145,11 +159,11 @@ class OAuthTokenService extends Service
     /**
      * Gets an access token using the specified code. The parameters previously
      * supplied will be used when requesting an access token.
-     * 
+     *
      * The token request is done using the authorization_code grant type.
      *
      * @param OAuthCode $code code to use when requesting access token
-     * 
+     *
      * @return OAuthToken an OAuth token
      * @throws OAuthException if server did not return valid access token
      */
@@ -163,17 +177,30 @@ class OAuthTokenService extends Service
     }
 
     /**
-     * Gets an access token using the specified scope. The parameters 
-     * previously supplied will be used when requesting an access token.
-     * 
-     * The token request is done using the client_credentials grant type.
+     * Alias for getToken().
+     *
+     * @param string $scope scope to use when requesting access token
+     *
+     * @return OAuthToken an OAuth token
+     * @throws OAuthException if server did not return valid access token
+     * @see getToken()
+     */
+    public function getTokenUsingScope($scope)
+    {
+        return $this->getToken($scope);
+    }
+
+    /**
+     * Gets an access token using the specified scope.
+     *
+     * The token request is done using the <i>client_credentials</i> grant type.
      *
      * @param string $scope scope to use when requesting access token
      *
      * @return OAuthToken an OAuth token
      * @throws OAuthException if server did not return valid access token
      */
-    public function getTokenUsingScope($scope) 
+    public function getToken($scope)
     {
         $req = $this->_createRESTFulRequest();
         $req->addParam('scope', $scope);
@@ -185,17 +212,17 @@ class OAuthTokenService extends Service
     }
 
     /**
-     * Gets a new OAuth token using the refresh token of the specified OAuth 
-     * token. 
-     * 
-     * The token request is done using the refresh_token grant type.
+     * Gets a new OAuth token using the refresh token of the specified OAuth
+     * token.
      *
-     * @param OAuthToken $token OAuth token to use for refreshing 
+     * The token request is done using the <i>refresh_token</i> grant type.
+     *
+     * @param OAuthToken $token OAuth token to use for refreshing
      *
      * @return OAuthToken an OAuth token
      * @throws OAuthException if server did not return valid access token
      */
-    public function refreshToken(OAuthToken $token) 
+    public function refreshToken(OAuthToken $token)
     {
         $req = $this->_createRESTFulRequest();
         $req->addParam('refresh_token', $token->getRefreshToken());
@@ -203,7 +230,5 @@ class OAuthTokenService extends Service
         $result = $req->sendRequest();
         return $this->parseResult($result);
     }
-
 }
-
 ?>

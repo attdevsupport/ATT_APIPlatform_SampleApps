@@ -170,13 +170,9 @@ For more information contact developer.support@att.com
                     <td data-value="Parameter">ClickUrl</td>
                     <td data-value="Value">${clickUrl}</td>
                   </tr>
-                  <tr>
-                    <td data-value="Parameter">ImageUrl</td>
-                    <td data-value="Value">${image}</td>
-                  </tr>
                 </tbody>
               </table>
-              <a id="hplImage" href="${clickUrl}" target="_blank"><img src="${image}" alt="" /></a>
+              ${content}
               </c:if>
             </c:if>
           <!-- SAMPLE APP CONTENT ENDS HERE! -->

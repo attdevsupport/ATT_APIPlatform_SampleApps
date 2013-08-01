@@ -24,7 +24,7 @@ class PaymentController extends APIController {
     }
 
     private function createPaymentService() {
-        $srvc = new PaymentService($this->FQDN, $this->getFileToken());
+        $srvc = new PaymentService($this->apiFQDN, $this->getFileToken());
         return $srvc;
     }
 
@@ -66,7 +66,7 @@ class PaymentController extends APIController {
             ->setMerchantProductId('mpid' . time())
             ->setMerchantRedirectUrl($this->_redirectURL);
 
-        $request = new NotaryService($this->FQDN, $this->clientId, 
+        $request = new NotaryService($this->apiFQDN, $this->clientId, 
                 $this->clientSecret);
         return $request->getSubscriptionNotary($subArgs);
     }
@@ -81,7 +81,7 @@ class PaymentController extends APIController {
             ->setMerchantProductId('mpid' . time())
             ->setMerchantRedirectUrl($this->_redirectURL);
 
-        $request = new NotaryService($this->FQDN, $this->clientId, 
+        $request = new NotaryService($this->apiFQDN, $this->clientId, 
                 $this->clientSecret);
         return $request->getTransactionNotary($transArgs);
     }
@@ -93,7 +93,7 @@ class PaymentController extends APIController {
             }
 
             $payload = $_REQUEST['payload'];
-            $req = new NotaryService($this->FQDN, $this->clientId, 
+            $req = new NotaryService($this->apiFQDN, $this->clientId, 
                     $this->clientSecret);
             $this->results['notary'] = $req->getNotary($payload);
         } catch (Exception $e) {
@@ -115,7 +115,7 @@ class PaymentController extends APIController {
             $_SESSION['notary'] = serialize($notary);
 
             // redirect
-            PaymentService::newSubscription($this->FQDN, $this->clientId, 
+            PaymentService::newSubscription($this->apiFQDN, $this->clientId, 
                     $notary); 
         } catch (Exception $e) {
             $this->errors['newSub'] = $e->getMessage();
@@ -135,7 +135,7 @@ class PaymentController extends APIController {
             $_SESSION['notary'] = serialize($notary);
 
             // redirect
-            PaymentService::newTransaction($this->FQDN, $this->clientId, 
+            PaymentService::newTransaction($this->apiFQDN, $this->clientId, 
                     $notary); 
         } catch (Exception $e) {
             $this->errors['newTrans'] = $e->getMessage();

@@ -34,6 +34,39 @@ require_once __DIR__ . '/RESTFulResponse.php';
 /**
  * Used for sending restful requests. 
  * 
+ * This class follows the dependency inversion principle by applying a
+ * varation of the adapter pattern. That is, this class wraps CURL and provides
+ * a simplified interface. Since this class is a wrapper for CURL, the CURL
+ * extension is required for this class to work. 
+ * 
+ * Example usage of this class can be found below:
+ * <pre>
+ * <code>
+ * // choose URL to send request to
+ * $endpoint = 'http://www.att.com';
+ * // create a RESTFULRequest
+ * $req = new RESTFulRequest($endpoint);
+ * // set any proxy settings, if applicable
+ * $req->setProxy('proxy.entp.attws.com', 8080);
+ * // set http method
+ * $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
+ * // set any headers
+ * $req->setHeader('name', 'value');
+ * // add any get params
+ * $req->addParam('param', 'value');
+ * // send request and get result
+ * $result = $req->sendRequest();
+ * // parse result
+ * if ($result->getResponseCode() == 200) {
+ *     print('Success!');
+ *     print("\n");
+ *     print($result->getResponseBody());
+ * } else {
+ *     print('Failed');
+ * }
+ * </code>
+ * </pre>
+ * 
  * @category Network
  * @package  Restful 
  * @author   Pavel Kazakov <pk9069@att.com>
@@ -231,8 +264,14 @@ class RESTFulRequest
     }
 
     /**
-     * Sets the HTTP method to use when sending request. Only GET, POST, and 
-     * PUT are currently supported.
+     * Sets the HTTP method to use when sending request.
+     * 
+     * Only the following HTTP methods currently are supported:
+     * <ul>
+     * <li>GET</li>
+     * <li>POST</li>
+     * <li>PUT</li>
+     * </ul>
      * 
      * @param int $method http method to use when sending request
      *
@@ -283,8 +322,10 @@ class RESTFulRequest
     }
 
     /** 
-     * Set raw body for HTTP POST. If intending to set query parameters as
-     * the POST body, use the addParam() method instead.
+     * Set raw body for HTTP POST.
+     * 
+     * If intending to set query parameters as the POST body, use the
+     * {@link #addParam()} method instead.
      *
      * @param string $body body to use in an HTTP POST request.
      *
@@ -296,8 +337,9 @@ class RESTFulRequest
     }
 
     /**
-     * Sets a multipart object to use for a multipart request. By setting a 
-     * multipart object, this request becomes a multipart request.
+     * Sets a multipart object to use for a multipart request.
+     * 
+     * By setting a multipart object, this request becomes a multipart request.
      *
      * @param MultipartBody $multipart multipart object to use 
      *
@@ -371,8 +413,10 @@ class RESTFulRequest
     }
 
     /**
-     * Sets whether to accept all certificates. Useful for testing if API server
-     * is using self-signed certificates.
+     * Sets whether to accept all certificates.
+     * 
+     * Useful for handling self-signed certificates, but should not be used on
+     * production.
      *
      * @param boolean $shouldAccept true if to accept all certificates, false
      *                              otherwise

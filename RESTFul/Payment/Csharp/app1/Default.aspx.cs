@@ -514,7 +514,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         showSubscription = "true";
         if (string.Compare(getSubscriptionAuthCode.SelectedValue.ToString(), "Select") == 0)
             return;
-        string resourcePathString = string.Empty + this.endPoint + "/rest/3/Commerce/Payment/Subscriptions/TransactionAuthCode/" + getSubscriptionAuthCode.SelectedValue.ToString();
+        string resourcePathString = string.Empty + this.endPoint + "/rest/3/Commerce/Payment/Subscriptions/SubscriptionAuthCode/" + getSubscriptionAuthCode.SelectedValue.ToString();
         this.getSubscriptionStatus(resourcePathString, ref subscription_status_error, ref subscription_status_success);
     }
     protected void GetSubscriptionStatusForMerTranId_Click(object sender, EventArgs e)
@@ -860,8 +860,8 @@ public partial class Payment_App1 : System.Web.UI.Page
                         this.channel + "\",\"Description\":\"" + this.description + "\",\"MerchantTransactionId\":\""
                         + this.merchantTransactionId + "\",\"MerchantProductId\":\"" + this.merchantProductId
                         + "\",\"MerchantPaymentRedirectUrl\":\"" + this.merchantRedirectURI + "\",\"MerchantSubscriptionIdList\":\""
-                        + this.merchantSubscriptionIdList + "\",\"IsPurchaseOnNoActiveSubscription\":\""
-                        + this.isPurchaseOnNoActiveSubscription + "\",\"SubscriptionRecurrences\":" + this.subscriptionRecurringNumber
+                        + this.merchantSubscriptionIdList + "\",\"IsPurchaseOnNoActiveSubscription\":"
+                        + this.isPurchaseOnNoActiveSubscription + ",\"SubscriptionRecurrences\":" + this.subscriptionRecurringNumber
                         + ",\"SubscriptionPeriod\":\"" + this.subscriptionRecurringPeriod
                         + "\",\"SubscriptionPeriodAmount\":" + this.subscriptionRecurringPeriodAmount +
                         "}";
