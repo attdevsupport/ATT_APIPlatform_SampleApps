@@ -64,7 +64,7 @@ post '/TextToSpeech' do
   rescue RestClient::Exception => e
     @error = e.response 
   rescue Exception => e
-    @error = e.response
+    @error = e.message
   end
   erb :tts
 end

@@ -86,7 +86,7 @@ module Att
           }
 
           gheaders = {
-            "Content-Disposition" => %(form-data; name="#{grammar_type.to_s}" filename="#{grammar_name}"),
+            "Content-Disposition" => %(form-data; name="#{grammar_type}"; filename="#{grammar_name}"),
             "Content-Type" => "application/srgs+xml"
           }
           grammar_part = {

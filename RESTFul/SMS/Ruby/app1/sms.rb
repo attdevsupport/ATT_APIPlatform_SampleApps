@@ -72,7 +72,7 @@ post '/sendSms' do
   rescue RestClient::Exception => e
     @send_error = e.response 
   rescue Exception => e
-    @send_error = e.response
+    @send_error = e.message
   end
   erb :sms
 end
@@ -90,7 +90,7 @@ post '/getDeliveryStatus' do
   rescue RestClient::Exception => e
     @delivery_error = e.response 
   rescue Exception => e
-    @delivery_error = e.response
+    @delivery_error = e.message
   end
   erb :sms
 end
@@ -108,7 +108,7 @@ post '/getReceivedSms' do
   rescue RestClient::Exception => e
     @received_error = e.response 
   rescue Exception => e
-    @received_error = e.response
+    @received_error = e.message
   end
   erb :sms
 end

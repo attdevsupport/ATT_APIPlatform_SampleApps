@@ -104,7 +104,7 @@ post '/getStatus' do
   rescue RestClient::Exception => e
     @delivery_error= e.response 
   rescue Exception => e
-    @delivery_error = e.response
+    @delivery_error = e.message
   end
   erb :mms
 end
