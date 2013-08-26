@@ -4,23 +4,27 @@
   <display-name>AT&amp;T Sample Application - Text to Speech</display-name>
 
   <welcome-file-list>
-    <welcome-file>Speech.jsp</welcome-file>
+    <welcome-file>tts.jsp</welcome-file>
   </welcome-file-list>
 
   <servlet>
-    <servlet-name>SpeechController</servlet-name>
-    <servlet-class>com.att.api.speech.controller.SpeechController</servlet-class>
+    <servlet-name>TtsController</servlet-name>
+    <servlet-class>com.att.api.speech.controller.TtsController</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>SpeechController</servlet-name>
+    <servlet-name>TtsController</servlet-name>
     <url-pattern>/SpeechAction</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>SpeechController</servlet-name>
+    <servlet-name>TtsController</servlet-name>
     <url-pattern>/index.jsp</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>SpeechController</servlet-name>
+    <servlet-name>TtsController</servlet-name>
+    <url-pattern>/tts.jsp</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>TtsController</servlet-name>
     <url-pattern>/Speech.jsp</url-pattern> 
   </servlet-mapping>
 </web-app>

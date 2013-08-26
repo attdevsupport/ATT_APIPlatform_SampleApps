@@ -56,7 +56,7 @@
         </div> <!-- end of contentHeading -->
         <div class="formBox" id="formBox">
           <div id="formContainer" class="formContainer">
-            <form name="SpeechToText" action="SpeechAction" method="post">
+            <form name="SpeechToText" action="index.jsp" method="post">
               <div id="formData">
                 <h3>Speech Context:</h3>
                 <select name="SpeechContext">

@@ -11,9 +11,9 @@ require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'base64'
-require 'att_tts_service'
+require 'att/codekit'
 
-include AttCloudServices
+include Att::Codekit
 
 enable :sessions
 
@@ -22,16 +22,19 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
+SCOPE = "TTS"
+
 TEXT_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/text")
 
 RestClient.proxy = settings.proxy
 
 configure do
-  Service = TTS::TtsService.new(settings.FQDN,
+  oauth = Auth::ClientCred.new(settings.FQDN,
                                 settings.api_key,
                                 settings.secret_key,
-                                TTS::SCOPE,
+                                SCOPE,
                                 :tokens_file => settings.tokens_file)
+  TTS = Service::TTSService.new(oauth)
 end
 
 before do
@@ -52,14 +55,18 @@ post '/TextToSpeech' do
               when "text/plain" then load_content("PlainText.txt")
               end
 
-    response = Service.textToSpeech(params[:x_arg], content, type)
+    response = TTS.toSpeech(content, 
+                            :xargs => params[:x_arg],
+                            :type => type)
     #the binary audio file
     @audio = response
-  rescue => e
+    
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
     @error = e.response
-  ensure
-    return erb :tts
   end
+  erb :tts
 end
 
 def load_content(text_file)

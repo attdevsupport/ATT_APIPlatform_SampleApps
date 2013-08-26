@@ -2,13 +2,13 @@
 <web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
   <display-name>speech</display-name>
   <welcome-file-list>
-    <welcome-file>Speech.jsp</welcome-file>
+    <welcome-file>SpeechCustom.jsp</welcome-file>
   </welcome-file-list>
   <display-name>AT&amp;T Speech Sample Application</display-name>
 
   <servlet>
     <servlet-name>SpeechController</servlet-name>
-    <servlet-class>com.att.api.speech.controller.SpeechController</servlet-class>
+    <servlet-class>com.att.api.speech.controller.SpeechCustomController</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>SpeechController</servlet-name>
@@ -20,6 +20,6 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>SpeechController</servlet-name>
-    <url-pattern>/Speech.jsp</url-pattern> 
+    <url-pattern>/SpeechCustom.jsp</url-pattern> 
   </servlet-mapping>
 </web-app>

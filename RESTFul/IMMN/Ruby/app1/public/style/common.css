@@ -199,11 +199,6 @@ h2 {
   margin-bottom: 1.2833%;
 }
 
-.note {
-  font-style: italic;
-  font-size: 0.8em;
-}
-
 /* APP SPECIFIC CSS */
 #msgHeaderForm {
     float: left;
@@ -213,10 +208,6 @@ h2 {
 #msgContentForm {
     float: right;
     width: 50%;
-}
-
-#kvp select {
-    width: 100%
 }
 /* END APP SPECIFIC CSS */
 
@@ -340,7 +331,7 @@ h2 {
         width: 100%;
     }
     #msgContentForm {
-        float: none;
+        float: right;
         width: 100%;
     }
   /* END APP SPECIFIC MEDIA QUERY CSS */

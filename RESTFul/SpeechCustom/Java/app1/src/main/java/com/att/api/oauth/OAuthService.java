@@ -1,3 +1,5 @@
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
@@ -12,21 +14,25 @@
 
 package com.att.api.oauth;
 
-import java.io.IOException;
 import java.text.ParseException;
 
 import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
-import com.att.api.rest.RESTConfig;
 import com.att.api.rest.RESTException;
 
 import org.json.JSONObject;
 
 /**
  * Implements the OAuth 2.0 Authorization Framework for requesting access
- * tokens. This implementation of the OAuth 2.0 Framework provides two models
+ * tokens.
+ *
+ * <p>
+ * This implementation of the OAuth 2.0 Framework provides two models
  * for obtaining an access token, which can then be used for requesting access
- * to protected resources. These models are:
+ * to protected resources.
+ * </p>
+ *
+ * These models are:
  * <ul>
  * <li>
  * Authorization Code - Uses a subscriber context by requesting an authorization
@@ -37,11 +43,12 @@ import org.json.JSONObject;
  * client id, client secret, and scope.
  * </li>
  * </ul>
+ *
  * An example of usage can be found below:
  * <pre>
  * // Declare variables to use
  * final String tokenFile = "/tmp/tokenfile.properties";
- * final String endpoint = "http://api.att.com" + OAuthService.API_URL;
+ * final String fqdn = "http://api.att.com";
  * final String clientId = "12345";
  * final String clientSecret = "12345";
  *
@@ -49,98 +56,71 @@ import org.json.JSONObject;
  *     // Attempt to load token from file before sending token request
  *     OAuthToken token = OAuthToken.loadToken(tokenFile);
  *     if (token == null || token.isAccessTokenExpired()) {
- *        // attempt to send request
- *        final RESTConfig cfg = new RESTConfig(endpoint);
- *        final OAuthService service = 
- *            new OAuthService(cfg, clientId, clientSecret);    
- *        final String scope = "SMS";
+ *         // attempt to send request
+ *         OAuthService service
+ *             = new OAuthService(fqdn, clientId, clientSecret);
+ *         final String scope = "SMS";
  *
- *        // send request
- *        token = service.getToken(scope); 
- *        
- *        // token obtained--save it
- *        token.saveToken(tokenFile);
+ *         // send request
+ *         token = service.getToken(scope);
+ *
+ *         // token obtained--save it
+ *         token.saveToken(tokenFile);
  *     }
  * } catch (RESTException e) {
- *     // if an error occured when access token is requested 
+ *     // if an error occured during access token request
+ * } catch (IOException ioe) {
+ *     // if an error occured loading or saving token
  * }
- *
  * </pre>
  *
- * @version 2.2
+ * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
+ * @version 3.0
  * @since 2.2
- * @see https://tools.ietf.org/html/rfc6749
+ * @see <a href="https://tools.ietf.org/html/rfc6749">OAuth 2.0 Framework</a>
  */
 public class OAuthService {
-    // 100 years
-    private static final long ACCESS_TOKEN_EXPIRY = 3155692597470L;
 
-    // 24 hrs
-    // private static final long REFRESH_TOKEN_EXPIRY = 86400000l;
-
+    /** Added to fqdn to use for sending OAuth requests. */
     public static final String API_URL = "/oauth/token";
 
-    private final RESTConfig cfg;
+    /** Fully qualified domain name. */
+    private final String fqdn;
 
+    /** Client id to use for requesting an OAuth token. */
     private final String clientId;
+
+    /** Client secret to use for requestion an OAuth token. */
     private final String clientSecret;
-
-    /**
-     * Validates client credentials.
-     *
-     * @param scope
-     *            scope to validate
-     * @param clientId
-     *            clientId to validate
-     * @param clientSecret
-     *            client secret to validate
-     *
-     * @throws RESTException 
-     *             if any of the aforementioned variables are invalid.
-     */
-    private void validateClientCredentials(String scope, String clientId,
-            String clientSecret) throws RESTException {
-
-        final String[] toValidate = { scope, clientId, clientSecret };
-        final String[] varNames = { "Scope", "Client Id", "ClientSecret" };
-        for (int i = 0; i < toValidate.length; ++i) {
-            if (toValidate[i] == null || toValidate[i].length() == 0) {
-                String exception = varNames[i] + " must not be empty.";
-                throw new RESTException(-1, exception);
-            }
-        }
-    }
 
     /**
      * Parses the API response from the API server when an access token was
      * requested.
      *
-     * @param apiResponse
-     *            API Response to parse
-     * @return OAuthToken if successful response
+     * @param response API Response to parse
+     * @return OAuthToken object if successful response
      * @throws RESTException if there is an issue reading the API response
      */
-    private OAuthToken parseResponse(APIResponse response) throws RESTException {
-
-        final long currentTime = System.currentTimeMillis();
+    private OAuthToken parseResponse(APIResponse response)
+            throws RESTException {
 
         try {
             JSONObject rpcObj = new JSONObject(response.getResponseBody());
 
             final String accessToken = rpcObj.getString("access_token");
             final String refreshToken = rpcObj.getString("refresh_token");
-            long expiry = Long.parseLong(rpcObj.getString("expires_in"));
+            long expiresIn = rpcObj.getLong("expires_in");
+
             // 0 indicates no expiry
-            // therefore just make the token expire in 100 years
-            if (expiry == 0) {
-                expiry = currentTime + ACCESS_TOKEN_EXPIRY;
+            if (expiresIn == 0) {
+                expiresIn = OAuthToken.NO_EXPIRATION;
             }
 
-            return new OAuthToken(accessToken, expiry, refreshToken);
+            return new OAuthToken(accessToken, expiresIn, refreshToken);
         } catch (ParseException e) {
             String msg = e.getMessage();
-            String err = "API Server returned unexpected result: " + msg; 
-            throw new IllegalStateException(err);
+            String err = "API Server returned unexpected result: " + msg;
+            throw new RESTException(err);
         }
     }
 
@@ -151,70 +131,74 @@ public class OAuthService {
      * @param client REST client to use for sending the POST request
      * @return API Response returned by the REST client
      *
-     * @throws IOException if the REST client throws an exception
+     * @throws RESTException if the REST client throws an exception
      */
     private APIResponse sendReceive(RESTClient client) throws RESTException {
-        return client 
+        return client
             .addHeader("Content-Type", "application/x-www-form-urlencoded")
-            .httpPost();  
+            .httpPost();
     }
 
     /**
      * Creates an OAuthService object.
      *
-     * @param cfg RESTConfig to use
+     * @param fqdn fully qualified domain used for sending request
      * @param clientId client id to use
      * @param clientSecret client secret to use
      */
-    public OAuthService(final RESTConfig cfg, final String clientId, 
-            final String clientSecret) {
-
-        this.cfg = cfg;
+    public OAuthService(String fqdn, String clientId, String clientSecret) {
+        this.fqdn = fqdn;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
     }
 
     /**
-     * Gets an access token using the specified code. The parameters set during
-     * object creation will be used when requesting the access token.
+     * Gets an access token using the specified code.
+     *
+     * <p>
+     * The parameters set during object creation will be used when requesting
+     * the access token.
+     * </p>
      * <p>
      * The token request is done using the 'authorization_code' grant type.
+     * </p>
      *
      * @param code code to use when requesting access token
      * @return OAuthToken object if successful
      *
-     * @throws IOException if unable to send request
+     * @throws RESTException if unable to send request
      */
     public OAuthToken getTokenUsingCode(String code) throws RESTException {
-        RESTClient client = 
-            new RESTClient(this.cfg)
+        RESTClient client =
+            new RESTClient(this.fqdn + API_URL)
             .addParameter("client_id", clientId)
             .addParameter("client_secret", clientSecret)
             .addParameter("code", code)
             .addParameter("grant_type", "authorization_code");
 
         APIResponse response = sendReceive(client);
-        
+
         return parseResponse(response);
     }
 
     /**
-     * Gets an access token using the specified code. The parameters set during
-     * object creation will be used when requesting the access token.
+     * Gets an access token using the specified code.
+     * <p>
+     * The parameters set during object creation will be used when requesting
+     * the access token.
+     * </p>
      * <p>
      * The token request is done using the 'client_credentials' grant type.
+     * </p>
      *
      * @param scope scope to use when requesting access token
      * @return OAuthToken object if successful
      *
-     * @throws RESTException 
-     *      if unable to send request or invalid arguments supplied
+     * @throws RESTException if request was unsuccessful
      */
     public OAuthToken getToken(String scope) throws RESTException {
-        validateClientCredentials(scope, clientId, clientSecret);
-
-        RESTClient client = 
-            new RESTClient(this.cfg)
+        RESTClient client =
+            new RESTClient(this.fqdn + API_URL)
             .addParameter("client_id", clientId)
             .addParameter("client_secret", clientSecret)
             .addParameter("scope", scope)
@@ -223,26 +207,30 @@ public class OAuthService {
         APIResponse apiResponse = sendReceive(client);
 
         return parseResponse(apiResponse);
-        
+
     }
 
     /**
-     * Gets an access token. The parameters set during object creation will 
-     * be used when requesting the access token.
+     * Gets an access token.
+     *
+     * <p>
+     * The parameters set during object creation will be used when requesting
+     * the access token.
+     * </p>
+     *
      * <p>
      * The token request is done using the 'refresh_token' grant type.
+     * </p>
      *
-     * @param clientId client id to use when requesting access token
-     * @param clientSecret client secret to use when requesting access token
      * @param refreshToken refresh token to use when requesting access token
      * @return OAuthToken object if successful
      *
-     * @throws RESTException if unable to send request
+     * @throws RESTException if request was unsuccessful
+     * @see OAuthToken#getRefreshToken()
      */
-    public OAuthToken refreshToken(String clientId, String clientSecret, 
-        String refreshToken) throws RESTException {
-        RESTClient client = 
-            new RESTClient(this.cfg)
+    public OAuthToken refreshToken(String refreshToken) throws RESTException {
+        RESTClient client =
+            new RESTClient(this.fqdn + API_URL)
             .addParameter("client_id", clientId)
             .addParameter("client_secret", clientSecret)
             .addParameter("refresh_token", refreshToken)

@@ -11,10 +11,10 @@ require 'sinatra'
 require 'sinatra/config_file'
 require 'base64'
 require 'cgi'
-require 'att_mms_service'
+require 'att/codekit'
 
 #include namespace
-include AttCloudServices::MMS
+include Att::Codekit
 
 enable :sessions
 
@@ -30,11 +30,12 @@ RestClient.proxy = settings.proxy
 
 #setup our mms service for the application
 configure do
-  Service = MmsService.new(settings.FQDN,
-                           settings.api_key,
-                           settings.secret_key,
-                           SCOPE,
-                           :tokens_file => settings.tokens_file)
+  oauth = Auth::ClientCred.new(settings.FQDN,
+                               settings.api_key,
+                               settings.secret_key,
+                               SCOPE,
+                               :tokens_file => settings.tokens_file)
+  MMS = Service::MMSService.new(oauth)
 end
 
 before do 
@@ -73,35 +74,39 @@ post '/sendMms' do
       attachment  = File.join(ATTACH_DIR, params[:attachment])
     end
 
-    response  = Service.sendMms(params[:address], params[:subject], attachment, notify)
+    response  = MMS.sendMms(params[:address], params[:subject], attachment, notify)
 
     @mms_id = JSON.parse(response)['outboundMessageResponse']['messageId']
-    @mms_url = JSON.parse(response)['outboundMessageResponse']['resourceReference']['resourceURL']
-    session[:mms_id] = @mms_id unless notify
+
+    unless notify 
+      @mms_url = JSON.parse(response)['outboundMessageResponse']['resourceReference']['resourceURL'] 
+      session[:mms_id] = @mms_id 
+    end
 
   rescue RestClient::Exception => e
-      @send_error = e.response 
-  rescue => e
-      @send_error = e.message
-  ensure
-    return erb :mms
+    @send_error = e.response 
+  rescue Exception => e
+    @send_error = e.message
   end
+  erb :mms
 end
 
 post '/getStatus' do
   begin 
     session[:mms_id] = params[:mmsId]
 
-    response = Service.getDeliveryStatus(session[:mms_id])
+    response = MMS.getDeliveryStatus(session[:mms_id])
 
     delivery_info_list = JSON.parse(response)['DeliveryInfoList']
     @delivery_info = delivery_info_list['DeliveryInfo']
     @mms_url = delivery_info_list['ResourceUrl']
-  rescue => e
+
+  rescue RestClient::Exception => e
+    @delivery_error= e.response 
+  rescue Exception => e
     @delivery_error = e.response
-  ensure
-    return erb :mms
   end
+  erb :mms
 end
 
 # use this URL to clear token file
@@ -140,7 +145,7 @@ end
 def mms_listener
   input   = request.env["rack.input"].read
   random  = rand(10000000).to_s
-  Service.handleInput(input) do |sender, date, text, type, image|
+  MMS.handleInput(input) do |sender, date, text, type, image|
     File.open("#{settings.momms_image_dir}/#{random}.#{type}", 'w') { |f| f.puts image }
     File.open("#{settings.momms_data_dir}/#{random}.#{type}.txt", 'w') { |f| f.puts sender, date, text } 
   end
@@ -165,7 +170,7 @@ end
 
 def load_file(file)
   data = Array.new
-  if File.exists? file then
+  if File.exists? file 
     File.open(file, 'r') do |f|
       begin
         f.flock(File::LOCK_EX)

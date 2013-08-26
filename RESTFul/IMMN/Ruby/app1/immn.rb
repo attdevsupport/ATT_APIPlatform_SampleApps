@@ -12,11 +12,9 @@ require 'base64'
 require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
-require 'att_oauth_service'
-require 'att_immn_service'
-require 'att_mim_service'
+require 'att/codekit'
 
-include AttCloudServices
+include Att::Codekit
 
 enable :sessions
 
@@ -29,21 +27,20 @@ ATTACH_DIR = File.join(File.dirname(__FILE__), 'public/attachments')
 
 RestClient.proxy = settings.proxy
 
-SCOPE = [ IMMN::SCOPE, MIM::SCOPE ].join(",")
+SCOPE = ["IMMN", "MIM"]
+
+configure do
+  OAuth = Auth::AuthCode.new(settings.FQDN,
+                             settings.api_key,
+                             settings.secret_key,
+                             SCOPE,
+                             settings.redirect_url)
+end
 
 before do
   load_attachments
-  if session[:oauth].nil?
-    session[:oauth] = OAuthService.new(settings.FQDN,
-                                       settings.api_key,
-                                       settings.secret_key,
-                                       SCOPE,
-                                       :redirect_uri => settings.redirect_url,
-                                       :grant_type => GrantType::AUTHORIZATION) 
-
-    session[:immn] = IMMN::ImmnService.new(session[:oauth]) if session[:immn].nil?
-    session[:mim] = MIM::MimService.new(session[:oauth]) if session[:mim].nil?
-  end
+  session[:immn] = Service::IMMNService.new(OAuth) if session[:immn].nil?
+  session[:mim] = Service::MIMService.new(OAuth) if session[:mim].nil?
 end
 
 get '/' do
@@ -51,29 +48,38 @@ get '/' do
     #if code is present in params then we're returning from authentication
     session[:immn].updateAccessToken(params[:code]) unless params[:code].nil?
     session[:mim].updateAccessToken(params[:code]) unless params[:code].nil?
-    if session[:sending] then
-      sendMessage(session[:Address], session[:subject], session[:message], session[:attachment], session[:groupCheckBox], true)
-    elsif session[:getting] then
-      getMessageHeaders(session[:headerCountTextBox], session[:indexCursorTextBox], true)
-    elsif session[:getting_content] then
-      getMessageContent(session[:MessageId], session[:PartNumber], true)
+
+    if (session[:immn].authenticated? || session[:mim].authenticated?)
+      if session[:sending] then
+        sendMessage(session[:address], session[:subject], session[:message], session[:attachment], session[:groupCheckBox], true)
+      elsif session[:getting] then
+        getMessageHeaders(session[:headerCountTextBox], session[:indexCursorTextBox], true)
+      elsif session[:getting_content] then
+        getMessageContent(session[:MessageId], session[:PartNumber], true)
+      end
     end
-  rescue => e
+
+  rescue RestClient::Exception => e
+    @send_error = e.response 
+  rescue Exception => e
     @send_error = e.message
-  ensure
-    return erb :immn
   end
+  erb :immn
 end
 
 #send message
 post '/submit' do
-  # if auth'd then send the message
-  if session[:immn].authenticated? then
-    sendMessage(params[:Address], params[:subject], params[:message], params[:attachment], params[:groupCheckBox])
-    # otherwise save our session and do consent flow
-  else
-    storeSendingParams
-    redirect session[:immn].consentFlow
+  begin
+    # if auth'd then send the message
+    if session[:immn].authenticated? then
+      sendMessage(params[:address], params[:subject], params[:message], params[:attachment], params[:groupCheckBox])
+      # otherwise save our session and do consent flow
+    else
+      storeSendingParams
+      redirect session[:immn].consentFlow
+    end
+  rescue => e
+    @send_error = e.message
   end
 end
 
@@ -85,11 +91,12 @@ post '/submitGetHeaders' do
       storeGetHeadersParams
       redirect session[:mim].consentFlow
     end
+  rescue RestClient::Exception => e
+    @get_error = e.response 
   rescue => e
     @get_error = e.message
-  ensure
-    return erb :immn
   end
+  erb :immn
 end
 
 post '/submitGetHeaderContent' do
@@ -100,11 +107,13 @@ post '/submitGetHeaderContent' do
       storeGetHeaderContentParams
       redirect session[:mim].consentFlow
     end
-  rescue => e
+
+  rescue RestClient::Exception => e
+    @get_error = e.response 
+  rescue Exception => e
     @get_error = e.message
-  ensure
-    return erb :immn
   end
+  erb :immn
 end
 
 # Takes care of parsing our send responses
@@ -122,11 +131,13 @@ def sendMessage(address, subject, msg, attachment, group, clear_requested=false)
     response = session[:immn].sendMessage(address, subject, msg, attachment, group)
 
     @send_result = JSON.parse(response)["Id"]
+
+  rescue RestClient::Exception => e
+    @send_error = e.response 
   rescue => e
     @send_error = e.message
-  ensure 
-    return erb :immn
   end
+  erb :immn
 end
 
 # perform the API call for getting message headers
@@ -136,11 +147,13 @@ def getMessageHeaders(count, index, clear_requested=false)
     response = session[:mim].getMessageHeaders(count, index)
 
     @get_result = JSON.parse(response)
+
+  rescue RestClient::Exception => e
+    @get_error = e.response 
   rescue => e
     @get_error = e.message
-  ensure
-    return erb :immn
   end
+  erb :immn
 end
 
 def getMessageContent(message_id, part_number, clear_requested=false)
@@ -156,11 +169,12 @@ def getMessageContent(message_id, part_number, clear_requested=false)
     @image = @image_string[0]
     @image_content = content_string[0]
 
+  rescue RestClient::Exception => e
+    @get_error = e.response 
   rescue => e
     @get_error = e.message
-  ensure
-    return erb :immn
   end
+  erb :immn
 end
 
 #load all attachments present
@@ -173,7 +187,7 @@ def load_attachments
 end
 
 def storeSendingParams
-  session[:Address] = params[:Address] if params[:Address]
+  session[:address] = params[:address] if params[:address]
   session[:message] = params[:message] if params[:message]
   session[:subject] = params[:subject] if params[:subject]
   session[:attachment] = params[:attachment] if params[:attachment]
@@ -182,7 +196,7 @@ def storeSendingParams
 end
 
 def clearSendingParams
-  session[:Address] = nil
+  session[:address] = nil
   session[:message] = nil
   session[:subject] = nil
   session[:attachment] = nil

@@ -38,15 +38,23 @@ For more information contact developer.support@att.com
           <a id="jump" href="#nav">Main Navigation</a>
         </div>
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img src="images/max.png" alt="" /></a> 
-            <span class="divider">|&nbsp;</span> </li>
-          <li><a id="SourceLink"   target="_blank">Source<img src="images/opensource.png" alt="" />
-            </a><span class="divider">|&nbsp;</span> </li>
-          <li><a id="DownloadLink"   target="_blank">Download<img src="images/download.png" alt="" />
-            </a><span class="divider">|&nbsp;</span> </li>
-          <li><a id="HelpLink"   target="_blank">Help </a></li>
-          <li id="back"><a href="#top">Back to top</a></li>
-        </ul>
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png" /></a>
+            <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+            <a href="<%= settings.help_link %>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li>
+        </ul> <!-- end of links -->
       </div>
       <div class="content">
         <div class="contentHeading">

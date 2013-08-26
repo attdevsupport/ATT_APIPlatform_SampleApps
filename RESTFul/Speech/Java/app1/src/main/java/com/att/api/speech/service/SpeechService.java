@@ -3,33 +3,25 @@ package com.att.api.speech.service;
 import java.io.File;
 import java.io.IOException;
 
-import com.att.api.rest.APIResponse;
-import com.att.api.rest.RESTClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.att.api.rest.RESTConfig;
+import com.att.api.oauth.OAuthToken;
+import com.att.api.rest.APIResponse;
+import com.att.api.rest.RESTClient;
+import com.att.api.service.APIService;
 import com.att.api.speech.model.SpeechResponse;
 
 /**
  * Class that handles communication with the speech server.
  *
  */
-public class SpeechService {
-    private RESTConfig cfg;
-
+public class SpeechService extends APIService {
     private boolean chunked;
 
-    /**
-     * Creates a speech service object. By default, chunked is set to false.
-     *
-     * @param cfg
-     *            the configuration to use for setting HTTP request values
-     * @see RESTConfig
-     */
-    public SpeechService(RESTConfig cfg) {
-        this.cfg = cfg;
-        chunked = false;
+    public SpeechService(String fqdn, OAuthToken token) {
+        super(fqdn, token);
+        this.chunked = false;
     }
 
     /**
@@ -87,8 +79,8 @@ public class SpeechService {
      *
      * @param file
      *            file to send.
-     * @param accessToken
-     *            access token used for authorization
+     * @param xArg
+     *            Extra custom parameters to send with the request
      * @param speechContext
      *            speech context
      * @param subContext
@@ -96,19 +88,22 @@ public class SpeechService {
      * @return a response in the form of a SpeechResponse object
      * @see SpeechResponse
      */
-    public SpeechResponse sendRequest(File file, String accessToken,
-            String speechContext, String xArg, String subContext) throws Exception {
-        RESTClient restClient = new RESTClient(this.cfg);
-        restClient.addHeader("Authorization", "Bearer " + accessToken).
-                addHeader("Accept", "application/json").
-                addHeader("X-SpeechContext", speechContext);
+    public SpeechResponse sendRequest(File file, String xArg, 
+            String speechContext, String subContext) throws Exception {
+        final String endpoint = getFQDN() + "/speech/v3/speechToText";
+
+        RESTClient restClient = new RESTClient(endpoint)
+            .addAuthorizationHeader(getToken())
+            .addHeader("Accept", "application/json")
+            .addHeader("X-SpeechContext", speechContext);
+
         if (xArg != null && !xArg.equals("")) {
             restClient.addHeader("X-Arg", xArg);
         }
         if (subContext != null && !subContext.equals("") && speechContext.equals("Gaming")){
             restClient.addHeader("X-SpeechSubContext",subContext);
         }
-        APIResponse apiResponse = restClient.httpPost(file,this.chunked);
+        APIResponse apiResponse = restClient.httpPost(file);
         return parseSuccess(apiResponse.getResponseBody());
     }
 }

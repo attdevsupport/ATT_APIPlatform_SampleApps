@@ -12,9 +12,9 @@ require 'sinatra'
 require 'open-uri'
 require 'uri'
 require 'sinatra/config_file'
-require 'att_speech_service'
+require 'att/codekit'
 
-include AttCloudServices
+include Att::Codekit
 
 enable :sessions
 
@@ -23,16 +23,20 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
+SCOPE = "SPEECH"
+
 RestClient.proxy = settings.proxy
 
 AUDIO_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/audio")
 
 configure do
-  Service = Speech::SpeechService.new(settings.FQDN,
-                                      settings.api_key,
-                                      settings.secret_key,
-                                      Speech::SCOPE, 
-                                      :tokens_file => settings.tokens_file)
+  oauth = Auth::ClientCred.new(settings.FQDN,
+                               settings.api_key,
+                               settings.secret_key,
+                               SCOPE, 
+                               :tokens_file => settings.tokens_file)
+
+  Speech = Service::SpeechService.new(oauth)
 end
 
 before do 
@@ -51,15 +55,19 @@ post '/SpeechToText' do
     chunked = params[:chkChunked]
     context = params[:SpeechContext]
 
-    response = Service.speechToText(settings.X_arg, audio_file, context, chunked)
+    response = Speech.toText(audio_file, 
+                             :xargs => settings.X_arg, 
+                             :context => context, 
+                             :chunked => chunked)
 
     @result = JSON.parse(response)
 
-  rescue => e
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
     @error = e.message
-  ensure
-    return erb :speech
   end
+  erb :speech
 end
 
 def drop_down_list

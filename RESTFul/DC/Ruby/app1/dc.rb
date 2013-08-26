@@ -11,7 +11,9 @@ require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
-require 'att_dc_service'
+require 'att/codekit'
+
+include Att::Codekit
 
 enable :sessions
 
@@ -20,23 +22,24 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
+SCOPE = "DC"
+
 RestClient.proxy = settings.proxy
 
-include AttCloudServices
+configure do
+  OAuth = Auth::AuthCode.new(settings.FQDN, 
+                             settings.api_key, 
+                             settings.secret_key,
+                             SCOPE,
+                             settings.redirect_url)
+end
 
 before do
   #add special headers for IE
   headers "P3P" => "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\""
 
   #create our service if isn't present
-  if session[:dc].nil?
-    session[:dc] = DC::DCService.new(settings.FQDN, 
-                                     settings.api_key, 
-                                     settings.secret_key,
-                                     DC::SCOPE,
-                                     :grant_type => GrantType::AUTHORIZATION,
-                                     :redirect_uri => settings.redirect_url) 
-  end
+  session[:dc] = Service::DCService.new(OAuth) if session[:dc].nil? 
 end
 
 get '/' do
@@ -45,17 +48,18 @@ get '/' do
     if params[:code] 
       @result = JSON.parse(session[:dc].getDeviceCapabilties(params[:code]))
 
-    #something went wrong with authentication display error
+      #something went wrong with authentication display error
     elsif params[:error]
       @error = params[:error] + ": " #+ params[:error_description] 
 
-    #Authenticate if neccessary
+      #Authenticate if neccessary
     else
       redirect session[:dc].consentFlow
     end
-  rescue => e
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
     @error = e.message
-  ensure
-    return erb :dc
   end
+  erb :dc
 end

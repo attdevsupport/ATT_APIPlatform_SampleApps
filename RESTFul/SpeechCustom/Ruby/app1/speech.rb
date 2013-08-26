@@ -12,9 +12,9 @@ require 'sinatra'
 require 'open-uri'
 require 'uri'
 require 'sinatra/config_file'
-require 'att_speechcustom_service'
+require 'att/codekit'
 
-include AttCloudServices
+include Att::Codekit
 
 enable :sessions
 
@@ -23,6 +23,8 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
+SCOPE = "STTC"
+
 RestClient.proxy = settings.proxy
 
 AUDIO_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/audio")
@@ -30,11 +32,13 @@ TEMPLATE_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/templ
 
 
 configure do
-  Service = SpeechCustom::SpeechCustomService.new(settings.FQDN, 
-                                            settings.api_key, 
-                                            settings.secret_key, 
-                                            SpeechCustom::SCOPE, 
-                                            :tokens_file => settings.tokens_file)
+  oauth = Auth::ClientCred.new(settings.FQDN, 
+                               settings.api_key, 
+                               settings.secret_key, 
+                               SCOPE, 
+                               :tokens_file => settings.tokens_file)
+
+  Speech = Service::SpeechService.new(oauth)
 end
 
 before do
@@ -52,50 +56,31 @@ post '/SpeechToText' do
     dict, grammar, afile = load_files
 
     if params[:nameParam] and params[:SpeechContext] == "GenericHints"
-      nametype = params[:nameParam]
+      grammar_type = params[:nameParam]
     else
-      nametype = "filename"
+      grammar_type = nil 
     end
 
-    dict_part = {
-      :headers => {"Content-Disposition" => 'form-data; name="x-dictionary"; ' + nametype.to_s + '="speech_alpha.pls"',
-                  "Content-Type" => "application/pls+xml"
-                 },
-      :data => dict 
-    }
-
-    grammar_part = {
-      :headers => {"Content-Disposition" => 'form-data; name="x-grammar"',
-                  "Content-Type" => "application/srgs+xml"
-                 },
-      :data => grammar
-    }
-
-    afile_part = {
-      :headers => {"Content-Disposition" =>  'form-data; name="x-voice"; ' + nametype.to_s + '="pizza-en-US.wav"',
-                   "Content-Type" => 'audio/wav',
-                   "Content-Transfer-Encoding" => 'binary'
-                  },
-      :data => afile
-    }
-
-    multipart = [dict_part, grammar_part, afile_part]
-
-    response = Service.speechToText(settings.X_arg, multipart, params[:SpeechContext])
+    response = Speech.speechToText(afile, dict, grammar, 
+                                   :context => params[:SpeechContext], 
+                                   :grammar => grammar_type,
+                                   :xargs => settings.X_arg)
 
     @result = JSON.parse(response)
-  rescue => e
+
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
     @error = e.message
-  ensure
-    return erb :speech
   end
+  erb :speech
 end
 
 
 def load_files
-  dictionary = File.read(File.join(TEMPLATE_DIR, "x-dictionary.txt"))
-  grammar = File.read(File.join(TEMPLATE_DIR, "x-grammar.txt"))
-  audio_file = File.read(File.join(AUDIO_DIR, "pizza-en-US.wav")) 
+  dictionary = File.join(TEMPLATE_DIR, "x-dictionary.txt")
+  grammar = File.join(TEMPLATE_DIR, "x-grammar.txt")
+  audio_file = File.join(AUDIO_DIR, "pizza-en-US.wav")
 
   return [dictionary, grammar, audio_file]
 end

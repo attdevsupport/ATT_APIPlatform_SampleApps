@@ -1,66 +1,30 @@
 package com.att.api.speech.controller;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import com.att.api.config.AppConfig;
-import com.att.api.oauth.OAuthService;
-import com.att.api.oauth.OAuthToken;
-import com.att.api.rest.RESTConfig;
-import com.att.api.rest.RESTException;
-import com.att.api.speech.model.ConfigBean;
-import com.att.api.speech.model.SpeechResponse;
-import com.att.api.speech.service.SpeechService;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class SpeechController extends HttpServlet {
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import com.att.api.controller.APIController;
+import com.att.api.oauth.OAuthToken;
+import com.att.api.speech.model.ConfigBean;
+import com.att.api.speech.model.SpeechResponse;
+import com.att.api.speech.service.SpeechService;
+
+public class SpeechController extends APIController {
     private static final long serialVersionUID = 1L;
-    private volatile AppConfig cfg;
 
     private String getPath() {
         return getServletContext().getRealPath("/");
     }
 
-    private RESTConfig getRESTConfig(final String endpoint) {
-        final String proxyHost = cfg.getProxyHost(); 
-        final int proxyPort = cfg.getProxyPort(); 
-        final boolean trustAllCerts = cfg.getTrustAllCerts();
-
-        return new RESTConfig(endpoint, proxyHost, proxyPort, trustAllCerts);
-    }
-
-    private OAuthToken getToken() throws RESTException {
-        try {
-            final AppConfig cfg = AppConfig.getInstance();
-            final String path = "WEB-INF/token.properties";
-            final String tokenFile = getServletContext().getRealPath(path);
-
-            OAuthToken token = OAuthToken.loadToken(tokenFile);
-            if (token == null || token.isAccessTokenExpired()) {
-                final String endpoint = cfg.getFQDN() + OAuthService.API_URL;
-                final String clientId = cfg.getClientId();
-                final String clientSecret = cfg.getClientSecret();
-                final OAuthService service = new OAuthService(
-                        getRESTConfig(endpoint), clientId, clientSecret);
-
-                token = service.getToken(cfg.getProperty("scope"));
-                token.saveToken(tokenFile);
-            }
-            return token;
-        } catch (IOException ioe) {
-            throw new RESTException(ioe);
-        }
-    }
-
     private String[] getFileNames() {
-        String audioFolder = cfg.getProperty("audioFolder");
+        String audioFolder = appConfig.getProperty("audioFolder");
 
         String dir = getServletContext().getRealPath("/")  + audioFolder;
         
@@ -80,8 +44,9 @@ public class SpeechController extends HttpServlet {
         }
 
         try {
+            final OAuthToken token = getFileToken();
             HttpSession session = request.getSession();
-            String xarg = cfg.getProperty("xArg");
+            String xarg = appConfig.getProperty("xArg");
 
             String speechContext = request.getParameter("SpeechContext");
             session.setAttribute("sessionContextName", speechContext);
@@ -89,8 +54,7 @@ public class SpeechController extends HttpServlet {
             String x_subContext = request.getParameter("x_subContext");
             session.setAttribute("sessionx_subContext", x_subContext);
 
-            String endpoint = cfg.getFQDN() + "/speech/v3/speechToText";
-            SpeechService srvc = new SpeechService(getRESTConfig(endpoint));
+            SpeechService srvc = new SpeechService(appConfig.getApiFQDN(), token);
 
             srvc.setChunked(false);
             if (request.getParameter("chkChunked") != null) {
@@ -101,12 +65,11 @@ public class SpeechController extends HttpServlet {
 
             String fname = request.getParameter("audio_file");
 	        session.setAttribute("sessionFileName", fname);
-            String audioFolder = cfg.getProperty("audioFolder");
+            String audioFolder = appConfig.getProperty("audioFolder");
             File file = new File(getPath() + audioFolder + "/" + fname);
 
-            OAuthToken token = getToken();
-            SpeechResponse response = srvc.sendRequest(file, 
-                    token.getAccessToken(), speechContext, xarg,x_subContext);
+            SpeechResponse response = srvc.sendRequest(file, xarg, 
+                    speechContext, x_subContext);
 
             request.setAttribute("resultSpeech", response.getResult());
         } catch (Exception e) {
@@ -115,24 +78,15 @@ public class SpeechController extends HttpServlet {
         }
     }
 
-    public void init() {
-        try {
-            this.cfg = AppConfig.getInstance();
-        } catch (IOException e) {
-            // print stack trace instead of handling
-            e.printStackTrace();
-        }
-    }
-
     public void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         this.handleSpeechToText(request);   
     
-        String speechContexts = cfg.getProperty("speechContexts");
-        request.setAttribute("xArg", cfg.getProperty("xArg", ""));
+        String speechContexts = appConfig.getProperty("speechContexts");
+        request.setAttribute("xArg", appConfig.getProperty("xArg", ""));
         request.setAttribute("speechContexts", speechContexts.split(","));
-        request.setAttribute("x_subContext", cfg.getProperty("xArgSubContext"));
+        request.setAttribute("x_subContext", appConfig.getProperty("xArgSubContext"));
         request.setAttribute("fnames", this.getFileNames());
         request.setAttribute("cfg", new ConfigBean());
 

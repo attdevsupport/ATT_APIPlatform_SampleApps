@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-# TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-# For more information contact developer.support@att.com
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
+# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# Property. All rights reserved. http://developer.att.com For more information
+# contact developer.support@att.com
 
 require 'rubygems'
 require 'json'
@@ -11,8 +12,10 @@ require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
-require 'att_oauth_service'
 require 'cgi'
+require 'att/codekit'
+
+include Att::Codekit
 
 enable :sessions
 
@@ -30,44 +33,53 @@ RestClient.proxy = settings.proxy
 #setup our oauth service
 configure do
   begin
-    OAuth = AttCloudServices::OAuthService.new(settings.FQDN, 
-                             settings.api_key, 
-                             settings.secret_key,
-                             SCOPE,
-                             :tokens_file => settings.tokens_file)
-  rescue => e
+    oauth = Auth::ClientCred.new(settings.FQDN, 
+                                 settings.api_key, 
+                                 settings.secret_key,
+                                 SCOPE,
+                                 :tokens_file => settings.tokens_file)
+    CMS = Service::CMSService.new(oauth)
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
     @error = e.message
   end
+end
+
+#load our file for display before anything
+before do
+  read_script
 end
 
 # On start of application clear any session id value and read scripts.
 get '/' do
   clear_session_variables
-  read_script
   erb :cms
 end
 
 post '/CreateSession' do
-  read_script
-  if params[:btnCreateSession] != nil
-    numberScript = CGI.escapeHTML(params[:txtNumberToDial])
-    read_script
-    create_session
-    return erb :cms
-  else
-    erb :cms
+  begin
+    create_session unless params[:btnCreateSession].nil? 
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
+    @error = e.message
   end
+  erb :cms
 end
 
 post '/SendSignal' do
-  if params[:scriptType].nil?
-    send_signal
-    read_script
-    return erb :cms
-  else
-    read_script
-    return erb :cms
+  begin
+    if params[:scriptType].nil?
+      response = CMS.send_signal(session[:cms_id], params[:signal])
+      @signal_result = JSON.parse response
+    end
+  rescue RestClient::Exception => e
+    @signal_error = e.response 
+  rescue Exception => e
+    @signal_error = e.message
   end
+  erb :cms
 end
 
 def clear_session_variables
@@ -96,19 +108,17 @@ def create_session
   numberVar = session[:txtNumber] = CGI.escapeHTML(params[:txtNumber])
   scriptType = session[:scriptType] = CGI.escapeHTML(params[:scriptType])
 
-  
+
   # Pass the script variable for First.rb in request body.
-  requestbody = JSON({
-		'feature' => scriptType, 
-		'messageToPlay' => messageToPlay,
-		'numberToDial' => numberToDial.to_s,
-		'featurenumber' => numberVar.to_s, 
-		'smsCallerID' => settings.phoneNumber.to_s,
- 	})
-  
-  # Resource URL for Create Session.
-  url = "#{settings.FQDN}/rest/1/Sessions"
-  response = RestClient.post url, requestbody, :Authorization => "Bearer #{OAuth.access_token}", :Content_Type => 'application/json', :Accept => 'application/json'
+  requestbody = {
+    'feature' => scriptType, 
+    'messageToPlay' => messageToPlay,
+    'numberToDial' => numberToDial.to_s,
+    'featurenumber' => numberVar.to_s, 
+    'smsCallerID' => settings.phoneNumber.to_s,
+  }
+
+  response =  CMS.create_session(requestbody)
 
   if response.code == 200 || response.code == 201
     @result = JSON.parse response
@@ -118,21 +128,3 @@ def create_session
   end
 end
 
-# Function which sends signal to either exit, hold or dequeue session.
-def send_signal
-  # Resource URL for Send Signal.
-  url = "#{settings.FQDN}/rest/1/Sessions/#{session[:cms_id]}/Signals"
-  
-  # Pass the signal paramater in request body.
-  requestBody = '{"signal":"' + CGI.escapeHTML(params[:signal]) + '"}'
-  
-  response = RestClient.post url, "#{requestBody}", :Authorization => "Bearer #{OAuth.access_token}", 
-  :Content_Type => 'application/json', :Accept => 'application/json'
-  
-  @signal_result = JSON.parse response
-  
-rescue => e
-  @signal_error = e.message
-ensure
-  return erb :cms
-end

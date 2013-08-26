@@ -12,9 +12,9 @@ require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'cgi'
-require 'att_tl_service'
+require 'att/codekit'
 
-include AttCloudServices
+include Att::Codekit
 
 enable :sessions
 
@@ -23,15 +23,18 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
+SCOPE = "TL"
+
+configure do 
+  OAuth = Auth::AuthCode.new(settings.FQDN,
+                             settings.api_key,
+                             settings.secret_key,
+                             SCOPE,
+                             settings.redirect_url)
+end
+
 before do
-  if session[:tl].nil?
-    session[:tl] = TL::TlService.new(settings.FQDN,
-                                     settings.api_key,
-                                     settings.secret_key,
-                                     TL::SCOPE,
-                                     :redirect_uri => settings.redirect_url,
-                                     :grant_type => GrantType::AUTHORIZATION)
-  end
+  session[:tl] = Service::TLService.new(OAuth) if session[:tl].nil?
 end
 
 get '/' do
@@ -41,35 +44,43 @@ get '/' do
       @error = params[:error] + ": " + params[:error_description]
       #if code is present then get location
     elsif params[:code] then
-      get_location(session[:requestedAccuracy],
-                   session[:acceptableAccuracy],
-                   session[:tolerance],
-                   params[:code])
+      response = session[:tl].getLocation(params[:code],
+                                          :req_accuracy => params[:requestedAccuracy],
+                                          :accept_accuracy => params[:acceptableAccuracy],
+                                          :tolerance => params[:tolerance])
+      @result = JSON.parse(response)
     end
-  rescue => e
+
+
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
     @error = e.message
-  ensure 
-    return erb :tl
   end
+  erb :tl
 end
 
 post '/submit' do
-  if session[:tl].authenticated?
-    #get location if authenticated
-    get_location(params[:requestedAccuracy],
-                 params[:acceptableAccuracy],
-                 params[:tolerance])
-  else
-    #save params and authenticate
-    session[:requestedAccuracy] = params[:requestedAccuracy]
-    session[:acceptableAccuracy] = params[:acceptableAccuracy]
-    session[:tolerance] = params[:tolerance]
-    redirect session[:tl].consentFlow
-  end
-end
+  begin
+    if session[:tl].authenticated?
+      #get location if authenticated
+      response = session[:tl].getLocation(:req_accuracy => params[:requestedAccuracy],
+                                          :accept_accuracy => params[:acceptableAccuracy],
+                                          :tolerance => params[:tolerance])
+      @result = JSON.parse(response)
+    else
+      #save params and authenticate
+      session[:requestedAccuracy] = params[:requestedAccuracy]
+      session[:acceptableAccuracy] = params[:acceptableAccuracy]
+      session[:tolerance] = params[:tolerance]
+      redirect session[:tl].consentFlow
+    end
 
-def get_location(ra, aa, tol, code=nil)
-  response = session[:tl].getDeviceLocation(code, ra, aa, tol)
-  @result = JSON.parse(response)
+  rescue RestClient::Exception => e
+    @error = e.response 
+  rescue Exception => e
+    @error = e.message
+  end
+  erb :tl
 end
 

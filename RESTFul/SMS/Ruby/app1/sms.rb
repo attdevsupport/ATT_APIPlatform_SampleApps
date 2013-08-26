@@ -10,9 +10,9 @@ require 'json'
 require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
-require 'att_sms_service'
+require 'att/codekit'
 
-include AttCloudServices
+include Att::Codekit
 
 enable :sessions
 
@@ -21,14 +21,18 @@ config_file 'config.yml'
 set :port, settings.port
 set :protection, :except => :frame_options
 
+SCOPE = "SMS"
+
 RestClient.proxy = settings.proxy
 
 configure do
-  Service = SMS::SmsService.new(settings.FQDN, 
-                                settings.api_key,
-                                settings.secret_key,
-                                SMS::SCOPE,
-                                settings.tokens_file)
+  oauth = Auth::ClientCred.new(settings.FQDN, 
+                               settings.api_key,
+                               settings.secret_key,
+                               SCOPE,
+                               :token_file => settings.tokens_file)
+
+  SMS = Service::SMSService.new(oauth)
 end
 
 #update listeners data before every request
@@ -57,40 +61,43 @@ post '/sendSms' do
       notify = true
     end
 
-    response = Service.sendSms(session[:sms1_address], params[:message], notify)
+    response = SMS.sendSms(session[:sms1_address], params[:message], notify)
 
     json = JSON.parse(response)
 
     @sms_id =  json['outboundSMSResponse']['messageId']
     @resource_url = json['outboundSMSResponse']['resourceReference']['resourceURL'] 
     session[:sms_id] = @sms_id unless notify
-  rescue => e
+
+  rescue RestClient::Exception => e
+    @send_error = e.response 
+  rescue Exception => e
     @send_error = e.response
-  ensure
-    return erb :sms
   end
+  erb :sms
 end
 
 post '/getDeliveryStatus' do
   session[:sms_id] = params["messageId"]
 
   begin
-    response = Service.getDeliveryStatus(session[:sms_id])
-    @resource_url = Service.getResourceUrl(session[:sms_id])
+    response = SMS.getDeliveryStatus(session[:sms_id])
+    @resource_url = SMS.getResourceUrl(session[:sms_id])
 
     delivery_info_list = JSON.parse(response)['DeliveryInfoList']
     @delivery_info = delivery_info_list['DeliveryInfo']
 
-  rescue => e
+  rescue RestClient::Exception => e
+    @delivery_error = e.response 
+  rescue Exception => e
     @delivery_error = e.response
-  ensure
-    return erb :sms
   end
+  erb :sms
 end
 
 post '/getReceivedSms' do
   begin
-    response = Service.getReceivedMessages(settings.short_code_1)
+    response = SMS.getReceivedMessages(settings.short_code_1)
 
     @message_list = JSON.parse(response).fetch 'InboundSmsMessageList'
 
@@ -98,11 +105,12 @@ post '/getReceivedSms' do
     @messages_pending  = @message_list['TotalNumberOfPendingMessages']
     @messages_inbound  = @message_list['InboundSmsMessage']
 
-  rescue => e
+  rescue RestClient::Exception => e
+    @received_error = e.response 
+  rescue Exception => e
     @received_error = e.response
-  ensure
-    return erb :sms
   end
+  erb :sms
 end
 
 post '/statusListener' do
