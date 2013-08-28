@@ -70,6 +70,9 @@
     speechService.delegate = self;
     //speechService.endingSilence = 1.25;
     
+    // Enable the Speex codec, which provides better speech recognition accuracy.
+    speechService.audioFormat = ATTSKAudioFormatSpeex_WB;
+
     // Use default speech UI.
     speechService.showUI = YES;
     
