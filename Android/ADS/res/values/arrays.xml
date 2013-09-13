@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="categoryTypes">
+        <item>auto</item>
+        <item>business</item>
+        <item>chat</item>
+        <item>communication</item>
+        <item>community</item>
+        <item>entertainment</item>
+        <item>finance</item>
+        <item>games</item>
+        <item>health</item>
+        <item>local</item>
+        <item>maps</item>
+        <item>medical</item>
+        <item>movies</item>
+        <item>music</item>
+        <item>news</item>
+        <item>personals</item>
+        <item>photos</item>
+        <item>shopping</item>
+        <item>social</item>
+        <item>sports</item>
+        <item>technology</item>
+        <item>tools</item>
+        <item>travel</item>
+        <item>tv</item>
+        <item>weather</item>
+        <item>others</item>
+    </string-array>
+    <string-array name="premiumTypes">
+        <item>Non-Premium</item>
+        <item>Premium</item>
+        <item>Both</item>
+    </string-array>
+    <string-array name="ageGroupTypes">
+        <item>All</item>
+        <item>1-13</item>
+        <item>14-25</item>
+        <item>26-35</item>
+        <item>36-55</item>
+        <item>55-100</item>
+    </string-array>
+    <string-array name="adSizeTypes">
+		<item>Any</item>
+		<item>320 x 50</item>		
+		<item>300 x 250</item>
+		<item>300 x 50</item>
+		<item>216 x 36</item>
+		<item>168 x 28</item>
+		<item>120 x 20</item>		
+    </string-array>
+
+</resources>
