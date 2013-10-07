@@ -3,6 +3,9 @@ session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/Util/Util.php';
 require_once __DIR__ . '/src/Controller/SMSController.php';
+
+use Att\Api\Util\Util;
+
 $controller = new SMSController();
 $controller->handleRequest();
 $results = $controller->getResults();
@@ -105,14 +108,15 @@ For more information contact developer.support@att.com
                   <?php echo htmlspecialchars($sendErr); ?>
                 </div>
                 <?php } else if (isset($results[SMSController::RESULT_SEND_SMS])) {
-                  $sendSms = $results[SMSController::RESULT_SEND_SMS];
-                  $msgId = $sendSms->outboundSMSResponse->messageId;
+                  $response = $results[SMSController::RESULT_SEND_SMS];
+                  $msgId = $response->getMessageId();
+                  $resourceUrl = $response->getResourceUrl();
                 ?>
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br>
                   <strong>messageId: </strong><?php echo $msgId; ?><br>
-                  <?php if (property_exists($sendSms->outboundSMSResponse, 'resourceReference')) { ?>
-                  <strong>resourceURL: </strong><?php echo $sendSms->outboundSMSResponse->resourceReference->resourceURL; ?><br>
+                  <?php if ($resourceUrl != null) { ?>
+                  <strong>resourceURL: </strong><?php echo $resourceUrl; ?><br>
                   <?php } ?>
                 </div>
                 <?php } ?>
@@ -134,13 +138,13 @@ For more information contact developer.support@att.com
                   <?php echo htmlspecialchars($deliveryErr); ?>
                 </div>
                 <?php } else if(isset($results[SMSController::RESULT_SMS_DELIVERY])) { 
-                $getStatus = $results[SMSController::RESULT_SMS_DELIVERY];
-                $statuses = $getStatus->DeliveryInfoList->DeliveryInfo;
-                $resourceURL = $getStatus->DeliveryInfoList->ResourceUrl;
+                $response = $results[SMSController::RESULT_SMS_DELIVERY];
+                $statuses = $response->getDeliveryInfoList();
+                $resourceUrl = $response->getResourceUrl();
                 ?>
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br>
-                  <strong>Resource URL: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
+                  <strong>Resource URL: </strong><?php echo htmlspecialchars($resourceUrl); ?><br>
                 </div>
                 <table>
                   <thead>
@@ -153,9 +157,9 @@ For more information contact developer.support@att.com
                   <tbody>
                   <?php foreach ($statuses as $status) { ?>
                     <tr>
-                      <td data-value="Id"><?php echo htmlspecialchars($status->Id); ?></td>
-                      <td data-value="Address"><?php echo htmlspecialchars($status->Address); ?></td>
-                      <td data-value="DeliveryStatus"><?php echo htmlspecialchars($status->DeliveryStatus); ?></td>
+                      <td data-value="Id"><?php echo htmlspecialchars($status->getId()); ?></td>
+                      <td data-value="Address"><?php echo htmlspecialchars($status->getAddress()); ?></td>
+                      <td data-value="DeliveryStatus"><?php echo htmlspecialchars($status->getDeliveryStatus()); ?></td>
                     </tr>
                   <?php } ?>
                   </tbody>
@@ -207,11 +211,10 @@ For more information contact developer.support@att.com
                   <?php echo htmlspecialchars($getMsgsErr); ?>
                 </div>
                 <?php } else if (isset($results[SMSController::RESULT_GET_MSGS])) {
-                  $getMsgs = $results[SMSController::RESULT_GET_MSGS];
-                  $msgList = $getMsgs->InboundSmsMessageList;
-                  $numMessages = $msgList->NumberOfMessagesInThisBatch;
-                  $numPending = $msgList->TotalNumberOfPendingMessages;
-                  $inboundMsgList = $msgList->InboundSmsMessage;
+                  $response = $results[SMSController::RESULT_GET_MSGS];
+                  $msgList = $response->getMessages();
+                  $numMessages = $response->getNumberOfMessages();
+                  $numPending = $response->getNumberOfPendingMessages();
                   ?>
                 <div class="successWide">
                   <strong>SUCCESS:</strong><br>
@@ -227,11 +230,11 @@ For more information contact developer.support@att.com
                     </tr>
                   </thead>
                   <tbody>
-                  <?php foreach($inboundMsgList as $name => $value) { ?>
+                  <?php foreach($msgList as $msg) { ?>
                     <tr>
-                      <td data-value="Message Index"><?php echo htmlspecialchars($value->MessageId); ?></td>
-                      <td data-value="Message Text"><?php echo htmlspecialchars($value->Message); ?></td>
-                      <td data-value="Sender Address"><?php echo htmlspecialchars($value->SenderAddress); ?></td>
+                      <td data-value="Message Index"><?php echo htmlspecialchars($msg->getMessageId()); ?></td>
+                      <td data-value="Message Text"><?php echo htmlspecialchars($msg->getMessage()); ?></td>
+                      <td data-value="Sender Address"><?php echo htmlspecialchars($msg->getSenderAddress()); ?></td>
                     </tr>
                     <?php } ?>
                   </tbody>

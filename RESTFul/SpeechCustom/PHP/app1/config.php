@@ -15,7 +15,7 @@ $FQDN = "https://api.att.com";
 $endpoint = $FQDN . "/speech/v3/speechToTextCustom";
 
 // Mandatory parameter. Scope to use when requesting access token.
-$scope = "SPEECH";
+$scope = "STTC";
 
 // Mandtory parameter. File to save access token after request. File/folder 
 // must have write permissions.

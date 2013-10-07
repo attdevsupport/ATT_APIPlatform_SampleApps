@@ -32,7 +32,7 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// <summary>
     /// Instance variables for local processing
     /// </summary>
-    private string endPoint, accessTokenFilePath, apiKey, secretKey, accessToken, scope, refreshToken;
+    private string endPoint, accessTokenFilePath, apiKey, secretKey, accessToken, scope, refreshToken, bypassSSL;
 
     /// <summary>
     /// Instance variables for local processing
@@ -164,14 +164,21 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// <summary>
     /// This method neglects the ssl handshake error with authentication server
     /// </summary>
-    public static void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
+
 
     /// <summary>
     /// This method reads config file and assigns values to local variables

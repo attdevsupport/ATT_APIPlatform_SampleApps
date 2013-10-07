@@ -1,6 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\SMS;
 
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * SMS Library
@@ -17,20 +18,29 @@
  * 
  * @category  API
  * @package   SMS 
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
 require_once __DIR__ . '../../Srvc/APIService.php';
+require_once __DIR__ . '/SendSMSResponse.php';
+require_once __DIR__ . '/GetSMSResponse.php';
+require_once __DIR__ . '/DeliveryStatus.php';
+
+use Att\Api\OAuth\OAuthToken;
+use Att\Api\Restful\HttpPost;
+use Att\Api\Restful\RestfulRequest;
+use Att\Api\Srvc\APIService;
+use Att\Api\Srvc\Service;
 
 /**
  * Used to interact with version 3 of the SMS API.
  *
  * @category API
  * @package  SMS
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/3/SMS
@@ -59,7 +69,7 @@ class SMSService extends APIService
      * @param boolean $notifyDeliveryStatus whether the API should sent a
      *                                      notification after delivery.
      *
-     * @return array API response as an array of key-value pairs.
+     * @return SendSMSResponse API response.
      * @throws ServiceException if API request was not successful.
      */
     public function sendSMS($addr, $msg, $notifyDeliveryStatus = true) 
@@ -72,16 +82,23 @@ class SMSService extends APIService
         $jsobj = array('outboundSMSRequest' => $vals);
         $jvals = json_encode($jsobj);
 
-        $endpoint = $this->FQDN . '/sms/v3/messaging/outbox';
-        $req = new RESTFulRequest($endpoint);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_POST);
-        $req->setHeader('Accept', 'application/json');
-        $req->setHeader('Content-Type', 'application/json');
-        $req->addAuthorizationHeader($this->token);
-        $req->setBody($jvals);
+        $endpoint = $this->getFqdn() . '/sms/v3/messaging/outbox';
 
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+        $req = new RESTFulRequest($endpoint);
+
+        $req
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Accept', 'application/json')
+            ->setHeader('Content-Type', 'application/json');
+
+        $httpPost = new HttpPost();
+
+        $httpPost->setBody($jvals);
+
+        $result = $req->sendHttpPost($httpPost);
+
+        $arr = Service::parseJson($result);
+        return SendSMSResponse::fromArray($arr);
     }
 
     /**
@@ -89,47 +106,49 @@ class SMSService extends APIService
      *
      * @param string $smsId SMS id for which to get delivery status.
      *
-     * @return array API response as an array of key-value pairs.
+     * @return SMSStatusResponse API response.
      * @throws ServiceException if API request was not successful.
      */
     public function getSMSDeliveryStatus($smsId)
     {
-
         $encodedId = urlencode($smsId);
-        $endpoint = $this->FQDN . '/sms/v3/messaging/outbox/' . $encodedId;  
+        $endpoint = $this->getFqdn() . '/sms/v3/messaging/outbox/' . $encodedId;  
         $req = new RESTFulRequest($endpoint);
 
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
-        $req->addAuthorizationHeader($this->token);
-        $req->setHeader('Accept', 'application/json');
-        $req->setHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $result = $req
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Accept', 'application/json')
+            ->setHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->sendHttpGet();
 
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+        $arr = Service::parseJson($result);
+        return DeliveryStatus::fromArray($arr);
     }
 
     /**
-     * Sends a request t othe API for getting any SMS messages that were sent 
-     * to the short code. 
+     * Sends a request to the API for getting any SMS messages that were sent 
+     * to the specified short code. 
      *
-     * @param int $shortCode short code for which to get messages
+     * @param string $shortCode gets messages sent to this short code
      *
-     * @return array API response as an array of key-value pairs.
-     * @throws ServiceException if API request was not successful.
+     * @return GetSMSResponse API response
+     * @throws ServiceException if API request was not successful
      */
     public function getMessages($shortCode) 
     {
-        $endpoint = $this->FQDN . '/rest/sms/2/messaging/inbox?' 
-            . '&RegistrationID=' . urlencode($shortCode);  
+        $endpoint = $this->getFqdn() . '/sms/v3/messaging/inbox/'
+            . urlencode($shortCode);  
 
         $req = new RESTFulRequest($endpoint);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
-        $req->addAuthorizationHeader($this->token);
-        $req->setHeader('Accept', 'application/json');
-        $req->setHeader('Content-Type', 'application/x-www-form-urlencoded');
         
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+        $result = $req
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Accept', 'application/json')
+            ->setHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->sendHttpGet();
+        
+        $arr = Service::parseJson($result);
+        return GetSMSResponse::fromArray($arr);
     } 
 }
 ?>

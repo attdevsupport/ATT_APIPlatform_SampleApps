@@ -1,8 +1,11 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 require_once __DIR__ . '/../../lib/Controller/APIController.php';
 require_once __DIR__ . '/../../lib/DC/DCService.php';
+
+use Att\Api\Controller\APIController;
+use Att\Api\DC\DCService;
 
 class DCController extends APIController 
 {

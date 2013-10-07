@@ -4,11 +4,13 @@
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
+require 'att/codekit/model/speech'
+
 module Att
   module Codekit
     module Service
 
-      #@author Kyle Hill <kh455g@att.com>
+      #@author kh455g
       class TTSService < CloudService
         SERVICE_URL = "/speech/v3/textToSpeech"
 
@@ -19,6 +21,8 @@ module Att
         # @option opts [#to_s] :xargs custom arguments to alter the conversion (default: nil)
         # @option opts [#to_s] :type the content type of the content (default: text/plain)
         # @option opts [#to_s] :accept format to request for the service (default: audio/x-wav)
+        #
+        # @return [Model::TTSResponse] container holding the tts response
         def textToSpeech(content, opts={})
           accept = (opts[:accept] || "audio/x-wav")
           type = (opts[:type] || "text/plain")
@@ -33,7 +37,12 @@ module Att
             :Content_Type => type.to_s,
           }
 
-          self.post(url, content.to_s, headers)
+          begin
+            response = self.post(url, content.to_s, headers)
+          rescue RestClient::Exception => e
+            raise(ServiceException, e.response || e.message, e.backtrace)
+          end
+          Model::TTSResponse.createFromResponse(response)
         end
         alias_method :toSpeech, :textToSpeech
 

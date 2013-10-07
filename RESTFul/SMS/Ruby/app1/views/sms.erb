@@ -108,12 +108,12 @@ For more information contact developer.support@att.com
                     <strong>ERROR: </strong><br>
                     <%= @send_error %>
                   </div>
-                <% elsif @sms_id %>
+                <% elsif @send %>
                   <div class="successWide">
                     <strong>SUCCESS: </strong><br>
-                    <strong>messageId: </strong><%= @sms_id %><br>
-                    <% if @resource_url %>
-                      <strong>resourceURL: </strong><%= @resource_url %><br>
+                    <strong>messageId: </strong><%= @send.id %><br>
+                    <% if @send.resource_url %>
+                      <strong>resourceURL: </strong><%= @send.resource_url %><br>
                     <% end %>
                   </div>
                 <% end %>
@@ -131,14 +131,13 @@ For more information contact developer.support@att.com
                     <strong>ERROR: </strong><br>
                     <%= @delivery_error %>
                   </div>
-                <% elsif @delivery_info %>
+                <% elsif @status %>
                   <div class="successWide">
                     <strong>SUCCESS: </strong><br>
-                    <% if @resource_url %>
-                      <strong>resourceURL: </strong><%= @resource_url %><br>
+                    <% if @status_resource_url %>
+                      <strong>resourceURL: </strong><%= @status_resource_url %><br>
                     <% end %>
-                    </div>
-                  <% end %>
+                  </div>
                   <table>
                     <thead>
                       <tr>
@@ -148,17 +147,18 @@ For more information contact developer.support@att.com
                       </tr>
                     </thead>
                     <tbody>
-                      <% if @delivery_info %>
-                        <% @delivery_info.each do |info| %>
+                      <% if @status.delivery_info %>
+                        <% @status.delivery_info.each do |info| %>
                           <tr>
-                            <td data-value="Message Id"><%= info['Id'] %></td>
-                            <td data-value="Address"><%= info['Address'] %></td>
-                            <td data-value="Delivery Status"><%= info['DeliveryStatus'] %></td>
+                            <td data-value="Message Id"><%= info.id %></td>
+                            <td data-value="Address"><%= info.address %></td>
+                            <td data-value="Delivery Status"><%= info.status %></td>
                           </tr>
                         <% end %>
                       <% end %>
                     </tbody>
                   </table>
+                <% end %>
                 </div>
                 <!-- end of getStatus -->
                 <div class="lightBorder">
@@ -205,11 +205,11 @@ For more information contact developer.support@att.com
                     <strong>ERROR: </strong><br>
                     <%= @received_error %>
                   </div>
-                <% elsif @message_list %>
+                <% elsif @messages %>
                   <div class="successWide">
                     <strong>SUCCESS:</strong><br>
-                    <strong>Messages in this batch: <strong><%= @messages_in_batch %><br>
-                      <strong>Messages pending: <strong><%= @messages_pending %><br>
+                    <strong>Messages in this batch: <strong><%= @messages.count %><br>
+                      <strong>Messages pending: <strong><%= @messages.pending %><br>
                       </div>
                       <table>
                         <thead>
@@ -221,13 +221,13 @@ For more information contact developer.support@att.com
                         </thead>
                         <tbody>
                           <% 
-                            if @messages_inbound then
-                              @messages_inbound.each do |msg|
+                            if @messages.messages then
+                              @messages.messages.each do |msg|
                             %>
                             <tr>
-                              <td data-value="Message Index"><%= msg["MessageId"] %></td>
-                              <td data-value="Message Text"><%= msg["Message"] %></td>
-                              <td data-value="Sender Address"><%= msg["SenderAddress"] %></td>
+                              <td data-value="Message Index"><%= msg.id %></td>
+                              <td data-value="Message Text"><%= msg.message %></td>
+                              <td data-value="Sender Address"><%= msg.sender %></td>
                             </tr>
                           <% end %>
                         <% end %>

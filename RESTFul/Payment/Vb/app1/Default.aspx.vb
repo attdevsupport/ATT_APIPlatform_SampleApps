@@ -156,9 +156,16 @@ Partial Public Class Payment_App1
 
         Return True
     End Function
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
+    End Sub
 
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
-        ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        Me.BypassCertificateError()
         Dim ableToReadFromConfig As Boolean = Me.ReadConfigFile()
 
         If ableToReadFromConfig = False Then

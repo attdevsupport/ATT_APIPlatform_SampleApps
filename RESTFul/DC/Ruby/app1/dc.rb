@@ -6,8 +6,6 @@
 # For more information contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
@@ -29,9 +27,7 @@ RestClient.proxy = settings.proxy
 configure do
   OAuth = Auth::AuthCode.new(settings.FQDN, 
                              settings.api_key, 
-                             settings.secret_key,
-                             SCOPE,
-                             settings.redirect_url)
+                             settings.secret_key)
 end
 
 before do
@@ -39,25 +35,25 @@ before do
   headers "P3P" => "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\""
 
   #create our service if isn't present
-  session[:dc] = Service::DCService.new(OAuth) if session[:dc].nil? 
+  if params[:code] && session[:token].nil?
+    session[:token] = OAuth.createToken(params[:code]) 
+  end
 end
 
 get '/' do
   begin
     #if there's a code we're returning from authenticaion
-    if params[:code] 
-      @result = JSON.parse(session[:dc].getDeviceCapabilties(params[:code]))
+    if session[:token]
+      @result = Service::DCService.new(settings.FQDN, session[:token]).getDeviceCapabilities
 
-      #something went wrong with authentication display error
+    #something went wrong with authentication display error
     elsif params[:error]
-      @error = params[:error] + ": " #+ params[:error_description] 
+      @error = params[:error] + ": " 
 
-      #Authenticate if neccessary
+    #Authenticate if neccessary
     else
-      redirect session[:dc].consentFlow
+      redirect OAuth.consentFlow(:scope => SCOPE, :redirect => settings.redirect_url)
     end
-  rescue RestClient::Exception => e
-    @error = e.response 
   rescue Exception => e
     @error = e.message
   end

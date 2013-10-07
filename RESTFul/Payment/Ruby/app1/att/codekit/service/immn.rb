@@ -4,74 +4,117 @@
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
+require 'json'
+require 'att/codekit/model/immn'
+
 module Att
   module Codekit
     module Service
 
-      #@author Kyle Hill <kh455g@att.com>
+      #@author kh455g
       class IMMNService < CloudService
-        SERVICE_URL = "/rest/1/MyMessages"
+        SERVICE_URL = '/myMessages/v2/messages'
 
-        # Send a message using IMMN services. Determines automatically if it should be a SMS or MMS message based on attachments and group.
+        # Send a message using IMMN services. Determines automatically if it 
+        # should be a SMS or MMS message based on attachments, group and 
+        # subject.
         #
         # @param addresses [String] A comma seperated list of phone numbers.
-        # @param subject [String] The subject of the message.
-        # @param message [String] The body of the message.
-        # @param attachments [Array<String>] An array of paths to files, if present a MMS is sent.
-        # @param group [Boolean] Send the message as a group message to provided addresses. If true then this methods sends a MMS
-        def sendMessage(addresses, subject, message, attachments=nil, group=nil)
-          subject ||= ""
-          message ||= ""
+        # @param opts [Hash] Optional arguments hash
+        #
+        # @option opts [String] :message The body of the message.
+        # @option opts [String] :subject The subject of the message, if 
+        #   present a MMS is sent.
+        # @option opts [Array<String>] :attachments An array of paths to files, if 
+        #   present a MMS is sent.
+        # @option opts [Boolean] :group Send the message as a group message to 
+        #   provided addresses. If true then this methods sends a MMS
+        #
+        # @raise [ServiceException] A problem went wrong with processing the 
+        #   request
+        # @return [Model::IMMNResponse] parsed api response 
+        def sendMessage(addresses, opts={})
+          message = opts[:message]
+          subject = opts[:subject]
+          group = opts[:group]
+          attachments = (opts[:attachments] || opts[:attachment])
 
-          addresses = addresses.gsub("-","").split(",")
-          parsed_addresses = Array.new
+          addresses = CloudService.format_addresses(addresses)
 
-          addresses.each do |a|
-            parsed_addresses << 'tel:'  + a.strip unless(a.include? "tel:" or a.include? "@")
-            parsed_addresses << a.strip if(a.include? "tel:" or a.include? "@")
-          end
-
-          payload = {
-            :Addresses => parsed_addresses,
-            :Text => message,
-            :Subject => subject
-          }
-
-          url = "#{@fqdn}#{SERVICE_URL}"
-
-          if attachments || group 
-            self.immnSendMMS(url, payload, attachments, group)
+          if (attachments || group || subject)
+            immnSendMMS(addresses, 
+                        :attachments => attachments, 
+                        :message => message,
+                        :subject => subject, 
+                        :group => group)
           else
-            self.immnSendSMS(url, payload)
+            immnSendSMS(addresses, message)
           end
         end
 
         # Send an SMS using IMMN services.
         #
+        # @param addresses [Array<String>] A list of phone numbers to send the 
+        #   message 
         # @param url [String] The url which accepts payload and sends SMS. 
-        # @param payload [#to_json] A json-able object to set as the payload.
-        def immnSendSMS(url, payload)
-          content_type = 'application/json' 
-          self.post(url, payload.to_json, :Content_Type => content_type)
+        #
+        # @raise [ServiceException] A problem went wrong with processing the 
+        #   request
+        # @return [Model::IMMNResponse] parsed api response 
+        def immnSendSMS(addresses, text)
+          url = "#{@fqdn}#{SERVICE_URL}"
+
+          payload = {
+            :messageRequest => {
+              :addresses => addresses,
+              :text => text.to_s,
+            }
+          }
+
+          begin
+            response = self.post(url, payload.to_json)
+          rescue RestClient::Exception => e
+            raise(ServiceException, e.response || e.message, e.backtrace)
+          end
+          Model::IMMNResponse.createFromJson(response)
         end
 
         # Send an MMS using IMMN services.
         #
-        # @param url [String] url which accepts payload and fowards MMS
-        # @param payload [#to_json] A payload which responds to #to_json
-        # @param attachments [Array<String>, String] An array of paths or a path to a file
-        # @param group [Boolean] Send the MMS as a group message (default: false)
-        def immnSendMMS(url, payload, attachments, group=nil)
-          attachments = [attachments] if attachments.instance_of? String
+        # @param addresses [String] A comma seperated list of phone numbers.
+        # @param opts [Hash] Optional arguments hash
+        #
+        # @option opts [String] :message The body of the message.
+        # @option opts [String] :subject The subject of the message, if 
+        #   present a MMS is sent.
+        # @option opts [Array<String>] :attachments An array of paths to files, if 
+        #   present a MMS is sent.
+        # @option opts [String] :attachment singular form of :attachments
+        # @option opts [Boolean] :group Send the message as a group message to 
+        #   provided addresses. If true then this methods sends a MMS
+        #
+        # @raise [ServiceException] A problem went wrong with processing the 
+        #   request
+        # @return [Model::IMMNResponse] parsed api response 
+        def immnSendMMS(addresses, opts={})
+          url = "#{@fqdn}#{SERVICE_URL}"
+
+          attachments = (opts[:attachments] || opts[:attachment])
+          text = (opts[:text] || opts[:message])
+          group = (opts[:group] || false)
+          subject = opts[:subject]
+
+          payload = { :addresses => addresses }
+          payload[:text] = text unless text.nil?
+          payload[:subject] = subject unless subject.nil?
+
           boundary = CloudService.generateBoundary
 
-          if group.nil? || group == false 
-            payload[:Group] = false
+          if (group && addresses.count > 1)
+            payload[:isGroup] = true 
           else
-            payload[:Group] = true 
+            payload[:isGroup] = false
           end
-
-          boundary = "#{(rand*10000000) + 10000000}.#{Time.now.to_i}"
 
           headers = {
             "Content-Type" => "application/json; charset=UTF-8",
@@ -81,14 +124,14 @@ module Att
 
           json_payload = {
             :headers => headers,
-            :data => payload.to_json
+            :data => { :messageRequest => payload }.to_json
           }
 
           parts = [json_payload]
 
           count = 0
           if attachments 
-            attachments.each do |attach|
+            Array(attachments).each do |attach|
               if attach && !attach.empty? 
                 data = File.open(attach, 'rb') { |io| io.read }
                 mime = CloudService.getMimeType(attach);
@@ -103,7 +146,7 @@ module Att
 
                 file_payload = {
                   :headers => headers,
-                  :data => data
+                  :data => data.to_s
                 }
 
                 count += 1
@@ -114,12 +157,14 @@ module Att
 
           multipart = CloudService.generateMultiPart(boundary, parts)
 
-          content_type = 'multipart/related; '
-          content_type << 'type="application/json"; ' 
-          content_type << 'start="<startpart>"; ' 
-          content_type << %(boundary="#{boundary}") 
+          content_type = %{multipart/related; type="application/json"; start="<startpart>"; boundary="#{boundary}"}
 
-          self.post(url, multipart, :Content_Type => content_type)
+          begin
+            response = self.post(url, multipart, :Content_Type => content_type)
+          rescue RestClient::Exception => e
+            raise(ServiceException, e.response || e.message, e.backtrace)
+          end
+          Model::IMMNResponse.createFromJson(response)
         end
 
       end

@@ -36,7 +36,7 @@ public partial class Payment_App1 : System.Web.UI.Page
     private string accessTokenFilePath, apiKey, secretKey, accessToken, endPoint,
         scope, expirySeconds, refreshToken, accessTokenExpiryTime, refreshTokenExpiryTime,
         amount, channel, description, merchantTransactionId, merchantProductId, merchantApplicationId,
-        transactionTimeString, notaryURL, notificationDetailsFile;
+        transactionTimeString, notaryURL, notificationDetailsFile, bypassSSL;
 
     private string merchantSubscriptionIdList, subscriptionRecurringPeriod, subscriptionRecurringNumber, subscriptionRecurringPeriodAmount, isPurchaseOnNoActiveSubscription;
 
@@ -147,13 +147,19 @@ public partial class Payment_App1 : System.Web.UI.Page
     /// <summary>
     /// This function is used to neglect the ssl handshake error with authentication server.
     /// </summary>
-    public static void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
 
     protected void Page_Load(object sender, EventArgs e)

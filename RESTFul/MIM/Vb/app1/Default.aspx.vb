@@ -78,6 +78,13 @@ Partial Public Class MIM_App1
         Return True
     End Function
 
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
+    End Sub
+
 #Region "Application events"
 
     ''' <summary>
@@ -87,7 +94,8 @@ Partial Public Class MIM_App1
     ''' <param name="e">Event that invoked this function</param>
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
         Try
-            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            Me.BypassCertificateError()
             pnlHeader.Visible = False
             imagePanel.Visible = False
             smilpanel.Visible = False

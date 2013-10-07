@@ -6,8 +6,6 @@
 # For more information contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'uri'
@@ -32,19 +30,32 @@ TEMPLATE_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/templ
 
 
 configure do
-  oauth = Auth::ClientCred.new(settings.FQDN, 
-                               settings.api_key, 
-                               settings.secret_key, 
-                               SCOPE, 
-                               :tokens_file => settings.tokens_file)
+  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
 
-  Speech = Service::SpeechService.new(oauth)
+  OAuth = Auth::ClientCred.new(settings.FQDN, 
+                               settings.api_key, 
+                               settings.secret_key)
+
+  if FILE_EXISTS 
+    token = Auth::OAuthToken.load(settings.tokens_file)
+  else
+    token = OAuth.createToken(SCOPE)
+  end
+  @@speech = Service::SpeechService.new(settings.FQDN, token)
+  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
 end
 
 before do
   drop_down_list
   dict, grammar, afile = load_files
   @mime_data = "x-dictionary:\n" + dict + "\n\nx-grammar:\n" + grammar 
+
+  if @@speech.token.expired?
+    token = OAuth.refreshToken(@@speech.token)
+    @@speech = Service::SpeechService.new(settings.FQDN, token)
+    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  end
 end
 
 get '/' do
@@ -61,15 +72,11 @@ post '/SpeechToText' do
       grammar_type = nil 
     end
 
-    response = Speech.speechToText(afile, dict, grammar, 
-                                   :context => params[:SpeechContext], 
-                                   :grammar => grammar_type,
-                                   :xargs => settings.X_arg)
+    @result = @@speech.speechToText(afile, dict, grammar, 
+                                  :context => params[:SpeechContext], 
+                                  :grammar => grammar_type,
+                                  :xargs => settings.X_arg)
 
-    @result = JSON.parse(response)
-
-  rescue RestClient::Exception => e
-    @error = e.response 
   rescue Exception => e
     @error = e.message
   end

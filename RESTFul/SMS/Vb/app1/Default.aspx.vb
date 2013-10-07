@@ -107,7 +107,8 @@ Partial Public Class SMS_App1
     ''' <param name="e">List of Arguments</param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
-            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            Me.BypassCertificateError()
             Dim ableToRead As Boolean = Me.ReadConfigFile()
             If ableToRead = False Then
                 Return
@@ -270,6 +271,13 @@ Partial Public Class SMS_App1
 
         Return True
     End Function
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
+    End Sub
+
 
 
     ''' <summary>

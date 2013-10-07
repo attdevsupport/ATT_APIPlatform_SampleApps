@@ -6,8 +6,6 @@
 # For more information contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'uri'
@@ -30,18 +28,31 @@ RestClient.proxy = settings.proxy
 AUDIO_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/audio")
 
 configure do
-  oauth = Auth::ClientCred.new(settings.FQDN,
-                               settings.api_key,
-                               settings.secret_key,
-                               SCOPE, 
-                               :tokens_file => settings.tokens_file)
+  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
 
-  Speech = Service::SpeechService.new(oauth)
+  OAuth = Auth::ClientCred.new(settings.FQDN,
+                               settings.api_key,
+                               settings.secret_key)
+
+  if FILE_EXISTS 
+    token = Auth::OAuthToken.load(settings.tokens_file)
+  else
+    token = OAuth.createToken(SCOPE)
+  end
+  @@speech = Service::SpeechService.new(settings.FQDN, token)
+  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
 end
 
 before do 
   drop_down_list
   load_submitted
+
+  if @@speech.token.expired?
+    token = OAuth.refreshToken(@@speech.token)
+    @@speech = Service::SpeechService.new(settings.FQDN, token)
+    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  end
 end
 
 get '/' do
@@ -55,15 +66,11 @@ post '/SpeechToText' do
     chunked = params[:chkChunked]
     context = params[:SpeechContext]
 
-    response = Speech.toText(audio_file, 
-                             :xargs => settings.X_arg, 
-                             :context => context, 
-                             :chunked => chunked)
+    @result = @@speech.toText(audio_file, 
+                              :xargs => settings.X_arg, 
+                              :context => context, 
+                              :chunked => chunked)
 
-    @result = JSON.parse(response)
-
-  rescue RestClient::Exception => e
-    @error = e.response 
   rescue Exception => e
     @error = e.message
   end

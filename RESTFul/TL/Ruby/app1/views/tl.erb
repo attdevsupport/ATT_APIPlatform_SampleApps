@@ -92,17 +92,17 @@
               <div class="successWide">
                 <strong>SUCCESS:</strong>
                 <br />
-                <strong>Latitude:</strong> <%= @result['latitude'] %>
+                <strong>Latitude:</strong> <%= @result.latitude %>
                 <br />
-                <strong>Longitude:</strong> <%= @result['longitude'] %>
+                <strong>Longitude:</strong> <%= @result.longitude %>
                 <br />
-                <strong>Accuracy:</strong> <%= @result['accuracy'] %>
+                <strong>Accuracy:</strong> <%= @result.accuracy %>
                 <br />
                 <strong>Response Time:</strong> <%= session[:elapsed] %> seconds
               </div>
               <div align="center">
                 <iframe width="600" height="400" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
-                  src="http://maps.google.com/?q=<%= @result['latitude']%>+<%= @result['longitude']%>&output=embed"></iframe>
+                  src="http://maps.google.com/?q=<%= @result.latitude %>+<%= @result.longitude %>&output=embed"></iframe>
               </div>
             <% elsif @error %>
               <div class="errorWide">

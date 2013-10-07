@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Restful;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * Restful Library.
@@ -16,7 +18,7 @@
  * 
  * @category  Network
  * @package   Restful
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
@@ -24,15 +26,15 @@
 
 /**
  * Immutable class that contains response information received after sending a 
- * RESTFul request.
+ * Restful request.
  * 
  * @category Network
  * @package  Restful 
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
-class RESTFulResponse
+final class RestfulResponse
 {
     /**
      * HTTP response body.
@@ -56,7 +58,7 @@ class RESTFulResponse
     private $_headers;
 
     /**
-     * Creates a new RESTFulResponse with the specified HTTP response body, 
+     * Creates a new RestfulResponse with the specified HTTP response body, 
      * HTTP response code, and HTTP headers.
      *
      * @param string $responseBody HTTP response body
@@ -99,5 +101,26 @@ class RESTFulResponse
     {
         return $this->_headers;
     }
+
+    /**
+     * Gets the value of the specified HTTP header or null if no such header.
+     *
+     * The <code>$name</code> field is NOT case sensitive.
+     *
+     * @param string $name http header name
+     *
+     * @return string http header value
+     */
+    public function getHeader($name)
+    {
+        foreach ($this->_headers as $k => $v) {
+            if (strtolower($k) == strtolower($name)) {
+                return $v;
+            }
+        }
+
+        return null;
+    }
+
 }
 ?>

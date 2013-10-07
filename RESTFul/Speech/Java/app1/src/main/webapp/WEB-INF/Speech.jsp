@@ -124,8 +124,8 @@
             <tbody>
             <c:forEach var="kvp" items="${resultSpeech}">
               <tr>
-                <td class="cell" align="center"><em><c:out value="${kvp[0]}" /></em></td>
-                <td class="cell" align="center"><em><c:out value="${kvp[1]}" /></em></td>
+                <td data-value="Parameter"><em><c:out value="${kvp[0]}" /></em></td>
+                <td data-value="Value"><em><c:out value="${kvp[1]}" /></em></td>
               </tr>
             </c:forEach>
             </tbody>

@@ -1,7 +1,7 @@
 require "att/codekit/version"
 
 module Att
-  # @author Kyle Hill <kh455g@att.com>
+  # @author kh455g
   module Codekit
     module Auth
       require "att/codekit/auth" 

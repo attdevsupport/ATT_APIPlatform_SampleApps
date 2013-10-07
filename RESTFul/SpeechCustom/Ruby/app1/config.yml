@@ -11,9 +11,9 @@ secret_key:
 tokens_file:        tokens
 FQDN:               https://api.att.com
 endpoint:           https://api.att.com/rest/2/SpeechToText
-speech_context:     GenericHints,GrammerList
+speech_context:     GenericHints,GrammarList
 X_arg:              
-default_audio_file: bostonSeltics.wav
+default_audio_file: pizza-en-US.wav
 source_link:        http://localhost/source
 help_link:          http://localhost/help
 download_link:      http://localhost/download

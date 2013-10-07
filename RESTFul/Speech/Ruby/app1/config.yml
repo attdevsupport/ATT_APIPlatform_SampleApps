@@ -14,7 +14,7 @@ endpoint:           https://api.att.com/rest/2/SpeechToText
 speech_context:     Generic, TV, BusinessSearch, Websearch, SMS, Voicemail, QuestionAndAnswer
 X_arg:              
 X_subContext:              
-default_audio_file: bostonSeltics.wav
+default_audio_file: BostonCeltics.wav
 source_link:        http://localhost/source
 help_link:          http://localhost/help
 download_link:      http://localhost/download

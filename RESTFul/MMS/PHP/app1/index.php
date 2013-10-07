@@ -3,11 +3,13 @@ session_start();
 require_once __DIR__ . '/lib/Util/Util.php';
 require_once __DIR__ . '/src/Controller/MMSController.php';
 require_once __DIR__ . '/config.php';
+
+use Att\Api\Util\Util;
+
 $controller = new MMSController();
 $controller->handleRequest();
 $results = $controller->getResults();
 $errors = $controller->getErrors();
-
 ?>
 <!DOCTYPE html>
 <html lang="en"> 
@@ -78,9 +80,9 @@ $errors = $controller->getErrors();
               <h2>Feature 1: Send MMS Message</h2>
               <form method="post" name="sendMms" action="index.php">
                 <div class="inputFields">
-                  <?php if (isset($_SESSION['addr'])) { ?>
+                  <?php if (isset($_SESSION['address'])) { ?>
                   <input name="address" placeholder="Address" 
-                      value="<?php echo htmlspecialchars($_SESSION['addr']); ?>" />
+                      value="<?php echo htmlspecialchars($_SESSION['address']); ?>" />
                   <?php } else { ?>
                   <input name="address" placeholder="Address" />
                   <?php } ?>
@@ -93,7 +95,7 @@ $errors = $controller->getErrors();
                   <label>
                     Attachment:
                     <select name="attachment">
-                      <?php foreach ($results['fnames'] as $fname) { ?>
+                      <?php foreach ($results[MMSController::RESULT_FNAMES] as $fname) { ?>
                       <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $fname) { ?>
                       <option selected="selected"><?php echo $fname; ?></option>
                       <?php } else { ?>
@@ -103,7 +105,7 @@ $errors = $controller->getErrors();
                     </select>
                   </label>
                   <label>
-                  <?php if (isset($_SESSION['notifyDeliveryStatus']) && $_SESSION['notifyDeliveryStatus'] == true) { ?>
+                  <?php if (isset($_SESSION['chkGetOnlineStatus']) && $_SESSION['chkGetOnlineStatus'] == true) { ?>
                     <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="True" checked
                       title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
                   <?php } else { ?>
@@ -116,18 +118,20 @@ $errors = $controller->getErrors();
                 </div> <!-- end of inputFields -->
               </form>
             </div> <!-- end of sendMMS -->
-            <?php if (isset($errors['sendMMS'])) { ?>
+            <?php if (isset($errors[MMSController::ERROR_SEND_MMS])) { ?>
             <div class="errorWide">
               <strong>ERROR: </strong><br>
               <?php echo htmlspecialchars($errors['sendMMS']); ?>
             </div>
             <?php } ?>
-            <?php if (isset($results['sendMMS'])) { ?>
+            <?php if (isset($results[MMSController::RESULT_SEND_MMS])) { 
+            $sendMmsR = $results[MMSController::RESULT_SEND_MMS];
+            ?>
             <div class="successWide">
               <strong>SUCCESS: </strong><br>
-              <strong>messageId: </strong><?php echo $results['messageId']; ?><br>
-              <?php if (isset($results['resourceURL'])) { ?>
-              <strong>resourceURL: </strong><?php echo $results['resourceURL']; ?><br>
+              <strong>messageId: </strong><?php echo $sendMmsR->getMessageId(); ?><br>
+              <?php if ($sendMmsR->getResourceUrl() != null) { ?>
+              <strong>resourceURL: </strong><?php echo $sendMmsR->getResourceUrl(); ?><br>
               <?php } ?>
             </div>
             <?php } ?>
@@ -136,8 +140,10 @@ $errors = $controller->getErrors();
               <h2>Feature 2: Get Delivery Status</h2>
               <form method="post" name="getStatus" action="index.php">
                 <div class="inputFields">
-                  <?php if (isset($results['id'])) { ?>
-                  <input maxlength="20" name="mmsId" placeholder="Message ID" value="<?php echo $results['id']; ?>" />
+                  <?php if (isset($results[MMSController::RESULT_MSG_ID])) { 
+                  $msgId = $results[MMSController::RESULT_MSG_ID];
+                  ?>
+                  <input maxlength="20" name="mmsId" placeholder="Message ID" value="<?php echo $msgId; ?>" />
                   <?php } else { ?>
                   <input maxlength="20" name="mmsId" placeholder="Message ID" />
                   <?php } ?>
@@ -145,16 +151,15 @@ $errors = $controller->getErrors();
                 </div> <!-- end of inputFields -->	
               </form> 
             </div> <!-- end of getDeliveryStatus -->
-            <?php if (isset($errors['getStatus'])) { ?>
+            <?php if (isset($errors[MMSController::ERROR_GET_STATUS])) { ?>
             <div class="errorWide">
             <strong>ERROR: </strong><br>
-            <?php echo htmlspecialchars($errors['getStatus']); ?>
+            <?php echo htmlspecialchars($errors[MMSController::ERROR_GET_STATUS]); ?>
             </div>
-            <?php } else if(isset($results['getStatus'])) { 
-              $sResult = $results['getStatus']; $infoList = $sResult['DeliveryInfoList']; 
-              $info = $infoList['DeliveryInfo']; $firstInfo = $info[0];
-              $status = $firstInfo['DeliveryStatus']; 
-              $resourceURL = $infoList['ResourceUrl'];
+            <?php } else if(isset($results[MMSController::RESULT_GET_STATUS])) { 
+            $statusR = $results[MMSController::RESULT_GET_STATUS];
+            $status = $statusR->getDeliveryInfoList()[0]->getDeliveryStatus(); 
+            $resourceURL = $statusR->getResourceUrl();
             ?>
             <div class="successWide">
             <strong>SUCCESS: </strong><br>
@@ -178,7 +183,7 @@ $errors = $controller->getErrors();
                   </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($results['resultStatusN'] as $statusNotification) { 
+                <?php foreach ($results[MMSController::RESULT_STATUS_DB] as $statusNotification) { 
                   $dInfoNotification = $statusNotification['deliveryInfoNotification']; 
                   $dInfo = $dInfoNotification['deliveryInfo'];
                 ?>
@@ -194,8 +199,8 @@ $errors = $controller->getErrors();
             <div class="lightBorder"></div>
             <div id="webGallery">
               <h2>Feature 4: Web gallery of MMS photos sent to short code</h2>
-              <p>Photos sent to short code <?php echo $shortCode ?> : <?php echo count($results['messages']) ?></p>
-              <?php foreach ($results['messages'] as $msg) { 
+              <p>Photos sent to short code <?php echo $shortCode ?> : <?php echo count($results[MMSController::RESULT_MSGS_DB]) ?></p>
+              <?php foreach ($results[MMSController::RESULT_MSGS_DB] as $msg) { 
               $txt = file_get_contents('MMSImages/' . $msg['text']);
               ?>
               <img src="<?php echo 'MMSImages/' . $msg['image']; ?>" width="150" border="0" /><br>

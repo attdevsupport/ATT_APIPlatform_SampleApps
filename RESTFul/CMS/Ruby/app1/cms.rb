@@ -7,8 +7,6 @@
 # contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
@@ -28,19 +26,26 @@ SCOPE = 'CMS'
 
 #An array of all the methods our script supports
 SCRIPT_METHODS = settings.script_methods.split(",")
+
+#Set the proxy that's used in att/codekit
 RestClient.proxy = settings.proxy
 
 #setup our oauth service
 configure do
   begin
-    oauth = Auth::ClientCred.new(settings.FQDN, 
+    FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+    FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
+
+    OAuth = Auth::ClientCred.new(settings.FQDN, 
                                  settings.api_key, 
-                                 settings.secret_key,
-                                 SCOPE,
-                                 :tokens_file => settings.tokens_file)
-    CMS = Service::CMSService.new(oauth)
-  rescue RestClient::Exception => e
-    @error = e.response 
+                                 settings.secret_key)
+
+    if FILE_EXISTS 
+      @@token = Auth::OAuthToken.load(settings.tokens_file)
+    else
+      @@token = OAuth.createToken(SCOPE)
+    end
+    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
   rescue Exception => e
     @error = e.message
   end
@@ -49,6 +54,14 @@ end
 #load our file for display before anything
 before do
   read_script
+  begin
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token)
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+  rescue Exception => e
+    @error = e.message
+  end
 end
 
 # On start of application clear any session id value and read scripts.
@@ -60,8 +73,6 @@ end
 post '/CreateSession' do
   begin
     create_session unless params[:btnCreateSession].nil? 
-  rescue RestClient::Exception => e
-    @error = e.response 
   rescue Exception => e
     @error = e.message
   end
@@ -70,12 +81,11 @@ end
 
 post '/SendSignal' do
   begin
+    service = Service::CMSService.new(settings.FQDN, @@token)
+
     if params[:scriptType].nil?
-      response = CMS.send_signal(session[:cms_id], params[:signal])
-      @signal_result = JSON.parse response
+      @signal_result = service.sendSignal(session[:cms_id], params[:signal])
     end
-  rescue RestClient::Exception => e
-    @signal_error = e.response 
   rescue Exception => e
     @signal_error = e.message
   end
@@ -118,13 +128,14 @@ def create_session
     'smsCallerID' => settings.phoneNumber.to_s,
   }
 
-  response =  CMS.create_session(requestbody)
+  begin
+    service = Service::CMSService.new(settings.FQDN, @@token)
 
-  if response.code == 200 || response.code == 201
-    @result = JSON.parse response
-    session[:cms_id] = @result['id']
-  else
-    @error = r
+    @result =  service.create_session(requestbody)
+
+    session[:cms_id] = @result.id
+  rescue Exception => e
+    @error = e.message 
   end
 end
 

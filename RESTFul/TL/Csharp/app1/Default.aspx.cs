@@ -52,7 +52,7 @@ public partial class TL_App1 : System.Web.UI.Page
     /// <summary>
     /// Access Token Variables
     /// </summary>
-    private string apiKey, secretKey, accessToken, authorizeRedirectUri, scope, refreshToken, accessTokenExpiryTime, refreshTokenExpiryTime;
+    private string apiKey, secretKey, accessToken, authorizeRedirectUri, scope, refreshToken, accessTokenExpiryTime, refreshTokenExpiryTime, bypassSSL;
 
     /// <summary>
     /// Gets or sets the value of authCode
@@ -81,13 +81,19 @@ public partial class TL_App1 : System.Web.UI.Page
     /// <summary>
     /// Neglect the ssl handshake error with authentication server
     /// </summary>
-    public static void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
 
     #endregion

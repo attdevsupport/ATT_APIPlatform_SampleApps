@@ -6,8 +6,6 @@
 # For more information contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'base64'
@@ -29,17 +27,30 @@ TEXT_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/text")
 RestClient.proxy = settings.proxy
 
 configure do
-  oauth = Auth::ClientCred.new(settings.FQDN,
+  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
+
+  OAuth = Auth::ClientCred.new(settings.FQDN,
                                 settings.api_key,
-                                settings.secret_key,
-                                SCOPE,
-                                :tokens_file => settings.tokens_file)
-  TTS = Service::TTSService.new(oauth)
+                                settings.secret_key)
+  if FILE_EXISTS 
+    token = Auth::OAuthToken.load(settings.tokens_file)
+  else
+    token = OAuth.createToken(SCOPE)
+  end
+  @@tts = Service::TTSService.new(settings.FQDN, token)
+  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
 end
 
 before do
   @ssml_content = load_content("SSMLWithPhoneme.txt")
   @text_content = load_content("PlainText.txt")
+
+  if @@tts.token.expired?
+    token = OAuth.refreshToken(@@tts.token)
+    @@tts = Service::TTSService.new(settings.FQDN, token)
+    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  end
 end
 
 
@@ -55,14 +66,10 @@ post '/TextToSpeech' do
               when "text/plain" then load_content("PlainText.txt")
               end
 
-    response = TTS.toSpeech(content, 
-                            :xargs => params[:x_arg],
-                            :type => type)
-    #the binary audio file
-    @audio = response
-    
-  rescue RestClient::Exception => e
-    @error = e.response 
+    @audio = @@tts.toSpeech(content, 
+                          :xargs => params[:x_arg],
+                          :type => type)
+
   rescue Exception => e
     @error = e.message
   end

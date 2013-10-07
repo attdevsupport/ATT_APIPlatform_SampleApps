@@ -25,7 +25,7 @@ using System.Security.Cryptography.X509Certificates;
 public partial class _Default : System.Web.UI.Page
 {
     string shortCode, FQDN, oauthFlow;
-    string api_key, secret_key, auth_code, access_token, authorize_redirect_uri, scope, expiryMilliSeconds, refresh_token, lastTokenTakenTime, refreshTokenExpiryTime;
+    string api_key, secret_key, auth_code, access_token, authorize_redirect_uri, scope, expiryMilliSeconds, refresh_token, lastTokenTakenTime, refreshTokenExpiryTime, bypassSSL;
     Table successTable, failureTable;
     string amount;
     Int32 category;
@@ -40,14 +40,21 @@ public partial class _Default : System.Web.UI.Page
     string transactionTimeString;
     string payLoadStringFromRequest;
 
-    public static void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
+
 
     private void readTransactionParametersFromConfigurationFile()
     {

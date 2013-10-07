@@ -78,12 +78,20 @@ Partial Public Class Speech_App1
     ''' <param name="sender">Button that caused this event</param>
     ''' <param name="e">Event that invoked this function</param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
-        ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
 
+        Me.BypassCertificateError()
         Me.ReadConfigFile()
 
         Me.setXArgsContent()
     End Sub
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
+    End Sub
+
 
     ''' <summary>
     ''' Method that calls SpeechToText api when user clicked on submit button

@@ -3,6 +3,7 @@ session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/src/Controller/CMSController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
+use Att\Api\Util\Util;
 
 $controller = new CMSController();
 $controller->handleRequest();
@@ -146,12 +147,12 @@ $errors = $controller->getErrors();
               </form>
               <?php 
               if (isset($results[CMSController::RESULT_CREATE_SESSION])) { 
-                $createSession = $results[CMSController::RESULT_CREATE_SESSION];
+                $cs = $results[CMSController::RESULT_CREATE_SESSION];
               ?>
               <div class="successWide">
                 <strong>SUCCESS</strong><br>
-                id:&nbsp;<?php echo $createSession['id']; ?><br>
-                success:&nbsp;<?php echo ($createSession['success'] ? 'True' : 'False'); ?><br>
+                id:&nbsp;<?php echo $cs->getId(); ?><br>
+                success:&nbsp;<?php echo ($cs->getSuccess() ? 'True' : 'False'); ?><br>
               </div>
               <?php } else if (isset($errors[CMSController::ERROR_CREATE_SESSION])) { 
                 $err = $errors[CMSController::ERROR_CREATE_SESSION];
@@ -197,7 +198,8 @@ $errors = $controller->getErrors();
                 </div>	
               </form>
               <?php if (isset($results[CMSController::RESULT_SEND_SIGNAL])) { 
-                $signalStatus = $results[CMSController::RESULT_SEND_SIGNAL];
+                $result = $results[CMSController::RESULT_SEND_SIGNAL];
+                $signalStatus = $result->getStatus();
               ?>
                 <div class="successWide">
                   <strong>SUCCESS</strong><br />

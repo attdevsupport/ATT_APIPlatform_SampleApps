@@ -1,9 +1,10 @@
 require 'json'
+require 'immutable_struct'
 
 module Att
   module Codekit
     module Model
-      #@author Kyle Hill <kh455g@att.com>
+      #@author kh455g
       class PaymentNotification
         def initialize(json, id)
           @json = json
@@ -17,6 +18,8 @@ module Att
         end
 
         # Each loop for a payment notification
+        #
+        # @yield [key, value] dumps all the key/values for the notification
         def each
           yield "NotificationId", @id
           @json.each do |key, value|

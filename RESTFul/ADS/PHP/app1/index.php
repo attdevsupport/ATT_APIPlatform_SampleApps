@@ -2,6 +2,8 @@
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/src/Controller/ADSController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
+use Att\Api\Util\Util;
+
 $controller = new ADSController();
 $controller->handleRequest();
 $errors = $controller->getErrors();
@@ -253,16 +255,9 @@ For more information contact developer.support@att.com
                 <?php 
                   if (is_string($result)) { 
                     echo htmlspecialchars($result);
-                  }
                 ?>
               </div>
-              <?php if (is_array($result)) { 
-              $response = $result['AdsResponse'];
-              $ads = $response['Ads'];
-              $type = $ads['Type'];
-              $clickURL = $ads['ClickUrl'];
-              $content = $ads['Content'];
-              ?>
+              <?php } else { ?>
               <table>
                 <thead>
                   <tr>
@@ -273,15 +268,15 @@ For more information contact developer.support@att.com
                 <tbody>
                   <tr>
                     <td data-value="Parameter">Type</td>
-                    <td data-value="Value"><?php echo htmlspecialchars($type); ?></td>
+                    <td data-value="Value"><?php echo htmlspecialchars($result->getAdsType()); ?></td>
                   </tr>
                   <tr>
                     <td data-value="Parameter">ClickUrl</td>
-                    <td data-value="Value"><?php echo htmlspecialchars($clickURL); ?></td>
+                    <td data-value="Value"><?php echo htmlspecialchars($result->getClickUrl()); ?></td>
                   </tr>
                 </tbody>
               </table>
-              <?php echo $content; ?>
+              <?php echo $result->getContent(); ?>
 
               <?php } ?>
               <?php } ?>

@@ -60,7 +60,7 @@ module Att
           Subscriber_Other = 16
         end
 
-      #@author Kyle Hill <kh455g@att.com>
+      #@author kh455g
       class PaymentService < CloudService
         module SERVICE_URL
           Transactions = "/rest/3/Commerce/Payment/Transactions"
@@ -96,7 +96,7 @@ module Att
 
           from_json = JSON.parse response
 
-          parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@oauth.client_id}"
+          parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@client.id}"
 
           "#{@fqdn}#{SERVICE_URL::Transactions}#{parameters}"
         end
@@ -140,7 +140,7 @@ module Att
 
           from_json = JSON.parse response
 
-          parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@oauth.client_id}"
+          parameters = "?Signature=#{from_json['Signature']}&SignedPaymentDetail=#{from_json['SignedDocument']}&clientid=#{@client.id}"
 
           "#{@fqdn}#{SERVICE_URL::Subscriptions}#{parameters}"
         end
@@ -176,7 +176,7 @@ module Att
         # @param merchant_subscription_id [String] the subscription product id of the merchant
         # @return [RestClient::Response] a parsed response object
         def getSubscriptionDetails(consumer_id, merchant_subscription_id)
-          url = "#{@fqdn}#{SERVICE_URL::Subscriptions}/#{merchant_subscription_id}/#{consumer_id}"
+          url = "#{@fqdn}#{SERVICE_URL::Subscriptions}/#{merchant_subscription_id}/Detail/#{consumer_id}"
 
           self.get(url)
         end
@@ -218,8 +218,8 @@ module Att
           url = "#{@fqdn}#{SERVICE_URL::NotarySignature}"
 
           headers = {
-            'client_id' => @oauth.client_id,
-            'client_secret' => @oauth.client_secret
+            'client_id' => @client.id,
+            'client_secret' => @client.secret
           }
 
           self.post(url, payload, headers)

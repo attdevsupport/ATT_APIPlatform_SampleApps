@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Srvc;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * Service Library.
@@ -16,26 +18,25 @@
  * 
  * @category  API
  * @package   Service
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
-require_once __DIR__ . '../../OAuth/OAuthToken.php';
-require_once __DIR__ . '../../Restful/RESTFulRequest.php';
+use Exception;
 
 /**
  * Basic class for storing any exceptions related to API requests.
  * 
  * @category API
  * @package  Service
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  * @see      Exception
  */
-class ServiceException extends Exception
+final class ServiceException extends Exception
 {
     /**
      * Http status code returned by API after unsuccessful request.
@@ -97,6 +98,4 @@ class ServiceException extends Exception
     }
 }
 
-
 ?>
-

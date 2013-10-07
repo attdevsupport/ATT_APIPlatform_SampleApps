@@ -26,19 +26,23 @@ set :port, settings.port
 set :protection, :except => :frame_options
 
 SCOPE = 'PAYMENT'
-RestClient.proxy = settings.proxy
+
+#Setup proxy used by att/codekit
+Transport.proxy(settings.proxy)
 
 # Initialize our service object that we will use to make requests.
 # Doing this globally with Rack spawners such as Shotgun will
 # make this call on every request resulting in poor performance.
 configure do
   begin
-    oauth = Auth::ClientCred.new(settings.FQDN, 
-                                 settings.api_key,
-                                 settings.secret_key, 
-                                 SCOPE,
-                                 :token_file => settings.tokens_file)
-    Payment = Service::PaymentService.new(oauth)
+    @@client = Auth::Client.new(settings.api_key, 
+                                settings.secret_key)
+
+    OAuth = Auth::ClientCred.new(settings.FQDN, 
+                                 @@client.id,
+                                 @@client.secret)
+
+    @@token = OAuth.createToken(SCOPE)
   rescue RestClient::Exception => e
     @auth_error = e.response 
   rescue Exception => e
@@ -47,7 +51,7 @@ configure do
 end
 
 #if we have a payload generate notary
-before '*' do
+before do
   @show_subscription = false
   @show_notary = false
   @show_transaction = false
@@ -56,6 +60,10 @@ before '*' do
   updateTransactions(settings.transactions_file, :transactions)
   updateTransactions(settings.subscriptions_file, :subscription)
   updateTransactions(settings.notifications_file, :notifications)
+
+  if @@token.expired?
+    @@token = OAuth.refreshToken(@@token) 
+  end
 end
 
 [ '/newSubscription','/getSubscriptionStatus','/getSubscriptionDetails',
@@ -82,6 +90,8 @@ end
 
 # Single pay URL handlers
 post '/newTransaction'  do
+  service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
   amount = params[:product] == "1" ? settings.min_transaction_value : settings.max_transaction_value
 
   description = 'Word game 1'
@@ -98,14 +108,15 @@ post '/newTransaction'  do
     merch_product_id,
     settings.payment_redirect_url)
 
-    #redirect is required per purchase to authenticate the purchase by user
-    redirect Payment.newTransaction(
-      amount,
-      Categories::IN_APP_GAMES,
-      description,
-      merch_transaction_id,
-      merch_product_id,
-      settings.payment_redirect_url)
+  #redirect is required per purchase to authenticate the purchase by user
+  redirect service.newTransaction(
+    amount,
+    Categories::IN_APP_GAMES,
+    description,
+    merch_transaction_id,
+    merch_product_id,
+    settings.payment_redirect_url,
+    settings.api_key)
 end
 
 # Returning from oauth flow to confirm purchase
@@ -113,7 +124,9 @@ end
 get '/returnTransaction' do
   if params['TransactionAuthCode']
     begin
-      response = Payment.getTransaction(TransactionType::TransactionAuthCode,
+      service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
+      response = service.getTransaction(TransactionType::TransactionAuthCode,
                                         params['TransactionAuthCode'])
 
       new_transaction = JSON.parse response
@@ -136,20 +149,22 @@ end
 
 post '/getTransactionStatus'  do
   begin
+    service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
     #we have three possible parameters, assign possible type
-    response = Payment.getTransaction(
+    response = service.getTransaction(
       TransactionType::TransactionAuthCode, 
       params['getTransactionAuthCode']) if params['getTransactionAuthCode']
 
-      response ||= Payment.getTransaction(
-        TransactionType::TransactionId, 
-        params['getTransactionTID']) if params['getTransactionTID']
+    response ||= service.getTransaction(
+      TransactionType::TransactionId, 
+      params['getTransactionTID']) if params['getTransactionTID']
 
-        response ||= Payment.getTransaction(
-          TransactionType::MerchantTransactionId, 
-          params['getTransactionMTID']) if params['getTransactionMTID']
+    response ||= service.getTransaction(
+      TransactionType::MerchantTransactionId, 
+      params['getTransactionMTID']) if params['getTransactionMTID']
 
-          @transaction_status = JSON.parse response
+    @transaction_status = JSON.parse response
 
   rescue RestClient::Exception => e
     @transaction_status_error = e.response 
@@ -161,11 +176,13 @@ end
 
 post '/refundTransaction'  do
   begin
+    service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
     reason = "User was not happy with purchase"
-    response = Payment.refundTransaction(params['refundTransactionId'],
+    response = service.refundTransaction(params['refundTransactionId'],
                                          RefundCodes::CP_None, reason)
 
-    @refund = JSON.parse Payment.getTransaction(TransactionType::TransactionId,
+    @refund = JSON.parse service.getTransaction(TransactionType::TransactionId,
                                                 params['refundTransactionId'])
 
   rescue RestClient::Exception => e
@@ -173,10 +190,12 @@ post '/refundTransaction'  do
   rescue Exception => e
     @refund_error = e.message
   end
-    erb :payment
+  erb :payment
 end
 
 post '/notificationListener' do
+  service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
   input = request.env["rack.input"].read
   xml_doc = REXML::Document.new input
 
@@ -185,12 +204,12 @@ post '/notificationListener' do
   #iterate the xml notification ids
   xml_doc.elements.each('*/*notificationId') do |note_id|
     id = note_id.get_text.value
-    response = JSON.parse Payment.getNotification(id) 
+    response = JSON.parse service.getNotification(id) 
     if response then
       notification = Notification.new(response, id)
       updateTransactions(settings.notifications_file, :notifications, 
                          notification, settings.recent_notifications_stored)
-      Payment.ackNotification(id) 
+      service.ackNotification(id) 
     end
   end
   #return a string to satisfy the post request
@@ -199,6 +218,8 @@ end
 
 # Subscription URL handlers
 post '/newSubscription' do
+  service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
   amount = params[:product] == "1" ? settings.min_subscription_value : settings.max_subscription_value
   description = 'Word game 1'
   merchant_product_id = 'wordGame1'
@@ -219,21 +240,23 @@ post '/newSubscription' do
     sub_recurrances,
     settings.subscription_redirect_url)
 
-    redirect Payment.newSubscription(
-      amount,
-      Categories::IN_APP_GAMES,
-      description,
-      merchant_transaction_id, 
-      merchant_product_id,
-      merchant_subscription_id_list,
-      sub_recurrances, 
-      settings.subscription_redirect_url)
+  redirect service.newSubscription(
+    amount,
+    Categories::IN_APP_GAMES,
+    description,
+    merchant_transaction_id, 
+    merchant_product_id,
+    merchant_subscription_id_list,
+    sub_recurrances, 
+    settings.subscription_redirect_url,
+    settings.api_key)
 end
 
 get '/callbackSubscription' do
   if params['SubscriptionAuthCode']
     begin
-      response = Payment.getSubscription(SubscriptionType::SubscriptionAuthCode,
+      service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+      response = service.getSubscription(SubscriptionType::SubscriptionAuthCode,
                                          params['SubscriptionAuthCode'])
 
       new_subscription = JSON.parse response
@@ -250,24 +273,25 @@ get '/callbackSubscription' do
       @new_subscription_error = e
     end
   end
-      erb :payment
+  erb :payment
 end
 
 post '/getSubscriptionStatus' do
   begin
+    service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
     if params['getSubscriptionAuthCode'] then
-      response = Payment.getSubscription(
+      response = service.getSubscription(
         SubscriptionType::SubscriptionAuthCode, 
         params['getSubscriptionAuthCode']) 
     end
 
     if params['getSubscriptionTID'] then
-      response ||= Payment.getSubscription(
+      response ||= service.getSubscription(
         SubscriptionType::SubscriptionId, params['getSubscriptionTID']) 
     end
 
     if params['getSubscriptionMTID'] then
-      response ||= Payment.getSubscription(
+      response ||= service.getSubscription(
         SubscriptionType::MerchantTransactionId, params['getSubscriptionMTID']) 
     end
 
@@ -278,10 +302,12 @@ post '/getSubscriptionStatus' do
   rescue Exception => e
     @subscription_status_error = e
   end
-    erb :payment
+  erb :payment
 end
 
 post '/getSubscriptionDetails' do
+  service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+
   merch_id = params['getSDetailsMSID']
 
   begin
@@ -293,7 +319,7 @@ post '/getSubscriptionDetails' do
       end
     end
 
-    response = Payment.getSubscriptionDetails(consumer_id, merch_id)
+    response = service.getSubscriptionDetails(consumer_id, merch_id)
 
     @subscription_detail= JSON.parse response
 
@@ -302,15 +328,16 @@ post '/getSubscriptionDetails' do
   rescue Exception => e
     @subscription_detail_error = e
   end
-    erb :payment
+  erb :payment
 end
 
 post '/cancelSubscription' do
   begin
+    service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
     if params['cancelSubscriptionId']
       reason = "User was not happy with service"
 
-      response = Payment.cancelSubscription(params['cancelSubscriptionId'],
+      response = service.cancelSubscription(params['cancelSubscriptionId'],
                                             RefundCodes::CP_None, reason)
 
       @cancel_subscription = JSON.parse response
@@ -321,15 +348,16 @@ post '/cancelSubscription' do
   rescue Exception => e
     @cancel_subscription_error = e
   end
-    erb :payment
+  erb :payment
 end
 
 post '/refundSubscription' do
   begin
+    service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
     if params['refundSubscriptionId']
       reason = "User was not happy with service"
 
-      response = Payment.refundSubscription(params['refundSubscriptionId'],
+      response = service.refundSubscription(params['refundSubscriptionId'],
                                             RefundCodes::CP_None, reason)
 
       @refund_subscription = JSON.parse response
@@ -340,7 +368,7 @@ post '/refundSubscription' do
   rescue Exception => e
     @refund_subscription_error = e
   end
-    erb :payment
+  erb :payment
 end
 
 post '/refreshNotifications' do
@@ -355,7 +383,8 @@ end
 
 def sign_payload(payload)
   begin
-    response = Payment.signPayload(payload)
+    service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
+    response = service.signPayload(payload)
 
     from_json = JSON.parse response
 

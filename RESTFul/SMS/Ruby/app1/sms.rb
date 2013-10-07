@@ -6,8 +6,6 @@
 # For more information contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'att/codekit'
@@ -26,19 +24,32 @@ SCOPE = "SMS"
 RestClient.proxy = settings.proxy
 
 configure do
-  oauth = Auth::ClientCred.new(settings.FQDN, 
-                               settings.api_key,
-                               settings.secret_key,
-                               SCOPE,
-                               :token_file => settings.tokens_file)
+  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
 
-  SMS = Service::SMSService.new(oauth)
+  OAuth = Auth::ClientCred.new(settings.FQDN, 
+                               settings.api_key,
+                               settings.secret_key)
+
+  if FILE_EXISTS 
+    token = Auth::OAuthToken.load(settings.tokens_file)
+  else
+    token = OAuth.createToken(SCOPE)
+  end
+  @@sms = Service::SMSService.new(settings.FQDN, token)
+  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
 end
 
 #update listeners data before every request
-before "/*" do |path|
+before do 
   @status_listener = load_file "#{settings.status_file}"
   @message_listener = load_file "#{settings.message_file}"
+
+  if @@sms.token.expired?
+    token = OAuth.refreshToken(@@sms.token)
+    @@sms = Service::SMSService.new(settings.FQDN, token)
+    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  end
 end
 
 get '/' do
@@ -61,16 +72,10 @@ post '/sendSms' do
       notify = true
     end
 
-    response = SMS.sendSms(session[:sms1_address], params[:message], notify)
+    @send = @@sms.sendSms(session[:sms1_address], params[:message], notify)
 
-    json = JSON.parse(response)
+    session[:sms_id] = @send.id unless notify
 
-    @sms_id =  json['outboundSMSResponse']['messageId']
-    @resource_url = json['outboundSMSResponse']['resourceReference']['resourceURL'] 
-    session[:sms_id] = @sms_id unless notify
-
-  rescue RestClient::Exception => e
-    @send_error = e.response 
   rescue Exception => e
     @send_error = e.message
   end
@@ -81,14 +86,9 @@ post '/getDeliveryStatus' do
   session[:sms_id] = params["messageId"]
 
   begin
-    response = SMS.getDeliveryStatus(session[:sms_id])
-    @resource_url = SMS.getResourceUrl(session[:sms_id])
+    @status = @@sms.getDeliveryStatus(session[:sms_id])
+    @status_resource_url = @@sms.getResourceUrl(session[:sms_id])
 
-    delivery_info_list = JSON.parse(response)['DeliveryInfoList']
-    @delivery_info = delivery_info_list['DeliveryInfo']
-
-  rescue RestClient::Exception => e
-    @delivery_error = e.response 
   rescue Exception => e
     @delivery_error = e.message
   end
@@ -97,16 +97,8 @@ end
 
 post '/getReceivedSms' do
   begin
-    response = SMS.getReceivedMessages(settings.short_code_1)
+    @messages = @@sms.getReceivedMessages(settings.short_code_1)
 
-    @message_list = JSON.parse(response).fetch 'InboundSmsMessageList'
-
-    @messages_in_batch = @message_list['NumberOfMessagesInThisBatch']
-    @messages_pending  = @message_list['TotalNumberOfPendingMessages']
-    @messages_inbound  = @message_list['InboundSmsMessage']
-
-  rescue RestClient::Exception => e
-    @received_error = e.response 
   rescue Exception => e
     @received_error = e.message
   end

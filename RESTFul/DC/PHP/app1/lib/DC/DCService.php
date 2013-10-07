@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\DC;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * DC Library
@@ -16,26 +18,31 @@
  * 
  * @category  API
  * @package   DC 
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 require_once __DIR__ . '../../Srvc/APIService.php';
+require_once __DIR__ . '/DCResponse.php';
+
+use Att\Api\Srvc\Service;
+use Att\Api\Srvc\APIService;
+use Att\Api\OAuth\OAuthToken;
+use Att\Api\Restful\RestfulRequest;
 
 /**
  * Used to interact with version 2 of the Device Capabilities API.
  *
  * @category API
  * @package  DC
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/2/Device%20Capabilities
  */
 class DCService extends APIService
 {
-
     /**
      * Creates a DCService object that can be used to interact with
      * the DC API.
@@ -52,17 +59,22 @@ class DCService extends APIService
     /**
      * Sends a request to the API for getting device capabilities. 
      *
-     * @return array API response as an associative array. 
+     * @return DCResponse API response. 
      * @throws ServiceException if API request was not successful
      */
     public function getDeviceInformation() 
     {
-        $endpoint = $this->FQDN . '/rest/2/Devices/Info';
+        $endpoint = $this->getFqdn() . '/rest/2/Devices/Info';
+
         $req = new RESTFulRequest($endpoint);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
-        $req->addAuthorizationHeader($this->token);
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+
+        $result = $req
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Accept', 'application/json')
+            ->sendHttpGet();
+
+        $arr = Service::parseJson($result);
+        return DCResponse::fromArray($arr);
     }
 
 }

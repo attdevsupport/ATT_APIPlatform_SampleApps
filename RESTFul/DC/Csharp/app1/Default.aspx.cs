@@ -49,7 +49,7 @@ public partial class DC_App1 : System.Web.UI.Page
     /// <summary>
     /// Instance variables
     /// </summary>
-    private string endPoint, apiKey, secretKey, authorizeRedirectUri, authCode, scope;
+    private string endPoint, apiKey, secretKey, authorizeRedirectUri, authCode, scope, bypassSSL;
 
     /// <summary>
     /// OAuth access token
@@ -78,13 +78,19 @@ public partial class DC_App1 : System.Web.UI.Page
     /// <summary>
     /// Neglect the ssl handshake error with authentication server
     /// </summary>
-    public static void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
     #endregion
 

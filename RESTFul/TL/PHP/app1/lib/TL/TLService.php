@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\TL;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * TL Library
@@ -16,26 +18,34 @@
  * 
  * @category  API
  * @package   TL
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
 require_once __DIR__ . '../../Srvc/APIService.php';
+require_once __DIR__ . '/TLResponse.php';
+
+use Att\Api\OAuth\OAuthToken;
+use Att\Api\Restful\HttpGet;
+use Att\Api\Restful\RestfulRequest;
+use Att\Api\Srvc\APIService;
+use Att\Api\Srvc\Service;
 
 /**
  * Used to interact with version 2 of the Terminal Location API.
  *
  * @category API
  * @package  TL
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/2/Location
  */
 class TLService extends APIService
 {
+
     /**
      * Creates a TLService object that can be used to interact with
      * the terminal location (TL) API.
@@ -51,10 +61,6 @@ class TLService extends APIService
 
     /**
      * Sends an API request for getting a device's location. 
-     *
-     * In addition to returning the API response an associative array, this
-     * method also adds an 'elapsedTime' key that contains the duration of the
-     * request.
      *
      * The values for requested accuracy and acceptable accuracy are as follows:
      *
@@ -79,29 +85,33 @@ class TLService extends APIService
      *                          <li>DelayTolerant</li>
      *                          </ul>
      * 
-     * @return array an associative array containing the API response and an 
-     *               extra 'elapsedTime' key.
+     * @return TLResponse API response
      */
     public function getLocation(
         $rAccuracy = 1000, $aAccuracy = 10000, $tolerance = 'NoDelay'
     ) {
-        $endpoint = $this->FQDN . '/2/devices/location';
+        $endpoint = $this->getFqdn() . '/2/devices/location';
 
-        $req = new RESTFulRequest($endpoint);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
-        $req->addParam('requestedAccuracy', $rAccuracy);
-        $req->addParam('acceptableAccuracy', $aAccuracy);
-        $req->addParam('tolerance', $tolerance);
-        $req->addAuthorizationHeader($this->token);
+        $req = new RestfulRequest($endpoint);
+        $req->setAuthorizationHeader($this->getToken());
+
+        $httpGet = new HttpGet();
+        $httpGet
+            ->setParam('requestedAccuracy', $rAccuracy)
+            ->setParam('acceptableAccuracy', $aAccuracy)
+            ->setParam('tolerance', $tolerance);
 
         $tNow = time();
 
-        $result = $req->sendRequest();
-        $responseArr = $this->parseResult($result); 
+        $result = $req->sendHttpGet($httpGet);
 
-        $responseArr['elapsedTime'] = time() - $tNow;
+        $elapsedTime = time() - $tNow;
 
-        return $responseArr;
+        $arr = Service::parseJson($result);
+
+        $arr['elapsedTime'] = $elapsedTime;
+        return TLResponse::fromArray($arr);
     }
+
 }
 ?>

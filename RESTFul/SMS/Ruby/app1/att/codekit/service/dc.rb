@@ -4,27 +4,34 @@
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
+require 'att/codekit/model/dc'
+
 module Att
   module Codekit
     module Service
 
-      #@author Kyle Hill <kh455g@att.com>
+      #@author kh455g
       class DCService < CloudService
         SERVICE_URL = "/rest/2/Devices/Info"
 
         # Obtain the device capabilities of device authenticated by code
         #
-        # @param code [String] the authentication code 
-        # @return [RestClient::Response] 
-        def getDeviceCapabilties(code=nil)
+        # @param code [String] the authentication code (not required if token is already authenticated)
+        #
+        # @return [DCResponse] parsed api response 
+        def getDeviceCapabilities
           url = "#{@fqdn}#{SERVICE_URL}"
 
-          updateAccessToken(code) unless (code.nil? || authenticated?)
-
-          self.get(url)
+          begin
+            response = self.get(url)
+          rescue RestClient::Exception => e
+            raise(ServiceException, e.response || e.message, e.backtrace)
+          end
+          Model::DCResponse.createFromJson(response)
         end
-
+        alias_method :capabilities, :getDeviceCapabilities
       end
+
     end
   end
 end

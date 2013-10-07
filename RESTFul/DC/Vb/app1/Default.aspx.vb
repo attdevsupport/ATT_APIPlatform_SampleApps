@@ -97,8 +97,9 @@ Partial Public Class DC_App1
     ''' <param name="e">event arguments</param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
-            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
 
+            Me.BypassCertificateError()
             Dim ableToReadConfig As Boolean = Me.ReadConfigFile()
             If ableToReadConfig = False Then
                 Return
@@ -136,6 +137,13 @@ Partial Public Class DC_App1
         Catch ex As Exception
             getDCError = ex.ToString()
         End Try
+    End Sub
+
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
     End Sub
 
 #End Region

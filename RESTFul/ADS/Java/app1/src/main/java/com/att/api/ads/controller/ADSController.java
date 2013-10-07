@@ -8,6 +8,7 @@ import javax.servlet.http.HttpSession;
 
 import org.json.JSONObject;
 
+import com.att.api.ads.model.ConfigBean;
 import com.att.api.ads.service.ADSService;
 import com.att.api.controller.APIController;
 import com.att.api.oauth.OAuthToken;
@@ -158,9 +159,9 @@ public class ADSController extends APIController {
         this.saveSession(request);
 
         final String forward = "WEB-INF/ADS.jsp";
+        request.setAttribute("cfg", new ConfigBean());
         RequestDispatcher dispatcher = request.getRequestDispatcher(forward);
         dispatcher.forward(request, response);
-
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response)

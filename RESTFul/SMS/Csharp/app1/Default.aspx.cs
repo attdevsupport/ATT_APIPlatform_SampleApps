@@ -29,7 +29,7 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <summary>
     /// Global Variables related to application
     /// </summary>
-    private string endPoint, apiKey, secretKey,  scope;
+    private string endPoint, apiKey, secretKey, scope, bypassSSL;
 
     ///<summary>
     ///API URL's
@@ -308,11 +308,17 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// </summary>
     private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
 
     /// <summary>

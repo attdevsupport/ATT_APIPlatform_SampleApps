@@ -1,5 +1,5 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * TL Sample Application 
@@ -21,6 +21,9 @@
 
 require_once __DIR__ . '/../../lib/TL/TLService.php';
 require_once __DIR__ . '/../../lib/Controller/APIController.php';
+
+use Att\Api\TL\TLService;
+use Att\Api\Controller\APIController;
 
 class TLController extends APIController {
     const RESULT_LOCATION = 0;

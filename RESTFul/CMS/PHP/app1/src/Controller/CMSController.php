@@ -3,6 +3,9 @@
 require_once __DIR__ . '/../../lib/Controller/APIController.php';
 require_once __DIR__ . '/../../lib/CMS/CMSService.php';
 
+use Att\Api\Controller\APIController;
+use Att\Api\CMS\CMSService;
+
 class CMSController extends APIController {
     const RESULT_CREATE_SESSION = 0;
     const RESULT_SEND_SIGNAL = 1;
@@ -41,43 +44,36 @@ class CMSController extends APIController {
         $this->handleSendSignal();
 
     } 
+
     public function handleCreateSession() 
     {
-
         if (!isset($_REQUEST['btnCreateSession'])) {
             return NULL;
         }
 
         try {
-            $txtNumberToDial = $_REQUEST['txtNumberToDial'];
-            $scriptType = $_REQUEST['scriptType'];
-            $txtNumber = $_REQUEST['txtNumber'];
-            $txtMessageToPlay = $_REQUEST['txtMessageToPlay'];
-
             /* save to session */
-            $_SESSION['txtNumberToDial'] = $txtNumberToDial;
-            $_SESSION['scriptType'] = $scriptType;
-            $_SESSION['txtNumber'] = $txtNumber;
-            $_SESSION['txtMessageToPlay'] = $txtMessageToPlay;
+            $this->copyToSession(array(
+                'txtNumberToDial', 'scriptType', 'txtNumber', 'txtMessageToPlay'
+                ));
 
             $vals = array(
-                    'smsCallerId' => $this->_number,
-                    'feature' => $scriptType,
-                    'numberToDial' => $txtNumberToDial,
-                    'featurenumber' => $txtNumber,
-                    'messageToPlay' => $txtMessageToPlay
-                    );
+                'smsCallerId' => $this->_number,
+                'feature' => $_REQUEST['scriptType'],
+                'numberToDial' => $_REQUEST['txtNumberToDial'],
+                'featurenumber' => $_REQUEST['txtNumber'],
+                'messageToPlay' => $_REQUEST['txtMessageToPlay']
+            );
                             
             $cmsSrvc = new CMSService($this->apiFQDN, $this->getFileToken());
             $result = $cmsSrvc->createSession($vals);
 
             // Save session id
-            $sessionId = $result["id"];
+            $sessionId = $result->getId();
             $this->results[CMSController::RESULT_SESSION_ID] = $sessionId;
             $_SESSION['sessionId'] = $sessionId;
 
             $this->results[CMSController::RESULT_CREATE_SESSION] = $result;
-
         } catch (Exception $e) {
             $msg = $e->getMessage();
             $this->errors[CMSController::ERROR_CREATE_SESSION] = $msg;

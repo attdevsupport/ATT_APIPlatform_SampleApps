@@ -110,9 +110,9 @@
               <% if @result %>
                 <div class="successWide">
                   <strong>SUCCESS</strong><br />
-                  <%= "ID: " + @result['id'] %>
+                  <%= "ID: " + @result.id %>
                   <br>
-                  <%= "Success: " + @result['success'].to_s %>
+                  <%= "Success: #{@result.success}" %>
                 </div>
               <% elsif @error %>
                 <div class="errorWide">
@@ -153,7 +153,7 @@
               <% if @signal_result %>
                 <div class="successWide">
                   <strong>SUCCESS</strong><br />
-                  <strong>Status:&nbsp;</strong><%= @signal_result['status'] %>
+                  <strong>Status:&nbsp;</strong><%= @signal_result.status %>
                 </div>
               <% end %>
 

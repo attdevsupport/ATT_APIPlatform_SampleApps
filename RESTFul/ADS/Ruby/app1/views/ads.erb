@@ -166,14 +166,14 @@ For more information contact developer.support@att.com
                   </div> <!-- end of getAds -->
                 </form>
 
-                <% if @result or @no_ads %>
+                <% if @ad %>
                   <div class="successWide">
                     <strong>SUCCESS:</strong>
-                    <% if @no_ads %>
-                      <%= @no_ads %>
+                    <% unless @ad.hasAds? %>
+                      No Ads were returned
                     <% end %>
                   </div>
-                  <% if @result %>
+                  <% if @ad.hasAds? %>
                     <table>
                       <thead>
                         <tr>
@@ -184,14 +184,14 @@ For more information contact developer.support@att.com
                       <tbody>
                         <tr>
                           <td data-value="Parameter">Type</td>
-                          <td data-value="Value"><%= @result["Type"] %></td>
+                          <td data-value="Value"><%= @ad.type %></td>
                         </tr>
                         <tr>
                           <td data-value="Parameter">ClickUrl</td>
-                          <td data-value="Value"><%= @result["ClickUrl"] %></td>
+                          <td data-value="Value"><%= @ad.clickurl %></td>
                         </tr>
-                        <% if @result["ImageUrl"] %>
-                          <% @result["ImageUrl"].each do |key, value| %>
+                        <% if @ad.imageurl? %>
+                          <% @ad.imageurl.each do |key, value| %>
                             <tr>
                               <td data-value="Parameter">ImageUrl</td>
                               <td data-value="Value"><%= value %></td>
@@ -200,9 +200,9 @@ For more information contact developer.support@att.com
                         <% end %>
                       </tbody>
                     </table>
-                    <% if @result["ImageUrl"] %>
-                      <% @result["ImageUrl"].each do |key, value| %>
-                        <a id="hplImage" href="<%= @result["ClickUrl"] %>" target="_blank"><img src="<%= value %>" alt="<%= value %>" /></a>
+                    <% if @ad.imageurl? %>
+                      <% @ad.imageurl.each do |key, value| %>
+                        <a id="hplImage" href="<%= @ad.clickurl %>" target="_blank"><img src="<%= value %>" alt="<%= value %>" /></a>
                       <% end %>
                     <% end %>
                   <% end %>

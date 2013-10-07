@@ -117,8 +117,16 @@ Partial Public Class _Default
         End If
         'requestText.Text = requestText.Text + "IsPurchaseOnNoActiveSubscription: " + IsPurchaseOnNoActiveSubscription;
     End Sub
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
+    End Sub
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs)
-        ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+
+        Me.BypassCertificateError()
         Dim currentServerTime As DateTime = DateTime.UtcNow
         serverTimeLabel.Text = [String].Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) & " UTC"
         FQDN = ConfigurationManager.AppSettings("FQDN").ToString()

@@ -4,6 +4,8 @@ require __DIR__ . '/config.php';
 require_once __DIR__ . '/src/Controller/TLController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
 
+use Att\Api\Util\Util;
+
 $controller = new TLController();
 $controller->handleRequest();
 $results = $controller->getResults();
@@ -120,9 +122,9 @@ For more information contact developer.support@att.com
 
             <?php if (isset($results[TLController::RESULT_LOCATION])) { 
               $tLocation = $results[TLController::RESULT_LOCATION];
-              $latitude = $tLocation['latitude']; 
-              $longitude= $tLocation['longitude']; 
-              $accuracy = $tLocation['accuracy']; 
+              $latitude = $tLocation->getLatitude(); 
+              $longitude= $tLocation->getLongitude();
+              $accuracy = $tLocation->getAccuracy();
             ?>
               <div class="successWide">
                 <strong>SUCCESS:</strong>
@@ -133,7 +135,7 @@ For more information contact developer.support@att.com
                 <br />
                 <strong>Accuracy:</strong> <?php echo $accuracy; ?> 
                 <br />
-                <strong>Response Time:</strong> <?php echo $tLocation['elapsedTime']; ?> seconds
+                <strong>Response Time:</strong> <?php echo $tLocation->getElapsedTime(); ?> seconds
               </div>
               <div align="center">
                 <iframe width="600" height="400" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"

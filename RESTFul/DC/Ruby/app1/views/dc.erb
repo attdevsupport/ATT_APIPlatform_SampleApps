@@ -96,10 +96,10 @@
                       TypeAllocationCode
                     </td>
                     <td data-value="Value">
-                      <%= @result['DeviceInfo']['DeviceId']['TypeAllocationCode'] %>
+                      <%= @result.device_id.type_allocation_code %>
                     </td>
                   </tr>
-                  <% @result['DeviceInfo']['Capabilities'].each do |key, value| %>
+                  <% @result.capabilities.each do |key, value| %>
                     <tr>
                       <td data-value="Parameter">
                         <%= key %>
@@ -117,13 +117,6 @@
               <div class="errorWide">
                 <b>ERROR:</b>
                 <%= @error %>
-              </div>
-            <% end %>
-
-            <% if session[:access_error] %>
-              <div class="errorWide">
-                <b>ERROR:</b><br />
-                error=<%= session[:access_error] %>&amp;error_description=<%= session[:error_type] %>
               </div>
             <% end %>
 

@@ -34,7 +34,7 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// <summary>
     /// Temporary variables for processing
     /// </summary>
-    private string apiKey, secretKey, accessToken, scope, refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime;
+    private string apiKey, secretKey, accessToken, scope, refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime, bypassSSL;
 
     /// <summary>
     /// variable for having the posted file.
@@ -83,7 +83,7 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// <param name="e">Event that invoked this function</param>
     protected void Page_Load(object sender, EventArgs e)
     {
-        this.BypassCertificateError();
+        BypassCertificateError();
         this.ReadConfigFile();
         this.SetContent();
     }
@@ -556,13 +556,19 @@ public partial class Speech_App1 : System.Web.UI.Page
     /// <summary>
     /// Neglect the ssl handshake error with authentication server 
     /// </summary>
-    private void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
 
 

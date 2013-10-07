@@ -95,7 +95,7 @@ Note: required for ruby 1.9+ and suggested for 1.8
 
     The code kit library can be installed by using our hosted gem file.
         
-        gem sources --add http://ldev.code-apt-att.com:8808
+        gem sources --add http://ldev.code-api-att.com:8808
         gem install att-codekit
 
     Note that the codekit is under heavy development and is using a semantic

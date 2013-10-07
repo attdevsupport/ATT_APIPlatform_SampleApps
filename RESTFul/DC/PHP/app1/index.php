@@ -3,6 +3,7 @@ session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/src/Controller/DCController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
+use Att\Api\Util\Util;
 $controller = new DCController();
 $controller->handleRequest();
 $results = $controller->getResults();
@@ -95,6 +96,7 @@ For more information contact developer.support@att.com
             <?php 
             if (isset($results[DCController::RESULT_DEVICE_INFO])) { 
               $dInfo = $results[DCController::RESULT_DEVICE_INFO];
+              $dcaps = $dInfo->getCapabilities();
             ?>
               <div class="successWide">
                 <strong>SUCCESS:</strong>
@@ -110,27 +112,49 @@ For more information contact developer.support@att.com
                 </thead>
                 <tbody>
                   <tr>
-                    <td data-value="Parameter">
-                      TypeAllocationCode
-                    </td>
-                    <td data-value="Value">
-                      <?php echo htmlspecialchars($dInfo['DeviceInfo']['DeviceId']['TypeAllocationCode']); ?>
-                    </td>
+                    <td data-value="Parameter">TypeAllocationCode</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dInfo->getTypeAllocationCode()); ?></td>
                   </tr>
-                  <?php 
-                  $dInfoEntry = $dInfo['DeviceInfo'];
-                  $capabilities = $dInfoEntry['Capabilities'];
-                  foreach ($capabilities as $name => $value) {
-                  ?>
-                    <tr>
-                      <td data-value="Parameter">
-                        <?php echo htmlspecialchars($name); ?>
-                      </td>
-                      <td data-value="Value">
-                        <?php echo htmlspecialchars($value); ?>
-                      </td>
-                    </tr>
-                    <?php } ?>
+                  <tr>
+                    <td data-value="Parameter">Name</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getName()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">Vendor</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getVendor()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">Model</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getModel()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">FirmwareVersion</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getFirmwareVersion()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">UaProf</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getUaProf()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">MmsCapable</td>
+                    <td data-value="Value"> <?php echo $dcaps->isMmsCapable() ? 'Y' : 'N'; ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">AssistedGps</td>
+                    <td data-value="Value"> <?php echo $dcaps->isAssistedGps() ? 'Y' : 'N'; ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">LocationTechnology</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getLocationTechnology()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">DeviceBrowser</td>
+                    <td data-value="Value"> <?php echo htmlspecialchars($dcaps->getDeviceBrowser()); ?></td>
+                  </tr>
+                  <tr>
+                    <td data-value="Parameter">WapPushCapable</td>
+                    <td data-value="Value"> <?php echo $dcaps->getDeviceBrowser() ? 'Y' : 'N'; ?></td>
+                  </tr>
                 </tbody>
               </table>
             <?php } ?>

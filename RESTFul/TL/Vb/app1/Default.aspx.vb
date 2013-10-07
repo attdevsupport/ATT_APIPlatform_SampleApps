@@ -102,7 +102,8 @@ Partial Public Class TL_App1
     ''' <param name="e">Event that invoked this function</param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
-            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            Me.BypassCertificateError()
             Dim ableToRead As Boolean = Me.ReadConfigFile()
             If Not ableToRead Then
                 Return
@@ -130,6 +131,13 @@ Partial Public Class TL_App1
         Catch ex As Exception
             getLocationError = ex.ToString()
         End Try
+    End Sub
+
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
     End Sub
 
     ''' <summary>

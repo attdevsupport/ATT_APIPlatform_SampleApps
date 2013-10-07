@@ -47,7 +47,7 @@ public partial class Ad_App1 : System.Web.UI.Page
     /// <summary>
     /// Application parameters.
     /// </summary>
-    private string apiKey, secretKey, endPoint, scope;
+    private string apiKey, secretKey, endPoint, scope, bypassSSL;
 
     /// <summary>
     /// Access token file path
@@ -591,11 +591,17 @@ public partial class Ad_App1 : System.Web.UI.Page
 
     private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
 
     private bool ReadConfigFile()

@@ -7,8 +7,6 @@
 # contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'cgi'
@@ -29,31 +27,32 @@ configure do
   OAuth = Auth::AuthCode.new(settings.FQDN,
                              settings.api_key,
                              settings.secret_key,
-                             SCOPE,
-                             settings.redirect_url)
+                             :redirect => settings.redirect_url)
 end
 
 before do
-  session[:tl] = Service::TLService.new(OAuth) if session[:tl].nil?
+  if params[:code] 
+    token = OAuth.createToken(params[:code])
+    session[:tl] = Service::TLService.new(settings.FQDN, token) 
+  elsif session[:tl] && session[:tl].token.expired?
+    token = OAuth.refreshToken(session[:tl].token)
+    session[:tl] = Service::TLService.new(settings.FQDN, token)
+  end
 end
 
 get '/' do
   begin
     #something went wrong with authentication display error
-    if params[:error] then
+    if params[:error] 
       @error = params[:error] + ": " + params[:error_description]
-      #if code is present then get location
-    elsif params[:code] then
-      response = session[:tl].getLocation(params[:code],
-                                          :req_accuracy => params[:requestedAccuracy],
-                                          :accept_accuracy => params[:acceptableAccuracy],
-                                          :tolerance => params[:tolerance])
-      @result = JSON.parse(response)
+
+    elsif session[:tl] && session[:back_from_consent]
+      @result = session[:tl].getLocation(:req_accuracy => session[:requestedAccuracy],
+                                         :accept_accuracy => session[:acceptableAccuracy],
+                                         :tolerance => session[:tolerance])
+      clear_session
     end
 
-
-  rescue RestClient::Exception => e
-    @error = e.response 
   rescue Exception => e
     @error = e.message
   end
@@ -62,25 +61,31 @@ end
 
 post '/submit' do
   begin
-    if session[:tl].authenticated?
-      #get location if authenticated
-      response = session[:tl].getLocation(:req_accuracy => params[:requestedAccuracy],
-                                          :accept_accuracy => params[:acceptableAccuracy],
-                                          :tolerance => params[:tolerance])
-      @result = JSON.parse(response)
+    if session[:tl]
+      @result = session[:tl].getLocation(:req_accuracy => params[:requestedAccuracy],
+                                         :accept_accuracy => params[:acceptableAccuracy],
+                                         :tolerance => params[:tolerance])
     else
-      #save params and authenticate
-      session[:requestedAccuracy] = params[:requestedAccuracy]
-      session[:acceptableAccuracy] = params[:acceptableAccuracy]
-      session[:tolerance] = params[:tolerance]
-      redirect session[:tl].consentFlow
+      save_session
+      redirect OAuth.consentFlow(:scope => SCOPE)
     end
 
-  rescue RestClient::Exception => e
-    @error = e.response 
   rescue Exception => e
     @error = e.message
   end
   erb :tl
 end
 
+def save_session
+  session[:requestedAccuracy] = params[:requestedAccuracy]
+  session[:acceptableAccuracy] = params[:acceptableAccuracy]
+  session[:tolerance] = params[:tolerance]
+  session[:back_from_consent] = true
+end
+
+def clear_session
+  session[:requestedAccuracy] = nil
+  session[:acceptableAccuracy] = nil
+  session[:tolerance] = nil
+  session[:back_from_consent] = nil
+end

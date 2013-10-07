@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
+
 # Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
 # Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
 require 'rubygems'
-require 'json'
-require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'base64'
@@ -30,12 +29,20 @@ RestClient.proxy = settings.proxy
 
 #setup our mms service for the application
 configure do
-  oauth = Auth::ClientCred.new(settings.FQDN,
+  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
+
+  OAuth = Auth::ClientCred.new(settings.FQDN,
                                settings.api_key,
-                               settings.secret_key,
-                               SCOPE,
-                               :tokens_file => settings.tokens_file)
-  MMS = Service::MMSService.new(oauth)
+                               settings.secret_key)
+
+  if FILE_EXISTS 
+    token = Auth::OAuthToken.load(settings.tokens_file)
+  else
+    token = OAuth.createToken(SCOPE)
+  end
+  @@mms = Service::MMSService.new(settings.FQDN, token)
+  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
 end
 
 before do 
@@ -44,6 +51,12 @@ before do
   display_images
   drop_down_list
   @status_listener = load_file "#{settings.status_file}"
+
+  if @@mms.token.expired?
+    token = OAuth.refreshToken(@@mms.token)
+    @@mms = Service::MMSService.new(settings.FQDN, token)
+    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  end
 end
 
 get '/' do
@@ -74,17 +87,10 @@ post '/sendMms' do
       attachment  = File.join(ATTACH_DIR, params[:attachment])
     end
 
-    response  = MMS.sendMms(params[:address], params[:subject], attachment, notify)
+    @send = @@mms.sendMms(params[:address], params[:subject], attachment, notify)
 
-    @mms_id = JSON.parse(response)['outboundMessageResponse']['messageId']
+    session[:mms_id] = @send.id unless notify
 
-    unless notify 
-      @mms_url = JSON.parse(response)['outboundMessageResponse']['resourceReference']['resourceURL'] 
-      session[:mms_id] = @mms_id 
-    end
-
-  rescue RestClient::Exception => e
-    @send_error = e.response 
   rescue Exception => e
     @send_error = e.message
   end
@@ -95,14 +101,8 @@ post '/getStatus' do
   begin 
     session[:mms_id] = params[:mmsId]
 
-    response = MMS.getDeliveryStatus(session[:mms_id])
+    @status = @@mms.getDeliveryStatus(session[:mms_id])
 
-    delivery_info_list = JSON.parse(response)['DeliveryInfoList']
-    @delivery_info = delivery_info_list['DeliveryInfo']
-    @mms_url = delivery_info_list['ResourceUrl']
-
-  rescue RestClient::Exception => e
-    @delivery_error= e.response 
   rescue Exception => e
     @delivery_error = e.message
   end
@@ -145,7 +145,7 @@ end
 def mms_listener
   input   = request.env["rack.input"].read
   random  = rand(10000000).to_s
-  MMS.handleInput(input) do |sender, date, text, type, image|
+  @@mms.handleInput(input) do |sender, date, text, type, image|
     File.open("#{settings.momms_image_dir}/#{random}.#{type}", 'w') { |f| f.puts image }
     File.open("#{settings.momms_data_dir}/#{random}.#{type}.txt", 'w') { |f| f.puts sender, date, text } 
   end

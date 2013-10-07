@@ -1,9 +1,15 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 require_once __DIR__ . '/../../lib/Controller/APIController.php';
 require_once __DIR__ . '/../../lib/SMS/SMSService.php';
+require_once __DIR__ . '/../../lib/Util/Util.php';
 require_once __DIR__ . '/../../lib/Util/FileUtil.php';
+
+use Att\Api\Controller\APIController;
+use Att\Api\SMS\SMSService;
+use Att\Api\Util\FileUtil;
+use Att\Api\Util\Util;
 
 class SMSController extends APIController
 {
@@ -47,10 +53,9 @@ class SMSController extends APIController
             $getNotification = isset($_REQUEST['chkGetOnlineStatus']);
             $srvc = new SMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->sendSMS($addr, $msg, $getNotification);
-            $result = json_decode(json_encode($result));
 
             if (!$getNotification) {
-                $_SESSION['SmsId'] = $result->outboundSMSResponse->messageId;
+                $_SESSION['SmsId'] = $result->getMessageId();
             }
 
             $this->results[SMSController::RESULT_SEND_SMS] = $result;
@@ -62,7 +67,7 @@ class SMSController extends APIController
     private function _handleGetSMSDeliveryStatus() 
     {
         if (!isset($_REQUEST['getStatus'])) {
-            return NULL;
+            return;
         }
 
         try {
@@ -71,7 +76,6 @@ class SMSController extends APIController
 
             $srvc = new SMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->getSMSDeliveryStatus($id);
-            $result = json_decode(json_encode($result));
             $this->results[SMSController::RESULT_SMS_DELIVERY] = $result;
         } catch (Exception $e) {
             $this->errors[SMSController::ERROR_SMS_DELIVERY] = $e->getMessage();
@@ -81,7 +85,7 @@ class SMSController extends APIController
     private function _handleGetMessages()
     {
         if (!isset($_REQUEST['getMessages'])) {
-            return NULL;
+            return;
         } 
 
         $shortCode = $this->_getMsgsShortCode;
@@ -89,7 +93,6 @@ class SMSController extends APIController
         try {
             $srvc = new SMSService($this->apiFQDN, $this->getFileToken());
             $result = $srvc->getMessages($shortCode);
-            $result = json_decode(json_encode($result));
             $this->results[SMSController::RESULT_GET_MSGS] = $result;
         } catch (Exception $e) {
             $this->errors[SMSController::ERROR_GET_MSGS] = $e->getMessage();
@@ -105,7 +108,6 @@ class SMSController extends APIController
         $this->_receiveMsgsShortCode = $receiveMsgsShortCode;
         $this->_getMsgsShortCode = $getMsgsShortCode;
     }
-
 
     public function handleRequest() 
     {

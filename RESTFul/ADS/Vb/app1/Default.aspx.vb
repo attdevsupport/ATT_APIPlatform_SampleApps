@@ -479,10 +479,18 @@ Partial Public Class Ad_App1
 
     Protected Sub Page_Load(sender As Object, e As EventArgs)
 
-        ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        Me.BypassCertificateError()
         Me.ReadConfigFile()
         hplImage.ImageUrl = String.Empty
         hplImage.Text = String.Empty
+    End Sub
+
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
     End Sub
 
     ''' <summary>
@@ -497,6 +505,9 @@ Partial Public Class Ad_App1
 
         Return True
     End Function
+
+
+
 
     Private Function ReadConfigFile() As Boolean
         Me.apiKey = ConfigurationManager.AppSettings("apiKey")

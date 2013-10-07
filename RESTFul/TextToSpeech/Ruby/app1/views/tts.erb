@@ -105,7 +105,7 @@ For more information contact developer.support@att.com
                   <strong>SUCCESS:</strong>
                   <br>
                   <audio controls="controls" autobuffer="autobuffer" autoplay="autoplay">
-                    <source src="data:audio/wav;base64,<%= Base64.encode64(@audio) %>" >
+                    <source src="data:audio/wav;base64,<%= Base64.encode64(@audio.data) %>" >
                   </audio>
                   </div>
               <% end %>

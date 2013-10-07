@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\OAuth;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * OAuth Library
@@ -16,7 +18,7 @@
  * 
  * @category  Authentication 
  * @package   OAuth
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
@@ -36,7 +38,7 @@ require_once __DIR__ . '/OAuthException.php';
  * 
  * @category Authentication 
  * @package  OAuth 
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  * @link     https://tools.ietf.org/html/rfc6749

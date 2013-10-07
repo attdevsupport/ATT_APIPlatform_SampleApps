@@ -54,8 +54,8 @@ public partial class MIM_App1 : System.Web.UI.Page
     /// <summary>
     /// Access token variables - temporary
     /// </summary>
-    private string apiKey, authCode, authorizeRedirectUri, secretKey, accessToken, scope, refreshToken, 
-        refreshTokenExpiryTime, accessTokenExpiryTime;
+    private string apiKey, authCode, authorizeRedirectUri, secretKey, accessToken, scope, refreshToken,
+        refreshTokenExpiryTime, accessTokenExpiryTime, bypassSSL;
 
     /// <summary>
     /// Gets or sets the value of refreshTokenExpiresIn
@@ -83,7 +83,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                 this.ReadConfigFile();
             }
 
-            this.BypassCertificateError();
+            BypassCertificateError();
             DateTime currentServerTime = DateTime.UtcNow;
             lblServerTime.Text = String.Format("{0:ddd, MMM dd, yyyy HH:mm:ss}", currentServerTime) + " UTC";
             if (!Page.IsPostBack)
@@ -643,13 +643,19 @@ public partial class MIM_App1 : System.Web.UI.Page
     /// <summary>
     /// Neglect the ssl handshake error with authentication server
     /// </summary>
-    private void BypassCertificateError()
+    private static void BypassCertificateError()
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
     }
 
     /// <summary>

@@ -118,13 +118,12 @@ For more information contact developer.support@att.com
                   <%= @send_error %>
                 </div>
               <% end %>
-              <% if @mms_id %>
+              <% if @send %>
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br />
-                  <strong>messageId:&nbsp;</strong><%= @mms_id %>
-                  <% if @mms_url %>
-                    <br>
-                    <strong>Resource Url:&nbsp;</strong><%= @mms_url %>
+                  <strong>messageId:&nbsp;</strong><%= @send.id %>
+                  <% if @send.resource_url %>
+                    <br><strong>Resource Url:&nbsp;</strong><%= @send.resource_url %>
                   <% end %>
                 </div>
               <% end %>
@@ -146,35 +145,34 @@ For more information contact developer.support@att.com
                   <strong>ERROR: </strong><br />
                   <%= @delivery_error %>
                 </div>
-              <% elsif @delivery_info %>
+              <% elsif @status %>
                 <div class="successWide">
                   <strong>SUCCESS: </strong>
-                  <% if @mms_url %>
-                    <br>
-                    <strong>Resource Url:&nbsp;</strong><%= @mms_url %>
+                  <% if @status.resource_url %>
+                    <br><strong>Resource Url:&nbsp;</strong><%= @status.resource_url %>
                   <% end %>
                 </div>
-              <% end %>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Message Id</th>
-                    <th>Address</th>
-                    <th>Delivery Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if @delivery_info %>
-                    <% @delivery_info.each do |info| %>
-                      <tr>
-                        <td data-value="Message Id"><%= info['Id'] %></td>
-                        <td data-value="Address"><%= info['Address'] %></td>
-                        <td data-value="Resouce Url"><%= info['DeliveryStatus'] %></td>
-                      </tr>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Message Id</th>
+                      <th>Address</th>
+                      <th>Delivery Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if @status.delivery_info %>
+                      <% @status.delivery_info.each do |info| %>
+                        <tr>
+                          <td data-value="Message Id"><%= info.id %></td>
+                          <td data-value="Address"><%= info.address %></td>
+                          <td data-value="Resouce Url"><%= info.status %></td>
+                        </tr>
+                      <% end %>
                     <% end %>
-                  <% end %>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              <% end %>
             </div><!-- end of getDeliveryStatus -->
             <div class="lightBorder">
             </div>
