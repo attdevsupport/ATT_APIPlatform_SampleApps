@@ -121,7 +121,7 @@ For more information contact developer.support@att.com
                            { %>
                         <div class="successWide">
                             <strong>SUCCESS:</strong>
-                            messageId: <%=sendMessageSuccessResponse.ToString() %>
+                            <%=sendMessageSuccessResponse.ToString() %>
                         </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(sendMessageErrorResponse))

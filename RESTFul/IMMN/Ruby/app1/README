@@ -83,27 +83,23 @@
       - rake: compiling tool used to make att-codekit
       - yard: documentation tool used by att-codekit
   
-  The easiest way to install the required gems is to use bundler.
-
-  First make sure you have bundler installed:
-    gem install bundler
-
-  Then inside the directory which this README resides run:
-    bundle install
+  To install these gems open up a terminal window and invoke:
+  
+      gem install sinatra sinatra-contrib rest-client json rake yard
   
   On a *nix based system you may need to raise your access privliges, such as 
   prefixing the command with sudo or logging in as root by running su.
 
 ** Installing the att-codekit library 
-Note: this is only required if you are **not** using bundler and are using ruby 1.9+
+Note: required for ruby 1.9+ and suggested for 1.8
 
     The code kit library can be installed by using our hosted gem file.
         
-        gem sources --add http://ldev.code-api-att.com:8808
+        gem sources --add http://ldev.code-apt-att.com:8808
         gem install att-codekit
 
     Note that the codekit is under heavy development and is using a semantic
-    versioning scheme. Non-backwards compatible changes **will** increase the
+    versioning scheme. Non-backwards compatible changes _will_ increase the
     major version number.
     
 

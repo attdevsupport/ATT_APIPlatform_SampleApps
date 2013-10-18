@@ -5,55 +5,35 @@
 # contact developer.support@att.com
 
 require 'cgi'
-require 'att/codekit/model/ads'
 
 module Att
   module Codekit
     module Service
 
-      #@author kh455g
-      class ADSService < CloudService
+      #@author Kyle Hill <kh455g@att.com>
+      class ADService < CloudService
         SERVICE_URL = "/rest/1/ads"
 
         # Return ads based on parameters
         #
-        # @param category [#to_s] the category which to request ads 
-        # @param user_agent [#to_s] the user_agent being used for request
-        # @param udid [#to_s] a unique identifier for the user
-        # @param optional [Hash] additional arguments to forward to the api
-        #
-        # @return [Model::ADSResponse, Model::NoAds] An ads container object 
-        def getAds(category, user_agent, udid, optional={})
+        # @param params [Hash] specifies the arguments sent to the api
+        # @param headers [Hash] additional headers to forward to the api
+        def get_ads(params, headers={})
           url = "#{@fqdn}#{SERVICE_URL}"
 
-          headers = {
-            :user_agent => user_agent.to_s,
-            :udid => udid.to_s,
-          }
-
-          url << "?Category=#{CGI.escape(category.to_s)}"
-
-          if optional
-            optional.each do |key, value|
+          if params
+            args = "?"
+            params.each do |key, value|
               if value && !value.empty?
-                url << "&#{CGI.escape(key.to_s)}=#{CGI.escape(value.to_s)}"
+                args << "&" unless args.end_with? "?"
+                args << "#{CGI.escape(key.to_s)}=#{CGI.escape(value.to_s)}"
               end
             end
+            url << args
           end
 
-          begin
-            response = self.get(url, headers)
-          rescue RestClient::Exception => e
-            raise(ServiceException, e.response || e.message, e.backtrace)
-          end
-
-          if response.code == 204
-            Model::NoAds.new
-          else
-            Model::ADSResponse.createFromJson(response)
-          end
+          self.get(url, headers)
         end
-        alias_method :get_ads, :getAds
 
       end
     end

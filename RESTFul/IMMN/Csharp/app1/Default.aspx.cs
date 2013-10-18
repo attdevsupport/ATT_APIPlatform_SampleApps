@@ -34,7 +34,7 @@ public partial class MIM_App1 : System.Web.UI.Page
     /// Access token variables - temporary
     /// </summary>
     private string apiKey, authCode, authorizeRedirectUri, secretKey, accessToken,
-        scope, refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime, bypassSSL;
+        scope, refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime;
 
     /// <summary>
     /// Maximum number of addresses user can specify
@@ -74,7 +74,7 @@ public partial class MIM_App1 : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        BypassCertificateError();
+        this.BypassCertificateError();
         this.ReadConfigFile();
 
         if ((Session["cs_rest_appState"] == "GetToken") && (Request["Code"] != null))
@@ -796,19 +796,13 @@ public partial class MIM_App1 : System.Web.UI.Page
 
     }
 
-    private static void BypassCertificateError()
+    private void BypassCertificateError()
     {
-        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
-
-        if ((!string.IsNullOrEmpty(bypassSSL))
-            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
-        {
-            ServicePointManager.ServerCertificateValidationCallback +=
-                delegate(Object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-                {
-                    return true;
-                };
-        }
+        ServicePointManager.ServerCertificateValidationCallback +=
+            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+            {
+                return true;
+            };
     }
 
     protected void SetRequestSessionVariables()

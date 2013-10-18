@@ -11,26 +11,22 @@ module Att
 
     # Static class for defining how to perform the transport layer
     class Transport
-    #TODO: implement facade to allow user to specify what rest library to use
 
       class << self
         # Send a post request with standard headers
         #
-        # @param url [String] The url to send the request 
+        # @param url [String] The url to send the request to
         # @param payload [String] The body of the post request
-        # @param headers [Hash] A hash of headers 
-        #
-        # @return [RestClient::Response] http response object
+        # @param headers [Hash] A hash of headers that override/extend the 
+        # defaults
         def post(url, payload, headers={})
           RestClient.post url, payload, headers
         end
 
         # Send a get request with standard headers
         #
-        # @param url [String] The url to send the request
-        # @param headers [Hash] A hash of headers 
-        #
-        # @return [RestClient::Response] http response object
+        # @param url [String] The url to send the request to
+        # @param headers [Hash] A hash of headers that override/extend the defaults
         def get(url, headers={})
           RestClient.get url, headers
         end
@@ -39,28 +35,10 @@ module Att
         #
         # @param url [String] The url to send the request to
         # @param payload [String] The data to send to the url
-        # @param headers [Hash] A hash of headers
-        #
-        # @return [RestClient::Response] http response object
+        # @param headers [Hash] A hash of headers that override/extend the 
+        # defaults
         def put(url, payload, headers={})
           RestClient.put url, payload, headers
-        end
-
-        # Send a Http delete request with standard headers
-        #
-        # @param url [String] The url to send the request 
-        # @param headers [Hash] A hash of headers
-        #
-        # @return [RestClient::Response] http response object
-        def delete(url, headers={})
-          RestClient.delete url, headers
-        end
-
-        # Set a proxy to use when making requests
-        #
-        # @param prox [String] The proxy to use for routing
-        def proxy(prox)
-          RestClient.proxy = prox
         end
 
       end

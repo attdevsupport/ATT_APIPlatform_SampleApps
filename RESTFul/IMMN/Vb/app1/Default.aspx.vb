@@ -72,9 +72,10 @@ Partial Public Class Mobo_App1
     Public messageList As MessageHeaderList
 
     Protected Sub Page_Load(sender As Object, e As EventArgs)
-        'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-        Me.BypassCertificateError()
+        ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+
         Me.ReadConfigFile()
+
         If (Session("vb_rest_appState") Is "GetToken") AndAlso (Request("Code") IsNot Nothing) Then
             Me.authCode = Request("code").ToString()
             If Me.GetAccessToken(AccessTokenType.Authorization_Code) = True Then
@@ -96,13 +97,6 @@ Partial Public Class Mobo_App1
             End If
         End If
 
-    End Sub
-
-    Private Sub BypassCertificateError()
-        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
-        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
-            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-        End If
     End Sub
 
 #Region "Access Token functions"

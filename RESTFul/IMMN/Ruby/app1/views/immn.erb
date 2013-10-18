@@ -1,526 +1,253 @@
 <!DOCTYPE html>
+<!-- 
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
+Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+For more information contact developer.support@att.com
+-->
+
 <html lang="en"> 
   <head> 
-    <title>AT&amp;T Sample Application - In App Messaging from Mobile Number</title>		
+    <title>AT&amp;T Sample Application - In App Messaging</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="style/common.css">
     <script src="scripts/utils.js"></script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-33466541-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function () {
+       var ga = document.createElement('script');
+       ga.type = 'text/javascript';
+       ga.async = true;
+       ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+         : 'http://www')
+       + '.google-analytics.com/ga.js';
+       var s = document.getElementsByTagName('script')[0];
+       s.parentNode.insertBefore(ga, s);
+       })();
+     </script>
   </head>
   <body>
     <div id="pageContainer">
       <div id="header">
-        <div class="logo"></div>
+        <div class="logo"> 
+        </div>
         <div id="menuButton" class="hide">
           <a id="jump" href="#nav">Main Navigation</a>
         </div> 
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img alt="images/max.png" src="images/max.png" /></a>
+          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-          <a href="#" target="_blank">Source<img alt="images/opensource.png" src="images/opensource.png" /></a>
+          <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-          <a href="#" target="_blank">Download<img alt="images/download.png" src="images/download.png"></a>
+          <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png"></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-          <a href="#" target="_blank">Help</a>
+          <a href="<%= settings.help_link %>" target="_blank">Help</a>
           </li>
-          <li id="back"><a href="#top">Back to top</a></li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li>
         </ul> <!-- end of links -->
       </div> <!-- end of header -->
       <div id="content">
         <div id="contentHeading">
-          <h1>AT&amp;T Sample Application - In App Messaging from mobile number</h1>
+          <h1>AT&amp;T Sample Application - In App Messaging From Mobile Number</h1>
           <div class="border"></div>
           <div id="introtext">
-            <div><b>Server Time:</b><%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
-            <div><b>Client Time:</b><script>document.write("" + new Date());</script></div>
-            <div><b>User Agent:</b><script>document.write("" + navigator.userAgent);</script></div>
+            <div><b>Server Time:</b> <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
+            <div><b>Client Time:</b> <script>document.write("" + new Date());</script></div>
+            <div><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div>
           </div> <!-- end of introtext -->
         </div> <!-- end of contentHeading -->
-        <div class="formBox">
-          <div class="formContainer">
 
-            <div class="lightBorder"></div>
+        <!-- SAMPLE APP CONTENT STARTS HERE! -->
 
-            <a id="sendMsgToggle" 
-              href="javascript:toggle('sendMsg');">Send Message</a>
-            <div class="toggle" id="sendMsg">
-              <label><i>Max message size must be 1MB or less</i></label>
-              <h2>Send Message</h2>
-              <form method="post" action="sendMessage" id="sendMessageForm">
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <div id="sendMessages">
+              <h2>Send Messages:</h2>
+              <form method="post" action="submit" name="msgContentForm" >
                 <div class="inputFields">
-                  <input type="text" name="address" placeholder="Address" value="<%=session[:address]%>"/>
-                  <label>Group: 
-                    <input type="checkbox" name="groupCheckBox" <%="checked" if session[:groupCheckBox]%> />
+                  <input placeholder="Address" name="Address" type="text" value="<%= session[:address]  %>" />     
+                  <label>Group: <input name="groupCheckBox" type="checkbox" /></label>
+                  <label>
+                    Message:
+                    <select name="message">
+                      <option value="ATT IMMN sample message">
+                      ATT IMMN sample message
+                      </option>
+                    </select>
                   </label>
                   <label>
-                    Message: <i>max 200 characters are allowed</i>
-                    <input type="text" name="message" placeholder="ATT IMMN sample message" value="<%=session[:message]%>" maxlength="200">
+                    Subject:
+                    <select name="subject">
+                      <option value="ATT IMMN sample subject">
+                      ATT IMMN sample subject
+                      </option>
+                    </select>
                   </label>
                   <label>
-                    Subject: <i>max 30 characters are allowed</i>
-                    <input type="text" name="subject" placeholder="ATT IMMN APP" value="<%=session[:subject]%>" maxlength="30">
-                  </label>
-                  <label>
-                    Attachment: 		                    
+                    Attachment:
                     <select name="attachment">
+                      <option value="None">None</option>
                       <% @attachments.each do |a| %>
-                        <option value="<%= a %>" <%="selected" if session[:attachment] == a%>><%= a %></option>
+                        <option value="<%= a %>"><%= a %></option>
                       <% end %>
                     </select>
                   </label>
-                  <button name="sendMessage" type="submit" class="submit">Send Message</button>
+                  <button type="submit" class="submit" id="sendMessage" name="sendMessage">Send Message</button>
                 </div>
               </form>
-              <% if @send_message %>
+              <% if @send_result %>
                 <div class="successWide">
                   <strong>SUCCESS:</strong>
-                  <%= @send_message.id %>
+                  <%= @send_result %>
                 </div>
               <% end %>
-              <% if @send_message_error %>
+              <% if @send_error %>
                 <div class="errorWide">
                   <strong>ERROR:</strong>
-                  <%= @send_message_error %>
+                  <%= @send_error %>
                 </div>
               <% end %>
-            </div> <!-- end of send message -->
-
-            <div class="lightBorder"></div>
-            <label>
-              <b>Note:</b> In order to use the following features, you must be subscribed to 
-              <a href="http://messages.att.net">AT&amp;T Messages</a>
-            </label>
-            <div class="lightBorder"></div>
-
-            <a id="createMsgToggle" 
-              href="javascript:toggle('createMsg');">Create Message Index</a>
-            <div class="toggle" id="createMsg">
-              <h2>Create Message Index</h2>
-              <form method="post" action="createMessageIndex" id="createMessageIndexForm">
-                <div class="inputFields">
-                  <button name="createMessageIndex" type="submit" class="submit">Create Index</button>
-                </div>
-              </form>					            
-              <% if @create_index %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-              <% end %>
-              <% if @create_index_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @create_index_error %>
-                </div>
-              <% end %>
-            </div> <!-- end of create message index -->
+            </div> <!-- end of sendMessages -->
 
             <div class="lightBorder"></div>
 
-            <a id="getMsgToggle" 
-              href="javascript:toggle('getMsg');">Get Message</a>
-            <div class="toggle" id="getMsg">
-              <h2>Get Message List <i>(Displays last 5 messages from the list)</i></h2>
-              <form method="post" action="getMessageList" id="getMessageListForm">
-                <div class="inputFields">						
-                  <label><input name="favorite" type="checkbox" <%= 'checked' if session[:favorite] %>>Filter by favorite</label>
-                  <label><input name="unread" type="checkbox" <%= 'checked' if session[:unread] %>>Filter by unread flag</label>
-                  <label><input name="incoming" type="checkbox" <%= 'checked' if session[:incoming] %>>Filter by incoming flag</label>
-                  <label>Filter by recipients:
-                    <input name="keyword" type="text" placeholder="555-555-5555, etc..." value="<%= session[:keyword] %>">
-                  </label>
-                  <button name="getMessageList" type="submit" class="submit">Get Message List</button>
-                </div>
-              </form>
-              <% if @msg_list %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>limit</th>
-                      <th>offset</th>
-                      <th>total</th>
-                      <th>state</th>
-                      <th>cache status</th>
-                      <th>failed messages</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td data-value="limit"><%= @msg_list.limit %></td>
-                      <td data-value="offset"><%=@msg_list.offset %></td>
-                      <td data-value="total"><%= @msg_list.total %></td>
-                      <td data-value="state"><%= @msg_list.state %></td>
-                      <td data-value="cache status"><%= @msg_list.cache_status %></td>
-                      <td data-value="failed messages"><%= @msg_list.failed_messages.join(", ") %></td>
-                    </tr>
-                  </tbody>
-                </table>
-                <a id="listMsgToggle" href="javascript:toggle('listMsg');">Messages (Click here to view messages)</a>
-                <div class="toggle" id="listMsg"> 				
-                  <% count = 0 %>
-                  <% @msg_list.messages.each do |msg| %>
-                    <h3>Message <%= count += 1 %></h3>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>message id</th>
-                          <th>from</th>
-                          <th>recipients</th>
-                          <th>text</th>
-                          <% if msg.subject? %>
-                            <th>subject</th>
-                          <% end %>
-                          <th>timestamp</th>
-                          <th>isFavorite</th>
-                          <th>isUnread</th>
-                          <th>isIncoming</th>
-                          <th>type</th>
-                          <% if msg.segmented? %>
-                            <th>segmentation reference number</th>
-                            <th>segmentation part</th>
-                            <th>segmentation total parts</th>
-                          <% end %>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td data-value="message id"><%= msg.id %></td>
-                          <td data-value="from"><%= msg.from %></td>
-                          <td data-value="recipients"><%= msg.recipients %></td>
-                          <td data-value="text"><%= msg.text %></td>
-                          <% if msg.subject? %>
-                            <td data-value="subject"><%= msg.subject %></td>
-                          <% end %>
-                          <td data-value="timestamp"><%= msg.timestamp %></td>
-                          <td data-value="isFavorite"><%= msg.favorite? %></td>
-                          <td data-value="isUnread"><%= msg.unread? %></td>
-                          <td data-value="isIncoming"><%= msg.incoming? %></td>
-                          <td data-value="type"><%= msg.type %></td>
-                          <% if msg.segmented? %>
-                            <td data-value="segmentation reference number"><%= msg.segmentation_details.msg_ref_num %></td>
-                            <td data-value="segmentation part"><%= msg.segmentation_details.part_number %></td>
-                            <td data-value="segmentation total parts"><%= msg.segmentation_details.total_parts %></td>
-                          <% end %>
-                        </tr>
-                      </tbody>
-                    </table>
-                  <% end %>
-                </div>
-              <% end %>
-              <% if @msg_list_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @msg_list_error %>
-                </div>
-              <% end %>
-
-              <h2>Get Message</h2>
-              <form method="post" action="getMessage" id="getMessageForm">
+            <div id="getMessages">
+              <h2>Read Messages:</h2>
+              <form method="post" action="submitGetHeaders" name="msgHeaderForm" id="msgHeaderForm">
                 <div class="inputFields">
-                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="<%=session[:messageId]%>" />
-                  <button name="getMessage" type="submit" class="submit">
-                    Get Message
-                  </button>
+                  <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
+                  <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
+                  <button type="submit" class="submit" name="getMessageHeaders" id="getMessageHeaders">Get Message Headers</button>
                 </div>
               </form>
-              <% if @get_msg %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-                <table>
-                  <thead>
-                    <th>message id</th>
-                    <th>from</th>
-                    <th>recipients</th>
-                    <th>text</th>
-                    <% if @get_msg.subject? %>
-                      <th>subject</th>
-                    <% end %>
-                    <th>timestamp</th>
-                    <th>isFavorite</th>
-                    <th>isUnread</th>
-                    <th>isIncoming</th>
-                    <th>type</th>
-                    <% if @get_msg.segmented? %>
-                      <th>segmentation reference number</th>
-                      <th>segmentation part</th>
-                      <th>segmentation total parts</th>
-                    <% end %>
-                  </thead>
-                  <tbody>
-                    <td data-value="message id"><%= @get_msg.id %></td>
-                    <td data-value="from"><%= @get_msg.from %></td>
-                    <td data-value="recipients"><%= @get_msg.recipients %></td>
-                    <td data-value="text"><%= @get_msg.text %></td>
-                    <% if @get_msg.subject? %>
-                      <td data-value="subject"><%= @get_msg.subject %></td>
-                    <% end %>
-                    <td data-value="timestamp"><%= @get_msg.timestamp %></td>
-                    <td data-value="isFavorite"><%= @get_msg.favorite? %></td>
-                    <td data-value="isUnread"><%= @get_msg.unread? %></td>
-                    <td data-value="isIncoming"><%= @get_msg.incoming? %></td>
-                    <td data-value="type"><%= @get_msg.type %></td>
-                    <% if @get_msg.segmented? %>
-                      <td data-value="segmentation reference number"><%= @get_msg.segmentation_details.msg_ref_num %></td>
-                      <td data-value="segmentation part"><%= @get_msg.segmentation_details.part_number %></td>
-                      <td data-value="segmentation total parts"><%= @get_msg.segmentation_details.total_parts %></td>
-                    <% end %>
-                  </tbody>
-                </table>
-              <% end %>
-              <% if @get_msg_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @get_msg_error %>
-                </div>
-              <% end %>
 
-              <h2>Get Message Content</h2>
-              <form method="post" action="getMessageContent" id="getMessageContentForm">
+              <form method="post" action="submitGetHeaderContent" name="msgContentForm" id="msgContentForm">
                 <div class="inputFields">
-                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="<%=session[:messageId]%>" />     
-                  <input name="partNumber" type="text" maxlength="30" placeholder="Part Number" value="<%=session[:partNumber]%>" />     
-                  <button  type="submit" class="submit" name="getMessageContent">
-                    Get Message Content
-                  </button>
+                  <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
+                  <input name="PartNumber"id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
+                  <button  type="submit" class="submit" name="getMessageContent" id="getMessageContent">Get Message Content</button>
                 </div>
               </form>
-              <% if @msg_content %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-                <% if @msg_content.text? %>
-                  <%= @msg_content.attachment %>
-                <% elsif @msg_content.image? %>
-                  <img src="data:<%= @msg_content.content_type %>;base64,<%= Base64.encode64(@msg_content.attachment) %>" />
-                <% elsif @msg_content.video? %>
-                  <video controls="controls" autobuffer="autobuffer" autoplay="autoplay">
-                    <source src="data:<%= @msg_content.content_type %>;base64,<%= Base64.encode64(@msg_content.attachment) %>" >
-                  </video>
-                <% elsif @msg_content.audio? %>
-                  <audio controls="controls" autobuffer="autobuffer" autoplay="autoplay">
-                    <source src="data:<%= @msg_content.content_type %>;base64,<%= Base64.encode64(@msg_content.attachment) %>" >
-                  </audio>
+              <label class="note">To use this feature, you must be a subscriber to My AT&amp;T Messages.</label>
+            </div> <!-- end of getMessages -->
+          </div> <!-- end of formContainer -->
+
+          <!-- BEGIN HEADER CONTENT RESULTS -->
+          <% if @content_result %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+            </div>
+            <% if @image == "TEXT" %>
+              <%= @content_result %>
+            <% elsif @image_content == "APPLICATION/SMIL" %>
+              <textarea name="TextBox1" rows="2" cols="20" id="TextBox1" disabled="disabled"><%= @content_result %></textarea>
+            <% elsif @image == "IMAGE" %>
+              <img src="data:<%= @image_content %>;base64,<%= Base64.encode64(@content_result) %>" />
+            <% end %>
+          <% end %>
+          <!-- END HEADER CONTENT RESULTS -->
+
+          <!-- BEGIN HEADER RESULTS -->
+          <% if @get_result %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+            </div>
+            <p id="headerCount">Header Count: <%= session[:headerCountTextBox] %></p>
+            <p id="indexCursor">Index Cursor: <%= @get_result['MessageHeadersList']['IndexCursor'] %></p>
+            <table class="kvp" id="kvp">
+              <thead>
+                <tr>
+                  <th>MessageId</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Received</th>
+                  <th>Text</th>
+                  <th>Favourite</th>
+                  <th>Read</th>
+                  <th>Type</th>
+                  <th>Direction</th>
+                  <th>Contents</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% count = 0; @get_result['MessageHeadersList']['Headers'].each do |key, val| %>
+                  <% rowId = "row"+count.to_s %>
+                  <tr id="<%= rowId %>">
+                    <td data-value="MessageId">
+                      <%= key['MessageId'] %>
+                    </td>
+                    <td data-value="From">
+                      <%= key['From'] %>
+                    </td>
+                    <td data-value="To">
+                      <%= key['To'] %>
+                    </td>
+                    <td data-value="Received">
+                      <%= key['Received'] %>
+                    </td>
+                    <td data-value="Text">
+                      <% if key['Text'] %>
+                        <%= key['Text'] %>
+                      <% else %>
+                        &#45;
+                      <% end %>
+                    </td>
+                    <td data-value="Favorite">
+                      <%= key['Favorite'] %>
+                    </td>
+                    <td data-value="Read">
+                      <%= key['Read'] %>
+                    </td>
+                    <td data-value="Type">
+                      <%= key['Type'] %>
+                    </td>
+                    <td data-value="Direction">
+                      <%= key['Direction'] %>
+                    </td>
+                    <td data-value="Contents">
+                      <% if key['MmsContent'] %>
+                        <select id="<%=rowId%>attachments" onchange='chooseSelect("<%=rowId%>",this)'>
+                          <option value="More..">More..</option>
+                          <% key['MmsContent'].each do |p| %>
+                            <option value="<%= p['PartNumber'].to_s + " - " + p['ContentName'].to_s + " - " + p['ContentType'].to_s %>">
+                            <%= p['PartNumber'].to_s + " - " + p['ContentName'].to_s + " - " + p['ContentType'].to_s %>
+                            </option>
+                          <% end %>
+                        </select>
+                      <% else %>
+                        &#45;
+                      <% end %>
+                    </td>
+                  </tr>
+                  <% count += 1 %>
                 <% end %>
-              <% end %>
-              <% if @msg_content_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @msg_content_error %>
-                </div>
-              <% end %>
+              </tbody>
+            </table>
+          <% end %>
+          <!-- END HEADER RESULTS -->
 
-              <h2>Get Delta</h2>
-              <form method="post" action="getDelta" id="getDeltaForm">
-                <div class="inputFields">
-                  <input name="messageId" type="text" maxlength="30" placeholder="Message State" value="<%=session[:messageId]%>" />
-                  <button  type="submit" class="submit" name="getDelta">
-                    Get Delta
-                  </button>
-                </div>
-              </form>				
-              <% if @get_delta %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-                <% @get_delta.deltas.each do |delta| %>
-                  <p><b>Delta type:</b> <%= delta.type %></p>
-                  <p><b>Message ID:</b> <%= delta.id %></p>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Delta Operation</th>
-                        <th>Favorite</th>
-                        <th>Unread</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% delta.adds.each do |add| %>
-                        <tr>
-                          <td data-value="Delta Operation">Add</td>
-                          <td data-value="Favorite"><%= add.favorite?%></td>
-                          <td data-value="Unread"><%= add.unread? %></td>
-                        </tr>
-                      <% end %>
-                      <% delta.deletes.each do |del| %>
-                        <tr>
-                          <td data-value="Delta Operation">Delete</td>
-                          <td data-value="Favorite"><%= del.favorite?%></td>
-                          <td data-value="Unread"><%= del.unread? %></td>
-                        </tr>
-                      <% end %>
-                      <% delta.updates.each do |update| %>
-                        <tr>
-                          <td data-value="Delta Operation">Update</td>
-                          <td data-value="Favorite"><%= update.favorite?%></td>
-                          <td data-value="Unread"><%= update.unread? %></td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                <% end %>
-              <% end %>
-              <% if @get_delta_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @get_delta_error %>
-                </div>
-              <% end %>
+          <% if @get_error %>
+            <div class="errorWide">
+              <strong>ERROR:</strong>
+              <%= @get_error %>
+            </div>
+          <% end %>
 
-              <h2> Get Message Index Info</h2>
-              <form method="post" action="getMessageIndexInfo" id="getMessageIndexInfoForm">
-                <div class="inputFields">
-                  <button name="getMessageIndexInfo" type="submit" class="submit">
-                    Get Message Index Info
-                  </button>
-                </div>
-              </form>
-              <% if @msg_index_info %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Status</th>
-                      <th>State</th>
-                      <th>Message Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td data-value="Status"><%= @msg_index_info.status %></td>
-                      <td data-value="State"><%= @msg_index_info.state %></td>
-                      <td data-value="Message Count"><%= @msg_index_info.message_count %></td>
-                    </tr>
-                  </tbody>
-                </table>
-              <% end %>
-              <% if @msg_index_info_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @msg_index_info_error %>
-                </div>
-              <% end %>
+        </div> <!-- end of formBox -->
 
-            </div> <!-- end of get message toggle -->
+        <!-- SAMPLE APP CONTENT ENDS HERE! -->
 
-            <div class="lightBorder"></div>
-            <a id="updateMsgToggle" 
-              href="javascript:toggle('updateMsg');">Update Message</a>
-            <div class="toggle" id="updateMsg">
-              <h2>Update Message/Messages</h2>
-              <form method="post" action="updateMessage" id="updateMessageForm">
-                <div class="inputFields">
-                  <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
-                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="<%=session[:messageId]%>" />
-                  <label>Change Status:</label>
-                  <label>
-                    <input type="radio" name="readflag" value="read" checked>
-                    Read
-                  </label>
-                  <label>
-                    <input type="radio" name="readflag" value="unread">
-                    Unread
-                  </label>
-                  <button name="updateMessage" type="submit" class="submit">Update Message/Messages</button>
-                </div>
-              </form>			  
-
-              <% if @update_msg %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-              <% end %>
-              <% if @update_msg_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @update_msg_error %>
-                </div>
-              <% end %>
-            </div> <!-- end of update message toggle -->
-
-            <div class="lightBorder"></div>
-            <a id="delMsgToggle" href="javascript:toggle('delMsg');">Delete Message</a>
-            <div class="toggle" id="delMsg">
-              <h2>Delete Message/Messages</h2>
-              <form method="post" action="deleteMessage" id="deleteMessageForm">
-                <div class="inputFields">
-                  <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
-                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="<%=session[:messageId]%>" />
-                  <button name="deleteMessage" type="submit" class="submit">Delete Message/Messages</button>
-                </div>
-              </form>			         
-
-              <% if @delete_msg %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-              <% end %>
-              <% if @delete_msg_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @delete_msg_error %>
-                </div>
-              <% end %>
-            </div> <!-- end of delete toggle -->
-
-            <div class="lightBorder"></div>
-
-            <a id="getMsgNotToggle" 
-              href="javascript:toggle('getMsgNot');">Get Notification Connection Details</a>
-            <div class="toggle" id="getMsgNot">
-              <form method="post" action="getNotifyDetails" id="getNotifyDetailsForm">
-                <div class="inputFields">
-                  <label>Notification Subscription:</label>
-                  <label><input type="radio" name="queues" value="text" checked >Text</label>
-                  <label><input type="radio" name="queues" value="mms" >MMS</label>
-                  <button name="getNotifyDetails" type="submit" class="submit">Get Details</button>
-                </div>
-              </form>
-              <% if @notification_details %>
-                <div class="successWide">
-                  <strong>SUCCESS:</strong>
-                </div>
-                <h3>Connection Details</h3>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Username</th>
-                      <th>Password</th>
-                      <th>https url</th>
-                      <th>wss url</th>
-                      <th>queues</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td data-value="Username"><%= @notification_details.username %></td>
-                      <td data-value="Password"><%=@notification_details.password %></td>
-                      <td data-value="https url"><%= @notification_details.https_url %></td>
-                      <td data-value="wss url"><%= @notification_details.wss_url %></td>
-                      <td data-value="queues"><%= @notification_details.queues %></td>
-                    </tr>
-                  </tbody>
-                </table>
-              <% end %>
-              <% if @notification_details_error %>
-                <div class="errorWide">
-                  <strong>ERROR:</strong>
-                  <%= @notification_details_error %>
-                </div>
-              <% end %>
-            </div> <!-- end of getMsgNot toggle -->
-          </div> <!-- end of form container -->
-        </div> <!-- end of form box -->
       </div> <!-- end of content -->
       <div class="border"></div>
       <div id="footer">
@@ -533,18 +260,18 @@
         AT&amp;T Services and not meant to be used as part of your
         product. The data in these pages is for test purposes only and
         intended only for use as a reference in how the services perform.
-        <br><br>
+        <br /><br />
         For download of tools and documentation, please go to 
         <a href="https://devconnect-api.att.com/" 
           target="_blank">https://devconnect-api.att.com</a>
         <br> For more information contact 
         <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-        <br><br>
+        <br /><br />
         &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
         <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->
     </div> <!-- end of page_container -->
-    <script>toggle("<%= session[:toggle_div] %>")</script>
+    <script>setup();</script>
   </body>
 </html>

@@ -78,11 +78,11 @@ For more information contact developer.support@att.com
               <h2>Send Messages:</h2>
               <form method="post" action="index.php" name="msgContentForm" >
                 <div class="inputFields">
-                  <?php if (isset($_SESSION['Address'])) { ?> 
-                  <input placeholder="Address" name="Address" type="text" 
-                      value="<?php echo htmlspecialchars($_SESSION['Address']); ?>" />     
+                  <?php if (isset($_SESSION['address'])) { ?> 
+                  <input placeholder="Address" name="address" type="text" 
+                      value="<?php echo htmlspecialchars($_SESSION['address']); ?>" />     
                   <?php } else { ?>
-                  <input placeholder="Address" name="Address" type="text" />     
+                  <input placeholder="Address" name="address" type="text" />     
                   <?php } ?>
                   <?php if (isset($_SESSION['checkbox']) && $_SESSION['checkbox'] == true) { ?>
                   <label>Group: <input name="groupCheckBox" type="checkbox" checked /></label>

@@ -4,49 +4,36 @@
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
-require 'json'
-
 module Att
   module Codekit
     module Auth
 
       # A container for tokens returned by the AT&T oauth api
-      # @author kh455g
+      # @author Kyle Hill <kh455g@att.com>
       class OAuthToken
         include Enumerable
 
-        attr_reader :access_token, :refresh_token 
-        # @!attribute [r] access_token
-        #   @return [String] token used for authentication
-        # @!attribute [r] refresh_token
-        #   @return [String] token used to refresh access_token if it expires
+        NEVER_EXPIRES = -1
 
         # Construct an OAuthToken object
-        #
         # @note Due to overflow of the time object in ruby <= 1.8, if the expiry exceeds year 2038 it is set to never expire.
         # @param access_token [String] token used for authentication
-        # @param expiry [#to_i] a representation of time in seconds since epoch of when the token should expire. set nil if never expires
+        # @param expiry [#to_i] a representation of time in ms since epoch. 
         # @param refresh_token [String] token used for re-obtaining an access_token after expiry.
         def initialize(access_token, expiry, refresh_token)
           @access_token = access_token
+          @expiry = (expiry.to_i || NEVER_EXPIRES)
           @refresh_token = refresh_token
-          if expiry
-            @expiry = expiry.to_i 
-          end
         end
 
-        # Returns if this token can expire
-        #
-        # @return [Boolean] true if the token is allowed to expire
-        def can_expire?
-          return !!@expiry
-        end
+        attr_reader :access_token, :refresh_token, :expiry
 
         # Check if access token is expired 
         #
         # @return [Boolean] true if access token is expired, false if it's valid.
         def expired?
-          can_expire? && @expiry < Time.now.to_i
+          return false if @expiry == NEVER_EXPIRES 
+          @expiry < Time.now.to_i
         end
 
         # 'Each' definition for OAuthToken object
@@ -68,58 +55,10 @@ module Att
         end
         alias == eql?
 
-        # Serialize token into a json object
-        def to_json(*a)
-          {
-            "json_class" => self.class.name,
-            "data" => [@access_token, @expiry, @refresh_token]
-          }.to_json(*a)
-        end
-
         class << self # begin static methods
 
-          # Factory method to create an object from a json string
-          #
-          # @param json [String] a json encoded string
-          #
-          # @return [OAuthToken] a parsed object
-          def createFromJson(json)
-            self.createFromParsedJson(JSON.parse(json))
-          end
-
-          # Factory method to create an object from a json string
-          #
-          # @param json [Object] a decoded json string
-          #
-          # @return [OAuthToken] a parsed object
-          def createFromParsedJson(json)
-            expires_in = json['expires_in']
-            access_token = json['access_token']
-            refresh_token = json['refresh_token']
-
-            if expires_in
-              #if expires_in is 0 then set expiration to 100 years
-              if expires_in.to_i == 0
-                expires_in = Time.now.to_i + (60*60*24*365*100) - 30 
-              else
-                expires_in = Time.now.to_i + expires_in.to_i - 30 
-              end
-            end
-
-            new(access_token, expires_in, refresh_token)
-          end
-
-          # Deserialize a token object
-          #
-          # @return [OAuthToken] parsed oauth token object
-          def json_create(o)
-            new(*o["data"])
-          end
-
-
           # Open file and save specified token
-          #
-          # @note Overwrites file if already exists.
+          # Overwrites file.
           #
           # @param path [String] path of file to save token
           # @param token [OAuthToken] the token to save to file.
@@ -127,7 +66,9 @@ module Att
             File.open(path, 'w') do |f|
               begin
                 f.flock(File::LOCK_EX)
-                f.puts token.to_json
+                f.puts token.access_token
+                f.puts token.expiry
+                f.puts token.refresh_token
               ensure
                 f.flock(File::LOCK_UN)
               end
@@ -138,13 +79,12 @@ module Att
           # Open file and return new OAuthToken
           # 
           # @param path [String] path of file to load token from
-          #
           # @return [OAuthToken] returns an OAuthToken object
           def open_token(path)
             File.open(path,'r') do |f|
               begin
                 f.flock(File::LOCK_EX)
-                JSON.load(f.read)
+                return self.new(*f.map.collect(&:chomp))
               ensure
                 f.flock(File::LOCK_UN)
               end

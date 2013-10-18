@@ -122,7 +122,7 @@ For more information contact developer.support@att.com
                         %>
                         <div class="successWide">
                             <strong>SUCCESS:</strong><br />
-                            messageId: <%= sendMessageSuccessResponse%>
+                            <%= sendMessageSuccessResponse%>
                         </div>
                         <% End If%>
                         <% If Not String.IsNullOrEmpty(sendMessageErrorResponse) Then%>

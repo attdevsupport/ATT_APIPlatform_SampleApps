@@ -107,7 +107,7 @@ For more information contact developer.support@att.com
                       <option value="att.gif">att.gif</option>
                     </select>
                   </label>
-                  <button id="sendMessage" name="sendMessage" type="submit" class="submit">Send Message</button>
+                  <button id="sendMessage" type="submit" class="submit">Send Message</button>
                 </div>
             </form>
             <c:if test="${not empty immnError}">

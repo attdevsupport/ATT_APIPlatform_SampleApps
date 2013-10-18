@@ -4,42 +4,56 @@
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
-#@author kh455g
+#@author Kyle Hill <kh455g@att.com>
 module Att
   module Codekit
     module Service
-
-      class ServiceException < Exception; end
+      require 'att/codekit/auth/oauth_service'
 
       # Helper class which contains common code for use with the AT&T Cloud API.
       class CloudService
         include Att::Codekit::Auth
 
-        attr_reader :fqdn, :token
+        attr_reader :fqdn
 
         # Creates a base service 
         #
-        # @param token [OAuthToken] the oauth token used to authenticate
+        # @param oauth [OAuthService] the oauth object used to authenticate
         # @param fqdn [String] url that points to where the cloud api exists
-        def initialize(fqdn, token, client=nil) 
-          @token = token
-          @fqdn = fqdn 
-          @client = client
+        # @see OAuthService#initialize
+        def initialize(oauth, fqdn=nil) 
+          @oauth = oauth
+          @fqdn = (fqdn || oauth.fqdn)
+        end
+
+        # Updates and returns an OAuthToken based on auth code
+        #
+        # @param code [String] The auth code used to update the token
+        def updateAccessToken(code)
+          @oauth.authenticate_token(code)
+        end
+
+        # Check if our token has been authenticated for the user.
+        def authenticated?
+          @oauth.authenticated?
+        end
+
+        # Returns the url that can be used for consent flow
+        def consentFlow
+          @oauth.generateConsentFlowUrl
         end
 
         # Send a post request with standard headers
         #
         # @param url [String] The url to send the request to
         # @param payload [String] The body of the post request
-        # @param custom_headers [Hash] A hash of headers that override/extend
-        #  the defaults
-        #
-        # @return [RestClient::Response] http response object
+        # @param custom_headers [Hash] A hash of headers that override/extend the 
+        # defaults
         def post(url, payload, custom_headers={})
           headers = {
             :Accept => "application/json",
             :Content_Type => "application/json",
-            :Authorization => "Bearer #{@token.access_token}"
+            :Authorization => "Bearer #{@oauth.access_token}"
           }
 
           headers.merge!(custom_headers)
@@ -50,14 +64,11 @@ module Att
         # Send a get request with standard headers
         #
         # @param url [String] The url to send the request to
-        # @param custom_headers [Hash] A hash of headers that override/extend 
-        #   the defaults
-        #
-        # @return [RestClient::Response] http response object
+        # @param custom_headers [Hash] A hash of headers that override/extend the defaults
         def get(url, custom_headers={})
           headers = {
             :Accept => "application/json",
-            :Authorization => "Bearer #{@token.access_token}", 
+            :Authorization => "Bearer #{@oauth.access_token}", 
           }
 
           headers.merge!(custom_headers)
@@ -69,15 +80,13 @@ module Att
         #
         # @param url [String] The url to send the request to
         # @param payload [String] The data to send to the url
-        # @param custom_headers [Hash] A hash of headers that override/extend 
-        #   the defaults
-        #
-        # @return [RestClient::Response] http response object
+        # @param custom_headers [Hash] A hash of headers that override/extend the 
+        # defaults
         def put(url, payload, custom_headers={})
           headers = {
             :Accept => "application/json",
             :Content_Type => 'application/json',
-            :Authorization => "Bearer #{@token.access_token}", 
+            :Authorization => "Bearer #{@oauth.access_token}", 
           }
 
           headers.merge!(custom_headers)
@@ -85,94 +94,44 @@ module Att
           Transport.put url, payload, headers
         end
 
-        # Send a Http delete request with standard headers
-        #
-        # @param url [String] The url to send the request to
-        # @param custom_headers [Hash] A hash of headers that override/extend 
-        #   the defaults
-        #
-        # @return [RestClient::Response] http response object
-        def delete(url, custom_headers={})
-          headers = {
-            :Accept => "application/json",
-            :Authorization => "Bearer #{@token.access_token}", 
-          }
-
-          headers.merge!(custom_headers)
-
-          Transport.delete url, headers
-        end
-
-        # Transform a list of addresses into a format acceptable by the api
-        # 
-        # @note If the prefix tel: or short: is not present, then a best guess
-        #   based on the length is made.
-        #
-        # @param addresses [String, Array<String>] Comma seperated string or 
-        #   array of phone numbers
-        #
-        # @return [Array<String>] an array of acceptable addresses
-        def self.format_addresses(addresses)
-          # convert any input to an array of strings
-          addresses = Array(addresses).join(",").split(",")
-
-          parsed_addresses = Array.new
-
-          addresses.each do |a|
-            a = a.gsub("-","").strip
-            if a.include?("@") || a.include?("tel:") || a.include?("short:")
-              parsed_addresses << a 
-            elsif a.length <= 8
-              parsed_addresses << "short:#{a}" 
-            else
-              parsed_addresses << "tel:#{a}" 
-            end
-          end
-          parsed_addresses
-        end
-
         # Internal function used to generate random boundary
         def self.generateBoundary
-          "----#{(rand*10_000_000) + 10_000_000}.#{Time.now.to_i}"
+          "----=_Part_#{((rand*10000000) + 10000000).to_i}.#{Time.now.to_i}"
         end
 
         # Construct a multipart body that's compatible with the AT&T Cloud API
         #
         # @param boundary [String] a random string to split chunks on
-        # @param data [Array<Hash>,Hash] An array of hashes or a single hash, each 
-        #   hash represents a seperate chunk of data. 
-        #
-        # @option data [Hash] :headers key value pairs, where key is the header
-        #   and value is the headers value
-        # @option data [String] :data the actual object (payload) to send
-        #
+        # @param data [Array,Hash] An array of hashes or a single hash, each hash
+        # represents a seperate chunk of data. Must contain the following two keys.
+        # @option data [Hash] :headers key value pairs, where key is the header 
+        # and value is the headers value
+        # @option data [String] :data the actual object to send
         # @return [String] A payload that can be sent to the AT&T Cloud API
         def self.generateMultiPart(boundary, data)
           body = ""
-          data = Array(data)
+          data = [data] unless data.instance_of? Array
           data.each do |part|
             body += "--#{boundary}\r\n"
             part[:headers].each do |key, value|
-              body += "#{key}: #{value}\r\n"
+              body += key.to_s + ": " + value.to_s + "\r\n"
             end
-            body += "\r\n#{part[:data]}\r\n\r\n"
+            body += "\r\n" + part[:data].to_s + "\r\n\r\n"
           end
           body += "--#{boundary}--\r\n"
         end
 
         # Simple file extension checking to obtain filetype
         #
-        # @note This method should not be used outside of the services as it
-        #   will eventually be removed and updated with libmagic.
-        #   The current speech api does not accept all the current values
-        #   returned from libmagic so a custom function is present here.
+        # This method should not be used outside of the services as it
+        # will eventually be removed and updated with libmagic.
+        # The current speech api does not accept all the current values
+        # returned from libmagic so a custom function is present here.
         #
         # @param file [String] the path or name of the file to check type
-        #
-        # @return [String] the mime type of the file
         def self.getMimeType(file)
-          extension = file.split(".").last
-          case extension
+          data = file.split(".").last
+          case data
           when "txt" then "text/plain"
           when "html" then "text/html"
           when "xml" then "application/xml"

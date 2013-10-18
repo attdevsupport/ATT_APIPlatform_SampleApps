@@ -7,15 +7,16 @@
 # contact developer.support@att.com
 
 require 'rubygems'
+require 'json'
 require 'base64'
+require 'rest_client'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'att/codekit'
 
 include Att::Codekit
 
-#regular sessions cause a problem with chrome
-use Rack::Session::Pool
+enable :sessions
 
 config_file 'config.yml'
 
@@ -24,274 +25,205 @@ set :protection, :except => :frame_options
 
 ATTACH_DIR = File.join(File.dirname(__FILE__), 'public/attachments')
 
-#Setup proxy used by att/codekit
-Transport.proxy(settings.proxy)
+RestClient.proxy = settings.proxy
 
 SCOPE = ["IMMN", "MIM"]
 
 configure do
-  PARAMS = [ :address, :message, :subject, :attachment, :groupCheckBox, 
-             :favorite, :incoming, :unread, :keyword, :messageId, 
-             :partNumber, :readflag, :queues ]
-
-  MSG_LIST_COUNT = 5
-
   OAuth = Auth::AuthCode.new(settings.FQDN,
                              settings.api_key,
-                             settings.secret_key)
+                             settings.secret_key,
+                             SCOPE,
+                             settings.redirect_url)
 end
 
-# Setup filters for saving session, 
-# loading select box data and catching the oauth redirect code
 before do
-  save_session
   load_attachments
-
-  if params[:code] && session[:token].nil?
-    session[:token] = OAuth.createToken(params[:code])
-  end
-  if session[:token] && session[:token].expired?
-    session[:token] = OAuth.refreshToken(session[:token])
-  end
-end
-
-# Setup filter for catching authentication 
-# only on actions that require authentication
-['/sendMessage', 
- '/createMessageIndex',
- '/getMessageList', 
- '/getMessage', 
- '/getMessageContent', 
- '/getDelta', 
- '/getMessageIndexInfo' 
-].each do |action|
-  before action do
-    if session[:token].nil?
-
-      #remove the leading / from action if redirect ends with /
-      suburl = settings.redirect_url.end_with?("/") ? action[1..-1] : action
-
-      redirect_url = "#{settings.redirect_url}#{suburl}"
-      redirect OAuth.consentFlow(:redirect => redirect_url) 
-    end
-  end
-end
-
-# Setup filter for clearing session after service calls are made.
-# This is required to prevent populating the form inputs of different forms.
-after do
-  clear_session
+  session[:immn] = Service::IMMNService.new(OAuth) if session[:immn].nil?
+  session[:mim] = Service::MIMService.new(OAuth) if session[:mim].nil?
 end
 
 get '/' do
-  if params[:error]
-    @send_error = params[:error]
-  end
-  erb :immn
-end
-
-get '/sendMessage' do send_message; end
-post '/sendMessage' do send_message; end
-def send_message
   begin
-    service = Service::IMMNService.new(settings.FQDN, session[:token])
+    #if code is present in params then we're returning from authentication
+    session[:immn].updateAccessToken(params[:code]) unless params[:code].nil?
+    session[:mim].updateAccessToken(params[:code]) unless params[:code].nil?
 
-    if session[:attachment] 
-      attachment  = File.join(ATTACH_DIR, session[:attachment])
-      unless File.file? attachment
-        attachment = nil
+    if (session[:immn].authenticated? || session[:mim].authenticated?)
+      if session[:sending] then
+        sendMessage(session[:address], session[:subject], session[:message], session[:attachment], session[:groupCheckBox], true)
+      elsif session[:getting] then
+        getMessageHeaders(session[:headerCountTextBox], session[:indexCursorTextBox], true)
+      elsif session[:getting_content] then
+        getMessageContent(session[:MessageId], session[:PartNumber], true)
       end
     end
 
-    # Sending in all optional parameters, service takes care of nil items
-    @send_message = service.sendMessage(session[:address], 
-                                        :message => session[:message],
-                                        :subject => session[:subject],
-                                        :attachments => attachment,
-                                        :group => session[:groupCheckBox])
+  rescue RestClient::Exception => e
+    @send_error = e.response 
   rescue Exception => e
-    @send_message_error = e.message
-  ensure
-    session[:toggle_div] = :sendMsg
+    @send_error = e.message
   end
   erb :immn
 end
 
-get '/createMessageIndex' do create_message_index; end
-post '/createMessageIndex' do create_message_index; end
-def create_message_index
+#send message
+post '/submit' do
   begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
-
-    @create_index = service.createIndex
-
-  rescue Exception => e
-    @create_index_error = e.message
-  ensure
-    session[:toggle_div] = :createMsg
+    # if auth'd then send the message
+    if session[:immn].authenticated? then
+      sendMessage(params[:address], params[:subject], params[:message], params[:attachment], params[:groupCheckBox])
+      # otherwise save our session and do consent flow
+    else
+      storeSendingParams
+      redirect session[:immn].consentFlow
+    end
+  rescue => e
+    @send_error = e.message
   end
-  erb :immn
 end
 
-get '/getMessageList' do get_message_list; end
-post '/getMessageList' do get_message_list; end
-def get_message_list
+post '/submitGetHeaders' do
   begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
-
-    @msg_list = service.getMessageList(MSG_LIST_COUNT,
-                                       :isUnread => session[:unread],
-                                       :isFavorite => session[:favorite],
-                                       :isIncoming => session[:incoming],
-                                       :keyword => session[:keyword])
-  rescue Exception => e
-    @msg_list_error = e.message
-  ensure
-    session[:toggle_div] = :getMsg
+    if session[:mim].authenticated?
+      getMessageHeaders(params[:headerCountTextBox], params[:indexCursorTextBox])
+    else
+      storeGetHeadersParams
+      redirect session[:mim].consentFlow
+    end
+  rescue RestClient::Exception => e
+    @get_error = e.response 
+  rescue => e
+    @get_error = e.message
   end
   erb :immn
 end
 
-get '/getMessage' do get_message; end
-post '/getMessage' do get_message; end
-def get_message
+post '/submitGetHeaderContent' do
   begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
+    if session[:mim].authenticated?
+      getMessageContent(params[:MessageId], params[:PartNumber])
+    else
+      storeGetHeaderContentParams
+      redirect session[:mim].consentFlow
+    end
 
-    @get_msg = service.getMessage(session[:messageId])
-
+  rescue RestClient::Exception => e
+    @get_error = e.response 
   rescue Exception => e
-    @get_msg_error = e.message
-  ensure
-    session[:toggle_div] = :getMsg
+    @get_error = e.message
   end
   erb :immn
 end
 
-get '/getMessageContent' do get_message_content; end
-post '/getMessageContent' do get_message_content; end
-def get_message_content
-  # make sure our required arguments are present
+# Takes care of parsing our send responses
+def sendMessage(address, subject, msg, attachment, group, clear_requested=false)
   begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
+    clearSendingParams if clear_requested
 
-    @msg_content = service.getMessageContent(session[:messageId], 
-                                             session[:partNumber])
+    #if we don't have an attachment selected make it nil
+    if attachment == "None"
+      attachment = nil 
+    else
+      attachment = File.join(ATTACH_DIR, attachment).to_s
+    end
 
-  rescue Exception => e
-    @msg_content_error = e.message
-  ensure
-    session[:toggle_div] = :getMsg
+    response = session[:immn].sendMessage(address, subject, msg, attachment, group)
+
+    @send_result = JSON.parse(response)["Id"]
+
+  rescue RestClient::Exception => e
+    @send_error = e.response 
+  rescue => e
+    @send_error = e.message
   end
   erb :immn
 end
 
-get '/getDelta' do get_delta; end
-post '/getDelta' do get_delta; end
-def get_delta
+# perform the API call for getting message headers
+def getMessageHeaders(count, index, clear_requested=false)
   begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
+    clearGetHeadersParams if clear_requested
+    response = session[:mim].getMessageHeaders(count, index)
 
-    @get_delta = service.getDelta(session[:messageId])
+    @get_result = JSON.parse(response)
 
-  rescue Exception => e
-    @get_delta_error = e.message
-  ensure
-    session[:toggle_div] = :getMsg
+  rescue RestClient::Exception => e
+    @get_error = e.response 
+  rescue => e
+    @get_error = e.message
   end
   erb :immn
 end
 
-get '/getMessageIndexInfo' do get_message_index_info; end
-post '/getMessageIndexInfo' do get_message_index_info; end
-def get_message_index_info
+def getMessageContent(message_id, part_number, clear_requested=false)
   begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
+    clearGetHeaderContentParams if clear_requested
+    response = session[:mim].getMessageContent(message_id, part_number)
 
-    @msg_index_info = service.getIndexInfo
+    @content_result = response
 
-  rescue Exception => e
-    @msg_index_info_error = e.message
-  ensure
-    session[:toggle_div] = :getMsg
+    headers = response.headers[:content_type]
+    content_string = headers.split("; ")
+    @image_string = headers.split("/")
+    @image = @image_string[0]
+    @image_content = content_string[0]
+
+  rescue RestClient::Exception => e
+    @get_error = e.response 
+  rescue => e
+    @get_error = e.message
   end
   erb :immn
 end
 
-
-get '/updateMessage' do update_message; end
-post '/updateMessage' do update_message; end
-def update_message
-  begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
-
-    unread_flag = ( session[:readflag] == 'unread' )
-
-    msgids = session[:messageId].split(",")
-
-    @update_msg = service.updateReadFlag(msgids, unread_flag)
-
-  rescue Exception => e
-    @update_msg_error = e.message
-  ensure
-    session[:toggle_div] = :updateMsg
-  end
-  erb :immn
-end
-
-get '/deleteMessage' do delete_message; end
-post '/deleteMessage' do delete_message; end
-def delete_message
-  begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
-
-    msgids = session[:messageId].split(",")
-
-    @delete_msg = service.deleteMessage(msgids)
-
-  rescue Exception => e
-    @delete_msg_error = e.message
-  ensure
-    session[:toggle_div] = :delMsg
-  end
-  erb :immn
-end
-
-get '/getNotifyDetails' do get_notify_details; end
-post '/getNotifyDetails' do get_notify_details; end
-def get_notify_details
-  begin
-    service = Service::MIMService.new(settings.FQDN, session[:token])
-
-    queues = session[:queues]
-
-    @notification_details = service.getNotificationDetails(queues)
-
-  rescue Exception => e
-    @notification_details_error = e.message
-  ensure
-    session[:toggle_div] = :getMsgNot
-  end
-  erb :immn
-end
-
+#load all attachments present
 def load_attachments
-  # make first box blank
-  @attachments = [""] 
+  @attachments = Array.new
   Dir.entries(ATTACH_DIR).sort.each do |x|
-    #add file filter directories with one or more '.'
+    #add file unless it starts with a . or more
     @attachments.push x unless x.match /\A\.+/
   end
 end
 
-def save_session
-  PARAMS.each do |x|
-    session[x] = params[x] 
-  end
+def storeSendingParams
+  session[:address] = params[:address] if params[:address]
+  session[:message] = params[:message] if params[:message]
+  session[:subject] = params[:subject] if params[:subject]
+  session[:attachment] = params[:attachment] if params[:attachment]
+  session[:groupCheckBox] = params[:groupCheckBox] if params[:groupCheckBox]
+  session[:sending] = true
 end
 
-def clear_session
-  PARAMS.each do |x|
-    session[x] = nil
-  end
+def clearSendingParams
+  session[:address] = nil
+  session[:message] = nil
+  session[:subject] = nil
+  session[:attachment] = nil
+  session[:sending] = false
 end
+
+def storeGetHeadersParams
+  session[:getting] = true
+  session[:headerCountTextBox] = params[:headerCountTextBox]
+  session[:indexCursorTextBox] = params[:indexCursorTextBox]
+end
+
+def clearGetHeadersParams
+  session[:getting] = false
+  session[:headerCountTextBox] = nil
+  session[:indexCursorTextBox] = nil
+end
+
+def storeGetHeaderContentParams
+  session[:getting_content] = true
+  session[:MessageId] = params[:MessageId]
+  session[:PartNumber] = params[:PartNumber]
+end
+
+def clearGetHeaderContentParams
+  session[:getting_content] = false
+  session[:MessageId] = nil
+  session[:PartNumber] = nil
+end
+
