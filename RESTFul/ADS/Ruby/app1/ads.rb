@@ -33,16 +33,18 @@ configure do
     OAuth = Auth::ClientCred.new(settings.FQDN,
                                  settings.api_key,
                                  settings.secret_key)
-
-    @@token = OAuth.createToken(SCOPE)
+    @@token = nil
   rescue Exception => e
     @error = e.message
   end
 end
 
-# Setup filter for refreshing the token
+# Setup filter for token handling
 [ '/getAds' ].each do |action|
   before action do
+    if @@token.nil?
+      @@token = OAuth.createToken(SCOPE)
+    end
     if @@token.expired?
       @@token = OAuth.refreshToken(@@token) 
     end
@@ -63,7 +65,7 @@ post '/getAds' do
       optional[p] = params[p].strip unless params[p].nil? or params[p].strip.empty?
     end
 
-    category = params[:category]
+    category = params[:Category]
     user_agent = @env["HTTP_USER_AGENT"].to_s
     udid = "012266005922565000000000000000"
 

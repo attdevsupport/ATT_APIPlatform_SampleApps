@@ -36,14 +36,7 @@ configure do
   OAuth = Auth::ClientCred.new(settings.FQDN, 
                                settings.api_key, 
                                settings.secret_key)
-
-  if FILE_EXISTS 
-    token = Auth::OAuthToken.load(settings.tokens_file)
-  else
-    token = OAuth.createToken(SCOPE)
-  end
-  @@speech = Service::SpeechService.new(settings.FQDN, token)
-  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  @@token = nil
 end
 
 before do
@@ -51,10 +44,22 @@ before do
   dict, grammar, afile = load_files
   @mime_data = "x-dictionary:\n" + dict + "\n\nx-grammar:\n" + grammar 
 
-  if @@speech.token.expired?
-    token = OAuth.refreshToken(@@speech.token)
-    @@speech = Service::SpeechService.new(settings.FQDN, token)
-    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  begin
+    if @@token.nil?
+      if FILE_EXISTS 
+        @@token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        @@token = OAuth.createToken(SCOPE)
+      end
+    end
+    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token)
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+  rescue Exception => e
+    @error = e.message
   end
 end
 
@@ -64,6 +69,7 @@ end
 
 post '/SpeechToText' do
   begin
+    service = Service::SpeechService.new(settings.FQDN, @@token)
     dict, grammar, afile = load_files
 
     if params[:nameParam] and params[:SpeechContext] == "GenericHints"
@@ -72,10 +78,10 @@ post '/SpeechToText' do
       grammar_type = nil 
     end
 
-    @result = @@speech.speechToText(afile, dict, grammar, 
-                                  :context => params[:SpeechContext], 
-                                  :grammar => grammar_type,
-                                  :xargs => settings.X_arg)
+    @result = service.speechToText(afile, dict, grammar, 
+                                   :context => params[:SpeechContext], 
+                                   :grammar => grammar_type,
+                                   :xargs => settings.X_arg)
 
   rescue Exception => e
     @error = e.message

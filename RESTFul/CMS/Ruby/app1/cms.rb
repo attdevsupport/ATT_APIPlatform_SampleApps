@@ -32,29 +32,27 @@ RestClient.proxy = settings.proxy
 
 #setup our oauth service
 configure do
-  begin
-    FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
-    FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
+  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
 
-    OAuth = Auth::ClientCred.new(settings.FQDN, 
-                                 settings.api_key, 
-                                 settings.secret_key)
-
-    if FILE_EXISTS 
-      @@token = Auth::OAuthToken.load(settings.tokens_file)
-    else
-      @@token = OAuth.createToken(SCOPE)
-    end
-    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
-  rescue Exception => e
-    @error = e.message
-  end
+  OAuth = Auth::ClientCred.new(settings.FQDN, 
+                               settings.api_key, 
+                               settings.secret_key)
+  @@token = nil
 end
 
 #load our file for display before anything
 before do
   read_script
   begin
+    if @@token.nil?
+      if FILE_EXISTS 
+        @@token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        @@token = OAuth.createToken(SCOPE)
+      end
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
     if @@token.expired?
       @@token = OAuth.refreshToken(@@token)
       Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT

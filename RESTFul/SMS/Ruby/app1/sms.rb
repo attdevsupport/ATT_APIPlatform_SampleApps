@@ -30,25 +30,32 @@ configure do
   OAuth = Auth::ClientCred.new(settings.FQDN, 
                                settings.api_key,
                                settings.secret_key)
-
-  if FILE_EXISTS 
-    token = Auth::OAuthToken.load(settings.tokens_file)
-  else
-    token = OAuth.createToken(SCOPE)
-  end
-  @@sms = Service::SMSService.new(settings.FQDN, token)
-  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  @@token = nil
 end
 
 #update listeners data before every request
 before do 
-  @status_listener = load_file "#{settings.status_file}"
-  @message_listener = load_file "#{settings.message_file}"
+  begin
+    @status_listener = load_file "#{settings.status_file}"
+    @message_listener = load_file "#{settings.message_file}"
 
-  if @@sms.token.expired?
-    token = OAuth.refreshToken(@@sms.token)
-    @@sms = Service::SMSService.new(settings.FQDN, token)
-    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+    #check if token exists and create if necessary
+    if @@token.nil?
+      if FILE_EXISTS 
+        @@token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        @@token = OAuth.createToken(SCOPE)
+      end
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token)
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+
+  rescue Exception => e
+    @send_error = e.message
   end
 end
 
@@ -64,6 +71,8 @@ end
 
 post '/sendSms' do
   begin
+    service = Service::SMSService.new(settings.FQDN, @@token)
+
     session[:sms1_address] = params[:address]
     #set true if  we're sending a notification 
     if params[:chkGetOnlineStatus].nil?
@@ -72,7 +81,7 @@ post '/sendSms' do
       notify = true
     end
 
-    @send = @@sms.sendSms(session[:sms1_address], params[:message], notify)
+    @send = service.sendSms(session[:sms1_address], params[:message], notify)
 
     session[:sms_id] = @send.id unless notify
 
@@ -85,9 +94,10 @@ end
 post '/getDeliveryStatus' do
   session[:sms_id] = params["messageId"]
 
+  service = Service::SMSService.new(settings.FQDN, @@token)
   begin
-    @status = @@sms.getDeliveryStatus(session[:sms_id])
-    @status_resource_url = @@sms.getResourceUrl(session[:sms_id])
+    @status = service.getDeliveryStatus(session[:sms_id])
+    @status_resource_url = service.getResourceUrl(session[:sms_id])
 
   rescue Exception => e
     @delivery_error = e.message
@@ -97,7 +107,8 @@ end
 
 post '/getReceivedSms' do
   begin
-    @messages = @@sms.getReceivedMessages(settings.short_code_1)
+    service = Service::SMSService.new(settings.FQDN, @@token)
+    @messages = service.getReceivedMessages(settings.short_code_1)
 
   rescue Exception => e
     @received_error = e.message

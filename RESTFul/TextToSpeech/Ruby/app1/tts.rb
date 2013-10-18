@@ -31,25 +31,32 @@ configure do
   FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
 
   OAuth = Auth::ClientCred.new(settings.FQDN,
-                                settings.api_key,
-                                settings.secret_key)
-  if FILE_EXISTS 
-    token = Auth::OAuthToken.load(settings.tokens_file)
-  else
-    token = OAuth.createToken(SCOPE)
-  end
-  @@tts = Service::TTSService.new(settings.FQDN, token)
-  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+                               settings.api_key,
+                               settings.secret_key)
+  @@token = nil
 end
 
 before do
   @ssml_content = load_content("SSMLWithPhoneme.txt")
   @text_content = load_content("PlainText.txt")
 
-  if @@tts.token.expired?
-    token = OAuth.refreshToken(@@tts.token)
-    @@tts = Service::TTSService.new(settings.FQDN, token)
-    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  begin
+    if @@token.nil?
+      if FILE_EXISTS 
+        @@token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        @@token = OAuth.createToken(SCOPE)
+      end
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token)
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+
+  rescue Exception => e
+    @error = e.message
   end
 end
 
@@ -60,15 +67,17 @@ end
 
 post '/TextToSpeech' do
   begin
+    service = Service::TTSService.new(settings.FQDN, @@token)
+
     type = params[:ContentType]
     content = case type
               when "application/ssml+xml" then load_content("SSMLWithPhoneme.txt")
               when "text/plain" then load_content("PlainText.txt")
               end
 
-    @audio = @@tts.toSpeech(content, 
-                          :xargs => params[:x_arg],
-                          :type => type)
+    @audio = service.textToSpeech(content, 
+                                  :xargs => params[:x_arg],
+                                  :type => type)
 
   rescue Exception => e
     @error = e.message

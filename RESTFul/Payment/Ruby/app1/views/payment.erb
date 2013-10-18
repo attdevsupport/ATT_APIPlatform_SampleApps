@@ -61,6 +61,12 @@
         <div class="lightBorder"></div>
         <div class="formBox" id="formBox">
           <div id="formContainer" class="formContainer">
+            <% if @auth_error %>
+              <div class="errorWide">
+                <strong>ERROR: </strong><br>
+                <%= @auth_error %>
+              </div>
+            <% end %>
             <a id="transactionToggle" 
               href="javascript:toggle('transaction','transactionToggle', 'Transaction');">Show Transaction</a>
             <div class="toggle" id="transaction">

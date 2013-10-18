@@ -4,11 +4,14 @@
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
+require 'json'
+require 'att/codekit/model/speech'
+
 module Att
   module Codekit
     module Service
 
-      #@author Kyle Hill <kh455g@att.com>
+      #@author kh455g
       class SpeechService < CloudService
         STANDARD_SERVICE_URL = "/speech/v3/speechToText"
         CUSTOM_SERVICE_URL = "/speech/v3/speechToTextCustom"
@@ -18,6 +21,9 @@ module Att
         # @note Scopes differ between standard and custom calls. 
         # @see #stdSpeechToText
         # @see #customSpeechToText
+        #
+        # @return [Model::SpeechResponse] the results of processing the speech 
+        #   file
         def speechToText(*args)
           if args.length > 2 
             customSpeechToText(*args)
@@ -34,8 +40,11 @@ module Att
         # @option opts [String] :context meta info on context (default: Generic)
         # @option opts [String] :xargs custom extra parameters to send for decoding
         # @option opts [Boolean] :chunked set transfter encoding to chunked
+        #
+        # @return (see speechToText)
         def stdSpeechToText(file, opts={})
-          xArgs = (opts[:xargs] || opts[:xarg] || "") #set to empty string if nil
+          # set to empty string if nil
+          xArgs = (opts[:xargs] || opts[:xarg] || "") 
           chunked = opts[:chunked]
           context = (opts[:context] || "Generic")
           x_arg_val = URI.escape(xArgs)
@@ -54,7 +63,12 @@ module Att
 
           url = "#{@fqdn}#{STANDARD_SERVICE_URL}"
 
-          self.post(url, filecontents, headers)
+          begin
+            response = self.post(url, filecontents, headers)
+          rescue RestClient::Exception => e
+            raise(ServiceException, e.response || e.message, e.backtrace)
+          end
+          Model::SpeechResponse.createFromJson(response)
         end
 
         # Send in an audio file to convert into text
@@ -63,9 +77,14 @@ module Att
         # @param dictionary [String] path to dictionary file
         # @param grammar [String] path to grammar file
         # @param opts [Hash] optional parameter hash
-        # @option opts [String] :context The speech context (default: GenericHints)
-        # @option opts [String] :grammar The type of grammar of the grammar file (default: x-grammar)
-        # @option opts [String] :xargs Custom parameters to send along with the request (default: "")
+        # @option opts [String] :context The speech context 
+        #   (default: GenericHints)
+        # @option opts [String] :grammar The type of grammar of the grammar file 
+        #   (default: x-grammar)
+        # @option opts [String] :xargs Custom parameters to send along with the 
+        #   request (default: "")
+        #
+        # @return (see speechToText)
         def customSpeechToText(audio_file, dictionary, grammar, opts={})
           context = (opts[:context] || "GenericHints")
           grammar_type = (opts[:grammar] || "x-grammar")
@@ -77,7 +96,7 @@ module Att
           filename = File.basename(audio_file)
 
           dheaders = {
-            "Content-Disposition" => %(form-data; name="x-dictionary"; filename="#{dictionary}"),
+            "Content-Disposition" => %(form-data; name="x-dictionary"; filename="#{dictionary_name}"),
             "Content-Type" => "application/pls+xml"
           }
           dict_part = {
@@ -113,11 +132,16 @@ module Att
 
           headers = {
             :X_arg => "#{x_arg_val}", 
-            :X_SpeechContext => context, 
+            :X_SpeechContext => "#{context}", 
             :Content_Type => %(multipart/x-srgs-audio; boundary="#{boundary}"),
           }
 
-          self.post(url, payload, headers)
+          begin
+            response = self.post(url, payload, headers)
+          rescue RestClient::Exception => e
+            raise(ServiceException, e.response || e.message, e.backtrace)
+          end
+          Model::SpeechResponse.createFromJson(response)
         end
 
       end

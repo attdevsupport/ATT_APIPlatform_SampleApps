@@ -175,6 +175,14 @@ For more information contact developer.support@att.com
               ${content}
               </c:if>
             </c:if>
+
+            <c:if test="${not empty error}">
+              <div class="errorWide">
+                <strong>ERROR:</strong><br>
+                <c:out value="${error}" />
+              </div>
+            </c:if>
+
           <!-- SAMPLE APP CONTENT ENDS HERE! -->
           </div> <!-- end of formContainer -->
         </div> <!-- end of formBox -->

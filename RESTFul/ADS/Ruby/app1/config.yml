@@ -5,3 +5,7 @@ secret_key:
 tokens_file:    tokens 
 FQDN:           https://api.att.com
 adType:
+
+source_link: #
+help_link: #
+download_link: #

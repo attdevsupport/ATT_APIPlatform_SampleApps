@@ -56,7 +56,7 @@ class IMMNController extends APIController {
     }
 
     public function handleSendMessage() {
-        $vnames = array('sendMessage', 'address', 'message', 'subject', 
+        $vnames = array('sendMessage', 'Address', 'message', 'subject', 
                 'attachment', 'groupCheckBox');
         $this->copyToSession($vnames);
         if (!isset($_SESSION['sendMessage'])) {
@@ -64,7 +64,7 @@ class IMMNController extends APIController {
         }
 
         try {
-            $addr = $this->convertAddresses($_SESSION['address']);
+            $addr = $this->convertAddresses($_SESSION['Address']);
             $msg = $_SESSION['message'];
             $subject = $_SESSION['subject'];
             $attachment = $_SESSION['attachment'];

@@ -35,27 +35,34 @@ configure do
   OAuth = Auth::ClientCred.new(settings.FQDN,
                                settings.api_key,
                                settings.secret_key)
-
-  if FILE_EXISTS 
-    token = Auth::OAuthToken.load(settings.tokens_file)
-  else
-    token = OAuth.createToken(SCOPE)
-  end
-  @@mms = Service::MMSService.new(settings.FQDN, token)
-  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  @@token = nil
 end
 
 before do 
-  Dir.mkdir(settings.momms_image_dir) unless File.directory?(settings.momms_image_dir)
-  Dir.mkdir(settings.momms_data_dir) unless File.directory?(settings.momms_data_dir)
-  display_images
-  drop_down_list
-  @status_listener = load_file "#{settings.status_file}"
+  begin
+    Dir.mkdir(settings.momms_image_dir) unless File.directory?(settings.momms_image_dir)
+    Dir.mkdir(settings.momms_data_dir) unless File.directory?(settings.momms_data_dir)
+    display_images
+    drop_down_list
+    @status_listener = load_file "#{settings.status_file}"
 
-  if @@mms.token.expired?
-    token = OAuth.refreshToken(@@mms.token)
-    @@mms = Service::MMSService.new(settings.FQDN, token)
-    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+    #check if token exists and create if necessary
+    if @@token.nil?
+      if FILE_EXISTS 
+        @@token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        @@token = OAuth.createToken(SCOPE)
+      end
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token)
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+
+  rescue Exception => e
+    @send_error = e.message
   end
 end
 
@@ -74,6 +81,7 @@ end
 
 post '/sendMms' do
   begin
+    service = Service::MMSService.new(settings.FQDN, @@token)
     session[:mms1_address] = params[:address]
     session[:mms1_subject] = params[:subject]
     session[:selected_file] = params[:attachment]
@@ -87,7 +95,7 @@ post '/sendMms' do
       attachment  = File.join(ATTACH_DIR, params[:attachment])
     end
 
-    @send = @@mms.sendMms(params[:address], params[:subject], attachment, notify)
+    @send = service.sendMms(params[:address], params[:subject], attachment, notify)
 
     session[:mms_id] = @send.id unless notify
 
@@ -99,9 +107,10 @@ end
 
 post '/getStatus' do
   begin 
+    service = Service::MMSService.new(settings.FQDN, @@token)
     session[:mms_id] = params[:mmsId]
 
-    @status = @@mms.getDeliveryStatus(session[:mms_id])
+    @status = service.getDeliveryStatus(session[:mms_id])
 
   rescue Exception => e
     @delivery_error = e.message
@@ -143,9 +152,10 @@ def display_images
 end
 
 def mms_listener
+  service = Service::MMSService.new(settings.FQDN, @@token)
   input   = request.env["rack.input"].read
   random  = rand(10000000).to_s
-  @@mms.handleInput(input) do |sender, date, text, type, image|
+  service.handleInput(input) do |sender, date, text, type, image|
     File.open("#{settings.momms_image_dir}/#{random}.#{type}", 'w') { |f| f.puts image }
     File.open("#{settings.momms_data_dir}/#{random}.#{type}.txt", 'w') { |f| f.puts sender, date, text } 
   end

@@ -121,7 +121,7 @@ $errors = $controller->getErrors();
             <?php if (isset($errors[MMSController::ERROR_SEND_MMS])) { ?>
             <div class="errorWide">
               <strong>ERROR: </strong><br>
-              <?php echo htmlspecialchars($errors['sendMMS']); ?>
+              <?php echo htmlspecialchars($errors[MMSController::ERROR_SEND_MMS]); ?>
             </div>
             <?php } ?>
             <?php if (isset($results[MMSController::RESULT_SEND_MMS])) { 
@@ -158,14 +158,31 @@ $errors = $controller->getErrors();
             </div>
             <?php } else if(isset($results[MMSController::RESULT_GET_STATUS])) { 
             $statusR = $results[MMSController::RESULT_GET_STATUS];
-            $status = $statusR->getDeliveryInfoList()[0]->getDeliveryStatus(); 
+            $dinfoList = $statusR->getDeliveryInfoList();
             $resourceURL = $statusR->getResourceUrl();
             ?>
             <div class="successWide">
             <strong>SUCCESS: </strong><br>
-            <strong>Status: </strong><?php echo htmlspecialchars($status); ?><br>
-            <strong>Resource URL: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
+            <strong>ResourceURL: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
             </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Id</th>
+                  <th>Address</th>
+                  <th>DeliveryStatus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($dinfoList as $dInfo) { ?>
+                <tr>
+                  <td data-value="Id"><?php echo $dInfo->getId(); ?></td>
+                  <td data-value="Address"><?php echo $dInfo->getAddress(); ?></td>
+                  <td data-value="DeliveryStatus"><?php echo $dInfo->getDeliveryStatus(); ?></td>
+                </tr>
+                <?php } ?>
+              </tbody>
+            </table>
             <?php } ?>
             <div class="lightBorder"></div>
             <div id="receiveStatusdiv">

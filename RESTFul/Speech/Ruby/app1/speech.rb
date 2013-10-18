@@ -34,24 +34,25 @@ configure do
   OAuth = Auth::ClientCred.new(settings.FQDN,
                                settings.api_key,
                                settings.secret_key)
-
-  if FILE_EXISTS 
-    token = Auth::OAuthToken.load(settings.tokens_file)
-  else
-    token = OAuth.createToken(SCOPE)
-  end
-  @@speech = Service::SpeechService.new(settings.FQDN, token)
-  Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  @@token = nil
 end
 
 before do 
   drop_down_list
   load_submitted
 
-  if @@speech.token.expired?
-    token = OAuth.refreshToken(@@speech.token)
-    @@speech = Service::SpeechService.new(settings.FQDN, token)
-    Auth::OAuthToken.save(settings.tokens_file, token) if FILE_SUPPORT
+  if @@token.nil?
+    if FILE_EXISTS 
+      @@token = Auth::OAuthToken.load(settings.tokens_file)
+    else
+      @@token = OAuth.createToken(SCOPE)
+    end
+    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+  end
+
+  if @@token.expired?
+    @@token = OAuth.refreshToken(@@token)
+    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
   end
 end
 
@@ -61,15 +62,16 @@ end
 
 post '/SpeechToText' do
   begin
+    service = Service::SpeechService.new(settings.FQDN, @@token)
     audio_file = File.join(AUDIO_DIR, params[:audio_file])
 
     chunked = params[:chkChunked]
     context = params[:SpeechContext]
 
-    @result = @@speech.toText(audio_file, 
-                              :xargs => settings.X_arg, 
-                              :context => context, 
-                              :chunked => chunked)
+    @result = service.speechToText(audio_file, 
+                                   :xargs => settings.X_arg, 
+                                   :context => context, 
+                                   :chunked => chunked)
 
   rescue Exception => e
     @error = e.message

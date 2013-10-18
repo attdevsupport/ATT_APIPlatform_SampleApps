@@ -21,7 +21,7 @@ public class TtsController extends APIController {
     private static String PLAIN_TEXT, SSML;
 
     private void handleTextToSpeech(HttpServletRequest request) {
-        if (request.getParameter("TextToSpeech") == null) {
+        if (request.getParameter("TextToSpeechButton") == null) {
             return;
         }
 
@@ -30,7 +30,7 @@ public class TtsController extends APIController {
             final OAuthToken token = getFileToken();
             String xarg = appConfig.getProperty("xArg");
 
-            String contentType = request.getParameter("contentType");
+            String contentType = request.getParameter("ContentType");
             session.setAttribute("sessionContentType", contentType);
 
             String speechText = null;

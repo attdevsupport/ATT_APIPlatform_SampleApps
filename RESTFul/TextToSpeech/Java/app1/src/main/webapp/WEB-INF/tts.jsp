@@ -59,7 +59,7 @@
             <form name="TextToSpeech" action="SpeechAction" method="post">
               <div id="formData">
                 <h3>Content Type:</h3>
-                <select name="contentType">
+                <select name="ContentType" id="ContentType">
                 <c:forEach var="cname" items="${contentTypes}">
                   <c:choose>
                     <c:when test="${sessionContentType eq cname}">
@@ -79,7 +79,7 @@
                 <h3>X-Arg:</h3>
                 <textarea id="x_arg" name="x_arg" readonly="readonly" rows="4" value="${xArg}">${xArg}</textarea>
                 <br>
-                <button type="submit" name="TextToSpeech">Submit</button>
+                <button id="btnSubmit" type="submit" name="TextToSpeechButton">Submit</button>
               </div> <!-- end of formData -->
             </form>
           </div> <!-- end of formContainer -->

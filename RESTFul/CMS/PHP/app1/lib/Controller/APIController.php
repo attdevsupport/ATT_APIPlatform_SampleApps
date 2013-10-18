@@ -222,10 +222,10 @@ abstract class APIController
 
         // set any RESTFul environmental settings
         if (isset($proxy_host) && isset($proxy_port))
-            RestfulEnvironment::setProxy($proxyHost, $proxyPort);
+            RestfulEnvironment::setProxy($proxy_host, $proxy_port);
 
-        if (isset($trustAllCerts))
-            RestfulEnvironment::setAcceptAllCerts($trustAllCerts);
+        if (isset($accept_all_certs))
+            RestfulEnvironment::setAcceptAllCerts($accept_all_certs);
     }
 
     /**

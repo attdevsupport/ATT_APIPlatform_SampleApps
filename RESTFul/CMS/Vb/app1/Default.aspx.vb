@@ -98,7 +98,7 @@ Partial Public Class CallControl_App1
     ''' <param name="e">Event that invoked this function</param>
     Protected Sub Page_Load(sender As Object, e As EventArgs)
         Try
-            'ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+            !ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
 
             Me.BypassCertificateError()
             Dim ableToRead As Boolean = Me.ReadConfigFile()

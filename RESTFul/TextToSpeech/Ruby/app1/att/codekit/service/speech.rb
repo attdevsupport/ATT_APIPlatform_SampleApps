@@ -96,7 +96,7 @@ module Att
           filename = File.basename(audio_file)
 
           dheaders = {
-            "Content-Disposition" => %(form-data; name="x-dictionary"; filename="#{dictionary}"),
+            "Content-Disposition" => %(form-data; name="x-dictionary"; filename="#{dictionary_name}"),
             "Content-Type" => "application/pls+xml"
           }
           dict_part = {
@@ -132,7 +132,7 @@ module Att
 
           headers = {
             :X_arg => "#{x_arg_val}", 
-            :X_SpeechContext => "#{context}, 
+            :X_SpeechContext => "#{context}", 
             :Content_Type => %(multipart/x-srgs-audio; boundary="#{boundary}"),
           }
 

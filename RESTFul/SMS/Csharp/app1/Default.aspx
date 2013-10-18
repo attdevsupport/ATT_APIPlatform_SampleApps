@@ -138,7 +138,7 @@ For more information contact developer.support@att.com
                             <div class="successWide">
                                 <strong>SUCCESS: </strong>
                                 <br />
-                                <strong>ResourceURL </strong>
+                                <strong>resourceURL </strong>
                                 <%=getSMSDeliveryStatusResponseData.DeliveryInfoList.ResourceURL%><br />
                             </div>
                             <table>

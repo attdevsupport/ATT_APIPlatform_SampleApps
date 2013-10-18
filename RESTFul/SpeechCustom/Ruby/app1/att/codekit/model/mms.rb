@@ -31,7 +31,7 @@ module Att
 
           id = root["messageId"]
           ref = root["resourceReference"]
-          url = ref["resourceURL"]
+          url = ref["resourceURL"] rescue nil
 
           new(id, url)
         end

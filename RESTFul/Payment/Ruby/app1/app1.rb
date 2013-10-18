@@ -34,20 +34,13 @@ Transport.proxy(settings.proxy)
 # Doing this globally with Rack spawners such as Shotgun will
 # make this call on every request resulting in poor performance.
 configure do
-  begin
-    @@client = Auth::Client.new(settings.api_key, 
-                                settings.secret_key)
+  @@client = Auth::Client.new(settings.api_key, 
+                              settings.secret_key)
 
-    OAuth = Auth::ClientCred.new(settings.FQDN, 
-                                 @@client.id,
-                                 @@client.secret)
-
-    @@token = OAuth.createToken(SCOPE)
-  rescue RestClient::Exception => e
-    @auth_error = e.response 
-  rescue Exception => e
-    @auth_error = e.message
-  end
+  OAuth = Auth::ClientCred.new(settings.FQDN, 
+                               @@client.id,
+                               @@client.secret)
+  @@token = nil
 end
 
 #if we have a payload generate notary
@@ -55,14 +48,24 @@ before do
   @show_subscription = false
   @show_notary = false
   @show_transaction = false
+
   sign_payload session[:payload] if session[:payload]
   @show_notary = true if session[:payload]
+
   updateTransactions(settings.transactions_file, :transactions)
   updateTransactions(settings.subscriptions_file, :subscription)
   updateTransactions(settings.notifications_file, :notifications)
 
-  if @@token.expired?
-    @@token = OAuth.refreshToken(@@token) 
+  begin
+    if @@token.nil?
+      @@token = OAuth.createToken(SCOPE)
+    end
+
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token) 
+    end
+  rescue Exception => e
+    @auth_error = e.message
   end
 end
 
@@ -115,8 +118,7 @@ post '/newTransaction'  do
     description,
     merch_transaction_id,
     merch_product_id,
-    settings.payment_redirect_url,
-    settings.api_key)
+    settings.payment_redirect_url)
 end
 
 # Returning from oauth flow to confirm purchase
@@ -248,8 +250,7 @@ post '/newSubscription' do
     merchant_product_id,
     merchant_subscription_id_list,
     sub_recurrances, 
-    settings.subscription_redirect_url,
-    settings.api_key)
+    settings.subscription_redirect_url)
 end
 
 get '/callbackSubscription' do
