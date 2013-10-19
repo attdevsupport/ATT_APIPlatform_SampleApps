@@ -22,7 +22,9 @@ Before building the sample app, you will need to add the configuration for your 
 
 ## Understanding the sample
 
-The main code of the sample app is in the SimpleTTSDemo class.  Look at the `readyForSpeech` method to see how to start TTS playback, and the `startSpeechService` method shows how to set up and start speech recognition.  The TTSClient inner class has an example of handling TTS responses.  Look in the ResultListener/ErrorListener classes for code handling recognition responses and errors.
+The main code of the sample app is in the `SimpleTTSDemo` class.  Look at the `readyForSpeech` method to see how to start TTS playback, and the `startSpeechService` method shows how to set up and start speech recognition.  The `TTSClient` inner class has an example of handling TTS responses.  Look in the `ResultListener`/`ErrorListener` classes for code handling recognition responses and errors.
+
+## Reusable TTS code
 
 ## Reusable TTS code
 
