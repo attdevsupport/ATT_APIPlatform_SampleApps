@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
@@ -20,8 +20,8 @@
  * <a href="https://developer.att.com/docs/apis/rest/1/OAuth%202.0%20Authentication%20Management">OAuth</a>.
  * </p>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @since 2.2
+ * @author pk9069
+ * @since 1.0
  * @see com.att.api.oauth.OAuthService
  * @see com.att.api.oauth.OAuthToken
  */

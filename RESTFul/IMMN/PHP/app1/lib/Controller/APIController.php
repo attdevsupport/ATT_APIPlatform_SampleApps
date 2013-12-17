@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Controller;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /**
  * Controller Library
@@ -16,7 +18,7 @@
  * 
  * @category  MVC 
  * @package   Controller 
- * @author    Pavel Kazakov <pk9069@att.com>
+ * @author    pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
@@ -24,7 +26,13 @@
 
 require_once __DIR__ . '../../OAuth/OAuthTokenService.php';
 require_once __DIR__ . '../../OAuth/OAuthCodeRequest.php';
+require_once __DIR__ . '../../Restful/RestfulEnvironment.php';
 require_once __DIR__ . '../../Srvc/Service.php';
+
+use Att\Api\OAuth\OAuthToken;
+use Att\Api\OAuth\OAuthTokenService;
+use Att\Api\OAuth\OAuthCodeRequest;
+use Att\Api\Restful\RestfulEnvironment;
 
 /**
  * Base class used to implement an MVC controller. 
@@ -35,7 +43,7 @@ require_once __DIR__ . '../../Srvc/Service.php';
  *
  * @category MVC 
  * @package  Controller 
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     http://developer.att.com
@@ -92,7 +100,7 @@ abstract class APIController
     /** 
      * Gets an access token that will be cached using a session. 
      *
-     * This method works first trying to load the token from the user's 
+     * This method works by first trying to load the token from the user's 
      * session, and, if a saved OAuth token isn't found, this method will send 
      * an API request. The OAuth token will then be saved in session for future
      * use.
@@ -183,7 +191,7 @@ abstract class APIController
     }
 
     /**
-     * Unsets the session for the specified names.
+     * Unsets the session values for the specified names.
      *
      * @param array $vnames list of variable names
      *
@@ -213,17 +221,16 @@ abstract class APIController
         $this->errors = array();
 
         // set any RESTFul environmental settings
-        $proxyHost = isset($proxy_host) ? $proxy_host : null;
-        $proxyPort = isset($proxy_port) ? $proxy_port : -1;
-        $trustAllCerts = isset($accept_all_certs) ? $accept_all_certs : false;
-        if ($proxyHost != null)
-            RESTFulRequest::setDefaultProxy($proxyHost, $proxyPort);
-        if ($trustAllCerts)
-            RESTFulRequest::setDefaultAcceptAllCerts($trustAllCerts);
+        if (isset($proxy_host) && isset($proxy_port))
+            RestfulEnvironment::setProxy($proxy_host, $proxy_port);
+
+        if (isset($accept_all_certs))
+            RestfulEnvironment::setAcceptAllCerts($accept_all_certs);
     }
 
     /**
      * Handles the http request sent to this server, such as a form submission.
+     * 
      * If the http request has a form submission or other case where an API 
      * call is made, results and errors of this call MUST be stored in:
      * <code>
@@ -258,5 +265,6 @@ abstract class APIController
     {
         return $this->errors;
     }
+
 }
 ?>

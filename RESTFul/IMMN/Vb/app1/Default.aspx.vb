@@ -5,7 +5,6 @@
 ' For more information contact developer.support@att.com
 ' </copyright>
 
-#Region "References"
 
 Imports System.Collections
 Imports System.Collections.Generic
@@ -18,11 +17,8 @@ Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Web.Script.Serialization
 
-
-#End Region
 Partial Public Class Mobo_App1
     Inherits System.Web.UI.Page
-#Region "Instance variables"
 
     ''' <summary>
     ''' API Address
@@ -56,38 +52,76 @@ Partial Public Class Mobo_App1
     Private refreshTokenExpiresIn As Integer
 
     Private AttachmentFilesDir As String = String.Empty
-
-#End Region
     Public attachments As List(Of String) = Nothing
     Public sendMessageSuccessResponse As String = String.Empty
     Public sendMessageErrorResponse As String = String.Empty
     Public getHeadersErrorResponse As String = String.Empty
     Public getHeadersSuccessResponse As String = String.Empty
     Public getMessageSuccessResponse As String = String.Empty
+    Public getMessageContentSuccessResponse As String = String.Empty
+    Public getMessageContentErrorResponse As String = String.Empty
     Public getMessageErrorResponse As String = String.Empty
+    Public filters As String = String.Empty
+    Public createMessageIndexSuccessResponse As String = String.Empty
+    Public createMessageIndexErrorResponse As String = String.Empty
+    Public csGetMessageListDetailsErrorResponse As String = String.Empty
+    Public csGetMessageListDetailsSuccessResponse As String = String.Empty
+    Public getNotificationConnectionDetailsSuccessResponse As String = String.Empty
+    Public getNotificationConnectionDetailsErrorResponse As String = String.Empty
+    Public getNotificationConnectionDetailsResponse As New csNotificationConnectionDetails()
+    Public csGetMessageListDetailsResponse As New MessageList()
+    Public csDeltaResponse As New DeltaResponse()
+    Public getMessageContentResponse As New csMessageContentDetails()
+    Public getMessageDetailsResponse As New Message()
+    Public getMessageIndexInfoResponse As New MessageIndexInfo()
+    Public deleteMessageSuccessResponse As String = String.Empty
+    Public deleteMessageErrorResponse As String = String.Empty
+    Public updateMessageSuccessResponse As String = String.Empty
+    Public updateMessageErrorResponse As String = String.Empty
+    Public messageIndexSuccessResponse As String = String.Empty
+    Public messageIndexErrorResponse As String = String.Empty
+    Public deltaSuccessResponse As String = String.Empty
+    Public deltaErrorResponse As String = String.Empty
+    Public getMessageListSuccessResponse As String = String.Empty
+    Public getMessageListErrorResponse As String = String.Empty
     Public content_result As String = String.Empty
     Public receivedBytes As Byte() = Nothing
     Public getContentResponseObject As WebResponse = Nothing
     Public imageData As String() = Nothing
-    Public messageList As MessageHeaderList
+    Public showSendMsg As String = String.Empty
+    Public showCreateMessageIndex As String = String.Empty
+    Public showGetNotificationConnectionDetails As String = String.Empty
+    Public showDeleteMessage As String = String.Empty
+    Public showUpdateMessage As String = String.Empty
+    Public showGetMessage As String = String.Empty
 
-    Protected Sub Page_Load(sender As Object, e As EventArgs)
-        ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
-
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
+        Me.BypassCertificateError()
         Me.ReadConfigFile()
 
-        If (Session("vb_rest_appState") Is "GetToken") AndAlso (Request("Code") IsNot Nothing) Then
+        If (Session("cs_rest_appState") = "GetToken") AndAlso (Request("Code") IsNot Nothing) Then
             Me.authCode = Request("code").ToString()
             If Me.GetAccessToken(AccessTokenType.Authorization_Code) = True Then
                 RestoreRequestSessionVariables()
                 ResetRequestSessionVariables()
-                If String.Compare(Session("vb_rest_ServiceRequest").ToString(), "sendmessasge") = 0 Then
+                If String.Compare(Session("cs_rest_ServiceRequest").ToString(), "sendmessasge") = 0 Then
                     Me.SendMessageRequest()
-                ElseIf String.Compare(Session("vb_rest_ServiceRequest").ToString(), "getmessageheader") = 0 Then
-                    Me.GetMsgHeaders()
-                ElseIf String.Compare(Session("vb_rest_ServiceRequest").ToString(), "getmessagecontent") = 0 Then
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getmessagecontent") = 0 Then
                     Me.GetMessageContentByIDnPartNumber()
-
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "createmessageindex") = 0 Then
+                    Me.createMessageIndex()
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getnotificationconnectiondetails") = 0 Then
+                    Me.getNotificationConnectionDetails()
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "deletemessage") = 0 Then
+                    Me.deleteMessage()
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "deltamessage") = 0 Then
+                    Me.getDelta()
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getmessagelist") = 0 Then
+                    Me.getMessageList()
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "messageindex") = 0 Then
+                    Me.getMessageIndex()
+                ElseIf String.Compare(Session("cs_rest_ServiceRequest").ToString(), "updatemessage") = 0 Then
+                    Me.updateMessage()
                 End If
             Else
                 sendMessageErrorResponse = "Failed to get Access token"
@@ -99,16 +133,14 @@ Partial Public Class Mobo_App1
 
     End Sub
 
-#Region "Access Token functions"
-
     ''' <summary>
     ''' This function resets access token related session variable to null 
     ''' </summary>
     Private Sub ResetTokenSessionVariables()
-        Session("vb_rest_AccessToken") = Nothing
-        Session("vb_rest_AccessTokenExpirtyTime") = Nothing
-        Session("vb_rest_RefreshToken") = Nothing
-        Session("vb_rest_RefreshTokenExpiryTime") = Nothing
+        Session("cs_rest_AccessToken") = Nothing
+        Session("cs_rest_AccessTokenExpirtyTime") = Nothing
+        Session("cs_rest_RefreshToken") = Nothing
+        Session("cs_rest_RefreshTokenExpiryTime") = Nothing
     End Sub
 
     ''' <summary>
@@ -126,10 +158,24 @@ Partial Public Class Mobo_App1
     ''' </summary>
     Private Sub GetAuthCode()
         Try
-            Response.Redirect(String.Empty & Me.endPoint & "/oauth/authorize?scope=" & Me.scope & "&client_id=" & Me.apiKey & "&redirect_url=" & Me.authorizeRedirectUri)
+            Response.Redirect(Convert.ToString((Convert.ToString((Convert.ToString(String.Empty + Me.endPoint & Convert.ToString("/oauth/authorize?scope=")) & Me.scope) + "&client_id=") & Me.apiKey) + "&redirect_url=") & Me.authorizeRedirectUri)
         Catch ex As Exception
-            If Session("vb_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("vb_rest_ServiceRequest").ToString(), "sendmessasge") = 0) Then
+            If Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "sendmessasge") = 0) Then
                 sendMessageErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "createmessageindex") = 0) Then
+                createMessageIndexErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getnotificationconnectiondetails") = 0) Then
+                getNotificationConnectionDetailsErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "deletemessage") = 0) Then
+                deleteMessageErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "deltamessage") = 0) Then
+                deltaErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getmessagelist") = 0) Then
+                getMessageListErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "messageindex") = 0) Then
+                messageIndexErrorResponse = ex.Message
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "updatemessage") = 0) Then
+                updateMessageErrorResponse = ex.Message
             Else
                 getMessageErrorResponse = ex.Message
             End If
@@ -141,26 +187,26 @@ Partial Public Class Mobo_App1
     ''' </summary>
     ''' <returns>true/false depending on the session variables</returns>
     Private Function ReadTokenSessionVariables() As Boolean
-        If Session("vb_rest_AccessToken") IsNot Nothing Then
-            Me.accessToken = Session("vb_rest_AccessToken").ToString()
+        If Session("cs_rest_AccessToken") IsNot Nothing Then
+            Me.accessToken = Session("cs_rest_AccessToken").ToString()
         Else
             Me.accessToken = Nothing
         End If
 
-        If Session("vb_rest_AccessTokenExpirtyTime") IsNot Nothing Then
-            Me.accessTokenExpiryTime = Session("vb_rest_AccessTokenExpirtyTime").ToString()
+        If Session("cs_rest_AccessTokenExpirtyTime") IsNot Nothing Then
+            Me.accessTokenExpiryTime = Session("cs_rest_AccessTokenExpirtyTime").ToString()
         Else
             Me.accessTokenExpiryTime = Nothing
         End If
 
-        If Session("vb_rest_RefreshToken") IsNot Nothing Then
-            Me.refreshToken = Session("vb_rest_RefreshToken").ToString()
+        If Session("cs_rest_RefreshToken") IsNot Nothing Then
+            Me.refreshToken = Session("cs_rest_RefreshToken").ToString()
         Else
             Me.refreshToken = Nothing
         End If
 
-        If Session("vb_rest_RefreshTokenExpiryTime") IsNot Nothing Then
-            Me.refreshTokenExpiryTime = Session("vb_rest_RefreshTokenExpiryTime").ToString()
+        If Session("cs_rest_RefreshTokenExpiryTime") IsNot Nothing Then
+            Me.refreshTokenExpiryTime = Session("cs_rest_RefreshTokenExpiryTime").ToString()
         Else
             Me.refreshTokenExpiryTime = Nothing
         End If
@@ -179,7 +225,7 @@ Partial Public Class Mobo_App1
     ''' otherwise, returns INVALID_ACCESS_TOKEN if refresh token expired or not able to read session variables
     ''' return REFRESH_TOKEN, if access token in expired and refresh token is valid</returns>
     Private Function IsTokenValid() As String
-        If Session("vb_rest_AccessToken") Is Nothing Then
+        If Session("cs_rest_AccessToken") Is Nothing Then
             Return "INVALID_ACCESS_TOKEN"
         End If
 
@@ -205,18 +251,18 @@ Partial Public Class Mobo_App1
     ''' <param name="type">If type value is 0, access token is fetch for authorization code flow
     ''' If type value is 2, access token is fetch for authorization code floww based on the exisiting refresh token</param>
     ''' <returns>true/false; true if success, else false</returns>
-    Private Function GetAccessToken(type As AccessTokenType) As Boolean
+    Private Function GetAccessToken(ByVal type As AccessTokenType) As Boolean
         Dim postStream As Stream = Nothing
         Try
             Dim currentServerTime As DateTime = DateTime.UtcNow.ToLocalTime()
-            Dim accessTokenRequest As WebRequest = System.Net.HttpWebRequest.Create(String.Empty & Me.endPoint & "/oauth/token")
+            Dim accessTokenRequest As WebRequest = System.Net.HttpWebRequest.Create(String.Empty + Me.endPoint & Convert.ToString("/oauth/token"))
             accessTokenRequest.Method = "POST"
             Dim oauthParameters As String = String.Empty
 
             If type = AccessTokenType.Authorization_Code Then
-                oauthParameters = "client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&code=" & Me.authCode & "&grant_type=authorization_code&scope=" & Me.scope
+                oauthParameters = Convert.ToString((Convert.ToString((Convert.ToString((Convert.ToString("client_id=") & Me.apiKey) + "&client_secret=") & Me.secretKey) + "&code=") & Me.authCode) + "&grant_type=authorization_code&scope=") & Me.scope
             Else
-                oauthParameters = "grant_type=refresh_token&client_id=" & Me.apiKey & "&client_secret=" & Me.secretKey & "&refresh_token=" & Me.refreshToken
+                oauthParameters = Convert.ToString((Convert.ToString((Convert.ToString("grant_type=refresh_token&client_id=") & Me.apiKey) + "&client_secret=") & Me.secretKey) + "&refresh_token=") & Me.refreshToken
             End If
 
             accessTokenRequest.ContentType = "application/x-www-form-urlencoded"
@@ -238,28 +284,34 @@ Partial Public Class Mobo_App1
 
                     Dim refreshExpiry As DateTime = currentServerTime.AddHours(Me.refreshTokenExpiresIn)
 
-                    Session("vb_rest_AccessTokenExpirtyTime") = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in))
+                    Session("cs_rest_AccessTokenExpirtyTime") = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in))
 
                     If deserializedJsonObj.expires_in.Equals("0") Then
                         Dim defaultAccessTokenExpiresIn As Integer = 100
                         ' In Years
-                        Session("vb_rest_AccessTokenExpirtyTime") = currentServerTime.AddYears(defaultAccessTokenExpiresIn)
+                        Session("cs_rest_AccessTokenExpirtyTime") = currentServerTime.AddYears(defaultAccessTokenExpiresIn)
                     End If
 
-                    Me.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() & " " & refreshExpiry.ToLongTimeString()
+                    Me.refreshTokenExpiryTime = refreshExpiry.ToLongDateString() + " " + refreshExpiry.ToLongTimeString()
 
-                    Session("vb_rest_AccessToken") = Me.accessToken
+                    Session("cs_rest_AccessToken") = Me.accessToken
 
-                    Me.accessTokenExpiryTime = Session("vb_rest_AccessTokenExpirtyTime").ToString()
-                    Session("vb_rest_RefreshToken") = Me.refreshToken
-                    Session("vb_rest_RefreshTokenExpiryTime") = Me.refreshTokenExpiryTime.ToString()
-                    Session("vb_rest_appState") = "TokenReceived"
+                    Me.accessTokenExpiryTime = Session("cs_rest_AccessTokenExpirtyTime").ToString()
+                    Session("cs_rest_RefreshToken") = Me.refreshToken
+                    Session("cs_rest_RefreshTokenExpiryTime") = Me.refreshTokenExpiryTime.ToString()
+                    Session("cs_rest_appState") = "TokenReceived"
                     accessTokenResponseStream.Close()
                     Return True
                 Else
                     Dim errorMessage As String = "Auth server returned null access token"
-                    If Session("vb_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("vb_rest_ServiceRequest").ToString(), "sendmessasge") = 0) Then
+                    If Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "sendmessasge") = 0) Then
                         sendMessageErrorResponse = errorMessage
+                    ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "createmessageindex") = 0) Then
+                        createMessageIndexErrorResponse = errorMessage
+                    ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getnotificationconnectiondetails") = 0) Then
+                        getNotificationConnectionDetailsErrorResponse = errorMessage
+                    ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "deletemessage") = 0) Then
+                        deleteMessageErrorResponse = errorMessage
                     Else
                         getMessageErrorResponse = errorMessage
                     End If
@@ -268,10 +320,14 @@ Partial Public Class Mobo_App1
             End Using
         Catch ex As Exception
             Dim errorMessage As String = ex.Message
-            If Session("vb_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("vb_rest_ServiceRequest").ToString(), "sendmessasge") = 0) Then
+            If Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "sendmessasge") = 0) Then
                 sendMessageErrorResponse = errorMessage
-            Else
-                getMessageErrorResponse = errorMessage
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "createmessageindex") = 0) Then
+                createMessageIndexErrorResponse = errorMessage
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "getnotificationconnectiondetails") = 0) Then
+                getNotificationConnectionDetailsErrorResponse = errorMessage
+            ElseIf Session("cs_rest_ServiceRequest") IsNot Nothing AndAlso (String.Compare(Session("cs_rest_ServiceRequest").ToString(), "deletemessage") = 0) Then
+                deleteMessageErrorResponse = errorMessage
             End If
         Finally
             If postStream IsNot Nothing Then
@@ -282,7 +338,6 @@ Partial Public Class Mobo_App1
         Return False
     End Function
 
-#End Region
     ''' <summary>
     ''' Read parameters from configuraton file
     ''' </summary>
@@ -351,38 +406,38 @@ Partial Public Class Mobo_App1
     ''' </summary>
     ''' <param name="extension">file extension</param>
     ''' <returns>string, content type</returns>
-    Private Function GetContentTypeFromExtension(extension As String) As String
-        Dim extensionToContentType As New Dictionary(Of String, String)() From { _
-         {".jpg", "image/jpeg"}, _
-         {".bmp", "image/bmp"}, _
-         {".mp3", "audio/mp3"}, _
-         {".m4a", "audio/m4a"}, _
-         {".gif", "image/gif"}, _
-         {".3gp", "video/3gpp"}, _
-         {".3g2", "video/3gpp2"}, _
-         {".wmv", "video/x-ms-wmv"}, _
-         {".m4v", "video/x-m4v"}, _
-         {".amr", "audio/amr"}, _
-         {".mp4", "video/mp4"}, _
-         {".avi", "video/x-msvideo"}, _
-         {".mov", "video/quicktime"}, _
-         {".mpeg", "video/mpeg"}, _
-         {".wav", "audio/x-wav"}, _
-         {".aiff", "audio/x-aiff"}, _
-         {".aifc", "audio/x-aifc"}, _
-         {".midi", ".midi"}, _
-         {".au", "audio/basic"}, _
-         {".xwd", "image/x-xwindowdump"}, _
-         {".png", "image/png"}, _
-         {".tiff", "image/tiff"}, _
-         {".ief", "image/ief"}, _
-         {".txt", "text/plain"}, _
-         {".html", "text/html"}, _
-         {".vcf", "text/x-vcard"}, _
-         {".vcs", "text/x-vcalendar"}, _
-         {".mid", "application/x-midi"}, _
-         {".imy", "audio/iMelody"} _
-        }
+    Private Function GetContentTypeFromExtension(ByVal extension As String) As String
+		Dim extensionToContentType As New Dictionary(Of String, String)() From { _
+			{".jpg", "image/jpeg"}, _
+			{".bmp", "image/bmp"}, _
+			{".mp3", "audio/mp3"}, _
+			{".m4a", "audio/m4a"}, _
+			{".gif", "image/gif"}, _
+			{".3gp", "video/3gpp"}, _
+			{".3g2", "video/3gpp2"}, _
+			{".wmv", "video/x-ms-wmv"}, _
+			{".m4v", "video/x-m4v"}, _
+			{".amr", "audio/amr"}, _
+			{".mp4", "video/mp4"}, _
+			{".avi", "video/x-msvideo"}, _
+			{".mov", "video/quicktime"}, _
+			{".mpeg", "video/mpeg"}, _
+			{".wav", "audio/x-wav"}, _
+			{".aiff", "audio/x-aiff"}, _
+			{".aifc", "audio/x-aifc"}, _
+			{".midi", ".midi"}, _
+			{".au", "audio/basic"}, _
+			{".xwd", "image/x-xwindowdump"}, _
+			{".png", "image/png"}, _
+			{".tiff", "image/tiff"}, _
+			{".ief", "image/ief"}, _
+			{".txt", "text/plain"}, _
+			{".html", "text/html"}, _
+			{".vcf", "text/x-vcard"}, _
+			{".vcs", "text/x-vcalendar"}, _
+			{".mid", "application/x-midi"}, _
+			{".imy", "audio/iMelody"} _
+		}
         If extensionToContentType.ContainsKey(extension) Then
             Return extensionToContentType(extension)
         Else
@@ -394,21 +449,21 @@ Partial Public Class Mobo_App1
     ''' Sends message to the list of addresses provided.
     ''' </summary>
     ''' <param name="attachments">List of attachments</param>
-    Private Sub SendMessageRequest(accToken As String, edPoint As String, subject As String, message As String, groupflag As String, attachments As ArrayList)
+    Private Sub SendMessageRequest(ByVal accToken As String, ByVal edPoint As String, ByVal subject As String, ByVal message As String, ByVal groupflag As String, ByVal attachments As ArrayList)
         Dim postStream As Stream = Nothing
         Try
-            Dim boundaryToSend As String = "----------------------------" & DateTime.Now.Ticks.ToString("x")
+            Dim boundaryToSend As String = "----------------------------" + DateTime.Now.Ticks.ToString("x")
 
-            Dim msgRequestObject As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & edPoint & "/rest/1/MyMessages"), HttpWebRequest)
+            Dim msgRequestObject As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & edPoint & "/myMessages/v2/messages"), HttpWebRequest)
             msgRequestObject.Headers.Add("Authorization", "Bearer " & accToken)
             msgRequestObject.Method = "POST"
-            Dim contentType As String = "multipart/form-data; type=""application/x-www-form-urlencoded""; start=""<startpart>""; boundary=""" & boundaryToSend & """" & vbCr & vbLf
+            Dim contentType As String = "multipart/related; type=""application/x-www-form-urlencoded""; start=""startpart""; boundary=""" & boundaryToSend & """" & vbCr & vbLf
             msgRequestObject.ContentType = contentType
-            Dim mmsParameters As String = Me.phoneNumbersParameter & "Subject=" & Server.UrlEncode(subject) & "&Text=" & Server.UrlEncode(message) & "&Group=" & groupflag
-
+            'msgRequestObject.Accept = "application/xml";
+            Dim mmsParameters As String = Convert.ToString(Me.phoneNumbersParameter) & "subject=" & Server.UrlEncode(subject) & "&text=" & Server.UrlEncode(message) & "&isGroup=" & groupflag
             Dim dataToSend As String = String.Empty
             dataToSend += "--" & boundaryToSend & vbCr & vbLf
-            dataToSend += "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" & vbCr & vbLf & "Content-Transfer-Encoding: 8bit" & vbCr & vbLf & "Content-Disposition: form-data; name=""root-fields""" & vbCr & vbLf & "Content-ID: <startpart>" & vbCr & vbLf & vbCr & vbLf & mmsParameters & vbCr & vbLf
+            dataToSend += "Content-Disposition: form-data; name=""root-fields""" & vbCr & vbLf & "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" & vbCr & vbLf & "Content-Transfer-Encoding: 8bit" & vbCr & vbLf & "Content-ID: startpart" & vbCr & vbLf & vbCr & vbLf & mmsParameters & vbCr & vbLf
 
             Dim encoding As New UTF8Encoding()
             If (attachments Is Nothing) OrElse (attachments.Count = 0) Then
@@ -430,7 +485,7 @@ Partial Public Class Mobo_App1
                         sr.Close()
                     End Using
                 Else
-                    dataToSend += "--" & boundaryToSend & "--" & vbCr & vbLf
+                    dataToSend += (Convert.ToString("--") & boundaryToSend) + "--" & vbCr & vbLf
                     Dim bytesToSend As Byte() = encoding.GetBytes(dataToSend)
 
                     Dim sizeToSend As Integer = bytesToSend.Length
@@ -467,15 +522,18 @@ Partial Public Class Mobo_App1
                     imageBinaryReader.Close()
                     imageFileStream.Close()
                     If count = 0 Then
-                        dataToSend += vbCr & vbLf & "--" & boundaryToSend & vbCr & vbLf
+                        dataToSend += (Convert.ToString(vbCr & vbLf & "--") & boundaryToSend) + vbCr & vbLf
                     Else
-                        dataToSend = vbCr & vbLf & "--" & boundaryToSend & vbCr & vbLf
+                        dataToSend = (Convert.ToString(vbCr & vbLf & "--") & boundaryToSend) + vbCr & vbLf
                     End If
 
-                    dataToSend += "Content-Disposition: form-data; name=""file" & count & """; filename=""" & mmsFileName & """" & vbCr & vbLf
-                    dataToSend += "Content-Type:" & attachmentContentType & vbCr & vbLf
-                    dataToSend += "Content-ID:<" & mmsFileName & ">" & vbCr & vbLf
-                    dataToSend += "Content-Transfer-Encoding:binary" & vbCr & vbLf & vbCr & vbLf
+                    dataToSend += "Content-Disposition: form-data; name=""" & mmsFileName & """; filename=" & mmsFileName & vbCr & vbLf
+                    dataToSend += "Content-Type: " & attachmentContentType & "; charset=UTF-8" & vbCr & vbLf
+                    dataToSend += "Content-ID:" & mmsFileName & vbCr & vbLf
+                    dataToSend += "Content-Transfer-Encoding: binary " & vbCr & vbLf
+                    dataToSend += "Content-Location: " & mmsFileName & vbCr & vbLf & vbCr & vbLf
+
+
                     Dim dataToSendByte As Byte() = encoding.GetBytes(dataToSend)
                     Dim dataToSendSize As Integer = dataToSendByte.Length + image.Length
                     Dim tempMemoryStream = New MemoryStream(New Byte(dataToSendSize - 1) {}, 0, dataToSendSize, True, True)
@@ -493,7 +551,7 @@ Partial Public Class Mobo_App1
                     count += 1
                 Next
 
-                Dim byteLastBoundary As Byte() = encoding.GetBytes(vbCr & vbLf & "--" & boundaryToSend & "--" & vbCr & vbLf)
+                Dim byteLastBoundary As Byte() = encoding.GetBytes((Convert.ToString(vbCr & vbLf & "--") & boundaryToSend) + "--" & vbCr & vbLf)
                 Dim totalDataSize As Integer = totalDataBytes.Length + byteLastBoundary.Length
                 Dim totalMemoryStream = New MemoryStream(New Byte(totalDataSize - 1) {}, 0, totalDataSize, True, True)
                 totalMemoryStream.Write(totalDataBytes, 0, totalDataBytes.Length)
@@ -536,7 +594,7 @@ Partial Public Class Mobo_App1
     ''' <param name="firstByteArray">First byte array</param>
     ''' <param name="secondByteArray">second byte array</param>
     ''' <returns>The memorystream"/> summed memory stream</returns>
-    Private Function JoinTwoByteArrays(firstByteArray As Byte(), secondByteArray As Byte()) As MemoryStream
+    Private Function JoinTwoByteArrays(ByVal firstByteArray As Byte(), ByVal secondByteArray As Byte()) As MemoryStream
         Dim newSize As Integer = firstByteArray.Length + secondByteArray.Length
         Dim totalMemoryStream = New MemoryStream(New Byte(newSize - 1) {}, 0, newSize, True, True)
         totalMemoryStream.Write(firstByteArray, 0, firstByteArray.Length)
@@ -544,19 +602,149 @@ Partial Public Class Mobo_App1
         Return totalMemoryStream
     End Function
 
-    Protected Sub getMessageHeaders_Click(sender As Object, e As EventArgs)
+    ''' <summary>
+    ''' Gets the message content for MMS messages based on Message ID and Part Number
+    ''' </summary>
+    Private Sub GetMessageContentByIDnPartNumber(ByVal accTok As String, ByVal endP As String, ByVal messId As String, ByVal partNum As String)
+        Try
+            Dim mimRequestObject1 As HttpWebRequest = DirectCast(WebRequest.Create(Convert.ToString((Convert.ToString(String.Empty + endP & Convert.ToString("/myMessages/v2/messages/")) & messId) + "/parts/") & partNum), HttpWebRequest)
+            mimRequestObject1.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            mimRequestObject1.Method = "GET"
+            mimRequestObject1.KeepAlive = True
+            Dim offset As Integer = 0
+
+            getContentResponseObject = mimRequestObject1.GetResponse()
+            Dim remaining As Integer = Convert.ToInt32(getContentResponseObject.ContentLength)
+            Using stream = getContentResponseObject.GetResponseStream()
+                receivedBytes = New Byte(getContentResponseObject.ContentLength - 1) {}
+                While remaining > 0
+                    Dim read As Integer = stream.Read(receivedBytes, offset, remaining)
+                    If read <= 0 Then
+                        getMessageContentErrorResponse = [String].Format("End of stream reached with {0} bytes left to read", remaining)
+                        Return
+                    End If
+
+                    remaining -= read
+                    offset += read
+                End While
+
+                'imageData = Regex.Split(getContentResponseObject.ContentType.ToLower(), ";");
+                'string[] ext = Regex.Split(imageData[0], "/");
+                'fetchedImage.Src = "data:" + imageData[0] + ";base64," + Convert.ToBase64String(receivedBytes, Base64FormattingOptions.None);
+
+                getMessageContentSuccessResponse = "Success"
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                getMessageContentErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                getMessageContentErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            getMessageContentErrorResponse = ex.Message
+            Return
+        End Try
+
+    End Sub
+
+    Private Sub BypassCertificateError()
+        Dim bypassSSL As String = ConfigurationManager.AppSettings("IgnoreSSL")
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3
+        If (Not String.IsNullOrEmpty(bypassSSL)) AndAlso (String.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)) Then
+            ServicePointManager.ServerCertificateValidationCallback = New RemoteCertificateValidationCallback(AddressOf CertificateValidationCallBack)
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Neglect the ssl handshake error with authentication server
+    ''' </summary>
+    Function CertificateValidationCallBack( _
+    ByVal sender As Object, _
+    ByVal certificate As X509Certificate, _
+    ByVal chain As X509Chain, _
+    ByVal sslPolicyErrors As SslPolicyErrors _
+) As Boolean
+
+        Return True
+    End Function
+
+    Protected Sub SetRequestSessionVariables()
+        Session("cs_rest_Address") = Address.Text
+        Session("cs_rest_Message") = message.Text
+        Session("cs_rest_Subject") = subject.Text
+        Session("cs_rest_Group") = groupCheckBox.Checked.ToString()
+        Session("cs_rest_Attachments") = attachment.Value
+        Session("cs_rest_GetHeadercount") = "abc"
+        Session("cs_rest_GetHeaderIndex") = "abc"
+        Session("cs_rest_GetMessageId") = ""
+        Session("cs_rest_GetMessagePart") = ""
+        If notificationMms.Checked Then
+            Session("cs_rest_GetNotificationConnectionDetailsQueue") = notificationMms.Value
+        ElseIf notificationText.Checked Then
+            Session("cs_rest_GetNotificationConnectionDetailsQueue") = notificationText.Value
+        End If
+        Session("cs_rest_deleteMessageId") = deleteMessageId.Text
+        Session("cs_rest_updateMessageId") = updateMessageId.Text
+    End Sub
+
+    Protected Sub ResetRequestSessionVariables()
+        Session("cs_rest_Address") = Nothing
+        Session("cs_rest_Message") = Nothing
+        Session("cs_rest_Subject") = Nothing
+        Session("cs_rest_Group") = Nothing
+        Session("cs_rest_Attachments") = Nothing
+        Session("cs_rest_GetHeadercount") = Nothing
+        Session("cs_rest_GetHeaderIndex") = Nothing
+        Session("cs_rest_GetMessageId") = Nothing
+        Session("cs_rest_GetMessagePart") = Nothing
+        Session("cs_rest_GetNotificationConnectionDetailsQueue") = Nothing
+        Session("cs_rest_deleteMessageId") = Nothing
+        Session("cs_rest_updateMessageId") = Nothing
+    End Sub
+
+    Protected Sub RestoreRequestSessionVariables()
+        Address.Text = Session("cs_rest_Address").ToString()
+        message.Text = Session("cs_rest_Message").ToString()
+
+
+        subject.Text = Session("cs_rest_Subject").ToString()
+        groupCheckBox.Checked = Convert.ToBoolean(Session("cs_rest_Group").ToString())
+        attachment.Value = Session("cs_rest_Attachments").ToString()
+        'headerCountTextBox.Value = Session["cs_rest_GetHeadercount"].ToString();
+        'indexCursorTextBox.Value = Session["cs_rest_GetHeaderIndex"].ToString();
+        MessageId.Text = Session("cs_rest_GetMessageId").ToString()
+        'PartNumber.Value = Session["cs_rest_GetMessagePart"].ToString();
+        If String.Compare(Session("cs_rest_GetNotificationConnectionDetailsQueue").ToString(), notificationMms.Value) = 0 Then
+            notificationMms.Checked = True
+        ElseIf String.Compare(Session("cs_rest_GetNotificationConnectionDetailsQueue").ToString(), notificationText.Value) = 0 Then
+            notificationText.Checked = True
+        End If
+        deleteMessageId.Text = Session("cs_rest_deleteMessageId").ToString()
+        updateMessageId.Text = Session("cs_rest_updateMessageId").ToString()
+    End Sub
+
+
+
+    Protected Sub updateMessage_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showUpdateMessage = "true"
         Me.ReadTokenSessionVariables()
 
         Dim tokentResult As String = Me.IsTokenValid()
 
         If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
             SetRequestSessionVariables()
-            Session("vb_rest_ServiceRequest") = "getmessageheader"
-            Session("vb_rest_appState") = "GetToken"
+            Session("cs_rest_ServiceRequest") = "updatemessage"
+            Session("cs_rest_appState") = "GetToken"
             Me.GetAuthCode()
         ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
             If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
-                sendMessageErrorResponse = "Failed to get Access token"
+                updateMessageErrorResponse = "Failed to get Access token"
                 Me.ResetTokenSessionVariables()
                 Me.ResetTokenVariables()
                 Return
@@ -566,90 +754,311 @@ Partial Public Class Mobo_App1
         If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
             Return
         End If
-        GetMsgHeaders()
+
+        Me.updateMessage(Me.accessToken, Me.endPoint, updateMessageId.Text, read.Checked)
     End Sub
 
-    Protected Sub GetMsgHeaders()
-        Me.GetMessageHeads(Me.accessToken, Me.endPoint, headerCountTextBox.Value, indexCursorTextBox.Value)
+    Private Sub updateMessage()
+        showUpdateMessage = "show"
+        Me.updateMessage(Me.accessToken, Me.endPoint, updateMessageId.Text, read.Checked)
     End Sub
-    Private Sub GetMessageHeads(acctoken As String, epoint As String, hCount As String, iCursor As String)
+
+    ''' <summary>
+    ''' send the create message index request to api platform.
+    ''' </summary>
+    Private Sub updateMessage(ByVal accTok As String, ByVal endP As String, ByVal updateMessages As String, ByVal read As Boolean)
         Try
-            Dim mimRequestObject1 As HttpWebRequest
+            Dim contextURL As String = String.Empty
+            Dim messagesJSON As String = String.Empty
+            Dim dataStream As Stream
+            Dim message As Message
+            Dim messageList As MessagesList
+            Dim messages As New List(Of Message)()
+            Dim serializeJsonObject As JavaScriptSerializer
+            contextURL = String.Empty + endP & Convert.ToString("/myMessages/v2/messages")
+            Dim messageIds As String() = updateMessages.Split(","c)
+            For Each messageId As [String] In messageIds
+                message = New Message()
+                message.isUnread = Convert.ToBoolean(read)
+                message.messageId = messageId
+                messages.Add(message)
+            Next
+            messageList = New MessagesList()
+            messageList.messages = messages
+            serializeJsonObject = New JavaScriptSerializer()
+            messagesJSON = serializeJsonObject.Serialize(messageList)
+            Dim encoding As New UTF8Encoding()
+            Dim msgBytes As Byte() = encoding.GetBytes(messagesJSON)
+            Dim updateMessageWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(contextURL), HttpWebRequest)
+            updateMessageWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            updateMessageWebRequest.Method = "PUT"
+            updateMessageWebRequest.KeepAlive = True
+            updateMessageWebRequest.ContentType = "application/json"
+            dataStream = updateMessageWebRequest.GetRequestStream()
+            dataStream.Write(msgBytes, 0, msgBytes.Length)
+            dataStream.Close()
 
-            Dim getHeadersURL As String = String.Empty & endPoint & "/rest/1/MyMessages?HeaderCount=" & hCount
-            If Not String.IsNullOrEmpty(iCursor) Then
-                getHeadersURL += "&IndexCursor=" & iCursor
-            End If
-            mimRequestObject1 = DirectCast(WebRequest.Create(getHeadersURL), HttpWebRequest)
-            mimRequestObject1.Headers.Add("Authorization", "Bearer " & accessToken)
-            mimRequestObject1.Method = "GET"
-            mimRequestObject1.KeepAlive = True
-
-            Dim mimResponseObject1 As WebResponse = mimRequestObject1.GetResponse()
-            Using sr As New StreamReader(mimResponseObject1.GetResponseStream())
-                Dim mimResponseData As String = sr.ReadToEnd()
-
-                Dim deserializeJsonObject As New JavaScriptSerializer()
-                Dim deserializedJsonObj As MIMResponse = DirectCast(deserializeJsonObject.Deserialize(mimResponseData, GetType(MIMResponse)), MIMResponse)
-
-                If deserializedJsonObj IsNot Nothing Then
-                    getHeadersSuccessResponse = "Success"
-                    messageList = deserializedJsonObj.MessageHeadersList
-                Else
-                    getHeadersErrorResponse = "No response from server"
-                End If
-
-                sr.Close()
+            Dim deleteMessageWebResponse As WebResponse = updateMessageWebRequest.GetResponse()
+            Using stream = deleteMessageWebResponse.GetResponseStream()
+                updateMessageSuccessResponse = "Success"
             End Using
         Catch we As WebException
             Dim errorResponse As String = String.Empty
-
             Try
                 Using sr2 As New StreamReader(we.Response.GetResponseStream())
                     errorResponse = sr2.ReadToEnd()
                     sr2.Close()
                 End Using
-                getHeadersErrorResponse = errorResponse
+                updateMessageErrorResponse = Convert.ToString((updateMessages & Convert.ToString("@")) + read + "@") & errorResponse
             Catch
                 errorResponse = "Unable to get response"
-                getHeadersErrorResponse = errorResponse
+                updateMessageErrorResponse = errorResponse
             End Try
         Catch ex As Exception
-            getHeadersErrorResponse = ex.Message
+            updateMessageErrorResponse = read + "@" + ex.Message
             Return
         End Try
+
     End Sub
 
 
+    Protected Sub deleteMessage_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showDeleteMessage = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "deletemessage"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                deleteMessageErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Me.deleteMessage(Me.accessToken, Me.endPoint, deleteMessageId.Text)
+    End Sub
+
+    Private Sub deleteMessage()
+        showDeleteMessage = "show"
+        Me.deleteMessage(Me.accessToken, Me.endPoint, deleteMessageId.Text)
+    End Sub
+
     ''' <summary>
-    ''' Gets the message content for MMS messages based on Message ID and Part Number
+    ''' send the create message index request to api platform.
     ''' </summary>
-    Private Sub GetMessageContentByIDnPartNumber(accTok As String, endP As String, messId As String, partNum As String)
+    Private Sub deleteMessage(ByVal accTok As String, ByVal endP As String, ByVal deleteMessages As String)
         Try
-            Dim mimRequestObject1 As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty & endP & "/rest/1/MyMessages/" & messId & "/" & partNum), HttpWebRequest)
-            mimRequestObject1.Headers.Add("Authorization", "Bearer " & accTok)
-            mimRequestObject1.Method = "GET"
-            mimRequestObject1.KeepAlive = True
-            Dim offset As Integer = 0
-            getContentResponseObject = mimRequestObject1.GetResponse()
-            Dim remaining As Integer = Convert.ToInt32(getContentResponseObject.ContentLength)
-            Using stream = getContentResponseObject.GetResponseStream()
-                receivedBytes = New Byte(getContentResponseObject.ContentLength - 1) {}
-                While remaining > 0
-                    Dim read As Integer = stream.Read(receivedBytes, offset, remaining)
-                    If read <= 0 Then
-                        getMessageErrorResponse = [String].Format("End of stream reached with {0} bytes left to read", remaining)
-                        Return
-                    End If
+            Dim contextURL As String = String.Empty
+            If Not deleteMessages.Contains(",") Then
+                contextURL = Convert.ToString(String.Empty + endP & Convert.ToString("/myMessages/v2/messages/")) & deleteMessages
+            Else
+                contextURL = (String.Empty + endP & Convert.ToString("/myMessages/v2/messages?messageIds=")) + System.Web.HttpUtility.UrlEncode(deleteMessages)
+            End If
+            Dim deleteMessageWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(contextURL), HttpWebRequest)
+            deleteMessageWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            deleteMessageWebRequest.Method = "DELETE"
+            deleteMessageWebRequest.KeepAlive = True
+            Dim deleteMessageWebResponse As WebResponse = deleteMessageWebRequest.GetResponse()
+            Using stream = deleteMessageWebResponse.GetResponseStream()
+                deleteMessageSuccessResponse = "Success"
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                deleteMessageErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                deleteMessageErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            deleteMessageErrorResponse = ex.Message
+            Return
+        End Try
 
-                    remaining -= read
-                    offset += read
-                End While
+    End Sub
 
-                imageData = Regex.Split(getContentResponseObject.ContentType.ToLower(), ";")
-                Dim ext As String() = Regex.Split(imageData(0), "/")
-                fetchedImage.Src = "data:" & imageData(0) & ";base64," & Convert.ToBase64String(receivedBytes, Base64FormattingOptions.None)
-                getMessageSuccessResponse = "Success"
+
+    Protected Sub getMessageList_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showGetMessage = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "getmessagelist"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                deleteMessageErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Me.filters = ""
+        If CheckBox1.Checked = True Then
+            If Me.filters.CompareTo(String.Empty) = 0 Then
+                Me.filters = "isFavorite=true&"
+            Else
+                Me.filters = Me.filters & Convert.ToString("&isFavorite=true") + "&"
+            End If
+        End If
+        If CheckBox2.Checked = True Then
+            If Me.filters.CompareTo(String.Empty) = 0 Then
+                Me.filters = "isUnread=true&"
+            Else
+                Me.filters = (Me.filters & Convert.ToString("&isUnread=true")) + "&"
+            End If
+        End If
+        If CheckBox3.Checked = True Then
+            If Me.filters.CompareTo(String.Empty) = 0 Then
+                Me.filters = "isIncoming=true" + "&"
+            Else
+                Me.filters = (Me.filters & Convert.ToString("&isIncoming=true")) + "&"
+            End If
+        End If
+        If Not String.IsNullOrEmpty(FilterKeyword.Text) Then
+            If Me.filters.CompareTo(String.Empty) = 0 Then
+                Me.filters = "keyword=" + FilterKeyword.Text.ToString() + "&"
+            Else
+                Me.filters = (Me.filters & Convert.ToString("&keyword=")) + FilterKeyword.Text.ToString() + "&"
+            End If
+        End If
+        Me.getMessageList(Me.accessToken, Me.endPoint, Me.filters)
+    End Sub
+
+    Private Sub getMessageList()
+        showDeleteMessage = "show"
+        Me.getMessageList(Me.accessToken, Me.endPoint, Me.filters)
+    End Sub
+
+    ''' <summary>
+    ''' send the create message index request to api platform.
+    ''' </summary>
+    Private Sub getMessageList(ByVal accTok As String, ByVal endP As String, ByVal filters As String)
+        Try
+            Dim contextURL As String = String.Empty
+            contextURL = (Convert.ToString(String.Empty + endP & Convert.ToString("/myMessages/v2/messages?")) & filters) + "limit=5&offset=1"
+
+            Dim getMessageListWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(contextURL), HttpWebRequest)
+            getMessageListWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            getMessageListWebRequest.Method = "GET"
+            getMessageListWebRequest.KeepAlive = True
+            Dim getMessageListWebResponse As WebResponse = getMessageListWebRequest.GetResponse()
+            Using stream = getMessageListWebResponse.GetResponseStream()
+                Dim sr As New StreamReader(stream)
+                Dim csGetMessageListDetailsData As String = sr.ReadToEnd()
+
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                Dim deserializedJsonObj As csGetMessageListDetails = DirectCast(deserializeJsonObject.Deserialize(csGetMessageListDetailsData, GetType(csGetMessageListDetails)), csGetMessageListDetails)
+
+                If deserializedJsonObj IsNot Nothing Then
+                    getMessageListSuccessResponse = "Success"
+                    csGetMessageListDetailsResponse = deserializedJsonObj.messageList
+                Else
+                    getMessageListErrorResponse = "No response from server"
+                End If
+
+
+                sr.Close()
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                getMessageListErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                getMessageListErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            getMessageListErrorResponse = ex.Message
+            Return
+        End Try
+
+    End Sub
+
+    Protected Sub getMessage_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showGetMessage = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "getmessage"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                getMessageErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Me.getMessage(Me.accessToken, Me.endPoint, MessageId.Text)
+    End Sub
+
+    Private Sub getMessage()
+        showGetMessage = "show"
+        Me.getMessage(Me.accessToken, Me.endPoint, MessageId.Text)
+    End Sub
+
+    ''' <summary>
+    ''' send the create message index request to api platform.
+    ''' </summary>
+    Private Sub getMessage(ByVal accTok As String, ByVal endP As String, ByVal getMessage1 As String)
+        Try
+            Dim contextURL As String = String.Empty
+            contextURL = Convert.ToString(String.Empty + endP & Convert.ToString("/myMessages/v2/messages/")) & getMessage1
+
+            Dim getMessageWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(contextURL), HttpWebRequest)
+            getMessageWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            getMessageWebRequest.Method = "GET"
+            getMessageWebRequest.KeepAlive = True
+            getMessageWebRequest.Accept = "application/json"
+            Dim getMessageWebResponse As WebResponse = getMessageWebRequest.GetResponse()
+            Using stream As New StreamReader(getMessageWebResponse.GetResponseStream())
+                Dim getMessageData As String = stream.ReadToEnd()
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                Dim deserializedJsonObj As csGetMessageDetails = DirectCast(deserializeJsonObject.Deserialize(getMessageData, GetType(csGetMessageDetails)), csGetMessageDetails)
+
+                If deserializedJsonObj IsNot Nothing Then
+                    getMessageSuccessResponse = getMessageData & Convert.ToString(":Success")
+                    getMessageDetailsResponse = deserializedJsonObj.message
+                Else
+                    getMessageErrorResponse = "No response from server"
+                End If
+
+                stream.Close()
             End Using
         Catch we As WebException
             Dim errorResponse As String = String.Empty
@@ -670,67 +1079,325 @@ Partial Public Class Mobo_App1
 
     End Sub
 
-    ''' <summary>
-    ''' Neglect the ssl handshake error with authentication server
-    ''' </summary>
-    Function CertificateValidationCallBack( _
-    ByVal sender As Object, _
-    ByVal certificate As X509Certificate, _
-    ByVal chain As X509Chain, _
-    ByVal sslPolicyErrors As SslPolicyErrors _
-) As Boolean
-
-        Return True
-    End Function
-
-    Protected Sub SetRequestSessionVariables()
-        Session("vb_rest_Address") = Address.Value
-        Session("vb_rest_Message") = message.Value
-        Session("vb_rest_Subject") = subject.Value
-        Session("vb_rest_Group") = groupCheckBox.Checked.ToString()
-        Session("vb_rest_Attachments") = attachment.Value
-        Session("vb_rest_GetHeadercount") = headerCountTextBox.Value
-        Session("vb_rest_GetHeaderIndex") = indexCursorTextBox.Value
-        Session("vb_rest_GetMessageId") = MessageId.Value
-        Session("vb_rest_GetMessagePart") = PartNumber.Value
-    End Sub
-
-    Protected Sub ResetRequestSessionVariables()
-        Session("vb_rest_Address") = Nothing
-        Session("vb_rest_Message") = Nothing
-        Session("vb_rest_Subject") = Nothing
-        Session("vb_rest_Group") = Nothing
-        Session("vb_rest_Attachments") = Nothing
-        Session("vb_rest_GetHeadercount") = Nothing
-        Session("vb_rest_GetHeaderIndex") = Nothing
-        Session("vb_rest_GetMessageId") = Nothing
-        Session("vb_rest_GetMessagePart") = Nothing
-    End Sub
-
-    Protected Sub RestoreRequestSessionVariables()
-        Address.Value = Session("vb_rest_Address").ToString()
-        message.Value = Session("vb_rest_Message").ToString()
-
-
-        subject.Value = Session("vb_rest_Subject").ToString()
-        groupCheckBox.Checked = Convert.ToBoolean(Session("vb_rest_Group").ToString())
-        attachment.Value = Session("vb_rest_Attachments").ToString()
-        headerCountTextBox.Value = Session("vb_rest_GetHeadercount").ToString()
-        indexCursorTextBox.Value = Session("vb_rest_GetHeaderIndex").ToString()
-        MessageId.Value = Session("vb_rest_GetMessageId").ToString()
-        PartNumber.Value = Session("vb_rest_GetMessagePart").ToString()
-    End Sub
-
-
-    Protected Sub Button1_Click(sender As Object, e As EventArgs)
+    Protected Sub getDelta_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showGetMessage = "true"
         Me.ReadTokenSessionVariables()
 
         Dim tokentResult As String = Me.IsTokenValid()
 
         If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
             SetRequestSessionVariables()
-            Session("vb_rest_ServiceRequest") = "sendmessasge"
-            Session("vb_rest_appState") = "GetToken"
+            Session("cs_rest_ServiceRequest") = "deltamessage"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                deltaErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Me.getDelta(Me.accessToken, Me.endPoint, MessageIdForDelta.Text)
+    End Sub
+
+    Private Sub getDelta()
+        'showDeltaMessage = "show";
+        Me.getDelta(Me.accessToken, Me.endPoint, MessageIdForDelta.Text)
+    End Sub
+
+    ''' <summary>
+    ''' send the create message index request to api platform.
+    ''' </summary>
+    Private Sub getDelta(ByVal accTok As String, ByVal endP As String, ByVal delta As String)
+        Try
+            Dim contextURL As String = String.Empty
+            contextURL = Convert.ToString(String.Empty + endP & Convert.ToString("/myMessages/v2/delta?state=")) & delta
+            Dim deltaWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(contextURL), HttpWebRequest)
+            deltaWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            deltaWebRequest.Method = "GET"
+            deltaWebRequest.KeepAlive = True
+            Dim deltaWebResponse As WebResponse = deltaWebRequest.GetResponse()
+            Using stream = deltaWebResponse.GetResponseStream()
+                Dim sr As New StreamReader(stream)
+                Dim deltaMessageData As String = sr.ReadToEnd()
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                Dim deserializedJsonObj As csGetDeltaDetails = DirectCast(deserializeJsonObject.Deserialize(deltaMessageData, GetType(csGetDeltaDetails)), csGetDeltaDetails)
+                If deserializedJsonObj IsNot Nothing Then
+                    deltaSuccessResponse = deltaMessageData & Convert.ToString(":Success")
+                    csDeltaResponse = deserializedJsonObj.deltaResponse
+                Else
+                    deltaErrorResponse = "No response from server"
+                End If
+
+                stream.Close()
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                deltaErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                deltaErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            deltaErrorResponse = ex.Message
+            Return
+        End Try
+
+    End Sub
+
+
+    Protected Sub getMessageIndex_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showGetMessage = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "messageindex"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                messageIndexErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Me.getMessageIndex(Me.accessToken, Me.endPoint)
+    End Sub
+
+    Private Sub getMessageIndex()
+        'showDeltaMessage = "show";
+        Me.getMessageIndex(Me.accessToken, Me.endPoint)
+    End Sub
+
+    ''' <summary>
+    ''' send the create message index request to api platform.
+    ''' </summary>
+    Private Sub getMessageIndex(ByVal accTok As String, ByVal endP As String)
+        Try
+            Dim contextURL As String = String.Empty
+            contextURL = String.Empty + endP & Convert.ToString("/myMessages/v2/messages/index/info")
+            Dim msgIndxWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(contextURL), HttpWebRequest)
+            msgIndxWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            msgIndxWebRequest.Method = "GET"
+            msgIndxWebRequest.KeepAlive = True
+            Dim msgIndxWebResponse As WebResponse = msgIndxWebRequest.GetResponse()
+            Using stream As New StreamReader(msgIndxWebResponse.GetResponseStream())
+                Dim getMessageIndexData As String = stream.ReadToEnd()
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                Dim deserializedJsonObj As csMessageIndexInfo = DirectCast(deserializeJsonObject.Deserialize(getMessageIndexData, GetType(csMessageIndexInfo)), csMessageIndexInfo)
+                If deserializedJsonObj IsNot Nothing Then
+
+                    messageIndexSuccessResponse = getMessageIndexData & Convert.ToString(":Success")
+                    getMessageIndexInfoResponse = deserializedJsonObj.messageIndexInfo
+                Else
+                    messageIndexErrorResponse = "No response from server"
+                End If
+
+
+                stream.Close()
+            End Using
+            messageIndexSuccessResponse = ":Success"
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                messageIndexErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                messageIndexErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            messageIndexErrorResponse = ex.Message
+            Return
+        End Try
+
+    End Sub
+
+    Protected Sub getNotificationConnectionDetails_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showGetNotificationConnectionDetails = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "getnotificationconnectiondetails"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                getNotificationConnectionDetailsErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Dim queueType As String = String.Empty
+        If notificationMms.Checked Then
+            queueType = notificationMms.Value
+        ElseIf notificationText.Checked Then
+            queueType = notificationText.Value
+        End If
+        Me.getNotificationConnectionDetails(Me.accessToken, Me.endPoint, queueType)
+    End Sub
+
+    Protected Sub getNotificationConnectionDetails()
+        showGetNotificationConnectionDetails = "show"
+        Dim queueType As String = String.Empty
+        If notificationMms.Checked Then
+            queueType = notificationMms.Value
+        ElseIf notificationText.Checked Then
+            queueType = notificationText.Value
+        End If
+        Me.getNotificationConnectionDetails(Me.accessToken, Me.endPoint, queueType)
+    End Sub
+
+    Private Sub getNotificationConnectionDetails(ByVal accTok As String, ByVal endP As String, ByVal queues As String)
+        Try
+            Dim getNotificationConnectionDetailsWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(Convert.ToString(String.Empty + endP & Convert.ToString("/myMessages/v2/notificationConnectionDetails?queues=")) & queues), HttpWebRequest)
+            getNotificationConnectionDetailsWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            getNotificationConnectionDetailsWebRequest.Method = "GET"
+            getNotificationConnectionDetailsWebRequest.KeepAlive = True
+            getNotificationConnectionDetailsWebRequest.Accept = "application/json"
+            Dim getNotificationConnectionDetailsWebResponse As WebResponse = getNotificationConnectionDetailsWebRequest.GetResponse()
+            Using sr As New StreamReader(getNotificationConnectionDetailsWebResponse.GetResponseStream())
+                Dim getNotificationConnectionDetailsData As String = sr.ReadToEnd()
+
+                Dim deserializeJsonObject As New JavaScriptSerializer()
+                Dim deserializedJsonObj As csGetNotificationConnectionDetails = DirectCast(deserializeJsonObject.Deserialize(getNotificationConnectionDetailsData, GetType(csGetNotificationConnectionDetails)), csGetNotificationConnectionDetails)
+
+                If deserializedJsonObj IsNot Nothing Then
+                    getNotificationConnectionDetailsSuccessResponse = "SUCCESS"
+                    getNotificationConnectionDetailsResponse = deserializedJsonObj.notificationConnectionDetails
+                Else
+                    getNotificationConnectionDetailsErrorResponse = "No response from server"
+                End If
+
+                sr.Close()
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                getNotificationConnectionDetailsErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                getNotificationConnectionDetailsErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            getNotificationConnectionDetailsErrorResponse = ex.Message
+            Return
+        End Try
+
+    End Sub
+
+    Protected Sub createMessageIndex_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showCreateMessageIndex = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "createmessageindex"
+            Session("cs_rest_appState") = "GetToken"
+            Me.GetAuthCode()
+        ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
+            If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
+                createMessageIndexErrorResponse = "Failed to get Access token"
+                Me.ResetTokenSessionVariables()
+                Me.ResetTokenVariables()
+                Return
+            End If
+        End If
+
+        If Me.accessToken Is Nothing OrElse Me.accessToken.Length <= 0 Then
+            Return
+        End If
+        Me.createMessageIndex(Me.accessToken, Me.endPoint)
+    End Sub
+
+    Private Sub createMessageIndex()
+        showCreateMessageIndex = "show"
+        Me.createMessageIndex(Me.accessToken, Me.endPoint)
+    End Sub
+
+    ''' <summary>
+    ''' send the create message index request to api platform.
+    ''' </summary>
+    Private Sub createMessageIndex(ByVal accTok As String, ByVal endP As String)
+        Try
+            Dim createMessageIndexWebRequest As HttpWebRequest = DirectCast(WebRequest.Create(String.Empty + endP & Convert.ToString("/myMessages/v2/messages/index")), HttpWebRequest)
+            createMessageIndexWebRequest.Headers.Add("Authorization", Convert.ToString("Bearer ") & accTok)
+            createMessageIndexWebRequest.Method = "POST"
+            createMessageIndexWebRequest.KeepAlive = True
+            Dim encoding As New UTF8Encoding()
+            Dim postBytes As Byte() = encoding.GetBytes("TEST")
+            createMessageIndexWebRequest.ContentLength = postBytes.Length
+            Dim postStream As Stream = createMessageIndexWebRequest.GetRequestStream()
+            postStream.Write(postBytes, 0, postBytes.Length)
+            postStream.Close()
+            Dim createMessageIndexWebResponse As WebResponse = createMessageIndexWebRequest.GetResponse()
+            Using stream = createMessageIndexWebResponse.GetResponseStream()
+                createMessageIndexSuccessResponse = "Success"
+            End Using
+        Catch we As WebException
+            Dim errorResponse As String = String.Empty
+            Try
+                Using sr2 As New StreamReader(we.Response.GetResponseStream())
+                    errorResponse = sr2.ReadToEnd()
+                    sr2.Close()
+                End Using
+                createMessageIndexErrorResponse = errorResponse
+            Catch
+                errorResponse = "Unable to get response"
+                createMessageIndexErrorResponse = errorResponse
+            End Try
+        Catch ex As Exception
+            createMessageIndexErrorResponse = ex.Message
+            Return
+        End Try
+
+    End Sub
+
+    Protected Sub Button1_Click(ByVal sender As Object, ByVal e As EventArgs)
+        showSendMsg = "true"
+        Me.ReadTokenSessionVariables()
+
+        Dim tokentResult As String = Me.IsTokenValid()
+
+        If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
+            SetRequestSessionVariables()
+            Session("cs_rest_ServiceRequest") = "sendmessasge"
+            Session("cs_rest_appState") = "GetToken"
             Me.GetAuthCode()
         ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
             If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
@@ -756,18 +1423,19 @@ Partial Public Class Mobo_App1
         End If
         Dim accessToken As String = Me.accessToken
         Dim endpoint As String = Me.endPoint
-        Me.SendMessageRequest(accessToken, endpoint, subject.Value, message.Value, groupCheckBox.Checked.ToString().ToLower(), attachmentList)
+        Me.SendMessageRequest(accessToken, endpoint, subject.Text, message.Text, groupCheckBox.Checked.ToString().ToLower(), attachmentList)
     End Sub
 
-    Protected Sub Button2_Click(sender As Object, e As EventArgs)
+    Protected Sub GetMessageContentByIDnPartNumber(ByVal sender As Object, ByVal e As EventArgs)
+        showGetMessage = "true"
         Me.ReadTokenSessionVariables()
 
         Dim tokentResult As String = Me.IsTokenValid()
 
         If tokentResult.CompareTo("INVALID_ACCESS_TOKEN") = 0 Then
             SetRequestSessionVariables()
-            Session("vb_rest_ServiceRequest") = "getmessagecontent"
-            Session("vb_rest_appState") = "GetToken"
+            Session("cs_rest_ServiceRequest") = "getmessagecontent"
+            Session("cs_rest_appState") = "GetToken"
             Me.GetAuthCode()
         ElseIf tokentResult.CompareTo("REFRESH_TOKEN") = 0 Then
             If Me.GetAccessToken(AccessTokenType.Refresh_Token) = False Then
@@ -782,11 +1450,11 @@ Partial Public Class Mobo_App1
             Return
         End If
 
-        GetMessageContentByIDnPartNumber()
+        GetMessageContentByIDnPartNumber(Me.accessToken, Me.endPoint, MessageIdForContent.Text, PartNumberForContent.Text)
     End Sub
 
     Protected Sub GetMessageContentByIDnPartNumber()
-        Me.GetMessageContentByIDnPartNumber(Me.accessToken, Me.endPoint, MessageId.Value, PartNumber.Value)
+        Me.GetMessageContentByIDnPartNumber(Me.accessToken, Me.endPoint, MessageIdForContent.Text, PartNumberForContent.Text)
     End Sub
     ''' <summary>
     ''' Validates the given addresses based on following conditions
@@ -801,24 +1469,25 @@ Partial Public Class Mobo_App1
         Dim phonenumbers As String = String.Empty
 
         Dim isValid As Boolean = True
-        If String.IsNullOrEmpty(Address.Value) Then
+        If String.IsNullOrEmpty(Address.Text) Then
             sendMessageErrorResponse = "Address field cannot be blank."
             Return False
         End If
 
-        Dim addresses As String() = Address.Value.Trim().Split(","c)
+        Dim addresses As String() = Address.Text.Trim().Split(","c)
 
         If addresses.Length > Me.maxAddresses Then
             sendMessageErrorResponse = "Message cannot be delivered to more than 10 receipients."
             Return False
         End If
 
-        If groupCheckBox.Checked AndAlso addresses.Length < 2 Then
+        If groupCheckBox.Checked AndAlso addresses.Length < 1 Then
             sendMessageErrorResponse = "Specify more than one address for Group message."
             Return False
         End If
 
-        For Each address__1 As String In addresses
+        For Each addressraw As String In addresses
+            Dim address__1 As String = addressraw.Trim()
             If String.IsNullOrEmpty(address__1) Then
                 Exit For
             End If
@@ -836,7 +1505,7 @@ Partial Public Class Mobo_App1
                 End If
 
                 Me.addressList.Add(address__1)
-                Me.phoneNumbersParameter = Me.phoneNumbersParameter & "Addresses=short:" & Server.UrlEncode(address__1.ToString()) & "&"
+                Me.phoneNumbersParameter = (Me.phoneNumbersParameter & Convert.ToString("addresses=short:")) + Server.UrlEncode(address__1.ToString()) + "&"
             End If
 
             If address__1.StartsWith("short") Then
@@ -852,7 +1521,7 @@ Partial Public Class Mobo_App1
                 End If
 
                 Me.addressList.Add(address__1)
-                Me.phoneNumbersParameter = Me.phoneNumbersParameter & "Addresses=" & Server.UrlEncode(address__1.ToString()) & "&"
+                Me.phoneNumbersParameter = (Me.phoneNumbersParameter & Convert.ToString("addresses=")) + Server.UrlEncode(address__1.ToString()) + "&"
             ElseIf address__1.Contains("@") Then
                 isValid = Me.IsValidEmail(address__1)
                 If isValid = False Then
@@ -860,16 +1529,16 @@ Partial Public Class Mobo_App1
                     Return False
                 Else
                     Me.addressList.Add(address__1)
-                    Me.phoneNumbersParameter = Me.phoneNumbersParameter & "Addresses=" & Server.UrlEncode(address__1.ToString()) & "&"
+                    Me.phoneNumbersParameter = (Me.phoneNumbersParameter & Convert.ToString("addresses=")) + Server.UrlEncode(address__1.ToString()) + "&"
                 End If
             Else
                 If Me.IsValidMISDN(address__1) = True Then
                     If address__1.StartsWith("tel:") Then
                         phonenumbers = address__1.Replace("-", String.Empty)
-                        Me.phoneNumbersParameter = Me.phoneNumbersParameter & "Addresses=" & Server.UrlEncode(phonenumbers.ToString()) & "&"
+                        Me.phoneNumbersParameter = (Me.phoneNumbersParameter & Convert.ToString("addresses=")) + Server.UrlEncode(phonenumbers.ToString()) + "&"
                     Else
                         phonenumbers = address__1.Replace("-", String.Empty)
-                        Me.phoneNumbersParameter = Me.phoneNumbersParameter & "Addresses=" & Server.UrlEncode("tel:" & phonenumbers.ToString()) & "&"
+                        Me.phoneNumbersParameter = (Me.phoneNumbersParameter & Convert.ToString("addresses=")) + Server.UrlEncode("tel:" + phonenumbers.ToString()) + "&"
                     End If
 
                     Me.addressList.Add(address__1)
@@ -885,7 +1554,7 @@ Partial Public Class Mobo_App1
     ''' </summary>
     ''' <param name="number">Phone number to be validated</param>
     ''' <returns>true/false; true - if valid MSISDN, else false</returns>
-    Private Function IsValidMISDN(number As String) As Boolean
+    Private Function IsValidMISDN(ByVal number As String) As Boolean
         Dim smsAddressInput As String = number
         Dim tryParseResult As Long = 0
         Dim smsAddressFormatted As String
@@ -920,8 +1589,8 @@ Partial Public Class Mobo_App1
     ''' </summary>
     ''' <param name="emailID">Mail Id to be validated</param>
     ''' <returns> true/false; true - if valid email id, else false</returns>
-    Private Function IsValidEmail(emailID As String) As Boolean
-        Dim strRegex As String = "^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}" & "\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\" & ".)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
+    Private Function IsValidEmail(ByVal emailID As String) As Boolean
+        Dim strRegex As String = "^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}" + "\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\" + ".)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
         Dim re As New Regex(strRegex)
         If re.IsMatch(emailID) Then
             Return True
@@ -935,7 +1604,7 @@ Partial Public Class Mobo_App1
     ''' </summary>
     ''' <param name="address">string to be validated</param>
     ''' <returns>true/false; true - if passed string has all digits, else false</returns>
-    Private Function IsNumber(address As String) As Boolean
+    Private Function IsNumber(ByVal address As String) As Boolean
         Dim isValid As Boolean = False
         Dim regex As New Regex("^[0-9]*$")
         If regex.IsMatch(address) Then
@@ -944,326 +1613,674 @@ Partial Public Class Mobo_App1
 
         Return isValid
     End Function
-#Region "Data Structures"
+End Class
+
+''' <summary>
+''' Access Token Data Structure
+''' </summary>
+Public Class AccessTokenResponse
+    ''' <summary>
+    ''' Gets or sets Access Token ID
+    ''' </summary>
+    Public Property access_token() As String
+        Get
+            Return m_access_token
+        End Get
+        Set(ByVal value As String)
+            m_access_token = Value
+        End Set
+    End Property
+    Private m_access_token As String
 
     ''' <summary>
-    ''' Access Token Data Structure
+    ''' Gets or sets Refresh Token ID
     ''' </summary>
-    Public Class AccessTokenResponse
-        ''' <summary>
-        ''' Gets or sets Access Token ID
-        ''' </summary>
-        Public Property access_token() As String
-            Get
-                Return m_access_token
-            End Get
-            Set(value As String)
-                m_access_token = value
-            End Set
-        End Property
-        Private m_access_token As String
-
-        ''' <summary>
-        ''' Gets or sets Refresh Token ID
-        ''' </summary>
-        Public Property refresh_token() As String
-            Get
-                Return m_refresh_token
-            End Get
-            Set(value As String)
-                m_refresh_token = value
-            End Set
-        End Property
-        Private m_refresh_token As String
-
-        ''' <summary>
-        ''' Gets or sets Expires in milli seconds
-        ''' </summary>
-        Public Property expires_in() As String
-            Get
-                Return m_expires_in
-            End Get
-            Set(value As String)
-                m_expires_in = value
-            End Set
-        End Property
-        Private m_expires_in As String
-    End Class
+    Public Property refresh_token() As String
+        Get
+            Return m_refresh_token
+        End Get
+        Set(ByVal value As String)
+            m_refresh_token = Value
+        End Set
+    End Property
+    Private m_refresh_token As String
 
     ''' <summary>
-    ''' Response returned from MyMessages api
+    ''' Gets or sets Expires in milli seconds
     ''' </summary>
-    Public Class MIMResponse
-        ''' <summary>
-        ''' Gets or sets the value of message header list.
-        ''' </summary>
-        Public Property MessageHeadersList() As MessageHeaderList
-            Get
-                Return m_MessageHeadersList
-            End Get
-            Set(value As MessageHeaderList)
-                m_MessageHeadersList = value
-            End Set
-        End Property
-        Private m_MessageHeadersList As MessageHeaderList
-    End Class
+    Public Property expires_in() As String
+        Get
+            Return m_expires_in
+        End Get
+        Set(ByVal value As String)
+            m_expires_in = Value
+        End Set
+    End Property
+    Private m_expires_in As String
+End Class
+
+Public Class MessageObject
+    Public Property message() As Message
+        Get
+            Return m_message
+        End Get
+        Set(ByVal value As Message)
+            m_message = Value
+        End Set
+    End Property
+    Private m_message As Message
+End Class
+
+''' <summary>
+''' Update message list datastructure
+''' </summary>
+Public Class MessagesList
+    Public Property messages() As List(Of Message)
+        Get
+            Return m_messages
+        End Get
+        Set(ByVal value As List(Of Message))
+            m_messages = Value
+        End Set
+    End Property
+    Private m_messages As List(Of Message)
+End Class
+
+Public Class MmsContent
+    Public Property contentType() As String
+        Get
+            Return m_contentType
+        End Get
+        Set(ByVal value As String)
+            m_contentType = Value
+        End Set
+    End Property
+    Private m_contentType As String
+    Public Property contentName() As String
+        Get
+            Return m_contentName
+        End Get
+        Set(ByVal value As String)
+            m_contentName = Value
+        End Set
+    End Property
+    Private m_contentName As String
+    Public Property contentUrl() As String
+        Get
+            Return m_contentUrl
+        End Get
+        Set(ByVal value As String)
+            m_contentUrl = Value
+        End Set
+    End Property
+    Private m_contentUrl As String
+    Public Property type() As String
+        Get
+            Return m_type
+        End Get
+        Set(ByVal value As String)
+            m_type = Value
+        End Set
+    End Property
+    Private m_type As String
+End Class
+
+''' <summary>
+''' Response from IMMN api
+''' </summary>
+Public Class MsgResponseId
+    ''' <summary>
+    ''' Gets or sets Message ID
+    ''' </summary>
+    Public Property Id() As String
+        Get
+            Return m_Id
+        End Get
+        Set(ByVal value As String)
+            m_Id = Value
+        End Set
+    End Property
+    Private m_Id As String
+End Class
+
+''' <summary>
+''' Access Token Types
+''' </summary>
+Public Enum AccessTokenType
+    ''' <summary>
+    ''' Access Token Type is based on Authorization Code
+    ''' </summary>
+    Authorization_Code
 
     ''' <summary>
-    ''' Message Header List
+    ''' Access Token Type is based on Refresh Token
     ''' </summary>
-    Public Class MessageHeaderList
-        ''' <summary>
-        ''' Gets or sets the value of object containing a List of Messages Headers
-        ''' </summary>
-        Public Property Headers() As List(Of Header)
-            Get
-                Return m_Headers
-            End Get
-            Set(value As List(Of Header))
-                m_Headers = value
-            End Set
-        End Property
-        Private m_Headers As List(Of Header)
+    Refresh_Token
+End Enum
 
-        ''' <summary>
-        ''' Gets or sets the value of a number representing the number of headers returned for this request.
-        ''' </summary>
-        Public Property HeaderCount() As Integer
-            Get
-                Return m_HeaderCount
-            End Get
-            Set(value As Integer)
-                m_HeaderCount = value
-            End Set
-        End Property
-        Private m_HeaderCount As Integer
+Public Class csGetNotificationConnectionDetails
+    Public Property notificationConnectionDetails() As csNotificationConnectionDetails
+        Get
+            Return m_notificationConnectionDetails
+        End Get
+        Set(ByVal value As csNotificationConnectionDetails)
+            m_notificationConnectionDetails = Value
+        End Set
+    End Property
+    Private m_notificationConnectionDetails As csNotificationConnectionDetails
+End Class
 
-        ''' <summary>
-        ''' Gets or sets the value of a string which defines the start of the next block of messages for the current request.
-        ''' A value of zero (0) indicates the end of the block.
-        ''' </summary>
-        Public Property IndexCursor() As String
-            Get
-                Return m_IndexCursor
-            End Get
-            Set(value As String)
-                m_IndexCursor = value
-            End Set
-        End Property
-        Private m_IndexCursor As String
-    End Class
+Public Class csNotificationConnectionDetails
+    Public Property username() As String
+        Get
+            Return m_username
+        End Get
+        Set(ByVal value As String)
+            m_username = Value
+        End Set
+    End Property
+    Private m_username As String
+    Public Property password() As String
+        Get
+            Return m_password
+        End Get
+        Set(ByVal value As String)
+            m_password = Value
+        End Set
+    End Property
+    Private m_password As String
+    Public Property httpsUrl() As String
+        Get
+            Return m_httpsUrl
+        End Get
+        Set(ByVal value As String)
+            m_httpsUrl = Value
+        End Set
+    End Property
+    Private m_httpsUrl As String
+    Public Property wssUrl() As String
+        Get
+            Return m_wssUrl
+        End Get
+        Set(ByVal value As String)
+            m_wssUrl = Value
+        End Set
+    End Property
+    Private m_wssUrl As String
+    Public Property queues() As csqueues
+        Get
+            Return m_queues
+        End Get
+        Set(ByVal value As csqueues)
+            m_queues = Value
+        End Set
+    End Property
+    Private m_queues As csqueues
+End Class
 
-    ''' <summary>
-    ''' Object containing a List of Messages Headers
-    ''' </summary>
-    Public Class Header
-        ''' <summary>
-        ''' Gets or sets the value of Unique message identifier
-        ''' </summary>
-        Public Property MessageId() As String
-            Get
-                Return m_MessageId
-            End Get
-            Set(value As String)
-                m_MessageId = value
-            End Set
-        End Property
-        Private m_MessageId As String
+Public Class csqueues
+    Public Property text() As String
+        Get
+            Return m_text
+        End Get
+        Set(ByVal value As String)
+            m_text = Value
+        End Set
+    End Property
+    Private m_text As String
+    Public Property mms() As String
+        Get
+            Return m_mms
+        End Get
+        Set(ByVal value As String)
+            m_mms = Value
+        End Set
+    End Property
+    Private m_mms As String
+End Class
 
-        ''' <summary>
-        ''' Gets or sets the value of message sender
-        ''' </summary>
-        Public Property From() As String
-            Get
-                Return m_From
-            End Get
-            Set(value As String)
-                m_From = value
-            End Set
-        End Property
-        Private m_From As String
+Public Class csGetMessageContentDetails
+    Public Property MessageContentDetails() As csMessageContentDetails
+        Get
+            Return m_MessageContentDetails
+        End Get
+        Set(ByVal value As csMessageContentDetails)
+            m_MessageContentDetails = Value
+        End Set
+    End Property
+    Private m_MessageContentDetails As csMessageContentDetails
+End Class
 
-        ''' <summary>
-        ''' Gets or sets the value of the addresses, whom the message need to be delivered. 
-        ''' If Group Message, this will contain multiple Addresses.
-        ''' </summary>
-        Public Property [To]() As List(Of String)
-            Get
-                Return m_To
-            End Get
-            Set(value As List(Of String))
-                m_To = value
-            End Set
-        End Property
-        Private m_To As List(Of String)
+Public Class csMessageContentDetails
+    Public Property contenttype() As String
+        Get
+            Return m_contenttype
+        End Get
+        Set(ByVal value As String)
+            m_contenttype = Value
+        End Set
+    End Property
+    Private m_contenttype As String
+    Public Property textplain() As String
+        Get
+            Return m_textplain
+        End Get
+        Set(ByVal value As String)
+            m_textplain = Value
+        End Set
+    End Property
+    Private m_textplain As String
+    Public Property imgjpg() As String
+        Get
+            Return m_imgjpg
+        End Get
+        Set(ByVal value As String)
+            m_imgjpg = Value
+        End Set
+    End Property
+    Private m_imgjpg As String
+End Class
 
-        ''' <summary>
-        ''' Gets or sets a value of message text
-        ''' </summary>
-        Public Property Text() As String
-            Get
-                Return m_Text
-            End Get
-            Set(value As String)
-                m_Text = value
-            End Set
-        End Property
-        Private m_Text As String
+Public Class csGetMessageDetails
+    Public Property message() As Message
+        Get
+            Return m_message
+        End Get
+        Set(ByVal value As Message)
+            m_message = Value
+        End Set
+    End Property
+    Private m_message As Message
+End Class
 
-        ''' <summary>
-        ''' Gets or sets a value of message part descriptions
-        ''' </summary>
-        Public Property MmsContent() As List(Of MMSContent)
-            Get
-                Return m_MmsContent
-            End Get
-            Set(value As List(Of MMSContent))
-                m_MmsContent = value
-            End Set
-        End Property
-        Private m_MmsContent As List(Of MMSContent)
+Public Class csGetMessageListDetails
+    Public Property messageList() As MessageList
+        Get
+            Return m_messageList
+        End Get
+        Set(ByVal value As MessageList)
+            m_messageList = Value
+        End Set
+    End Property
+    Private m_messageList As MessageList
+End Class
 
-        ''' <summary>
-        ''' Gets or sets the value of date/time message received
-        ''' </summary>
-        Public Property Received() As DateTime
-            Get
-                Return m_Received
-            End Get
-            Set(value As DateTime)
-                m_Received = value
-            End Set
-        End Property
-        Private m_Received As DateTime
+Public Class From
+    Public Property value() As String
+        Get
+            Return m_value
+        End Get
+        Set(ByVal value As String)
+            m_value = Value
+        End Set
+    End Property
+    Private m_value As String
+End Class
 
-        ''' <summary>
-        ''' Gets or sets a value indicating whether its a favourite or not
-        ''' </summary>
-        Public Property Favorite() As Boolean
-            Get
-                Return m_Favorite
-            End Get
-            Set(value As Boolean)
-                m_Favorite = value
-            End Set
-        End Property
-        Private m_Favorite As Boolean
+Public Class Recipient
+    Public Property value() As String
+        Get
+            Return m_value
+        End Get
+        Set(ByVal value As String)
+            m_value = Value
+        End Set
+    End Property
+    Private m_value As String
+End Class
 
-        ''' <summary>
-        ''' Gets or sets a value indicating whether message is read or not
-        ''' </summary>
-        Public Property Read() As Boolean
-            Get
-                Return m_Read
-            End Get
-            Set(value As Boolean)
-                m_Read = value
-            End Set
-        End Property
-        Private m_Read As Boolean
+Public Class SegmentationDetails
 
-        ''' <summary>
-        ''' Gets or sets the value of type of message, TEXT or MMS
-        ''' </summary>
-        Public Property Type() As String
-            Get
-                Return m_Type
-            End Get
-            Set(value As String)
-                m_Type = value
-            End Set
-        End Property
-        Private m_Type As String
+    Public Property segmentationMsgRefNumber() As Integer
+        Get
+            Return m_segmentationMsgRefNumber
+        End Get
+        Set(ByVal value As Integer)
+            m_segmentationMsgRefNumber = Value
+        End Set
+    End Property
+    Private m_segmentationMsgRefNumber As Integer
 
-        ''' <summary>
-        ''' Gets or sets the value of indicator, which indicates if message is Incoming or Outgoing “IN” or “OUT”
-        ''' </summary>
-        Public Property Direction() As String
-            Get
-                Return m_Direction
-            End Get
-            Set(value As String)
-                m_Direction = value
-            End Set
-        End Property
-        Private m_Direction As String
-    End Class
+    Public Property totalNumberOfParts() As Integer
+        Get
+            Return m_totalNumberOfParts
+        End Get
+        Set(ByVal value As Integer)
+            m_totalNumberOfParts = Value
+        End Set
+    End Property
+    Private m_totalNumberOfParts As Integer
 
-    ''' <summary>
-    ''' Message part descriptions
-    ''' </summary>
-    Public Class MMSContent
-        ''' <summary>
-        ''' Gets or sets the value of content name
-        ''' </summary>
-        Public Property ContentName() As String
-            Get
-                Return m_ContentName
-            End Get
-            Set(value As String)
-                m_ContentName = value
-            End Set
-        End Property
-        Private m_ContentName As String
+    Public Property thisPartNumber() As Integer
+        Get
+            Return m_thisPartNumber
+        End Get
+        Set(ByVal value As Integer)
+            m_thisPartNumber = Value
+        End Set
+    End Property
+    Private m_thisPartNumber As Integer
 
-        ''' <summary>
-        ''' Gets or sets the value of content type
-        ''' </summary>
-        Public Property ContentType() As String
-            Get
-                Return m_ContentType
-            End Get
-            Set(value As String)
-                m_ContentType = value
-            End Set
-        End Property
-        Private m_ContentType As String
+End Class
 
-        ''' <summary>
-        ''' Gets or sets the value of part number
-        ''' </summary>
-        Public Property PartNumber() As String
-            Get
-                Return m_PartNumber
-            End Get
-            Set(value As String)
-                m_PartNumber = value
-            End Set
-        End Property
-        Private m_PartNumber As String
-    End Class
+Public Class TypeMetaData
+    Public Property isSegmented() As Boolean
+        Get
+            Return m_isSegmented
+        End Get
+        Set(ByVal value As Boolean)
+            m_isSegmented = Value
+        End Set
+    End Property
+    Private m_isSegmented As Boolean
+    Public Property segmentationDetails() As SegmentationDetails
+        Get
+            Return m_segmentationDetails
+        End Get
+        Set(ByVal value As SegmentationDetails)
+            m_segmentationDetails = Value
+        End Set
+    End Property
+    Private m_segmentationDetails As SegmentationDetails
+    Public Property subject() As String
+        Get
+            Return m_subject
+        End Get
+        Set(ByVal value As String)
+            m_subject = Value
+        End Set
+    End Property
+    Private m_subject As String
+End Class
 
-    ''' <summary>
-    ''' Response from IMMN api
-    ''' </summary>
-    Public Class MsgResponseId
-        ''' <summary>
-        ''' Gets or sets Message ID
-        ''' </summary>
-        Public Property Id() As String
-            Get
-                Return m_Id
-            End Get
-            Set(value As String)
-                m_Id = value
-            End Set
-        End Property
-        Private m_Id As String
-    End Class
+Public Class Message
 
-    ''' <summary>
-    ''' Access Token Types
-    ''' </summary>
-    Public Enum AccessTokenType
-        ''' <summary>
-        ''' Access Token Type is based on Authorization Code
-        ''' </summary>
-        Authorization_Code
+    Public Property messageId() As String
+        Get
+            Return m_messageId
+        End Get
+        Set(ByVal value As String)
+            m_messageId = Value
+        End Set
+    End Property
+    Private m_messageId As String
+    Public Property from() As From
+        Get
+            Return m_from
+        End Get
+        Set(ByVal value As From)
+            m_from = Value
+        End Set
+    End Property
+    Private m_from As From
+    Public Property recipients() As List(Of Recipient)
+        Get
+            Return m_recipients
+        End Get
+        Set(ByVal value As List(Of Recipient))
+            m_recipients = Value
+        End Set
+    End Property
+    Private m_recipients As List(Of Recipient)
+    Public Property timeStamp() As String
+        Get
+            Return m_timeStamp
+        End Get
+        Set(ByVal value As String)
+            m_timeStamp = Value
+        End Set
+    End Property
+    Private m_timeStamp As String
+    Public Property isFavorite() As [Boolean]
+        Get
+            Return m_isFavorite
+        End Get
+        Set(ByVal value As [Boolean])
+            m_isFavorite = Value
+        End Set
+    End Property
+    Private m_isFavorite As [Boolean]
+    Public Property isUnread() As [Boolean]
+        Get
+            Return m_isUnread
+        End Get
+        Set(ByVal value As [Boolean])
+            m_isUnread = Value
+        End Set
+    End Property
+    Private m_isUnread As [Boolean]
+    Public Property type() As String
+        Get
+            Return m_type
+        End Get
+        Set(ByVal value As String)
+            m_type = Value
+        End Set
+    End Property
+    Private m_type As String
+    Public Property typeMetaData() As TypeMetaData
+        Get
+            Return m_typeMetaData
+        End Get
+        Set(ByVal value As TypeMetaData)
+            m_typeMetaData = Value
+        End Set
+    End Property
+    Private m_typeMetaData As TypeMetaData
+    Public Property isIncoming() As String
+        Get
+            Return m_isIncoming
+        End Get
+        Set(ByVal value As String)
+            m_isIncoming = Value
+        End Set
+    End Property
+    Private m_isIncoming As String
+    Public Property mmsContent() As List(Of MmsContent)
+        Get
+            Return m_mmsContent
+        End Get
+        Set(ByVal value As List(Of MmsContent))
+            m_mmsContent = Value
+        End Set
+    End Property
+    Private m_mmsContent As List(Of MmsContent)
+    Public Property text() As String
+        Get
+            Return m_text
+        End Get
+        Set(ByVal value As String)
+            m_text = Value
+        End Set
+    End Property
+    Private m_text As String
+    Public Property subject() As String
+        Get
+            Return m_subject
+        End Get
+        Set(ByVal value As String)
+            m_subject = Value
+        End Set
+    End Property
+    Private m_subject As String
+End Class
 
-        ''' <summary>
-        ''' Access Token Type is based on Refresh Token
-        ''' </summary>
-        Refresh_Token
-    End Enum
-#End Region
+Public Class MessageList
+    Public Property messages() As List(Of Message)
+        Get
+            Return m_messages
+        End Get
+        Set(ByVal value As List(Of Message))
+            m_messages = Value
+        End Set
+    End Property
+    Private m_messages As List(Of Message)
+    Public Property offset() As Integer
+        Get
+            Return m_offset
+        End Get
+        Set(ByVal value As Integer)
+            m_offset = Value
+        End Set
+    End Property
+    Private m_offset As Integer
+    Public Property limit() As Integer
+        Get
+            Return m_limit
+        End Get
+        Set(ByVal value As Integer)
+            m_limit = Value
+        End Set
+    End Property
+    Private m_limit As Integer
+    Public Property total() As Integer
+        Get
+            Return m_total
+        End Get
+        Set(ByVal value As Integer)
+            m_total = Value
+        End Set
+    End Property
+    Private m_total As Integer
+    Public Property state() As String
+        Get
+            Return m_state
+        End Get
+        Set(ByVal value As String)
+            m_state = Value
+        End Set
+    End Property
+    Private m_state As String
+    Public Property cacheStatus() As String
+        Get
+            Return m_cacheStatus
+        End Get
+        Set(ByVal value As String)
+            m_cacheStatus = Value
+        End Set
+    End Property
+    Private m_cacheStatus As String
+    Public Property failedMessages() As List(Of String)
+        Get
+            Return m_failedMessages
+        End Get
+        Set(ByVal value As List(Of String))
+            m_failedMessages = Value
+        End Set
+    End Property
+    Private m_failedMessages As List(Of String)
+End Class
+
+Public Class csGetDeltaDetails
+    Public Property deltaResponse() As DeltaResponse
+        Get
+            Return m_deltaResponse
+        End Get
+        Set(ByVal value As DeltaResponse)
+            m_deltaResponse = Value
+        End Set
+    End Property
+    Private m_deltaResponse As DeltaResponse
+End Class
+
+Public Class Delta
+    Public Property adds() As List(Of Message)
+        Get
+            Return m_adds
+        End Get
+        Set(ByVal value As List(Of Message))
+            m_adds = Value
+        End Set
+    End Property
+    Private m_adds As List(Of Message)
+    Public Property deletes() As List(Of Message)
+        Get
+            Return m_deletes
+        End Get
+        Set(ByVal value As List(Of Message))
+            m_deletes = Value
+        End Set
+    End Property
+    Private m_deletes As List(Of Message)
+    Public Property type() As String
+        Get
+            Return m_type
+        End Get
+        Set(ByVal value As String)
+            m_type = Value
+        End Set
+    End Property
+    Private m_type As String
+    Public Property updates() As List(Of Message)
+        Get
+            Return m_updates
+        End Get
+        Set(ByVal value As List(Of Message))
+            m_updates = Value
+        End Set
+    End Property
+    Private m_updates As List(Of Message)
+End Class
+
+Public Class DeltaResponse
+    Public Property state() As String
+        Get
+            Return m_state
+        End Get
+        Set(ByVal value As String)
+            m_state = Value
+        End Set
+    End Property
+    Private m_state As String
+    Public Property delta() As List(Of Delta)
+        Get
+            Return m_delta
+        End Get
+        Set(ByVal value As List(Of Delta))
+            m_delta = Value
+        End Set
+    End Property
+    Private m_delta As List(Of Delta)
+End Class
+
+Public Class MessageIndexInfo
+    Public Property status() As String
+        Get
+            Return m_status
+        End Get
+        Set(ByVal value As String)
+            m_status = Value
+        End Set
+    End Property
+    Private m_status As String
+    Public Property state() As String
+        Get
+            Return m_state
+        End Get
+        Set(ByVal value As String)
+            m_state = Value
+        End Set
+    End Property
+    Private m_state As String
+    Public Property messageCount() As Integer
+        Get
+            Return m_messageCount
+        End Get
+        Set(ByVal value As Integer)
+            m_messageCount = Value
+        End Set
+    End Property
+    Private m_messageCount As Integer
+End Class
+
+Public Class csMessageIndexInfo
+    Public Property messageIndexInfo() As MessageIndexInfo
+        Get
+            Return m_messageIndexInfo
+        End Get
+        Set(ByVal value As MessageIndexInfo)
+            m_messageIndexInfo = Value
+        End Set
+    End Property
+    Private m_messageIndexInfo As MessageIndexInfo
 End Class

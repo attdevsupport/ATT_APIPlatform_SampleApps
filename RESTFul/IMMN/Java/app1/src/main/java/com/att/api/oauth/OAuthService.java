@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
@@ -74,9 +74,9 @@ import org.json.JSONObject;
  * }
  * </pre>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  * @see <a href="https://tools.ietf.org/html/rfc6749">OAuth 2.0 Framework</a>
  */
 public class OAuthService {
@@ -126,14 +126,14 @@ public class OAuthService {
 
     /**
      * Sends an HTTP POST request using the specified REST client with the
-     * content type set to 'application/x-ww-form/urlencoded'.
+     * content type set to 'application/x-www-form/urlencoded'.
      *
      * @param client REST client to use for sending the POST request
      * @return API Response returned by the REST client
      *
      * @throws RESTException if the REST client throws an exception
      */
-    private APIResponse sendReceive(RESTClient client) throws RESTException {
+    private APIResponse sendRequest(RESTClient client) throws RESTException {
         return client
             .addHeader("Content-Type", "application/x-www-form-urlencoded")
             .httpPost();
@@ -176,17 +176,19 @@ public class OAuthService {
             .addParameter("code", code)
             .addParameter("grant_type", "authorization_code");
 
-        APIResponse response = sendReceive(client);
+        APIResponse response = sendRequest(client);
 
         return parseResponse(response);
     }
 
     /**
      * Gets an access token using the specified code.
+     *
      * <p>
      * The parameters set during object creation will be used when requesting
      * the access token.
      * </p>
+     *
      * <p>
      * The token request is done using the 'client_credentials' grant type.
      * </p>
@@ -204,7 +206,7 @@ public class OAuthService {
             .addParameter("scope", scope)
             .addParameter("grant_type", "client_credentials");
 
-        APIResponse apiResponse = sendReceive(client);
+        APIResponse apiResponse = sendRequest(client);
 
         return parseResponse(apiResponse);
 
@@ -236,7 +238,7 @@ public class OAuthService {
             .addParameter("refresh_token", refreshToken)
             .addParameter("grant_type", "refresh_token");
 
-        APIResponse response = sendReceive(client);
+        APIResponse response = sendRequest(client);
 
         return parseResponse(response);
     }

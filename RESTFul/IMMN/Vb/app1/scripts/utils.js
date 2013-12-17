@@ -90,3 +90,17 @@ function chooseSelect(r,s){
 	s.selectedIndex = 0;
 	button.click();
 }
+
+function toggle(showHideDiv, switchTextDiv, title) {
+    var ele = document.getElementById(showHideDiv);
+    var text = document.getElementById(switchTextDiv);
+    if (ele.style.display == "block") {
+        ele.style.display = "none";
+        text.innerHTML = "";
+        text.innerHTML = " " + title;
+    }
+    else {
+        ele.style.display = "block";
+        text.innerHTML = "Hide " + title;
+    }
+} 

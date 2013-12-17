@@ -2,28 +2,24 @@
 session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/src/Controller/IMMNController.php';
+require_once __DIR__ . '/lib/Util/Util.php';
+use Att\Api\Util\Util;
 $controller = new IMMNController();
 $controller->handleRequest();
 $results = $controller->getResults();
 $errors = $controller->getErrors();
 ?>
 <!DOCTYPE html>
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
--->
 <html lang="en"> 
   <head> 
     <title>AT&amp;T Sample Application - In App Messaging from Mobile Number</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <link rel="stylesheet" type="text/css" href="style/common.css">
     <script src="scripts/utils.js"></script>
     <script type="text/javascript">
-	    var _gaq = _gaq || [];
-	    _gaq.push(['_setAccount', 'UA-33466541-1']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
         _gaq.push(['_trackPageview']);
 
         (function () {
@@ -41,8 +37,10 @@ For more information contact developer.support@att.com
   <body>
     <div id="pageContainer">
       <div id="header">
-        <div class="logo"></div> 
-        <div id="menuButton" class="hide"><a id="jump" href="#nav">Main Navigation</a></div> 
+        <div class="logo"></div>
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a>
+        </div> 
         <ul class="links" id="nav">
           <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
             <span class="divider"> |&nbsp;</span>
@@ -63,7 +61,7 @@ For more information contact developer.support@att.com
       </div> <!-- end of header -->
       <div id="content">
         <div id="contentHeading">
-          <h1>AT&amp;T Sample Application - In App Messaging from Mobile Number</h1>
+          <h1>AT&amp;T Sample Application - In App Messaging from mobile number</h1>
           <div class="border"></div>
           <div id="introtext">
             <div><b>Server Time:&nbsp;</b><?php echo Util::getServerTime(); ?></div> 
@@ -71,270 +69,614 @@ For more information contact developer.support@att.com
             <div><b>User Agent:&nbsp;</b><script>document.write("" + navigator.userAgent);</script></div>
           </div> <!-- end of introtext -->
         </div> <!-- end of contentHeading -->
+        <div class="formBox">
+          <div class="formContainer">
 
-        <div class="formBox" id="formBox">
-          <div id="formContainer" class="formContainer">
-            <div id="sendMessages">
-              <h2>Send Messages:</h2>
-              <form method="post" action="index.php" name="msgContentForm" >
+            <div class="lightBorder"></div>
+
+            <a id="sendMsgToggle" 
+              href="javascript:toggle('sendMsg');">Send Message</a>
+            <div class="toggle" id="sendMsg">
+              <label><i>Max message size must be 1MB or less</i></label>
+              <h2>Send Message</h2>
+              <form method="post" action="index.php" id="sendMessageForm">
                 <div class="inputFields">
-                  <?php if (isset($_SESSION['address'])) { ?> 
-                  <input placeholder="Address" name="address" type="text" 
-                      value="<?php echo htmlspecialchars($_SESSION['address']); ?>" />     
-                  <?php } else { ?>
-                  <input placeholder="Address" name="address" type="text" />     
-                  <?php } ?>
-                  <?php if (isset($_SESSION['checkbox']) && $_SESSION['checkbox'] == true) { ?>
-                  <label>Group: <input name="groupCheckBox" type="checkbox" checked /></label>
-                  <?php } else { ?>
-                  <label>Group: <input name="groupCheckBox" type="checkbox" /></label>
-                  <?php } ?>
-                  <label>
-                    Message:
-                    <select name="message">
-                      <option value="ATT IMMN sample message">ATT IMMN sample message</option>
-                    </select>
+                  <input type="text" name="address" placeholder="Address" 
+                      value="<?php echo isset($_SESSION['address']) ? htmlspecialchars($_SESSION['address']) : ""; ?>" />
+                  <label>Group: 
+                    <input type="checkbox" name="groupCheckBox" 
+                        <?php if(isset($_SESSION['groupCheckBox']) && $_SESSION['groupCheckBox']) echo "checked"; ?> />
                   </label>
                   <label>
-                    Subject:
-                    <select name="subject">
-                      <option value="ATT IMMN sample subject">ATT IMMN sample subject</option>
-                    </select>
+                    Message: <i>max 200 characters are allowed</i>
+                    <input type="text" name="message" placeholder="ATT IMMN sample message"
+                        value="<?php echo isset($_SESSION['message']) ? htmlspecialchars($_SESSION['message']) : ""; ?>" maxlength="200">
+                  </label>
+                  <label>
+                    Subject: <i>max 30 characters are allowed</i>
+                    <input type="text" name="subject" placeholder="ATT IMMN APP" 
+                        value="<?php echo isset($_SESSION['subject']) ? htmlspecialchars($_SESSION['subject']) : ""; ?>" maxlength="30">
                   </label>
                   <label>
                     Attachment:
                     <select name="attachment">
-                      <option value="None">None</option>
-                      <?php foreach ($controller->getAttachments() as $attachment) { ?>
-                        <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $attachment) { ?>
-                        <option value="<?php echo $attachment; ?>"
-                            selected="selected"><?php echo htmlspecialchars($attachment); ?></option>
-                        <?php } else { ?>
-                        <option value="<?php echo $attachment; ?>"><?php echo htmlspecialchars($attachment); ?></option>
-                        <?php } ?>
+                      <?php
+                        $attachments = $results[C_ATTACHMENTS];
+                        foreach($attachments as $attachment) {
+                      ?>
+                          <?php if (isset($_SESSION['attachment']) && $_SESSION['attachment'] == $attachment) { ?>
+                              <option value="<?php echo $attachment; ?>" selected><?php echo $attachment; ?></option>
+                          <?php } else { ?>
+                              <option value="<?php echo $attachment; ?>"><?php echo $attachment; ?></option>
+                          <?php } ?>
                       <?php } ?>
                     </select>
                   </label>
-                  <button type="submit" class="submit" id="sendMessage" name="sendMessage">Send Message</button>
-                </div> <!-- end of inputFields -->
+                  <button name="sendMessage" type="submit" class="submit">Send Message</button>
+                </div>
               </form>
+              <?php if (isset($results[C_SEND_MSG])) { ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                  <?php echo htmlspecialchars($results[C_SEND_MSG]); ?>
+                </div>
+              <?php } ?>
+              <?php if (isset($errors[C_SEND_MSG])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_SEND_MSG]); ?>
+                </div>
+              <?php } ?>
+            </div> <!-- end of send message -->
 
+            <div class="lightBorder"></div>
+            <label>
+              <b>Note:</b> In order to use the following features, you must be subscribed to 
+              <a href="http://messages.att.net">AT&amp;T Messages</a>
+            </label>
+            <div class="lightBorder"></div>
+
+            <a id="createMsgToggle" 
+              href="javascript:toggle('createMsg');">Create Message Index</a>
+            <div class="toggle" id="createMsg">
+              <h2>Create Message Index</h2>
+              <form method="post" action="index.php" id="createMessageIndexForm">
+                <div class="inputFields">
+                  <button name="createMessageIndex" type="submit" class="submit">Create Index</button>
+                </div>
+              </form>
+              <?php if (isset($results[C_CREATE_MSG_INDEX])) { ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+              <?php } ?>
+              <?php if (isset($errors[C_CREATE_MSG_INDEX])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_CREATE_MSG_INDEX]); ?>
+                </div>
+              <?php } ?>
+            </div> <!-- end of create message index -->
+
+            <div class="lightBorder"></div>
+
+            <a id="getMsgToggle" 
+              href="javascript:toggle('getMsg');">Get Message</a>
+            <div class="toggle" id="getMsg">
+              <h2>Get Message List <i>(Displays last 5 messages from the list)</i></h2>
+              <form method="post" action="index.php" id="getMessageListForm">
+                <div class="inputFields">
+                  <label><input name="favorite" type="checkbox" 
+                    <?php echo isset($_SESSION['favorite']) ? 'checked' : '' ?>>Filter by favorite</label>
+                  <label><input name="unread" type="checkbox"
+                    <?php echo isset($_SESSION['unread']) ? 'checked' : '' ?>>Filter by unread flag</label>
+                  <label><input name="incoming" type="checkbox" 
+                    <?php echo isset($_SESSION['incoming']) ? 'checked' : '' ?>>Filter by incoming flag</label>
+                  <label>Filter by recipients:
+                    <input name="keyword" type="text" placeholder="555-555-5555, etc..." 
+                      value="<?php echo htmlspecialchars(isset($_SESSION['keyword']) ? $_SESSION['keyword'] : ''); ?>">
+                  </label>
+                  <button name="getMessageList" type="submit" class="submit">Get Message List</button>
+                </div>
+              </form>
               <?php 
-              if (isset($results[IMMNController::RESULT_SEND_MSG])) { 
-                $immnSend = $results[IMMNController::RESULT_SEND_MSG];
+              if (isset($results[C_GET_MSG_LIST])) { 
+                $msgList = $results[C_GET_MSG_LIST];
               ?>
                 <div class="successWide">
                   <strong>SUCCESS:</strong>
-                  <?php echo htmlspecialchars('Message ID: ' . $immnSend); ?>
-                </div> <!-- end of successWide -->
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>limit</th>
+                      <th>offset</th>
+                      <th>total</th>
+                      <th>state</th>
+                      <th>cache status</th>
+                      <th>failed messages</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td data-value="limit"><?php echo htmlspecialchars($msgList->getLimit()); ?></td>
+                      <td data-value="offset"><?php echo htmlspecialchars($msgList->getOffset()); ?></td>
+                      <td data-value="total"><?php echo htmlspecialchars($msgList->getTotal()); ?></td>
+                      <td data-value="state"><?php echo htmlspecialchars($msgList->getState()); ?></td>
+                      <td data-value="cache status"><?php echo htmlspecialchars($msgList->getCacheStatus()); ?></td>
+                      <?php 
+                      if ($msgList->getFailedMessages() != null) { 
+                        $failedMsgs = htmlspecialchars(join(', ', $msgList->getFailedMessages()));
+                      ?>
+                        <td data-value="failed messages"><?php echo $failedMsgs; ?></td>
+                      <?php } else { ?>
+                        <td data-value="failed messages">None</td>
+                      <?php } ?>
+                    </tr>
+                  </tbody>
+                </table>
+                <div id="listMsg">
+                <?php
+                  $count = 0;
+                  $msgs = $msgList->getMessages();
+                  foreach($msgs as $msg) {
+                ?>
+                    <h3>Message <?php echo ++$count; ?></h3>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>message id</th>
+                          <th>from</th>
+                          <th>recipients</th>
+                          <th>text</th>
+                          <?php if ($msg->getTypeMetaData()->getSubject() != null) { ?>
+                            <th>subject</th>
+                          <?php } ?>
+                          <th>timestamp</th>
+                          <th>isFavorite</th>
+                          <th>isUnread</th>
+                          <th>isIncoming</th>
+                          <th>type</th>
+                          <?php if ($msg->getTypeMetaData()->isSegmented()) { ?>
+                            <th>segmentation reference number</th>
+                            <th>segmentation part</th>
+                            <th>segmentation total parts</th>
+                          <?php } ?>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td data-value="message id"><?php echo htmlspecialchars($msg->getMessageId()); ?></td>
+                          <td data-value="from"><?php echo htmlspecialchars($msg->getFrom()); ?></td>
+                          <td data-value="recipients"><?php echo htmlspecialchars(join(', ', $msg->getRecipients())); ?></td>
+                          <td data-value="text"><?php echo htmlspecialchars($msg->getText() != '' ? $msg->getText() : '-'); ?></td>
+                          <?php if ($msg->getTypeMetaData()->getSubject() != null) { ?>
+                            <td data-value="subject"><?php echo htmlspecialchars($msg->getTypeMetaData()->getSubject()); ?></td>
+                          <?php } ?>
+                          <td data-value="timestamp"><?php echo htmlspecialchars($msg->getTimeStamp()); ?></td>
+                          <td data-value="isFavorite"><?php echo htmlspecialchars($msg->isFavorite() ? 'true' : 'false'); ?></td>
+                          <td data-value="isUnread"><?php echo htmlspecialchars($msg->isUnread() ? 'true' : 'false'); ?></td>
+                          <td data-value="isIncoming"><?php echo htmlspecialchars($msg->isIncoming() ? 'true' : 'false'); ?></td>
+                          <td data-value="type"><?php echo htmlspecialchars($msg->getMessageType()); ?></td>
+                          <?php 
+                            if ($msg->getTypeMetaData()->isSegmented()) { 
+                              $segDetails = $msg->getTypeMetaData()->getSegmentationDetails();
+                          ?>
+                            <td data-value="segmentation reference number"><?php echo htmlspecialchars($segDetails->getSegmentationMsgRefNumber()); ?></td>
+                            <td data-value="segmentation part"><?php echo htmlspecialchars($segDetails->getThisPartNumber()); ?></td>
+                            <td data-value="segmentation total parts"><?php echo htmlspecialchars($segDetails->getTotalNumberOfParts()); ?></td>
+                          <?php } ?>
+                        </tr>
+                      </tbody>
+                    </table>
+                  <?php } ?>
+                </div>
               <?php } ?>
-
-              <?php 
-              if (isset($errors[IMMNController::ERROR_SEND_MSG])) { 
-                $errSend = $errors[IMMNController::ERROR_SEND_MSG]; 
-              ?>
+              <?php if (isset($errors[C_GET_MSG_LIST])) { ?>
                 <div class="errorWide">
                   <strong>ERROR:</strong>
-                  <?php echo htmlspecialchars($errSend); ?>
-                </div> <!-- end of errorWide -->
+                  <?php echo htmlspecialchars($errors[C_GET_MSG_LIST]); ?>
+                </div>
               <?php } ?>
 
-            </div> <!-- end of sendMessages -->
-            <div class="lightBorder"></div>
-            <div id="getMessages">
-              <h2>Read Messages:</h2>
-              <form method="post" action="index.php" name="msgHeaderForm" id="msgHeaderForm">
+              <h2>Get Message</h2>
+              <form method="post" action="index.php" id="getMessageForm">
                 <div class="inputFields">
-
-                  <?php if (isset($_SESSION['headerCountTextBox'])) { ?>
-                    <input name="headerCountTextBox" type="text" maxlength="3" 
-                        value="<?php echo htmlspecialchars($_SESSION['headerCountTextBox']); ?>" 
-                        placeholder="Header Counter" />     
-                  <?php } else { ?>
-                    <input name="headerCountTextBox" type="text" maxlength="3" placeholder="Header Counter" />     
-                  <?php } ?>
-
-                  <?php if (isset($_SESSION['headerCountTextBox'])) { ?>
-                    <input name="indexCursorTextBox" type="text" maxlength="30" 
-                        value="<?php echo htmlspecialchars($_SESSION['indexCursorTextBox']); ?>" 
-                        placeholder="Index Cursor" />     
-                  <?php } else { ?>
-                    <input name="indexCursorTextBox" type="text" maxlength="30" placeholder="Index Cursor" />     
-                  <?php } ?>
-
-                  <button type="submit" class="submit" name="getMessageHeaders" 
-                      id="getMessageHeaders">Get Message Headers</button>
-
-                </div> <!-- end of inputFields -->
+                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID"
+                      value="<?php echo htmlspecialchars(isset($_SESSION['messageId']) ? $_SESSION['messageId'] : ''); ?>" />
+                  <button name="getMessage" type="submit" class="submit">
+                    Get Message
+                  </button>
+                </div>
               </form>
-              <form method="post" action="index.php" name="msgContentForm" id="msgContentForm">
-                <div class="inputFields">
-                  <?php if (isset($_SESSION['MessageId'])) { ?>
-                    <input name="MessageId" id="MessageId" type="text" maxlength="30" 
-                        value="<?php echo htmlspecialchars($_SESSION['MessageId']); ?>" placeholder="Message ID" />     
-                  <?php } else { ?>
-                    <input name="MessageId" id="MessageId" type="text" maxlength="30" placeholder="Message ID" />     
-                  <?php } ?>
-
-                  <?php if (isset($_SESSION['PartNumber'])) { ?>
-                    <input name="PartNumber" id="PartNumber" type="text" maxlength="30" 
-                        value="<?php echo htmlspecialchars($_SESSION['PartNumber']); ?>" placeholder="Part Number" />     
-                  <?php } else { ?>
-                    <input name="PartNumber" id="PartNumber" type="text" maxlength="30" placeholder="Part Number" />     
-                  <?php } ?>
-                  <button type="submit" class="submit" name="getMessageContent" 
-                      id="getMessageContent">Get Message Content</button>
-                </div> <!-- end of inputFields -->
-              </form>
-              <label class="note">To use this feature, you must be a subscriber to My AT&amp;T Messages.</label>
-            </div> <!-- end of getMessages -->
-          </div> <!-- end of formContainer -->
-
-          <!-- BEGIN HEADER CONTENT RESULTS -->
-          <?php 
-          if (isset($results[IMMNController::RESULT_GET_BODY])) { 
-            $msgBody = $results[IMMNController::RESULT_GET_BODY];
-            $rawCType = $msgBody->getContentType();
-            $tokenCType = strtok($rawCType, ';');
-            $splitCType = strtok($rawCType, '/');
-          ?> 
-          <div class="successWide">
-            <strong>SUCCESS:</strong>
-          </div> <!-- end of successWide -->
-          <?php 
-          if (strcmp('TEXT', $splitCType) == 0) { 
-          echo htmlspecialchars($msgBody->getData()); 
-          } else if (strcmp($tokenCType, 'APPLICATION/SMIL') == 0) {
-          $data = htmlspecialchars($msgBody->getData());
-          ?>
-
-          <textarea name="TextBox1" rows="2" cols="20" id="TextBox1" disabled="disabled"><?php echo $data; ?></textarea>
-          <?php } else if (strcmp($splitCType, 'IMAGE') == 0) { ?>
-
-          <img src="data:<?php echo $tokenCType; ?>;base64,<?php echo base64_encode($msgBody->getData()); ?>" />
-          <?php
-          }
-          }
-          ?>
-
-          <!-- END HEADER CONTENT RESULTS -->
-
-          <!-- BEGIN HEADER RESULTS -->
-          <?php 
-          if (isset($results[IMMNController::RESULT_GET_HEADERS])) { 
-          $msgHeaders = $results[IMMNController::RESULT_GET_HEADERS];
-          $headers = $msgHeaders->getHeaders();
-          $indexCursor = $msgHeaders->getIndexCursor();
-          $headerCount = $msgHeaders->getHeaderCount();
-          ?>
-
-          <div class="successWide">
-            <strong>SUCCESS:</strong>
-          </div> <!-- end of successWide -->
-          <p id="headerCount">Header Count: <?php echo $headerCount; ?></p>
-          <p id="indexCursor">Index Cursor: <?php echo $indexCursor; ?></p>
-          <table class="kvp" id="kvp">
-            <thead>
-              <tr>
-                <th>MessageId</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Received</th>
-                <th>Text</th>
-                <th>Favorite</th>
-                <th>Read</th>
-                <th>Type</th>
-                <th>Direction</th>
-                <th>Contents</th>
-              </tr>
-            </thead>
-            <tbody>
-            <?php for ($i = 0; $i < count($headers); ++$i) { 
-              $header = $headers[$i];
-              $text = $header->getText();
-              if ($text == NULL || $text == '') {
-                $text = '&#45';
-              }
-              $toArr = $header->getTo();
-              $to = (count($toArr) > 0) ? $toArr[0] : ''; 
-              for ($j = 1; $j < count($toArr); ++$j) {
-                $to .= ',' . $toArr[$j];
-              }
-              $favorite = ($header->getFavorite()) ? 'true' : 'false';
+              <?php 
+              if (isset($results[C_GET_MSG])) { 
+                $msg = $results[C_GET_MSG];
               ?>
-
-              <tr id="<?php echo 'row' . $i; ?>">
-                <td data-value="MessageId"><?php echo $header->getMessageId(); ?></td>
-                <td data-value="From"><?php echo $header->getFrom(); ?></td>
-                <td data-value="To"><?php echo $to; ?></td>
-                <td data-value="Received"><?php echo $header->getReceived(); ?></td>
-                <td data-value="Text"><?php echo $text; ?></td>
-                <td data-value="Favorite"><?php echo $favorite; ?></td>
-                <td data-value="Read"><?php echo $header->getRead(); ?></td>
-                <td data-value="Type"><?php echo $header->getType(); ?></td>
-                <td data-value="Direction"><?php echo $header->getDirection(); ?></td>
-                <td data-value="Contents">
-                <?php if ($header->getMmsContent() != NULL) { ?>
-
-                  <select id="row<?php echo $i; ?>attachments" onchange='chooseSelect("<?php echo 'row' . $i; ?>", this)'>
-                    <option>More..</option>
-                    <?php foreach ($header->getMmsContent() as $p) { ?>
-
-                    <option><?php echo $p['PartNumber'] . '-' . $p['ContentName'] . '-' . $p['ContentType']; ?></option>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+                <table>
+                  <thead>
+                    <th>message id</th>
+                    <th>from</th>
+                    <th>recipients</th>
+                    <th>text</th>
+                     <?php if ($msg->getTypeMetaData()->getSubject() != null) { ?>
+                       <th>subject</th>
+                     <?php } ?>
+                    <th>timestamp</th>
+                    <th>isFavorite</th>
+                    <th>isUnread</th>
+                    <th>isIncoming</th>
+                    <th>type</th>
+                    <?php if ($msg->getTypeMetaData()->isSegmented()) { ?>
+                      <th>segmentation reference number</th>
+                      <th>segmentation part</th>
+                      <th>segmentation total parts</th>
                     <?php } ?>
-
-                  </select>
-                    <?php } else { ?>
-                      &#45;
-                      <?php } ?>
-
-                </td>
-              </tr>
+                  </thead>
+                  <tbody>
+                     <td data-value="message id"><?php echo htmlspecialchars($msg->getMessageId()); ?></td>
+                     <td data-value="from"><?php echo htmlspecialchars($msg->getFrom()); ?></td>
+                     <td data-value="recipients"><?php echo htmlspecialchars(join(', ', $msg->getRecipients())); ?></td>
+                     <td data-value="text"><?php echo htmlspecialchars($msg->getText() != '' ? $msg->getText() : '-'); ?></td>
+                     <?php if ($msg->getTypeMetaData()->getSubject() != null) { ?>
+                       <td data-value="subject"><?php echo htmlspecialchars($msg->getTypeMetaData()->getSubject()); ?></td>
+                     <?php } ?>
+                     <td data-value="timestamp"><?php echo htmlspecialchars($msg->getTimeStamp()); ?></td>
+                     <td data-value="isFavorite"><?php echo htmlspecialchars($msg->isFavorite() ? 'true' : 'false'); ?></td>
+                     <td data-value="isUnread"><?php echo htmlspecialchars($msg->isUnread() ? 'true' : 'false'); ?></td>
+                     <td data-value="isIncoming"><?php echo htmlspecialchars($msg->isIncoming() ? 'true' : 'false'); ?></td>
+                     <td data-value="type"><?php echo htmlspecialchars($msg->getMessageType()); ?></td>
+                     <?php 
+                       if ($msg->getTypeMetaData()->isSegmented()) { 
+                         $segDetails = $msg->getTypeMetaData()->getSegmentationDetails();
+                     ?>
+                       <td data-value="segmentation reference number"><?php echo htmlspecialchars($segDetails->getSegmentationMsgRefNumber()); ?></td>
+                       <td data-value="segmentation part"><?php echo htmlspecialchars($segDetails->getThisPartNumber()); ?></td>
+                       <td data-value="segmentation total parts"><?php echo htmlspecialchars($segDetails->getTotalNumberOfParts()); ?></td>
+                     <?php } ?>
+                  </tbody>
+                </table>
+              <?php } ?>
+              <?php if (isset($errors[C_GET_MSG])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_GET_MSG]); ?>
+                </div>
               <?php } ?>
 
-            </tbody>
-          </table>
-          <?php } ?>
+              <?php
+                $sessionMsgId = htmlspecialchars(isset($_SESSION['messageId']) ? $_SESSION['messageId'] : '');
+                $sessionPartNumber = htmlspecialchars(isset($_SESSION['partNumber']) ? $_SESSION['partNumber'] : '');
+              ?>
+              <h2>Get Message Content</h2>
+              <form method="post" action="index.php" id="getMessageContentForm">
+                <div class="inputFields">
+                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" 
+                    value="<?php echo $sessionMsgId; ?>" />     
+                  <input name="partNumber" type="text" maxlength="30" placeholder="Part Number" 
+                    value="<?php echo $sessionPartNumber; ?>" />     
+                  <button  type="submit" class="submit" name="getMessageContent">
+                    Get Message Content
+                  </button>
+                </div>
+              </form>
+              <?php 
+                if (isset($results[C_GET_MSG_CONTENT])) { 
+                  $msgContent = $results[C_GET_MSG_CONTENT];
+                  $splitType = explode('/', $msgContent->getContentType());
+                  $ctype = $splitType[0];
+              ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+                <?php if ($ctype == 'text') { ?>
+                  <?php echo htmlspecialchars($msgContent->getContent()); ?>
+                <?php } else if ($ctype == 'image') { ?>
+                  <img src="data:<?php echo $msgContent->getContentType(); ?>;base64,<?php echo base64_encode($msgContent->getContent()); ?>" />
+                <?php } else if ($ctype == 'video') { ?>
+                  <video controls="controls" autobuffer="autobuffer" autoplay="autoplay">
+                    <source src="data:<?php echo $msgContent->getContentType(); ?>;base64,<?php echo base64_encode($msgContent->getContent()); ?>" />
+                  </video>
+                <?php } else if ($ctype == 'audio') { ?>
+                  <audio controls="controls" autobuffer="autobuffer" autoplay="autoplay">
+                    <source src="data:<?php echo $msgContent->getContentType(); ?>;base64,<?php echo base64_encode($msgContent->getContent()); ?>" />
+                  </audio>
+                <?php } ?>
+              <?php } ?>
+              <?php if (isset($errors[C_GET_MSG_CONTENT])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_GET_MSG_CONTENT]); ?>
+                </div>
+              <?php } ?>
 
-          <!-- END HEADER RESULTS -->
-          <?php 
-          $errGet = null;
-          if (isset($errors[IMMNController::ERROR_GET_HEADERS])) {
-            $errGet = $errors[IMMNController::ERROR_GET_HEADERS];
-          } else if (isset($errors[IMMNController::ERROR_GET_BODY])) {
-            $errGet = $errors[IMMNController::ERROR_GET_BODY];
-          }
+              <h2>Get Delta</h2>
+              <form method="post" action="index.php" id="getDeltaForm">
+                <div class="inputFields">
+                  <?php
+                    $sessionState = htmlspecialchars(isset($_SESSION['state']) ? $_SESSION['state'] : '');
+                  ?>
+                  <input name="state" type="text" maxlength="30" placeholder="Message State" 
+                    value="<?php echo $sessionState; ?>" />
+                  <button  type="submit" class="submit" name="getDelta">
+                    Get Delta
+                  </button>
+                </div>
+              </form>
+              <?php 
+                if (isset($results[C_GET_DELTA])) { 
+                  $deltaResponse = $results[C_GET_DELTA];
+              ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+                <?php foreach($deltaResponse->getDeltas() as $delta) { ?>
+                  <p><b>Delta type:</b> <?php echo $delta->getDeltaType(); ?></p>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Delta Operation</th>
+                        <th>MessageId</th>
+                        <th>Favorite</th>
+                        <th>Unread</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php foreach($delta->getAdds() as $add) { ?>
+                        <tr>
+                          <td data-value="Delta Operation">Add</td>
+                          <td data-value="MessageId"><?php echo $add->getMessageId(); ?></td>
+                          <td data-value="Favorite"><?php echo $add->isFavorite() ? 'true' : 'false'; ?></td>
+                          <td data-value="Unread"><?php echo $add->isUnread() ? 'true' : 'false'; ?></td>
+                        </tr>
+                      <?php } ?>
+                      <?php foreach($delta->getDeletes() as $delete) { ?>
+                        <tr>
+                          <td data-value="Delta Operation">Delete</td>
+                          <td data-value="MessageId"><?php echo $delete->getMessageId(); ?></td>
+                          <td data-value="Favorite"><?php echo $delete->isFavorite() ? 'true' : 'false'; ?></td>
+                          <td data-value="Unread"><?php echo $delete->isUnread() ? 'true' : 'false'; ?></td>
+                        </tr>
+                      <?php } ?>
+                      <?php foreach($delta->getDeletes() as $update) { ?>
+                        <tr>
+                          <td data-value="Delta Operation">Update</td>
+                          <td data-value="MessageId"><?php echo $update->getMessageId(); ?></td>
+                          <td data-value="Favorite"><?php echo $update->isFavorite() ? 'true' : 'false'; ?></td>
+                          <td data-value="Unread"><?php echo $update->isUnread() ? 'true' : 'false'; ?></td>
+                        </tr>
+                      <?php } ?>
+                    </tbody>
+                  </table>
+                <?php } ?>
+              <?php } ?>
+              <?php if (isset($errors[C_GET_DELTA])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_GET_DELTA]); ?>
+                </div>
+              <?php } ?>
 
-          if ($errGet != null) { ?>
-          <div class="errorWide">
-            <strong>ERROR:</strong>
-            <?php echo htmlspecialchars($errGet); ?>
+              <h2> Get Message Index Info</h2>
+              <form method="post" action="index.php" id="getMessageIndexInfoForm">
+                <div class="inputFields">
+                  <button name="getMessageIndexInfo" type="submit" class="submit">
+                    Get Message Index Info
+                  </button>
+                </div>
+              </form>
+              <?php 
+                if (isset($results[C_GET_MSG_INDEX_INFO])) { 
+                  $indexInfo = $results[C_GET_MSG_INDEX_INFO];
+              ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>State</th>
+                      <th>Message Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td data-value="Status"><?php echo htmlspecialchars($indexInfo->getStatus()); ?></td>
+                      <td data-value="State"><?php echo htmlspecialchars($indexInfo->getState()); ?></td>
+                      <td data-value="Message Count"><?php echo htmlspecialchars($indexInfo->getMessageCount()); ?></td>
+                    </tr>
+                  </tbody>
+                </table>
+              <?php } ?>
+              <?php if (isset($errors[C_GET_MSG_INDEX_INFO])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_GET_MSG_INDEX_INFO]); ?>
+                </div>
+              <?php } ?>
 
-          </div> <!-- end of errorWide -->
-          <?php } ?>
+            </div> <!-- end of get message toggle -->
 
-        </div> <!-- end of formBox -->
+            <div class="lightBorder"></div>
+            <a id="updateMsgToggle" 
+              href="javascript:toggle('updateMsg');">Update Message</a>
+            <div class="toggle" id="updateMsg">
+              <h2>Update Message/Messages</h2>
+              <form method="post" action="index.php" id="updateMessageForm">
+                <div class="inputFields">
+                  <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
+                  <?php
+                    $sessionMsgId = htmlspecialchars(isset($_SESSION['messageId']) ? $_SESSION['messageId'] : '');
+                  ?>
+                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" 
+                      value="<?php echo $sessionMsgId; ?>" />
+                  <label>Change Status:</label>
+                  <?php
+                    $rflag = isset($_SESSION['readflag']) ? $_SESSION['readflag'] : 'read';
+                  ?>
+                  <label>
+                    <input type="radio" name="readflag" value="read" <?php echo $rflag == 'read' ? 'checked' : ''; ?>>
+                    Read
+                  </label>
+                  <label>
+                    <input type="radio" name="readflag" value="unread" <?php echo $rflag == 'unread' ? 'checked' : ''?>>
+                    Unread
+                  </label>
+                  <button name="updateMessage" type="submit" class="submit">Update Message/Messages</button>
+                </div>
+              </form>
+
+              <?php if (isset($results[C_UPDATE_MSGS])) { ?> 
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+              <?php } ?>
+              <?php if (isset($errors[C_UPDATE_MSGS])) { ?> 
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_UPDATE_MSGS]); ?>
+                </div>
+              <?php } ?>
+            </div> <!-- end of update message toggle -->
+
+            <div class="lightBorder"></div>
+            <a id="delMsgToggle" href="javascript:toggle('delMsg');">Delete Message</a>
+            <div class="toggle" id="delMsg">
+              <h2>Delete Message/Messages</h2>
+              <form method="post" action="index.php" id="deleteMessageForm">
+                <div class="inputFields">
+                  <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
+                  <?php
+                    $sessionMsgId = htmlspecialchars(isset($_SESSION['messageId']) ? $_SESSION['messageId'] : '');
+                  ?>
+                  <input name="messageId" type="text" maxlength="30" placeholder="Message ID" 
+                    value="<?php echo $sessionMsgId; ?>" />
+                  <button name="deleteMessage" type="submit" class="submit">Delete Message/Messages</button>
+                </div>
+              </form>
+
+              <?php if (isset($results[C_DELETE_MSGS])) { ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+              <?php } ?>
+              <?php if (isset($errors[C_DELETE_MSGS])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_DELETE_MSGS]); ?>
+                </div>
+              <?php } ?>
+            </div> <!-- end of delete toggle -->
+
+            <div class="lightBorder"></div>
+
+            <a id="getMsgNotToggle" 
+              href="javascript:toggle('getMsgNot');">Get Notification Connection Details</a>
+            <div class="toggle" id="getMsgNot">
+              <form method="post" action="index.php" id="getNotifyDetailsForm">
+                <div class="inputFields">
+                  <label>Notification Subscription:</label>
+                  <?php
+                    $sessionQueues = isset($_SESSION['queues']) ? $_SESSION['queues'] : 'text'; 
+                  ?>
+                  <label><input type="radio" name="queues" value="text"
+                    <?php echo $sessionQueues == 'text' ? 'checked' : '' ?>>Text</label>
+                  <label><input type="radio" name="queues" value="mms" 
+                    <?php echo $sessionQueues == 'mms' ? 'checked' : '' ?>>MMS</label>
+                  <button name="getNotifyDetails" type="submit" class="submit">Get Details</button>
+                </div>
+              </form>
+              <?php 
+                if (isset($results[C_NOTIFICATION_DETAILS])) { 
+                  $notifDetails = $results[C_NOTIFICATION_DETAILS];
+              ?>
+                <div class="successWide">
+                  <strong>SUCCESS:</strong>
+                </div>
+                <h3>Connection Details</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>Password</th>
+                      <th>https url</th>
+                      <th>wss url</th>
+                      <th>queues</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td data-value="Username"><?php echo htmlspecialchars($notifDetails->getUsername()); ?></td>
+                      <td data-value="Password"><?php echo htmlspecialchars($notifDetails->getPassword()); ?></td>
+                      <td data-value="https url"><?php echo htmlspecialchars($notifDetails->getHttpsUrl()); ?></td>
+                      <td data-value="wss url"><?php echo htmlspecialchars($notifDetails->getWssUrl()); ?></td>
+                      <td data-value="queues"><?php echo htmlspecialchars(implode(',', $notifDetails->getQueues())); ?></td>
+                    </tr>
+                  </tbody>
+                </table>
+              <?php } ?>
+              <?php if (isset($errors[C_NOTIFICATION_DETAILS])) { ?>
+                <div class="errorWide">
+                  <strong>ERROR:</strong>
+                  <?php echo htmlspecialchars($errors[C_NOTIFICATION_DETAILS]); ?>
+                </div>
+              <?php } ?>
+            </div> <!-- end of getMsgNot toggle -->
+          </div> <!-- end of form container -->
+        </div> <!-- end of form box -->
       </div> <!-- end of content -->
       <div class="border"></div>
       <div id="footer">
-        <div id="powered_by">Powered by AT&amp;T Cloud Architecture</div>
+        <div id="powered_by">
+          Powered by AT&amp;T Cloud Architecture
+        </div>
         <p>
-          The Application hosted on this site are working examples intended to be used for reference in creating 
-          products to consume AT&amp;T Services and not meant to be used as part of your product. The data in 
-          these pages is for test purposes only and intended only for use as a reference in how the services 
-          perform. 
-          <br> <br> 
-          For download of tools and documentation, please go to 
-          <a href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
-          <br> 
-          For more information contact 
-          <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-          <br> <br>
-          &copy; 2013 AT&amp;T Intellectual Property. All rights reserved.
-          <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        The Application hosted on this site are working examples
+        intended to be used for reference in creating products to consume
+        AT&amp;T Services and not meant to be used as part of your
+        product. The data in these pages is for test purposes only and
+        intended only for use as a reference in how the services perform.
+        <br><br>
+        For download of tools and documentation, please go to 
+        <a href="https://devconnect-api.att.com/" 
+          target="_blank">https://devconnect-api.att.com</a>
+        <br> For more information contact 
+        <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+        <br><br>
+        &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+        <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->
     </div> <!-- end of page_container -->
-    <script>setup();</script>
+    <script>
+      <?php 
+        /* handle toggling of divs */ 
+
+        // map results and errors to div toggles
+        $resultsArr = array(
+          C_SEND_MSG => 'sendMsg',
+          C_CREATE_MSG_INDEX => 'createMsg',
+          C_GET_MSG_LIST => 'getMsg',
+          C_GET_MSG => 'getMsg',
+          C_GET_MSG_CONTENT => 'getMsg',
+          C_GET_DELTA => 'getMsg',
+          C_GET_MSG_INDEX_INFO => 'getMsg',
+          C_UPDATE_MSGS => 'updateMsg',
+          C_DELETE_MSGS => 'delMsg',
+          C_NOTIFICATION_DETAILS => 'getMsgNot'
+        );
+
+        foreach ($resultsArr as $k => $v) {
+          if (isset($results[$k]) || isset($errors[$k])) {
+            echo "toggle('$v')";
+          }
+        }
+      ?>
+    </script>
   </body>
 </html>
+

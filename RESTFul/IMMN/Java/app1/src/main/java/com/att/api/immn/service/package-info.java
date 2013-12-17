@@ -22,9 +22,9 @@
  * <a href="https://developer.att.com/docs/apis/rest/1/In-app%20Messaging%20from%20Mobile%20Number">IMMN</a>.
  * </p>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @author <a href="mailto:kh455g@att.com">Kyle Hill</a>
- * @since 2.2
+ * @author pk9069
+ * @author kh455g
+ * @since 1.0
  * @see com.att.api.mmn.service.IMMNService
  */
 

@@ -122,7 +122,7 @@ h2 {
 }
 
 #content th, #content td {
-  text-align: center;
+  text-align: left;
   padding-left: 10px;
 	border: 1px solid lightgray;
 }
@@ -135,7 +135,7 @@ h2 {
   padding-right: 1.5625%; 
 }
 
-#formBox {
+.formBox {
   padding-top: 2.0833%;
   padding-left: 1.5625%; 
 }
@@ -177,6 +177,7 @@ h2 {
   margin-bottom: 1.0833%;
 }
 
+
 .inputFields select {
   position: relative;
   margin-bottom: 1.0833%;
@@ -199,25 +200,32 @@ h2 {
   margin-bottom: 1.2833%;
 }
 
-.note {
-  font-style: italic;
-  font-size: 0.8em;
-}
-
 /* APP SPECIFIC CSS */
-#msgHeaderForm {
-    float: left;
-    width: 50%;
+
+.toggle {
+	display: none;
 }
 
-#msgContentForm {
-    float: right;
-    width: 50%;
+.column {
+	display: inline-block;
+	margin: 10px;
 }
 
-#kvp select {
-    width: 100%
+.columns {
+	white-space: nowrap
 }
+
+#payload {
+	height: 141px;
+	width: 96.785%;
+}
+
+#notaryInfo {
+  margin-right: 2.029334%;
+  margin-bottom: 1.0833%;
+  word-wrap: break-word;
+}
+
 /* END APP SPECIFIC CSS */
 
 /* End of layout styles */
@@ -230,7 +238,7 @@ h2 {
   }
   /* table data */
   #content table, #content thead, #content tbody, #content th, #content td, #content tr {
-    display: block;
+    display: block;	
   }
   #content thead tr { 
     position: absolute;
@@ -340,7 +348,7 @@ h2 {
         width: 100%;
     }
     #msgContentForm {
-        float: none;
+        float: right;
         width: 100%;
     }
   /* END APP SPECIFIC MEDIA QUERY CSS */

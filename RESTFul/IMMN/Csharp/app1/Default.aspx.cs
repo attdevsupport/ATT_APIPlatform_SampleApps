@@ -21,39 +21,21 @@ using System.Web.Script.Serialization;
 
 
 #endregion
-public partial class MIM_App1 : System.Web.UI.Page
+public partial class IMMN_App1 : System.Web.UI.Page
 {
     #region Instance variables
 
-    /// <summary>
-    /// API Address
-    /// </summary>
     private string endPoint;
 
-    /// <summary>
-    /// Access token variables - temporary
-    /// </summary>
     private string apiKey, authCode, authorizeRedirectUri, secretKey, accessToken,
         scope, refreshToken, refreshTokenExpiryTime, accessTokenExpiryTime;
 
-    /// <summary>
-    /// Maximum number of addresses user can specify
-    /// </summary>
     private int maxAddresses;
 
-    /// <summary>
-    /// List of addresses to send
-    /// </summary>
     private List<string> addressList = new List<string>();
 
-    /// <summary>
-    /// Variable to hold phone number(s)/email address(es)/short code(s) parameter.
-    /// </summary>
     private string phoneNumbersParameter = null;
 
-    /// <summary>
-    /// Gets or sets the value of refreshTokenExpiresIn
-    /// </summary>
     private int refreshTokenExpiresIn;
 
     private string AttachmentFilesDir = string.Empty;
@@ -65,12 +47,44 @@ public partial class MIM_App1 : System.Web.UI.Page
     public string getHeadersErrorResponse = string.Empty;
     public string getHeadersSuccessResponse = string.Empty;
     public string getMessageSuccessResponse = string.Empty;
+    public string getMessageContentSuccessResponse = string.Empty;
+    public string getMessageContentErrorResponse = string.Empty;
     public string getMessageErrorResponse = string.Empty;
+    public string filters = string.Empty;
+
+    public string createMessageIndexSuccessResponse = string.Empty;
+    public string createMessageIndexErrorResponse = string.Empty;
+    public string csGetMessageListDetailsErrorResponse = string.Empty;
+    public string csGetMessageListDetailsSuccessResponse = string.Empty;
+    public string getNotificationConnectionDetailsSuccessResponse = string.Empty;
+    public string getNotificationConnectionDetailsErrorResponse = string.Empty;
+    public csNotificationConnectionDetails getNotificationConnectionDetailsResponse = new csNotificationConnectionDetails();
+    public MessageList csGetMessageListDetailsResponse = new MessageList();
+    public DeltaResponse csDeltaResponse = new DeltaResponse();
+    public csMessageContentDetails getMessageContentResponse = new csMessageContentDetails();
+    public Message getMessageDetailsResponse = new Message();
+    public MessageIndexInfo getMessageIndexInfoResponse = new MessageIndexInfo();
+    public string deleteMessageSuccessResponse = string.Empty;
+    public string deleteMessageErrorResponse = string.Empty;
+    public string updateMessageSuccessResponse = string.Empty;
+    public string updateMessageErrorResponse = string.Empty;
+    public string messageIndexSuccessResponse = string.Empty;
+    public string messageIndexErrorResponse = string.Empty;
+    public string deltaSuccessResponse = string.Empty;
+    public string deltaErrorResponse = string.Empty;
+    public string getMessageListSuccessResponse = string.Empty;
+    public string getMessageListErrorResponse = string.Empty;
+
     public string content_result = string.Empty;
     public byte[] receivedBytes = null;
     public WebResponse getContentResponseObject = null;
     public string[] imageData = null;
-    public MessageHeaderList messageHeaderList;
+    public string showSendMsg = string.Empty;
+    public string showCreateMessageIndex = string.Empty;
+    public string showGetNotificationConnectionDetails = string.Empty;
+    public string showDeleteMessage = string.Empty;
+    public string showUpdateMessage = string.Empty;
+    public string showGetMessage = string.Empty;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -86,11 +100,22 @@ public partial class MIM_App1 : System.Web.UI.Page
                 ResetRequestSessionVariables();
                 if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "sendmessasge") == 0)
                     this.SendMessageRequest();
-                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getmessageheader") == 0)
-                    this.GetMessageHeaders();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getmessagecontent") == 0)
                     this.GetMessageContentByIDnPartNumber();
-
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "createmessageindex") == 0)
+                    this.createMessageIndex();
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getnotificationconnectiondetails") == 0)
+                    this.getNotificationConnectionDetails();
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deletemessage") == 0)
+                    this.deleteMessage();
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deltamessage") == 0)
+                    this.getDelta();
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getmessagelist") == 0)
+                    this.getMessageList();
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "messageindex") == 0)
+                    this.getMessageIndex();
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "updatemessage") == 0)
+                    this.updateMessage();
             }
             else
             {
@@ -99,15 +124,12 @@ public partial class MIM_App1 : System.Web.UI.Page
                 this.ResetTokenVariables();
                 return;
             }
-        }            
+        }
 
     }
 
     #region Access Token functions
 
-    /// <summary>
-    /// This function resets access token related session variable to null 
-    /// </summary>
     private void ResetTokenSessionVariables()
     {
         Session["cs_rest_AccessToken"] = null;
@@ -115,10 +137,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         Session["cs_rest_RefreshToken"] = null;
         Session["cs_rest_RefreshTokenExpiryTime"] = null;
     }
-
-    /// <summary>
-    /// This function resets access token related  variable to null 
-    /// </summary>
     private void ResetTokenVariables()
     {
         this.accessToken = null;
@@ -126,10 +144,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         this.refreshTokenExpiryTime = null;
         this.accessTokenExpiryTime = null;
     }
-
-    /// <summary>
-    /// Redirect to OAuth and get Authorization Code
-    /// </summary>
     private void GetAuthCode()
     {
         try
@@ -141,7 +155,42 @@ public partial class MIM_App1 : System.Web.UI.Page
             if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
                                                                         "sendmessasge") == 0))
             {
-              sendMessageErrorResponse = ex.Message;
+                sendMessageErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                                        "createmessageindex") == 0))
+            {
+                createMessageIndexErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                        "getnotificationconnectiondetails") == 0))
+            {
+                getNotificationConnectionDetailsErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                        "deletemessage") == 0))
+            {
+                deleteMessageErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                    "deltamessage") == 0))
+            {
+                deltaErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                    "getmessagelist") == 0))
+            {
+                getMessageListErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                "messageindex") == 0))
+            {
+                messageIndexErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                "updatemessage") == 0))
+            {
+                updateMessageErrorResponse = ex.Message;
             }
             else
             {
@@ -150,10 +199,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
     }
 
-    /// <summary>
-    /// Reads access token related session variables to local variables
-    /// </summary>
-    /// <returns>true/false depending on the session variables</returns>
     private bool ReadTokenSessionVariables()
     {
         if (Session["cs_rest_AccessToken"] != null)
@@ -173,7 +218,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         {
             this.accessTokenExpiryTime = null;
         }
-
         if (Session["cs_rest_RefreshToken"] != null)
         {
             this.refreshToken = Session["cs_rest_RefreshToken"].ToString();
@@ -182,7 +226,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         {
             this.refreshToken = null;
         }
-
         if (Session["cs_rest_RefreshTokenExpiryTime"] != null)
         {
             this.refreshTokenExpiryTime = Session["cs_rest_RefreshTokenExpiryTime"].ToString();
@@ -200,12 +243,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         return true;
     }
 
-    /// <summary>
-    /// Validates access token related variables
-    /// </summary>
-    /// <returns>string, returns VALID_ACCESS_TOKEN if its valid
-    /// otherwise, returns INVALID_ACCESS_TOKEN if refresh token expired or not able to read session variables
-    /// return REFRESH_TOKEN, if access token in expired and refresh token is valid</returns>
     private string IsTokenValid()
     {
         if (Session["cs_rest_AccessToken"] == null)
@@ -237,13 +274,6 @@ public partial class MIM_App1 : System.Web.UI.Page
             return "INVALID_ACCESS_TOKEN";
         }
     }
-
-    /// <summary>
-    /// Get access token based on the type parameter type values.
-    /// </summary>
-    /// <param name="type">If type value is 0, access token is fetch for authorization code flow
-    /// If type value is 2, access token is fetch for authorization code floww based on the exisiting refresh token</param>
-    /// <returns>true/false; true if success, else false</returns>
     private bool GetAccessToken(AccessTokenType type)
     {
         Stream postStream = null;
@@ -305,11 +335,26 @@ public partial class MIM_App1 : System.Web.UI.Page
                 }
                 else
                 {
-                    string errorMessage= "Auth server returned null access token";
+                    string errorMessage = "Auth server returned null access token";
                     if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
                                                             "sendmessasge") == 0))
                     {
                         sendMessageErrorResponse = errorMessage;
+                    }
+                    else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                        "createmessageindex") == 0))
+                    {
+                        createMessageIndexErrorResponse = errorMessage;
+                    }
+                    else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                        "getnotificationconnectiondetails") == 0))
+                    {
+                        getNotificationConnectionDetailsErrorResponse = errorMessage;
+                    }
+                    else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                        "deletemessage") == 0))
+                    {
+                        deleteMessageErrorResponse = errorMessage;
                     }
                     else
                     {
@@ -327,9 +372,20 @@ public partial class MIM_App1 : System.Web.UI.Page
             {
                 sendMessageErrorResponse = errorMessage;
             }
-            else
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                    "createmessageindex") == 0))
             {
-                getMessageErrorResponse = errorMessage;
+                createMessageIndexErrorResponse = errorMessage;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                    "getnotificationconnectiondetails") == 0))
+            {
+                getNotificationConnectionDetailsErrorResponse = errorMessage;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                        "deletemessage") == 0))
+            {
+                deleteMessageErrorResponse = errorMessage;
             }
         }
         finally
@@ -344,10 +400,6 @@ public partial class MIM_App1 : System.Web.UI.Page
     }
 
     #endregion
-    /// <summary>
-    /// Read parameters from configuraton file
-    /// </summary>
-    /// <returns>true/false; true if all required parameters are specified, else false</returns>
     private bool ReadConfigFile()
     {
         this.endPoint = ConfigurationManager.AppSettings["endPoint"];
@@ -360,21 +412,21 @@ public partial class MIM_App1 : System.Web.UI.Page
         this.apiKey = ConfigurationManager.AppSettings["api_key"];
         if (string.IsNullOrEmpty(this.apiKey))
         {
-            sendMessageErrorResponse =  "api_key is not defined in configuration file";
+            sendMessageErrorResponse = "api_key is not defined in configuration file";
             return false;
         }
 
         this.secretKey = ConfigurationManager.AppSettings["secret_key"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
-            sendMessageErrorResponse =  "secret_key is not defined in configuration file";
+            sendMessageErrorResponse = "secret_key is not defined in configuration file";
             return false;
         }
 
         this.authorizeRedirectUri = ConfigurationManager.AppSettings["authorize_redirect_uri"];
         if (string.IsNullOrEmpty(this.authorizeRedirectUri))
         {
-            sendMessageErrorResponse =  "authorize_redirect_uri is not defined in configuration file";
+            sendMessageErrorResponse = "authorize_redirect_uri is not defined in configuration file";
             return false;
         }
 
@@ -423,11 +475,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         return true;
     }
 
-    /// <summary>
-    /// Gets the mapping of extension with predefined content types
-    /// </summary>
-    /// <param name="extension">file extension</param>
-    /// <returns>string, content type</returns>
     private string GetContentTypeFromExtension(string extension)
     {
         Dictionary<string, string> extensionToContentType = new Dictionary<string, string>()
@@ -453,27 +500,24 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
     }
 
-    /// <summary>
-    /// Sends message to the list of addresses provided.
-    /// </summary>
-    /// <param name="attachments">List of attachments</param>
-    private void SendMessageRequest( string accToken, string edPoint,string subject, string message, string groupflag, ArrayList attachments)
+    private void SendMessageRequest(string accToken, string edPoint, string subject, string message, string groupflag, ArrayList attachments)
     {
         Stream postStream = null;
         try
         {
             string boundaryToSend = "----------------------------" + DateTime.Now.Ticks.ToString("x");
 
-            HttpWebRequest msgRequestObject = (HttpWebRequest)WebRequest.Create(string.Empty + edPoint + "/rest/1/MyMessages");
+            HttpWebRequest msgRequestObject = (HttpWebRequest)WebRequest.Create(string.Empty + edPoint + "/myMessages/v2/messages");
             msgRequestObject.Headers.Add("Authorization", "Bearer " + accToken);
             msgRequestObject.Method = "POST";
-            string contentType = "multipart/form-data; type=\"application/x-www-form-urlencoded\"; start=\"<startpart>\"; boundary=\"" + boundaryToSend + "\"\r\n";
+            string contentType = "multipart/related; type=\"application/x-www-form-urlencoded\"; start=\"startpart\"; boundary=\"" + boundaryToSend + "\"\r\n";
             msgRequestObject.ContentType = contentType;
-            string mmsParameters = this.phoneNumbersParameter + "Subject=" + Server.UrlEncode(subject) + "&Text=" + Server.UrlEncode(message) + "&Group=" + groupflag;
-
+            //msgRequestObject.Accept = "application/xml";
+            string mmsParameters = this.phoneNumbersParameter + "subject=" + Server.UrlEncode(subject) + "&text=" + Server.UrlEncode(message) + "&isGroup=" + groupflag;
+            Response.Write(mmsParameters);
             string dataToSend = string.Empty;
             dataToSend += "--" + boundaryToSend + "\r\n";
-            dataToSend += "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\nContent-Disposition: form-data; name=\"root-fields\"\r\nContent-ID: <startpart>\r\n\r\n" + mmsParameters + "\r\n";
+            dataToSend += "Content-Disposition: form-data; name=\"root-fields\"\r\n" + "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\nContent-ID: startpart\r\n\r\n" + mmsParameters + "\r\n";
 
             UTF8Encoding encoding = new UTF8Encoding();
             if ((attachments == null) || (attachments.Count == 0))
@@ -520,7 +564,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                         string mmsResponseData = sr.ReadToEnd();
                         JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
                         MsgResponseId deserializedJsonObj = (MsgResponseId)deserializeJsonObject.Deserialize(mmsResponseData, typeof(MsgResponseId));
-                        sendMessageSuccessResponse =  deserializedJsonObj.Id.ToString();
+                        sendMessageSuccessResponse = deserializedJsonObj.Id.ToString();
                         sr.Close();
                     }
                 }
@@ -530,6 +574,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                 byte[] dataBytes = encoding.GetBytes(string.Empty);
                 byte[] totalDataBytes = encoding.GetBytes(string.Empty);
                 int count = 0;
+               
                 foreach (string attachment in attachments)
                 {
                     string mmsFileName = Path.GetFileName(attachment.ToString());
@@ -549,10 +594,12 @@ public partial class MIM_App1 : System.Web.UI.Page
                         dataToSend = "\r\n--" + boundaryToSend + "\r\n";
                     }
 
-                    dataToSend += "Content-Disposition: form-data; name=\"file" + count + "\"; filename=\"" + mmsFileName + "\"\r\n";
-                    dataToSend += "Content-Type:" + attachmentContentType + "\r\n";
-                    dataToSend += "Content-ID:<" + mmsFileName + ">\r\n";
-                    dataToSend += "Content-Transfer-Encoding:binary\r\n\r\n";
+                    dataToSend += "Content-Disposition: form-data; name=\""+ mmsFileName +"\"; filename=" + mmsFileName + "\r\n";
+                    dataToSend += "Content-Type: " + attachmentContentType + "; charset=UTF-8" + "\r\n";
+                    dataToSend += "Content-ID:" + mmsFileName + "\r\n";                    
+                    dataToSend += "Content-Transfer-Encoding: binary \r\n";
+                    dataToSend += "Content-Location: " + mmsFileName + "\r\n\r\n";
+                    
                     byte[] dataToSendByte = encoding.GetBytes(dataToSend);
                     int dataToSendSize = dataToSendByte.Length + image.Length;
                     var tempMemoryStream = new MemoryStream(new byte[dataToSendSize], 0, dataToSendSize, true, true);
@@ -581,7 +628,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                 byte[] finalpostBytes = totalMemoryStream.GetBuffer();
 
                 msgRequestObject.ContentLength = finalpostBytes.Length;
-
+                
                 postStream = msgRequestObject.GetRequestStream();
                 postStream.Write(finalpostBytes, 0, finalpostBytes.Length);
 
@@ -603,13 +650,13 @@ public partial class MIM_App1 : System.Web.UI.Page
                 using (Stream stream = we.Response.GetResponseStream())
                 {
                     StreamReader reader = new StreamReader(stream);
-                    sendMessageErrorResponse =  reader.ReadToEnd();
+                    sendMessageErrorResponse = reader.ReadToEnd();
                 }
             }
         }
         catch (Exception ex)
         {
-            sendMessageErrorResponse =   ex.ToString();
+            sendMessageErrorResponse = ex.ToString();
         }
         finally
         {
@@ -620,12 +667,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
     }
 
-    /// <summary>
-    /// Sums up two byte arrays.
-    /// </summary>
-    /// <param name="firstByteArray">First byte array</param>
-    /// <param name="secondByteArray">second byte array</param>
-    /// <returns>The memorystream"/> summed memory stream</returns>
     private MemoryStream JoinTwoByteArrays(byte[] firstByteArray, byte[] secondByteArray)
     {
         int newSize = firstByteArray.Length + secondByteArray.Length;
@@ -635,117 +676,16 @@ public partial class MIM_App1 : System.Web.UI.Page
         return totalMemoryStream;
     }
 
-    protected void getMessageHeaders_Click(object sender, EventArgs e)
-    {
-        this.ReadTokenSessionVariables();
-
-        string tokentResult = this.IsTokenValid();
-
-        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
-        {
-            SetRequestSessionVariables();
-            Session["cs_rest_ServiceRequest"] = "getmessageheader";
-            Session["cs_rest_appState"] = "GetToken";
-            this.GetAuthCode();
-        }
-        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
-        {
-            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
-            {
-                sendMessageErrorResponse = "Failed to get Access token";
-                this.ResetTokenSessionVariables();
-                this.ResetTokenVariables();
-                return;
-            }
-        }
-
-        if (this.accessToken == null || this.accessToken.Length <= 0)
-        {
-            return;
-        }
-        GetMessageHeaders();
-    }
-
-    protected void GetMessageHeaders()
-    {
-        this.GetMessageHeaders(this.accessToken, this.endPoint, headerCountTextBox.Value, indexCursorTextBox.Value);
-    }
-    private void GetMessageHeaders(string acctoken, string epoint, string hCount, string iCursor)
-    {
-        try
-        {
-            HttpWebRequest mimRequestObject1;
-
-            string getHeadersURL = string.Empty + endPoint + "/rest/1/MyMessages?HeaderCount=" + hCount;
-            if (!string.IsNullOrEmpty(iCursor))
-            {
-                getHeadersURL += "&IndexCursor=" + iCursor;
-            }
-            mimRequestObject1 = (HttpWebRequest)WebRequest.Create(getHeadersURL);
-            mimRequestObject1.Headers.Add("Authorization", "Bearer " + accessToken);
-            mimRequestObject1.Method = "GET";
-            mimRequestObject1.KeepAlive = true;
-
-            WebResponse mimResponseObject1 = mimRequestObject1.GetResponse();
-            using (StreamReader sr = new StreamReader(mimResponseObject1.GetResponseStream()))
-            {
-                string mimResponseData = sr.ReadToEnd();
-
-                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                MIMResponse deserializedJsonObj = (MIMResponse)deserializeJsonObject.Deserialize(mimResponseData, typeof(MIMResponse));
-
-                if (null != deserializedJsonObj)
-                {
-                    getHeadersSuccessResponse = "Success";
-                    messageHeaderList = deserializedJsonObj.MessageHeadersList;
-                }
-                else
-                {
-                    getHeadersErrorResponse =  "No response from server";
-                }
-
-                sr.Close();
-            }
-        }
-        catch (WebException we)
-        {
-            string errorResponse = string.Empty;
-
-            try
-            {
-                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
-                {
-                    errorResponse = sr2.ReadToEnd();
-                    sr2.Close();
-                }
-                getHeadersErrorResponse = errorResponse;
-            }
-            catch
-            {
-                errorResponse = "Unable to get response";
-                getHeadersErrorResponse = errorResponse;
-            }
-        }
-        catch (Exception ex)
-        {
-            getHeadersErrorResponse= ex.Message;
-            return;
-        }
-    }
-
-
-    /// <summary>
-    /// Gets the message content for MMS messages based on Message ID and Part Number
-    /// </summary>
     private void GetMessageContentByIDnPartNumber(string accTok, string endP, string messId, string partNum)
     {
         try
         {
-            HttpWebRequest mimRequestObject1 = (HttpWebRequest)WebRequest.Create(string.Empty + endP + "/rest/1/MyMessages/" + messId + "/" + partNum);
+            HttpWebRequest mimRequestObject1 = (HttpWebRequest)WebRequest.Create(string.Empty + endP + "/myMessages/v2/messages/" + messId + "/parts/" + partNum);
             mimRequestObject1.Headers.Add("Authorization", "Bearer " + accTok);
             mimRequestObject1.Method = "GET";
             mimRequestObject1.KeepAlive = true;
             int offset = 0;
+
             getContentResponseObject = mimRequestObject1.GetResponse();
             int remaining = Convert.ToInt32(getContentResponseObject.ContentLength);
             using (var stream = getContentResponseObject.GetResponseStream())
@@ -756,7 +696,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                     int read = stream.Read(receivedBytes, offset, remaining);
                     if (read <= 0)
                     {
-                        getMessageErrorResponse = String.Format("End of stream reached with {0} bytes left to read", remaining);
+                        getMessageContentErrorResponse = String.Format("End of stream reached with {0} bytes left to read", remaining);
                         return;
                     }
 
@@ -764,10 +704,504 @@ public partial class MIM_App1 : System.Web.UI.Page
                     offset += read;
                 }
 
-                imageData = Regex.Split(getContentResponseObject.ContentType.ToLower(), ";");
-                string[] ext = Regex.Split(imageData[0], "/");
-                fetchedImage.Src = "data:" + imageData[0] + ";base64," + Convert.ToBase64String(receivedBytes, Base64FormattingOptions.None);
-                getMessageSuccessResponse = "Success";
+                getMessageContentSuccessResponse = "Success";
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                getMessageContentErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                getMessageContentErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            getMessageContentErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+
+    private void BypassCertificateError()
+    {
+        string bypassSSL = ConfigurationManager.AppSettings["IgnoreSSL"];
+
+        if ((!string.IsNullOrEmpty(bypassSSL))
+            && (string.Equals(bypassSSL, "true", StringComparison.OrdinalIgnoreCase)))
+        {
+            ServicePointManager.ServerCertificateValidationCallback +=
+                delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                {
+                    return true;
+                };
+        }
+    }
+
+    protected void SetRequestSessionVariables()
+    {
+        Session["cs_rest_Address"] = Address.Text;
+        Session["cs_rest_Message"] = message.Text;
+        Session["cs_rest_Subject"] = subject.Text;
+        Session["cs_rest_Group"] = groupCheckBox.Checked.ToString();
+        Session["cs_rest_Attachments"] = attachment.Value;
+        Session["cs_rest_GetHeadercount"] = "abc";
+        Session["cs_rest_GetHeaderIndex"] = "abc";
+        Session["cs_rest_GetMessageId"] = "";
+        Session["cs_rest_GetMessagePart"] = "";
+        if (notificationMms.Checked)
+            Session["cs_rest_GetNotificationConnectionDetailsQueue"] = notificationMms.Value;
+        else if (notificationText.Checked)
+            Session["cs_rest_GetNotificationConnectionDetailsQueue"] = notificationText.Value;
+        Session["cs_rest_deleteMessageId"] = deleteMessageId.Text;
+        Session["cs_rest_updateMessageId"] = updateMessageId.Text;
+    }
+
+    protected void ResetRequestSessionVariables()
+    {
+        Session["cs_rest_Address"] = null;
+        Session["cs_rest_Message"] = null;
+        Session["cs_rest_Subject"] = null;
+        Session["cs_rest_Group"] = null;
+        Session["cs_rest_Attachments"] = null;
+        Session["cs_rest_GetHeadercount"] = null;
+        Session["cs_rest_GetHeaderIndex"] = null;
+        Session["cs_rest_GetMessageId"] = null;
+        Session["cs_rest_GetMessagePart"] = null;
+        Session["cs_rest_GetNotificationConnectionDetailsQueue"] = null;
+        Session["cs_rest_deleteMessageId"] = null;
+        Session["cs_rest_updateMessageId"] = null;
+    }
+
+    protected void RestoreRequestSessionVariables()
+    {
+        Address.Text = Session["cs_rest_Address"].ToString();
+        message.Text = Session["cs_rest_Message"].ToString(); ;
+        subject.Text = Session["cs_rest_Subject"].ToString();
+        groupCheckBox.Checked = Convert.ToBoolean(Session["cs_rest_Group"].ToString());
+        attachment.Value = Session["cs_rest_Attachments"].ToString();
+        //headerCountTextBox.Value = Session["cs_rest_GetHeadercount"].ToString();
+        //indexCursorTextBox.Value = Session["cs_rest_GetHeaderIndex"].ToString();
+        MessageId.Text = Session["cs_rest_GetMessageId"].ToString();
+        //PartNumber.Value = Session["cs_rest_GetMessagePart"].ToString();
+        if (string.Compare(Session["cs_rest_GetNotificationConnectionDetailsQueue"].ToString(), notificationMms.Value) == 0)
+        {
+            notificationMms.Checked = true;
+        }
+        else if (string.Compare(Session["cs_rest_GetNotificationConnectionDetailsQueue"].ToString(), notificationText.Value) == 0)
+        {
+            notificationText.Checked = true;
+        }
+        deleteMessageId.Text = Session["cs_rest_deleteMessageId"].ToString();
+        updateMessageId.Text = Session["cs_rest_updateMessageId"].ToString();
+    }
+
+    #region updateMessageRoutines
+
+    protected void updateMessage_Click(object sender, EventArgs e)
+    {
+        showUpdateMessage = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "updatemessage";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                updateMessageErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+
+        this.updateMessage(this.accessToken, this.endPoint, updateMessageId.Text, read.Checked);
+    }
+
+    private void updateMessage()
+    {
+        showUpdateMessage = "show";
+        this.updateMessage(this.accessToken, this.endPoint, updateMessageId.Text, read.Checked);
+    }
+
+    private void updateMessage(string accTok, string endP, string updateMessages, bool read)
+    {
+        try
+        {
+            string contextURL = string.Empty;
+            string messagesJSON = string.Empty;
+            Stream dataStream;
+            Message message;
+            MessagesList messageList;
+            List<Message> messages = new List<Message>();
+            JavaScriptSerializer serializeJsonObject;
+            contextURL = string.Empty + endP + "/myMessages/v2/messages";
+            string[] messageIds = updateMessages.Split(',');
+            foreach (String messageId in messageIds)
+            {
+                message = new Message();
+                message.isUnread = Convert.ToBoolean(read);
+                message.messageId = messageId;
+                messages.Add(message);
+            }
+            messageList = new MessagesList();
+            messageList.messages = messages;
+            serializeJsonObject = new JavaScriptSerializer();
+            messagesJSON = serializeJsonObject.Serialize(messageList);
+            UTF8Encoding encoding = new UTF8Encoding();
+            byte[] msgBytes = encoding.GetBytes(messagesJSON);
+            HttpWebRequest updateMessageWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            updateMessageWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            updateMessageWebRequest.Method = "PUT";
+            updateMessageWebRequest.KeepAlive = true;
+            updateMessageWebRequest.ContentType = "application/json";
+            dataStream = updateMessageWebRequest.GetRequestStream();
+            dataStream.Write(msgBytes, 0, msgBytes.Length);
+            dataStream.Close();
+
+            WebResponse deleteMessageWebResponse = updateMessageWebRequest.GetResponse();
+            using (var stream = deleteMessageWebResponse.GetResponseStream())
+            {
+                updateMessageSuccessResponse = "Success";
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                updateMessageErrorResponse = updateMessages + "@" + read + "@" + errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                updateMessageErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            updateMessageErrorResponse = read + "@" + ex.Message;
+            return;
+        }
+
+    }
+    #endregion
+
+
+    #region deleteMessageRoutines
+
+    protected void deleteMessage_Click(object sender, EventArgs e)
+    {
+        showDeleteMessage = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "deletemessage";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                deleteMessageErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.deleteMessage(this.accessToken, this.endPoint, deleteMessageId.Text);
+    }
+
+    private void deleteMessage()
+    {
+        showDeleteMessage = "show";
+        this.deleteMessage(this.accessToken, this.endPoint, deleteMessageId.Text);
+    }
+
+    private void deleteMessage(string accTok, string endP, string deleteMessages)
+    {
+        try
+        {
+            string contextURL = string.Empty;
+            if (!deleteMessages.Contains(","))
+                contextURL = string.Empty + endP + "/myMessages/v2/messages/" + deleteMessages;
+            else
+                contextURL = string.Empty + endP + "/myMessages/v2/messages?messageIds=" + System.Web.HttpUtility.UrlEncode(deleteMessages);
+            HttpWebRequest deleteMessageWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            deleteMessageWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            deleteMessageWebRequest.Method = "DELETE";
+            deleteMessageWebRequest.KeepAlive = true;
+            WebResponse deleteMessageWebResponse = deleteMessageWebRequest.GetResponse();
+            using (var stream = deleteMessageWebResponse.GetResponseStream())
+            {
+                deleteMessageSuccessResponse = "Success";
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                deleteMessageErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                deleteMessageErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            deleteMessageErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+    #endregion
+
+    #region getMessageListRoutines
+
+    protected void getMessageList_Click(object sender, EventArgs e)
+    {
+        showGetMessage = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "getmessagelist";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                deleteMessageErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.filters = "";
+        if (CheckBox1.Checked == true)
+        {
+            if (this.filters.CompareTo(string.Empty) == 0)
+                this.filters = "isFavorite=true&";
+            else
+                this.filters = this.filters + "&isFavorite=true" +"&";
+        }
+        if (CheckBox2.Checked == true)
+        {
+            if (this.filters.CompareTo(string.Empty) == 0)
+                this.filters = "isUnread=true&";
+            else
+                this.filters = this.filters + "&isUnread=true" + "&";
+        }
+        if (CheckBox3.Checked == true)
+        {
+            if (this.filters.CompareTo(string.Empty) == 0)
+                this.filters = "isIncoming=true" + "&";
+            else
+                this.filters = this.filters + "&isIncoming=true" + "&";
+        }
+        if (!string.IsNullOrEmpty(FilterKeyword.Text))
+        {
+            if (this.filters.CompareTo(string.Empty) == 0)
+                this.filters = "keyword=" + FilterKeyword.Text.ToString() + "&";
+            else
+                this.filters = this.filters + "&keyword=" + FilterKeyword.Text.ToString() + "&";
+        }
+        this.getMessageList(this.accessToken, this.endPoint, this.filters);
+    }
+
+    private void getMessageList()
+    {
+        showDeleteMessage = "show";
+        this.getMessageList(this.accessToken, this.endPoint, this.filters);
+    }
+
+    private void getMessageList(string accTok, string endP, string filters)
+    {
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/myMessages/v2/messages?" + filters + "limit=5&offset=1";
+
+            HttpWebRequest getMessageListWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            getMessageListWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            getMessageListWebRequest.Method = "GET";
+            getMessageListWebRequest.KeepAlive = true;
+            WebResponse getMessageListWebResponse = getMessageListWebRequest.GetResponse();
+            using (var stream = getMessageListWebResponse.GetResponseStream())
+            {
+                StreamReader sr = new StreamReader(stream);
+                string csGetMessageListDetailsData = sr.ReadToEnd();
+
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csGetMessageListDetails deserializedJsonObj = (csGetMessageListDetails)deserializeJsonObject.Deserialize(csGetMessageListDetailsData, typeof(csGetMessageListDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    getMessageListSuccessResponse = "Success";
+                    csGetMessageListDetailsResponse = deserializedJsonObj.messageList;
+                }
+                else
+                {
+                    getMessageListErrorResponse = "No response from server";
+                }
+
+                sr.Close();
+
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                getMessageListErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                getMessageListErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            getMessageListErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+    #endregion
+
+    #region getMessageRoutines
+
+    protected void getMessage_Click(object sender, EventArgs e)
+    {
+        showGetMessage = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "getmessage";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                getMessageErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.getMessage(this.accessToken, this.endPoint, MessageId.Text);
+    }
+
+    private void getMessage()
+    {
+        showGetMessage = "show";
+        this.getMessage(this.accessToken, this.endPoint, MessageId.Text);
+    }
+
+    private void getMessage(string accTok, string endP, string getMessage1)
+    {
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/myMessages/v2/messages/" + getMessage1;
+
+            HttpWebRequest getMessageWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            getMessageWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            getMessageWebRequest.Method = "GET";
+            getMessageWebRequest.KeepAlive = true;
+            getMessageWebRequest.Accept = "application/json";
+            WebResponse getMessageWebResponse = getMessageWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(getMessageWebResponse.GetResponseStream()))
+            {
+                string getMessageData = stream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csGetMessageDetails deserializedJsonObj = (csGetMessageDetails)deserializeJsonObject.Deserialize(getMessageData, typeof(csGetMessageDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    getMessageSuccessResponse = getMessageData + ":Success";
+                    getMessageDetailsResponse = deserializedJsonObj.message;
+                }
+                else
+                {
+                    getMessageErrorResponse = "No response from server";
+                }
+
+                stream.Close();
             }
         }
         catch (WebException we)
@@ -795,58 +1229,401 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
 
     }
+    #endregion
 
-    private void BypassCertificateError()
+    #region getDeltaRoutines
+
+    protected void getDelta_Click(object sender, EventArgs e)
     {
-        ServicePointManager.ServerCertificateValidationCallback +=
-            delegate(object sender1, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        showGetMessage = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "deltamessage";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
             {
-                return true;
-            };
+                deltaErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.getDelta(this.accessToken, this.endPoint, MessageIdForDelta.Text);
     }
 
-    protected void SetRequestSessionVariables()
+    private void getDelta()
     {
-        Session["cs_rest_Address"] = Address.Value;
-        Session["cs_rest_Message"] = message.Value;
-        Session["cs_rest_Subject"] = subject.Value;
-        Session["cs_rest_Group"] = groupCheckBox.Checked.ToString();
-        Session["cs_rest_Attachments"] = attachment.Value;
-        Session["cs_rest_GetHeadercount"] = headerCountTextBox.Value;
-        Session["cs_rest_GetHeaderIndex"] = indexCursorTextBox.Value;
-        Session["cs_rest_GetMessageId"] = MessageId.Value;
-        Session["cs_rest_GetMessagePart"] = PartNumber.Value;
+        //showDeltaMessage = "show";
+        this.getDelta(this.accessToken, this.endPoint, MessageIdForDelta.Text);
     }
 
-    protected void ResetRequestSessionVariables()
+    private void getDelta(string accTok, string endP, string delta)
     {
-        Session["cs_rest_Address"] = null;
-        Session["cs_rest_Message"] = null;
-        Session["cs_rest_Subject"] = null;
-        Session["cs_rest_Group"] = null;
-        Session["cs_rest_Attachments"] = null;
-        Session["cs_rest_GetHeadercount"] = null;
-        Session["cs_rest_GetHeaderIndex"] = null;
-        Session["cs_rest_GetMessageId"] = null;
-        Session["cs_rest_GetMessagePart"] = null;
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/myMessages/v2/delta?state=" + delta;
+            HttpWebRequest deltaWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            deltaWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            deltaWebRequest.Method = "GET";
+            deltaWebRequest.KeepAlive = true;
+            WebResponse deltaWebResponse = deltaWebRequest.GetResponse();
+            using (var stream = deltaWebResponse.GetResponseStream())
+            {
+                StreamReader sr = new StreamReader(stream);
+                string deltaMessageData = sr.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csGetDeltaDetails deserializedJsonObj = (csGetDeltaDetails)deserializeJsonObject.Deserialize(deltaMessageData, typeof(csGetDeltaDetails));
+                if (null != deserializedJsonObj)
+                {
+                    deltaSuccessResponse = deltaMessageData + ":Success";
+                    csDeltaResponse = deserializedJsonObj.deltaResponse;
+                }
+                else
+                {
+                    deltaErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                deltaErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                deltaErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            deltaErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+    #endregion
+
+    #region getMessageIndexRoutines
+
+    protected void getMessageIndex_Click(object sender, EventArgs e)
+    {
+        showGetMessage = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "messageindex";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                messageIndexErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.getMessageIndex(this.accessToken, this.endPoint);
     }
 
-    protected void RestoreRequestSessionVariables()
+    private void getMessageIndex()
     {
-        Address.Value = Session["cs_rest_Address"].ToString();
-        message.Value = Session["cs_rest_Message"].ToString(); ;
-        subject.Value = Session["cs_rest_Subject"].ToString() ;
-        groupCheckBox.Checked = Convert.ToBoolean(Session["cs_rest_Group"].ToString());
-        attachment.Value = Session["cs_rest_Attachments"].ToString();
-        headerCountTextBox.Value = Session["cs_rest_GetHeadercount"].ToString();
-        indexCursorTextBox.Value = Session["cs_rest_GetHeaderIndex"].ToString();
-        MessageId.Value = Session["cs_rest_GetMessageId"].ToString();
-        PartNumber.Value = Session["cs_rest_GetMessagePart"].ToString();
+        //showDeltaMessage = "show";
+        this.getMessageIndex(this.accessToken, this.endPoint);
     }
-   
+
+    private void getMessageIndex(string accTok, string endP)
+    {
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/myMessages/v2/messages/index/info";
+            HttpWebRequest msgIndxWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            msgIndxWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            msgIndxWebRequest.Method = "GET";
+            msgIndxWebRequest.KeepAlive = true;
+            WebResponse msgIndxWebResponse = msgIndxWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(msgIndxWebResponse.GetResponseStream()))
+            {
+                string getMessageIndexData = stream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csMessageIndexInfo deserializedJsonObj = (csMessageIndexInfo)deserializeJsonObject.Deserialize(getMessageIndexData, typeof(csMessageIndexInfo));
+                if (null != deserializedJsonObj)
+                {
+
+                    messageIndexSuccessResponse = getMessageIndexData + ":Success";
+                    getMessageIndexInfoResponse = deserializedJsonObj.messageIndexInfo;
+                }
+                else
+                {
+                    messageIndexErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+
+            }
+            messageIndexSuccessResponse = ":Success";
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                messageIndexErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                messageIndexErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            messageIndexErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+    #endregion
+
+    #region getNotificationConnectionDetailsRoutines
+
+    protected void getNotificationConnectionDetails_Click(object sender, EventArgs e)
+    {
+        showGetNotificationConnectionDetails = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "getnotificationconnectiondetails";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                getNotificationConnectionDetailsErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        string queueType = string.Empty;
+        if (notificationMms.Checked)
+            queueType = notificationMms.Value;
+        else if (notificationText.Checked)
+            queueType = notificationText.Value;
+        this.getNotificationConnectionDetails(this.accessToken, this.endPoint, queueType);
+    }
+
+    protected void getNotificationConnectionDetails()
+    {
+        showGetNotificationConnectionDetails = "show";
+        string queueType = string.Empty;
+        if (notificationMms.Checked)
+            queueType = notificationMms.Value;
+        else if (notificationText.Checked)
+            queueType = notificationText.Value;
+        this.getNotificationConnectionDetails(this.accessToken, this.endPoint, queueType);
+    }
+
+    private void getNotificationConnectionDetails(string accTok, string endP, string queues)
+    {
+        try
+        {
+            HttpWebRequest getNotificationConnectionDetailsWebRequest = (HttpWebRequest)WebRequest.Create(string.Empty + endP + "/myMessages/v2/notificationConnectionDetails?queues=" + queues);
+            getNotificationConnectionDetailsWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            getNotificationConnectionDetailsWebRequest.Method = "GET";
+            getNotificationConnectionDetailsWebRequest.KeepAlive = true;
+            getNotificationConnectionDetailsWebRequest.Accept = "application/json";
+            WebResponse getNotificationConnectionDetailsWebResponse = getNotificationConnectionDetailsWebRequest.GetResponse();
+            using (StreamReader sr = new StreamReader(getNotificationConnectionDetailsWebResponse.GetResponseStream()))
+            {
+                string getNotificationConnectionDetailsData = sr.ReadToEnd();
+
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csGetNotificationConnectionDetails deserializedJsonObj = (csGetNotificationConnectionDetails)deserializeJsonObject.Deserialize(getNotificationConnectionDetailsData, typeof(csGetNotificationConnectionDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    getNotificationConnectionDetailsSuccessResponse = "SUCCESS";
+                    getNotificationConnectionDetailsResponse = deserializedJsonObj.notificationConnectionDetails;
+                }
+                else
+                {
+                    getNotificationConnectionDetailsErrorResponse = "No response from server";
+                }
+
+                sr.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                getNotificationConnectionDetailsErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                getNotificationConnectionDetailsErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            getNotificationConnectionDetailsErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+    #endregion
+
+    #region createMessageIndexRoutines
+
+    protected void createMessageIndex_Click(object sender, EventArgs e)
+    {
+        showCreateMessageIndex = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "createmessageindex";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                createMessageIndexErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.createMessageIndex(this.accessToken, this.endPoint);
+    }
+
+    private void createMessageIndex()
+    {
+        showCreateMessageIndex = "show";
+        this.createMessageIndex(this.accessToken, this.endPoint);
+    }
+
+    private void createMessageIndex(string accTok, string endP)
+    {
+        try
+        {
+            HttpWebRequest createMessageIndexWebRequest = (HttpWebRequest)WebRequest.Create(string.Empty + endP + "/myMessages/v2/messages/index");
+            createMessageIndexWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            createMessageIndexWebRequest.Method = "POST";
+            createMessageIndexWebRequest.KeepAlive = true;
+            UTF8Encoding encoding = new UTF8Encoding();
+            byte[] postBytes = encoding.GetBytes("");
+            //createMessageIndexWebRequest.ContentLength = postBytes.Length;
+            Stream postStream = createMessageIndexWebRequest.GetRequestStream();
+            postStream.Write(postBytes, 0, postBytes.Length);
+            postStream.Close();
+            WebResponse createMessageIndexWebResponse = createMessageIndexWebRequest.GetResponse();
+            using (var stream = createMessageIndexWebResponse.GetResponseStream())
+            {
+                createMessageIndexSuccessResponse = "Success";
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                createMessageIndexErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                createMessageIndexErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            createMessageIndexErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+    #endregion
 
     protected void Button1_Click(object sender, EventArgs e)
     {
+        showSendMsg = "true";
         this.ReadTokenSessionVariables();
 
         string tokentResult = this.IsTokenValid();
@@ -862,7 +1639,7 @@ public partial class MIM_App1 : System.Web.UI.Page
         {
             if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
             {
-                sendMessageErrorResponse =  "Failed to get Access token";
+                sendMessageErrorResponse = "Failed to get Access token";
                 this.ResetTokenSessionVariables();
                 this.ResetTokenVariables();
                 return;
@@ -885,12 +1662,13 @@ public partial class MIM_App1 : System.Web.UI.Page
             attachmentList.Add(attachFile);
         string accessToken = this.accessToken;
         string endpoint = this.endPoint;
-        this.SendMessageRequest(accessToken, endpoint, subject.Value, message.Value, groupCheckBox.Checked.ToString().ToLower(),
+        this.SendMessageRequest(accessToken, endpoint, subject.Text, message.Text, groupCheckBox.Checked.ToString().ToLower(),
                                       attachmentList);
     }
-    
-    protected void Button2_Click(object sender, EventArgs e)
+
+    protected void GetMessageContentByIDnPartNumber(object sender, EventArgs e)
     {
+        showGetMessage = "true";
         this.ReadTokenSessionVariables();
 
         string tokentResult = this.IsTokenValid();
@@ -918,12 +1696,12 @@ public partial class MIM_App1 : System.Web.UI.Page
             return;
         }
 
-        GetMessageContentByIDnPartNumber();
+        GetMessageContentByIDnPartNumber(this.accessToken, this.endPoint, MessageIdForContent.Text, PartNumberForContent.Text);
     }
 
     protected void GetMessageContentByIDnPartNumber()
     {
-        this.GetMessageContentByIDnPartNumber(this.accessToken, this.endPoint, MessageId.Value, PartNumber.Value);
+        this.GetMessageContentByIDnPartNumber(this.accessToken, this.endPoint, MessageIdForContent.Text, PartNumberForContent.Text);
     }
     /// <summary>
     /// Validates the given addresses based on following conditions
@@ -939,13 +1717,13 @@ public partial class MIM_App1 : System.Web.UI.Page
         string phonenumbers = string.Empty;
 
         bool isValid = true;
-        if (string.IsNullOrEmpty(Address.Value))
+        if (string.IsNullOrEmpty(Address.Text))
         {
             sendMessageErrorResponse = "Address field cannot be blank.";
             return false;
         }
 
-        string[] addresses = Address.Value.Trim().Split(',');
+        string[] addresses = Address.Text.Trim().Split(',');
 
         if (addresses.Length > this.maxAddresses)
         {
@@ -953,7 +1731,7 @@ public partial class MIM_App1 : System.Web.UI.Page
             return false;
         }
 
-        if (groupCheckBox.Checked && addresses.Length < 2)
+        if (groupCheckBox.Checked && addresses.Length < 1)
         {
             sendMessageErrorResponse = "Specify more than one address for Group message.";
             return false;
@@ -978,19 +1756,19 @@ public partial class MIM_App1 : System.Web.UI.Page
             {
                 if (groupCheckBox.Checked)
                 {
-                    sendMessageErrorResponse =  "Group Message with short codes is not allowed.";
+                    sendMessageErrorResponse = "Group Message with short codes is not allowed.";
                     return false;
                 }
 
                 this.addressList.Add(address);
-                this.phoneNumbersParameter = this.phoneNumbersParameter + "Addresses=short:" + Server.UrlEncode(address.ToString()) + "&";
+                this.phoneNumbersParameter = this.phoneNumbersParameter + "addresses=short:" + Server.UrlEncode(address.ToString()) + "&";
             }
 
             if (address.StartsWith("short"))
             {
                 if (groupCheckBox.Checked)
                 {
-                    sendMessageErrorResponse=  "Group Message with short codes is not allowed.";
+                    sendMessageErrorResponse = "Group Message with short codes is not allowed.";
                     return false;
                 }
 
@@ -1002,7 +1780,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                 }
 
                 this.addressList.Add(address);
-                this.phoneNumbersParameter = this.phoneNumbersParameter + "Addresses=" + Server.UrlEncode(address.ToString()) + "&";
+                this.phoneNumbersParameter = this.phoneNumbersParameter + "addresses=" + Server.UrlEncode(address.ToString()) + "&";
             }
             else if (address.Contains("@"))
             {
@@ -1015,7 +1793,7 @@ public partial class MIM_App1 : System.Web.UI.Page
                 else
                 {
                     this.addressList.Add(address);
-                    this.phoneNumbersParameter = this.phoneNumbersParameter + "Addresses=" + Server.UrlEncode(address.ToString()) + "&";
+                    this.phoneNumbersParameter = this.phoneNumbersParameter + "addresses=" + Server.UrlEncode(address.ToString()) + "&";
                 }
             }
             else
@@ -1025,12 +1803,12 @@ public partial class MIM_App1 : System.Web.UI.Page
                     if (address.StartsWith("tel:"))
                     {
                         phonenumbers = address.Replace("-", string.Empty);
-                        this.phoneNumbersParameter = this.phoneNumbersParameter + "Addresses=" + Server.UrlEncode(phonenumbers.ToString()) + "&";
+                        this.phoneNumbersParameter = this.phoneNumbersParameter + "addresses=" + Server.UrlEncode(phonenumbers.ToString()) + "&";
                     }
                     else
                     {
                         phonenumbers = address.Replace("-", string.Empty);
-                        this.phoneNumbersParameter = this.phoneNumbersParameter + "Addresses=" + Server.UrlEncode("tel:" + phonenumbers.ToString()) + "&";
+                        this.phoneNumbersParameter = this.phoneNumbersParameter + "addresses=" + Server.UrlEncode("tel:" + phonenumbers.ToString()) + "&";
                     }
 
                     this.addressList.Add(address);
@@ -1041,11 +1819,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         return true;
     }
 
-    /// <summary>
-    /// Validate given string for MSISDN
-    /// </summary>
-    /// <param name="number">Phone number to be validated</param>
-    /// <returns>true/false; true - if valid MSISDN, else false</returns>
     private bool IsValidMISDN(string number)
     {
         string smsAddressInput = number;
@@ -1090,11 +1863,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         return true;
     }
 
-    /// <summary>
-    /// Validates given mail ID for standard mail format
-    /// </summary>
-    /// <param name="emailID">Mail Id to be validated</param>
-    /// <returns> true/false; true - if valid email id, else false</returns>
     private bool IsValidEmail(string emailID)
     {
         string strRegex = @"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}" +
@@ -1111,11 +1879,6 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
     }
 
-    /// <summary>
-    /// Validates a given string for digits
-    /// </summary>
-    /// <param name="address">string to be validated</param>
-    /// <returns>true/false; true - if passed string has all digits, else false</returns>
     private bool IsNumber(string address)
     {
         bool isValid = false;
@@ -1129,32 +1892,18 @@ public partial class MIM_App1 : System.Web.UI.Page
     }
     #region Data Structures
 
-    /// <summary>
-    /// Access Token Data Structure
-    /// </summary>
     public class AccessTokenResponse
     {
-        /// <summary>
-        /// Gets or sets Access Token ID
-        /// </summary>
         public string access_token
         {
             get;
             set;
         }
-
-        /// <summary>
-        /// Gets or sets Refresh Token ID
-        /// </summary>
         public string refresh_token
         {
             get;
             set;
         }
-
-        /// <summary>
-        /// Gets or sets Expires in milli seconds
-        /// </summary>
         public string expires_in
         {
             get;
@@ -1162,210 +1911,172 @@ public partial class MIM_App1 : System.Web.UI.Page
         }
     }
 
-    /// <summary>
-    /// Response returned from MyMessages api
-    /// </summary>
-    public class MIMResponse
+    public class MessageObject
     {
-        /// <summary>
-        /// Gets or sets the value of message header list.
-        /// </summary>
-        public MessageHeaderList MessageHeadersList
+        public Message message { get; set; }
+    }
+    public class MessagesList
+    {
+        public List<Message> messages
         {
             get;
             set;
         }
     }
 
-    /// <summary>
-    /// Message Header List
-    /// </summary>
-    public class MessageHeaderList
-    {
-        /// <summary>
-        /// Gets or sets the value of object containing a List of Messages Headers
-        /// </summary>
-        public List<Header> Headers
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of a number representing the number of headers returned for this request.
-        /// </summary>
-        public int HeaderCount
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of a string which defines the start of the next block of messages for the current request.
-        /// A value of zero (0) indicates the end of the block.
-        /// </summary>
-        public string IndexCursor
-        {
-            get;
-            set;
-        }
-    }
-
-    /// <summary>
-    /// Object containing a List of Messages Headers
-    /// </summary>
-    public class Header
-    {
-        /// <summary>
-        /// Gets or sets the value of Unique message identifier
-        /// </summary>
-        public string MessageId
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of message sender
-        /// </summary>
-        public string From
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of the addresses, whom the message need to be delivered. 
-        /// If Group Message, this will contain multiple Addresses.
-        /// </summary>
-        public List<string> To
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a value of message text
-        /// </summary>
-        public string Text
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a value of message part descriptions
-        /// </summary>
-        public List<MMSContent> MmsContent
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of date/time message received
-        /// </summary>
-        public DateTime Received
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether its a favourite or not
-        /// </summary>
-        public bool Favorite
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether message is read or not
-        /// </summary>
-        public bool Read
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of type of message, TEXT or MMS
-        /// </summary>
-        public string Type
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of indicator, which indicates if message is Incoming or Outgoing “IN” or “OUT”
-        /// </summary>
-        public string Direction
-        {
-            get;
-            set;
-        }
-    }
-
-    /// <summary>
-    /// Message part descriptions
-    /// </summary>
-    public class MMSContent
-    {
-        /// <summary>
-        /// Gets or sets the value of content name
-        /// </summary>
-        public string ContentName
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of content type
-        /// </summary>
-        public string ContentType
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the value of part number
-        /// </summary>
-        public string PartNumber
-        {
-            get;
-            set;
-        }
-    }
-
-    /// <summary>
-    /// Response from IMMN api
-    /// </summary>
     public class MsgResponseId
     {
-        /// <summary>
-        /// Gets or sets Message ID
-        /// </summary>
         public string Id { get; set; }
     }
-
-    /// <summary>
-    /// Access Token Types
-    /// </summary>
     public enum AccessTokenType
     {
-        /// <summary>
-        /// Access Token Type is based on Authorization Code
-        /// </summary>
         Authorization_Code,
-
-        /// <summary>
-        /// Access Token Type is based on Refresh Token
-        /// </summary>
         Refresh_Token
     }
     #endregion
+
+    #region GetNotificationConnectionDetailsDataTypes
+
+    public class csGetNotificationConnectionDetails
+    {
+        public csNotificationConnectionDetails notificationConnectionDetails { get; set; }
+    }
+
+    public class csNotificationConnectionDetails
+    {
+        public string username { get; set; }
+        public string password { get; set; }
+        public string httpsUrl { get; set; }
+        public string wssUrl { get; set; }
+        public csqueues queues { get; set; }
+    }
+
+    public class csqueues
+    {
+        public string text { get; set; }
+        public string mms { get; set; }
+    }
+    #endregion
+
+    #region GetMessageContentDetails
+
+    public class csGetMessageContentDetails
+    {
+        public csMessageContentDetails MessageContentDetails { get; set; }
+    }
+
+    public class csMessageContentDetails
+    {
+        public string contenttype { get; set; }
+        public string textplain { get; set; }
+        public string imgjpg { get; set; }
+    }
+    #endregion
+
+    #region GetMessageDetails
+
+    public class csGetMessageDetails
+    {
+        public Message message { get; set; }
+    }
+
+    public class csGetMessageListDetails
+    {
+        public MessageList messageList { get; set; }
+    }
+
+    public class From
+    {
+        public string value { get; set; }
+    }
+    public class Recipient
+    {
+        public string value { get; set; }
+    }
+    public class SegmentationDetails
+    {
+
+        public int segmentationMsgRefNumber { get; set; }
+
+        public int totalNumberOfParts { get; set; }
+
+        public int thisPartNumber { get; set; }
+
+    }
+    public class TypeMetaData
+    {
+        public bool isSegmented { get; set; }
+        public SegmentationDetails segmentationDetails { get; set; }
+        public string subject { get; set; }
+    }
+    public class MmsContent
+    {
+        public string contentType { get; set; }
+        public string contentName { get; set; }
+        public string contentUrl { get; set; }
+        public string type { get; set; }
+    }
+    public class Message
+    {
+        public string messageId { get; set; }
+        public From from { get; set; }
+        public List<Recipient> recipients { get; set; }
+        public string timeStamp { get; set; }
+        public Boolean isFavorite { get; set; }
+        public Boolean isUnread { get; set; }
+        public string type { get; set; }
+        public TypeMetaData typeMetaData { get; set; }
+        public string isIncoming { get; set; }
+        public List<MmsContent> mmsContent { get; set; }
+        public string text { get; set; }
+        public string subject { get; set; }
+    }
+
+    public class MessageList
+    {
+        public List<Message> messages { get; set; }
+        public int offset { get; set; }
+        public int limit { get; set; }
+        public int total { get; set; }
+        public string state { get; set; }
+        public string cacheStatus { get; set; }
+        public List<string> failedMessages { get; set; }
+    }
+    #endregion
+
+    #region GetDeltaDetails
+
+    public class csGetDeltaDetails
+    {
+        public DeltaResponse deltaResponse { get; set; }
+    }
+
+    public class Delta
+    {
+        public List<Message> adds { get; set; }
+        public List<Message> deletes { get; set; }
+        public string type { get; set; }
+        public List<Message> updates { get; set; }
+    }
+
+    public class DeltaResponse
+    {
+        public string state { get; set; }
+        public List<Delta> delta { get; set; }
+    }
+    #endregion
+    #region GetMessageIndexInfo
+
+    public class MessageIndexInfo
+    {
+        public string status { get; set; }
+        public string state { get; set; }
+        public int messageCount { get; set; }
+    }
+    public class csMessageIndexInfo
+    {
+        public MessageIndexInfo messageIndexInfo { get; set; }
+    }
+    #endregion
+
 }

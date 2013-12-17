@@ -65,6 +65,7 @@ h2 {
   margin-right: 2.029334%;
 }
 
+ 
 /* End of util */
 
 /* Layout styles */
@@ -122,7 +123,25 @@ h2 {
 }
 
 #content th, #content td {
-  text-align: center;
+  text-align: left;
+  padding-left: 10px;
+	border: 1px solid lightgray;
+}
+
+#kvp table {
+  width: 96.875%;
+  border-collapse: collapse;
+  font-size: .75em;
+	table-layout: fixed;
+	word-wrap: break-word;
+}
+
+#kvp tr:nth-of-type(even) {
+  background: #eee;
+}
+
+#kvp th, #kvp td {
+  text-align: left;
   padding-left: 10px;
 	border: 1px solid lightgray;
 }
@@ -139,6 +158,9 @@ h2 {
   padding-top: 2.0833%;
   padding-left: 1.5625%; 
 }
+#formBox .toggle {
+    display: none;
+ }
 
 #footer {
   text-align: center;
@@ -340,6 +362,8 @@ h2 {
         width: 100%;
     }
   /* END APP SPECIFIC MEDIA QUERY CSS */
+  
+
 }
 
 /* end responsive layout */

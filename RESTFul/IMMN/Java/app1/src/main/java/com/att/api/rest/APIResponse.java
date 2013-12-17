@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
@@ -23,9 +23,9 @@ import org.apache.http.util.EntityUtils;
 /**
  * Immutable class that holds API response information.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  */
 public class APIResponse {
 
@@ -161,7 +161,7 @@ public class APIResponse {
      * @return response
      * @throws RESTException if unable to parse http response
      * @see #valueOf(HttpResponse)
-     * @since 3.0
+     * @since 1.0
      */
     public static APIResponse fromHttpResponse(HttpResponse httpResponse)
             throws RESTException {
@@ -177,14 +177,17 @@ public class APIResponse {
      * @return response
      * @throws RESTException if unable to parse http response
      * @see org.apache.http.HttpResponse
-     * @since 3.0
+     * @since 1.0
      */
     public static APIResponse valueOf(HttpResponse httpResponse)
             throws RESTException {
 
         try {
             int statusCode = httpResponse.getStatusLine().getStatusCode();
-            String rb = EntityUtils.toString(httpResponse.getEntity());
+            String rb = "";
+            if (httpResponse.getEntity() != null) {
+                rb = EntityUtils.toString(httpResponse.getEntity());
+            }
             HttpHeader[] headers = APIResponse.buildHeaders(httpResponse);
             return new APIResponse(statusCode, rb, headers);
         } catch (IOException ioe) {
@@ -202,7 +205,7 @@ public class APIResponse {
      *
      * @param headers HTTP headers to copy
      * @return copy of http headers
-     * @since 3.0
+     * @since 1.0
      */
     public static HttpHeader[] copyHeaders(final HttpHeader[] headers) {
         final HttpHeader[] headersCopy = new HttpHeader[headers.length];

@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
@@ -33,6 +33,7 @@ import java.util.Properties;
  *
  * An example of usage can be found below:
  * <pre>
+ * <code>
  * // declare variables
  * final long expiry = OAuthToken.NO_EXPIRATION;
  * final String accessToken = "12345";
@@ -50,11 +51,12 @@ import java.util.Properties;
  * // load token
  * token = OAuthToken.loadToken("/tmp/token.properties");
  *
+ * </code>
  * </pre>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  * @see <a href="https://tools.ietf.org/html/rfc6749">OAuth 2.0 Framework</a>
  */
 public class OAuthToken {
