@@ -159,7 +159,7 @@ For more information contact developer.support@att.com
                             <div class="successWide">
                                 <strong>SUCCESS: </strong>
                                 <br />
-                                <strong>ResourceURL </strong>
+                                <strong>ResourceUrl: </strong>
                                 <%=getMMSDeliveryStatusResponseData.DeliveryInfoList.ResourceURL%><br />
                             </div>
                             <table>

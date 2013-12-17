@@ -8,11 +8,23 @@
 
 require 'rubygems'
 require 'json'
+require 'cgi'
 require 'base64'
 require 'sinatra'
 require 'sinatra/config_file'
 require 'rexml/document'
-require 'att/codekit'
+
+# require as a gem file load relative if fails
+begin
+  require 'att/codekit'
+rescue LoadError
+  # try relative, fall back to ruby 1.8 method if fails
+  begin
+    require_relative 'codekit/lib/att/codekit'
+  rescue NoMethodError 
+    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
+  end
+end
 
 include Att::Codekit
 include Att::Codekit::Service
@@ -208,7 +220,7 @@ post '/notificationListener' do
     id = note_id.get_text.value
     response = JSON.parse service.getNotification(id) 
     if response then
-      notification = Notification.new(response, id)
+      notification = Model::PaymentNotification.new(response, id)
       updateTransactions(settings.notifications_file, :notifications, 
                          notification, settings.recent_notifications_stored)
       service.ackNotification(id) 
@@ -404,9 +416,9 @@ end
 #
 #@param file [String] path/name of the file to save to
 #@param type [Symbol] the type we want to save :transactions, :subscription or :notifications
-#@param new [Hash] a transaction or subscription descriptor
+#@param newdata [Hash] a transaction or subscription descriptor
 #@param store_amount [Integer] the amount of transactions to store
-def updateTransactions(file, type, new=nil, store_amount=5)
+def updateTransactions(file, type, newdata=nil, store_amount=5)
   File.open(type.to_s + "_lock", File::CREAT|File::RDONLY) do |lock|
     begin
       lock.flock(File::LOCK_EX)
@@ -414,11 +426,11 @@ def updateTransactions(file, type, new=nil, store_amount=5)
         session[type] = Array.new
 
         read.each do |line|
-          session[type].push JSON.parse line
+          session[type].push JSON.load line
         end
 
-        if new
-          session[type].push new unless session[type].include? new
+        if newdata
+          session[type].push newdata unless session[type].include? newdata
         end
       end
 
@@ -476,4 +488,8 @@ def generate_subscription_payload(amount, category, desc, merch_trans_id,
     :IsPurchaseOnNoActiveSubscription => is_purchase_on_no_active_sub,
     :Channel => channel,
   }.to_json
+end
+
+def raw(string)
+    CGI.unescapeHTML(string)
 end

@@ -150,7 +150,7 @@
             <div class="successWide">
             <strong>SUCCESS:&nbsp;</strong><br>
             <strong>Status:&nbsp;</strong><c:out value="${resultStatus}" /><br>
-            <strong>Resource URL:&nbsp;</strong><c:out value="${resultResourceUrl}" /><br>
+            <strong>ResourceUrl:&nbsp;</strong><c:out value="${resultResourceUrl}" /><br>
             </div>
             </c:if>
             <div class="lightBorder"></div>

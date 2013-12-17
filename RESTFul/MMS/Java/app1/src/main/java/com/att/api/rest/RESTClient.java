@@ -704,7 +704,8 @@ public class RESTClient {
                     .guessContentTypeFromStream(new FileInputStream(fname));
 
                 if (type == null) {
-                    type = URLConnection.guessContentTypeFromName(fname);
+                    String encodedName = URLEncoder.encode(fname, "UTF-8");
+                    type = URLConnection.guessContentTypeFromName(encodedName);
                 }
                 if (type == null) {
                     type = "application/octet-stream";

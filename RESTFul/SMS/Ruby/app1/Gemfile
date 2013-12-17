@@ -3,7 +3,9 @@ source "https://rubygems.org"
 
 gem 'sinatra', '~>1.4'
 gem 'sinatra-contrib'
+gem 'immutable_struct', '~>1.1'
 gem 'json', '~>1.8'
+gem 'mime-types', '~>1.25'
 gem 'thin', '~>1.6'
 gem 'rack', '~>1.5'
 gem 'rest-client', '~>1.6'

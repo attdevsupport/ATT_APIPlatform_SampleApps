@@ -11,7 +11,18 @@ require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
 require 'cgi'
-require 'att/codekit'
+
+# require as a gem file load relative if fails
+begin
+  require 'att/codekit'
+rescue LoadError
+  # try relative, fall back to ruby 1.8 method if fails
+  begin
+    require_relative 'codekit/lib/att/codekit'
+  rescue NoMethodError 
+    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
+  end
+end
 
 include Att::Codekit
 
@@ -26,6 +37,7 @@ SCOPE = 'CMS'
 
 #An array of all the methods our script supports
 SCRIPT_METHODS = settings.script_methods.split(",")
+SCRIPT_FILE = "cms_files/First.rb"
 
 #Set the proxy that's used in att/codekit
 RestClient.proxy = settings.proxy
@@ -104,8 +116,7 @@ end
 
 def read_script
   # Populate Feature 1: Outbound voice/message Session text area with contents of Script.rb script. 
-  @firstscript = 'First.rb'
-  @outbound = getContentsFromFile @firstscript
+  @outbound = getContentsFromFile SCRIPT_FILE
 end
 
 # Function to create session for outbound voice and messaging.

@@ -10,7 +10,18 @@ require 'sinatra'
 require 'open-uri'
 require 'uri'
 require 'sinatra/config_file'
-require 'att/codekit'
+#
+# require as a gem file load relative if fails
+begin
+  require 'att/codekit'
+rescue LoadError
+  # try relative, fall back to ruby 1.8 method if fails
+  begin
+    require_relative 'codekit/lib/att/codekit'
+  rescue NoMethodError 
+    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
+  end
+end
 
 include Att::Codekit
 
