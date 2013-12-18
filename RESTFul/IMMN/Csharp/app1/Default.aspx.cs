@@ -514,7 +514,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
             msgRequestObject.ContentType = contentType;
             //msgRequestObject.Accept = "application/xml";
             string mmsParameters = this.phoneNumbersParameter + "subject=" + Server.UrlEncode(subject) + "&text=" + Server.UrlEncode(message) + "&isGroup=" + groupflag;
-            Response.Write(mmsParameters);
             string dataToSend = string.Empty;
             dataToSend += "--" + boundaryToSend + "\r\n";
             dataToSend += "Content-Disposition: form-data; name=\"root-fields\"\r\n" + "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\nContent-ID: startpart\r\n\r\n" + mmsParameters + "\r\n";
