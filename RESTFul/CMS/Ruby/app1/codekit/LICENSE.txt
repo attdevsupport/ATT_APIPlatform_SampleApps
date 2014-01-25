@@ -1,4 +1,0 @@
-Licensed by AT&T under the 'Software Development Kit Tools Agreement.' 2013.
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:               
-http://developer.att.com/sdk_agreement/ 
-
