@@ -88,7 +88,11 @@ public class AdsEncryptDecrypt {
 		if ((strSeedKey != null) && (strSeedKey.length() > 0)) {
 			byte[] byteBSSIDValue = strSeedKey.getBytes();
 			try {
-				SecureRandom rng = SecureRandom.getInstance("SHA1PRNG");
+				SecureRandom rng;
+				if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1)
+					rng = SecureRandom.getInstance("SHA1PRNG", "Crypto");
+				else
+					rng = SecureRandom.getInstance("SHA1PRNG");
 				rng.setSeed(byteBSSIDValue);
 				KeyGenerator kg = KeyGenerator.getInstance("AES");
 				kg.init(128, rng);
