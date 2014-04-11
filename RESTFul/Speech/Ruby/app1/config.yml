@@ -1,7 +1,7 @@
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2014 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
 port:               4567
@@ -13,7 +13,7 @@ FQDN:               https://api.att.com
 endpoint:           https://api.att.com/rest/2/SpeechToText
 speech_context:     Generic, TV, BusinessSearch, Websearch, SMS, Voicemail, QuestionAndAnswer
 X_arg:              
-X_subContext:              
+X_subContext:       Chat,Rpg,PetCmd,Ui,War
 default_audio_file: BostonCeltics.wav
 source_link:        http://localhost/source
 help_link:          http://localhost/help

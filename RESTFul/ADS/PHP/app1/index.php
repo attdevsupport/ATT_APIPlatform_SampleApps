@@ -11,9 +11,9 @@ $results = $controller->getResults();
 ?>
 <!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+Copyright 2014 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
 <html lang="en"> 
@@ -47,9 +47,6 @@ For more information contact developer.support@att.com
           <a id="jump" href="#nav">Main Navigation</a>
         </div> 
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
-          <span class="divider"> |&nbsp;</span>
-          </li>
           <li>
           <a href="<?php echo $linkSource; ?>" target="_blank">Source<img src="images/opensource.png" /></a>
           <span class="divider"> |&nbsp;</span>
@@ -310,7 +307,7 @@ For more information contact developer.support@att.com
         <br> For more information contact 
         <a href="mailto:developer.support@att.com">developer.support@att.com</a>
         <br /><br />
-        &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+        &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. 
         <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->

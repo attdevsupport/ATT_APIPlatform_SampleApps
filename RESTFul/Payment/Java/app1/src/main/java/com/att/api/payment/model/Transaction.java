@@ -10,6 +10,26 @@ public class Transaction {
     private String applicationId;
     private String redirectUrl;
 
+    public enum Type {
+        ID("TransactionId"),
+        AUTHCODE("TransactionAuthCode"),
+        TRANSACTIONID("MerchantTransactionId");
+
+        private String value;
+
+        private Type(String value){
+            this.value = value;
+        }
+
+        public String getValue(){
+            return this.value;
+        }
+
+        public String toString(){
+            return this.getValue();
+        }
+    }
+
     public static class Builder {
         private double amount;
         private AppCategory category;
@@ -47,25 +67,15 @@ public class Transaction {
         }
     }
 
-
-/* TODO: update this into where it's called
-        this.amount = "0.00";
-        this.category = "1";
-        this.description = "DESC";
-        this.transactionId = "T" + System.currentTimeMillis();
-        this.productId = "0";
-        this.paymentRedirectUrl = "localhost";
-*/
-
-    public Transaction(Transaction.Builder builder) {
-            this.amount = builder.amount;
-            this.category = builder.category;
-            this.description = builder.description;
-            this.transactionId = builder.transactionId;
-            this.productId = builder.productId;
-            this.redirectUrl = builder.redirectUrl;
-            this.channel = builder.channel;
-            this.applicationId = builder.applicationId;
+    protected Transaction(Transaction.Builder builder) {
+        this.amount = builder.amount;
+        this.category = builder.category;
+        this.description = builder.description;
+        this.transactionId = builder.transactionId;
+        this.productId = builder.productId;
+        this.redirectUrl = builder.redirectUrl;
+        this.channel = builder.channel;
+        this.applicationId = builder.applicationId;
     }
 
 
@@ -73,60 +83,28 @@ public class Transaction {
         return category;
     }
 
-    public void setAppCategory(AppCategory category) {
-        this.category = category;
-    }
-
     public String getChannel() {
         return channel;
-    }
-
-    public void setChannel(String channel) {
-        this.channel = channel;
     }
 
     public double getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
     public String getDescription() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getTransactionId() {
         return transactionId;
     }
 
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
-    }
-
     public String getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
     public String getPaymentRedirectUrl() {
         return redirectUrl;
-    }
-
-    public void setPaymentRedirectUrl(String paymentRedirectUrl) {
-        this.redirectUrl = paymentRedirectUrl;
-    }
-
-    public void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
     }
 
     public String getApplicationId() {

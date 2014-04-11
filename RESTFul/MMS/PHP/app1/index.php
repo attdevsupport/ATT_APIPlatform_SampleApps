@@ -43,9 +43,6 @@ $errors = $controller->getErrors();
           <a id="jump" href="#nav">Main Navigation</a>
         </div> <!-- end of menuButton -->
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
-            <span class="divider"> |&nbsp;</span>
-          </li>
           <li>
             <a href="<?php echo $linkSource; ?>" target="_blank">Source<img src="images/opensource.png" /></a>
             <span class="divider"> |&nbsp;</span>
@@ -163,7 +160,7 @@ $errors = $controller->getErrors();
             ?>
             <div class="successWide">
             <strong>SUCCESS: </strong><br>
-            <strong>ResourceURL: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
+            <strong>ResourceUrl: </strong><?php echo htmlspecialchars($resourceURL); ?><br>
             </div>
             <table>
               <thead>
@@ -246,7 +243,7 @@ $errors = $controller->getErrors();
           <br> For more information contact 
           <a href="mailto:developer.support@att.com">developer.support@att.com</a>
           <br><br>
-          &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+          &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. 
           <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->

@@ -20,11 +20,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   #install dependencies
-  spec.add_dependency "rake"
-  spec.add_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "rake"
+  spec.add_development_dependency "yard"
+  spec.add_development_dependency "bundler", "~> 1.3"
 
   #runtime dependencies
-  spec.add_runtime_dependency "immutable_struct"
-  spec.add_runtime_dependency "rest-client"
   spec.add_runtime_dependency "json"
+  spec.add_runtime_dependency "immutable_struct"
+  spec.add_runtime_dependency "rest-client", "~> 1.6"
 end

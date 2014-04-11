@@ -1,10 +1,10 @@
 *******************************************************************************
 * Licensed by AT&T under 'Software Development Kit Tools Agreement.' 
 *
-* 2013 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
+* 2014 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
 * http://developer.att.com/sdk_agreement/ 
 *
-* Copyright 2013 AT&T Intellectual Property. All rights reserved.  
+* Copyright 2014 AT&T Intellectual Property. All rights reserved.  
 * http://developer.att.com 
 *
 * For more information contact developer.support@att.com
@@ -99,7 +99,7 @@ Note: this is only required if you are **not** using bundler and are using ruby 
 
     The code kit library can be installed by using our hosted gem file.
         
-        gem sources --add http://ldev.code-api-att.com:8808
+        gem sources --add http://lprod.code-api-att.com:8808
         gem install att-codekit
 
     Note that the codekit is under heavy development and is using a semantic

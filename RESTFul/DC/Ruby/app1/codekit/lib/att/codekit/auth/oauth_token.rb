@@ -1,6 +1,6 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
@@ -15,24 +15,25 @@ module Att
       class OAuthToken
         include Enumerable
 
-        attr_reader :access_token, :refresh_token 
+        attr_reader :access_token, :refresh_token, :expiry
         # @!attribute [r] access_token
         #   @return [String] token used for authentication
         # @!attribute [r] refresh_token
         #   @return [String] token used to refresh access_token if it expires
+        alias_method :access, :access_token
+        alias_method :refresh, :refresh_token
 
         # Construct an OAuthToken object
         #
-        # @note Due to overflow of the time object in ruby <= 1.8, if the expiry exceeds year 2038 it is set to never expire.
         # @param access_token [String] token used for authentication
-        # @param expiry [#to_i] a representation of time in seconds since epoch of when the token should expire. set nil if never expires
-        # @param refresh_token [String] token used for re-obtaining an access_token after expiry.
+        # @param expiry [#to_i] a representation of time in seconds since 
+        #   epoch of when the token should expire. set nil if never expires
+        # @param refresh_token [String] token used for re-obtaining an 
+        #   access_token after expiry.
         def initialize(access_token, expiry, refresh_token)
           @access_token = access_token
           @refresh_token = refresh_token
-          if expiry
-            @expiry = expiry.to_i 
-          end
+          @expiry = expiry.to_i if expiry
         end
 
         # Returns if this token can expire
@@ -44,16 +45,19 @@ module Att
 
         # Check if access token is expired 
         #
-        # @return [Boolean] true if access token is expired, false if it's valid.
+        # @return [Boolean] true if access token is expired, false if it's 
+        #   valid.
         def expired?
           can_expire? && @expiry < Time.now.to_i
         end
 
         # 'Each' definition for OAuthToken object
         #
-        # @yieldparam access_token [String] The access token used for authentication
+        # @yieldparam access_token [String] The access token used for 
+        #   authentication
         # @yieldparam expiry [Time] the time that the access token expires
-        # @yieldparam refresh_token [String] the token used to obtain an access token after expiry
+        # @yieldparam refresh_token [String] the token used to obtain an 
+        #   access token after expiry
         def each
           yield @access_token
           yield @expiry

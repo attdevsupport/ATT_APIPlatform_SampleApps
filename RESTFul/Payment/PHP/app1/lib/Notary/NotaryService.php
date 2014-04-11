@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Notary;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Notary Library.
@@ -7,17 +9,17 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  API 
  * @package   Notary 
- * @author    Pavel Kazakov <pk9069@att.com>
- * @copyright 2013 AT&T Intellectual Property
+ * @author    pk9069
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
@@ -26,13 +28,17 @@ require_once __DIR__ . '../../Srvc/APIService.php';
 require_once __DIR__ . '/NotaryArguments.php';
 require_once __DIR__ . '/Notary.php';
 
+use Att\Api\Restful\HttpPost;
+use Att\Api\Restful\RestfulRequest;
+use Att\Api\Srvc\APIService;
+use Att\Api\Srvc\Service;
 
 /**
  * Used to interact with the Notary API.
  *
  * @category API
  * @package  Notary 
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     http://developer.att.com
@@ -57,7 +63,7 @@ class NotaryService extends Service
     /** 
      * Adds the required http headers to the specified request object.
      *
-     * @param RESTFulRequest $req restful request object
+     * @param RestfulRequest $req restful request object
      *
      * @return void
      */
@@ -99,13 +105,15 @@ class NotaryService extends Service
     {
         $endpoint = $this->_fqdn . '/Security/Notary/Rest/1/SignedPayload';
 
-        $req = new RESTFulRequest($endpoint);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_POST);
+        $req = new RestfulRequest($endpoint);
+
+        $httpPost = new HttpPost();
         $this->_setHeaders($req);
-        $req->setBody($payload);
-        
-        $result = $req->sendRequest();
-        $responseArr = $this->parseResult($result);
+        $httpPost->setBody($payload);
+
+        $result = $req->sendHttpPost($httpPost);
+        $responseArr = Service::parseJson($result);
+
         return new Notary(
             $responseArr['SignedDocument'],
             $responseArr['Signature'],
@@ -127,19 +135,19 @@ class NotaryService extends Service
     public function getSubscriptionNotary(SubscriptionNotaryArguments $args)
     {
         $vars = array(
-                'Amount' => $args->getAmount(),
-                'Category' => $args->getCategory(),
-                'Channel' => $args->getChannel(),
-                'Description' => $args->getDescription(),
-                'MerchantTransactionId' => $args->getMerchantTransactionId(),
-                'MerchantProductId' => $args->getMerchantProductId(),
-                'MerchantPaymentRedirectUrl' => $args->getMerchantRedirectUrl(),
-                'MerchantSubscriptionIdList' => $args->getMerchantSubscriptionIdList(),
-                'IsPurchaseOnNoActiveSubscription' => $args->isPurchaseOnNoActiveSubscription(),
-                'SubscriptionRecurrences' => $args->getSubscriptionRecurrences(),
-                'SubscriptionPeriod' => $args->getSubscriptionPeriod(),
-                'SubscriptionPeriodAmount' => $args->getSubscriptionPeriodAmount()
-                );
+            'Amount' => $args->getAmount(),
+            'Category' => $args->getCategory(),
+            'Channel' => $args->getChannel(),
+            'Description' => $args->getDescription(),
+            'MerchantTransactionId' => $args->getMerchantTransactionId(),
+            'MerchantProductId' => $args->getMerchantProductId(),
+            'MerchantPaymentRedirectUrl' => $args->getMerchantRedirectUrl(),
+            'MerchantSubscriptionIdList' => $args->getMerchantSubscriptionIdList(),
+            'IsPurchaseOnNoActiveSubscription' => $args->isPurchaseOnNoActiveSubscription(),
+            'SubscriptionRecurrences' => $args->getSubscriptionRecurrences(),
+            'SubscriptionPeriod' => $args->getSubscriptionPeriod(),
+            'SubscriptionPeriodAmount' => $args->getSubscriptionPeriodAmount()
+        );
         $payload = json_encode($vars);
         return $this->getNotary($payload);
     }
@@ -158,14 +166,14 @@ class NotaryService extends Service
     public function getTransactionNotary(TransactionNotaryArguments $args)
     {
         $vars = array(
-                'Amount' => $args->getAmount(),
-                'Category' => $args->getCategory(),
-                'Channel' => $args->getChannel(),
-                'Description' => $args->getDescription(),
-                'MerchantTransactionId' => $args->getMerchantTransactionId(),
-                'MerchantProductId' => $args->getMerchantProductId(),
-                'MerchantPaymentRedirectUrl' => $args->getMerchantRedirectUrl()
-                );
+            'Amount' => $args->getAmount(),
+            'Category' => $args->getCategory(),
+            'Channel' => $args->getChannel(),
+            'Description' => $args->getDescription(),
+            'MerchantTransactionId' => $args->getMerchantTransactionId(),
+            'MerchantProductId' => $args->getMerchantProductId(),
+            'MerchantPaymentRedirectUrl' => $args->getMerchantRedirectUrl()
+        );
         $payload = json_encode($vars);
         return $this->getNotary($payload);
     }

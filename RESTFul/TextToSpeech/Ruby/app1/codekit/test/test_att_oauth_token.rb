@@ -6,6 +6,7 @@ include Att::Codekit::Auth
 
 class TestOauthToken < Test::Unit::TestCase
   HUNDRED_YEARS = Time.now.to_i + (60*60*24*365*100)
+  NEVER_EXPIRES = 0
 
   def setup
     @access_token = rand(1_000_000).to_s
@@ -23,15 +24,15 @@ class TestOauthToken < Test::Unit::TestCase
   #to never_expires, thus we should test that our expiry doesn't experience any overflow
   def test_time_overflow
     #test standard case, this should equal NEVER_EXPIRES for ruby <= 1.8.7 after 03:14:07 UTC on Tuesday, 19 January 2038
-    assert(@token.expiry.to_i >= OAuthToken::NEVER_EXPIRES, "token set with expiry: #{@expiry}")
+    assert(@token.expiry.to_i >= NEVER_EXPIRES, "token set with expiry: #{@expiry}")
 
     #test hundred years, 
     @token = OAuthToken.new(@access_token, HUNDRED_YEARS, @refresh_token)
-    assert(@token.expiry.to_i >= OAuthToken::NEVER_EXPIRES, "token set with expiry HUNDRED_YEARS: #{HUNDRED_YEARS}")
+    assert(@token.expiry.to_i >= NEVER_EXPIRES, "token set with expiry HUNDRED_YEARS: #{HUNDRED_YEARS}")
 
     #never expires
-    @token = OAuthToken.new(@access_token, OAuthToken::NEVER_EXPIRES, @refresh_token)
-    assert(@token.expiry.to_i >= OAuthToken::NEVER_EXPIRES, "token set with expiry NEVER_EXPIRES: #{OAuthToken::NEVER_EXPIRES}")
+    @token = OAuthToken.new(@access_token, NEVER_EXPIRES, @refresh_token)
+    assert(@token.expiry.to_i >= NEVER_EXPIRES, "token set with expiry NEVER_EXPIRES: #{NEVER_EXPIRES}")
   end
 
   #tests that expiration is done correctly

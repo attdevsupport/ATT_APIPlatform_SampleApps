@@ -3,11 +3,11 @@
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -135,6 +135,7 @@ public class OAuthService {
      */
     private APIResponse sendRequest(RESTClient client) throws RESTException {
         return client
+            .addHeader("Accept", "application/json")
             .addHeader("Content-Type", "application/x-www-form-urlencoded")
             .httpPost();
     }

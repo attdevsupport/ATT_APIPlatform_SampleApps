@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Speech;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Speech Library
@@ -7,34 +9,37 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  API
  * @package   Speech 
- * @author    Pavel Kazakov <pk9069@att.com>
- * @copyright 2013 AT&T Intellectual Property
+ * @author    pk9069
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
-require_once __DIR__ . '/../Restful/Multipart.php';
+require_once __DIR__ . '/../Restful/HttpMultipart.php';
+
+use Att\Api\Util\Util;
+use Att\Api\Restful\HttpMultipart;
 
 /**
  * Used to handle the multipart aspect of a speech request.
  *
  * @category API
  * @package  Speech
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/3/Speech
  */
-class SpeechMultipartBody extends MultipartBody
+class SpeechMultipartBody extends HttpMultipart
 {
 
     /**

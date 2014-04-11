@@ -7,7 +7,6 @@
     <title>AT&amp;T Sample Application - Multimedia Messaging Service</title>		
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <link rel="stylesheet" type="text/css" href="style/common.css">
-    <script src="scripts/utils.js"></script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33466541-1']);
@@ -33,9 +32,6 @@
           <a id="jump" href="#nav">Main Navigation</a>
         </div> <!-- end of menuButton -->
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
-            <span class="divider"> |&nbsp;</span>
-          </li>
           <li>
             <a href="${cfg.linkSource}" target="_blank">Source<img src="images/opensource.png" /></a>
             <span class="divider"> |&nbsp;</span>
@@ -210,7 +206,7 @@
           <br> For more information contact 
           <a href="mailto:developer.support@att.com">developer.support@att.com</a>
           <br><br>
-          &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. 
+          &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. 
           <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->

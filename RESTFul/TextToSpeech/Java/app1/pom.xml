@@ -2,7 +2,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.att.api</groupId>
-  <artifactId>text-to-speech</artifactId>
+  <artifactId>tts</artifactId>
   <packaging>war</packaging>
   <version>2.3</version>
   <name>Text To Speech Sample App</name>
@@ -84,7 +84,7 @@
     </dependency>
   </dependencies>
   <build>
-    <finalName>speech</finalName>
+    <finalName>tts</finalName>
     <plugins>
       <plugin>
         <groupId>org.mortbay.jetty</groupId>

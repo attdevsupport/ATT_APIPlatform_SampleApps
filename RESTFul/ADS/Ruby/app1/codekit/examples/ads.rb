@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# This quickstart guide requires the Ruby codekit, which can be found at:
+# https://github.com/attdevsupport/codekit-ruby
 
 # Make sure the att-codekit has been installed then require the class
 require 'att/codekit'
@@ -7,29 +9,29 @@ require 'att/codekit'
 include Att::Codekit
 
 # Uncomment to set a proxy if required
-# Transport.proxy("http:/proxyaddress.com:port")
+# Transport.proxy("http://proxyaddress.com:port")
 
-# Use the app settings from developer.att.com for the following values.
-# Make sure ADS is enabled for the app key/secret.
+# Use the app account settings from developer.att.com for the following values.
+# Make sure ADS is enabled for the App Key and App Secret.
 
 # Enter the value from 'App Key' field
 client_id = 'ENTER VALUE!'
 
-# Enter the value from 'Secret' field
+# Enter the value from 'App Secret' field
 client_secret = 'ENTER VALUE!'
 
 # Set the fqdn to default of https://api.att.com
 fqdn = 'https://api.att.com'
 
-# Create service for requesting an OAuth token
+# Create service for requesting an OAuth access token
 clientcred = Auth::ClientCred.new(fqdn, 
                                   client_id,
                                   client_secret)
 
-# Get OAuth token using the ADS scope
+# Get OAuth access token using the Advertising API scope
 token = clientcred.createToken('ADS')
 
-# Create service for interacting with the ADS api
+# Create service for interacting with the Advertising API
 ads = Service::ADSService.new(fqdn, token)
 
 # User agent (must be mobile)
@@ -39,8 +41,8 @@ user_agent = 'Mozilla/5.0 (Android; Mobile; rv:13.0) Gecko/13.0 Firefox/13.0'
 udid = '938382893239492349234923493249'
 
 begin 
-  # Send a request to the API for getting an advertisement using 'auto' as the
-  # category.
+  # Send a request to the API Gateway for getting an advertisement using 'auto'
+  # as the category.
   response = ads.getAds('auto', user_agent, udid)
 
 rescue Service::ServiceException => e
@@ -48,8 +50,8 @@ rescue Service::ServiceException => e
   puts "#{e.message}"
 
 else
-  # It's important to check that ads were returned since a successful response
-  # does not guarantee ad content
+  # It's important to check that advertisements were returned since a
+  # successful response does not guarantee advertisement content
   if response.hasAds?
 
     # Simply display the results

@@ -30,7 +30,7 @@ public class TtsService extends APIService {
      *
      * @param response
      *            the response returned by the server
-     * @return the server response as a SpeechResponse object
+     * @return the server response as a binary byte[] array
      * @throws IOException
      *             if unable to read the passed-in response
      * @throws java.text.ParseException
@@ -38,6 +38,7 @@ public class TtsService extends APIService {
     private byte[] parseSuccess(APIResponse wavResponse)
             throws IOException
     {
+        //decodes binary properly with iso-8859-1 charset
         return wavResponse.getResponseBody().getBytes("ISO-8859-1");
     }
 

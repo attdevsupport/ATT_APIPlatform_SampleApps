@@ -1,13 +1,13 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -21,8 +21,8 @@
  * simplified interface to a full http client.
  * </p>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @since 2.2
+ * @author pk9069
+ * @since 1.0
  * @see com.att.api.rest.RESTClient
  */
 

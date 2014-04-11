@@ -34,9 +34,6 @@
           <a id="jump" href="#nav">Main Navigation</a>
         </div>
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img 
-              src="images/max.png"></img></a> <span class="divider"> |&nbsp;</span>
-          </li>
           <li><a href="${cfg.linkSource}" target="_blank">Source<img
           src="images/source.png" /></a> <span class="divider"> |&nbsp;</span></li>
           <li><a href="${cfg.linkDownload}" target="_blank">Download<img
@@ -113,7 +110,7 @@
             href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
             <br> For more information contact <a
             href="mailto:developer.support@att.com">developer.support@att.com</a>
-            <br> <br> &copy; 2013 AT&amp;T Intellectual Property. All
+            <br> <br> &copy; 2014 AT&amp;T Intellectual Property. All
             rights reserved. <a href="http://developer.att.com/"
             target="_blank">http://developer.att.com</a>
           </p>

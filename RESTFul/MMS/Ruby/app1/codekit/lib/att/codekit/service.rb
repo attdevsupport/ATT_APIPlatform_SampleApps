@@ -1,6 +1,6 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
@@ -73,6 +73,26 @@ module Att
         #   the defaults
         #
         # @return [RestClient::Response] http response object
+        def patch(url, payload, custom_headers={})
+          headers = {
+            :Accept => "application/json",
+            :Content_Type => 'application/json',
+            :Authorization => "Bearer #{@token.access_token}", 
+          }
+
+          headers.merge!(custom_headers)
+
+          Transport.patch url, payload, headers
+        end
+
+        # Send a Http put request with standard headers
+        #
+        # @param url [String] The url to send the request to
+        # @param payload [String] The data to send to the url
+        # @param custom_headers [Hash] A hash of headers that override/extend 
+        #   the defaults
+        #
+        # @return [RestClient::Response] http response object
         def put(url, payload, custom_headers={})
           headers = {
             :Accept => "application/json",
@@ -120,15 +140,33 @@ module Att
 
           addresses.each do |a|
             a = a.gsub("-","").strip
-            if a.include?("@") || a.include?("tel:") || a.include?("short:")
-              parsed_addresses << a 
-            elsif a.length <= 8
-              parsed_addresses << "short:#{a}" 
-            else
-              parsed_addresses << "tel:#{a}" 
+            unless a.empty?
+              if a.include?("@") || a.include?("tel:") || a.include?("short:")
+                parsed_addresses << a 
+              elsif a.length <= 8 
+                parsed_addresses << "short:#{a}" 
+              else
+                parsed_addresses << "tel:#{a}" 
+              end
             end
           end
           parsed_addresses
+        end
+
+        # Transform a Hash of key, value pairs into a query string
+        # 
+        # @param query_params [Hash<String>] 
+        #
+        # @return [String] a query string in the form of 
+        #   "key1=value1&key2=value2"
+        def self.query_param_string(query_params)
+          parameters = Array.new
+          query_params.each do |key,value|
+            unless value.nil?
+              parameters << %(#{key}=#{CGI.escape(Array(value).join(","))}) 
+            end
+          end
+          parameters.join("&")
         end
 
         # Internal function used to generate random boundary
@@ -149,8 +187,8 @@ module Att
         # @return [String] A payload that can be sent to the AT&T Cloud API
         def self.generateMultiPart(boundary, data)
           body = ""
-          data = Array(data)
-          data.each do |part|
+          tmp_data = data.is_a?(Hash) ? [data] : Array(data)
+          tmp_data.each do |part|
             body += "--#{boundary}\r\n"
             part[:headers].each do |key, value|
               body += "#{key}: #{value}\r\n"
@@ -204,16 +242,14 @@ module Att
         end
       end
 
-      require_relative "service/tts" 
       require_relative "service/ads" 
       require_relative "service/speech" 
+      require_relative "service/tts" 
       require_relative "service/dc" 
-      require_relative "service/tl" 
       require_relative "service/mim" 
       require_relative "service/immn" 
       require_relative "service/sms" 
       require_relative "service/mms" 
-      require_relative "service/cms" 
       require_relative "service/payment" 
 
     end

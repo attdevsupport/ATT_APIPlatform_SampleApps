@@ -4,6 +4,9 @@
 require_once __DIR__ . '/../../lib/Controller/APIController.php';
 require_once __DIR__ . '/../../lib/Speech/SpeechService.php';
 
+use Att\Api\Controller\APIController;
+use Att\Api\Speech\SpeechService;
+
 class SpeechController extends APIController
 {
     const RESULT_STT = 0;

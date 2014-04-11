@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Payment;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Payment Library.
@@ -7,20 +9,22 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category API
  * @package Payment 
- * @copyright 2013 AT&T Intellectual Property
+ * @copyright 2014 AT&T Intellectual Property
  * @license http://developer.att.com/sdk_agreement AT&amp;T License
  */
 
 require_once __DIR__ . '/../../lib/Util/FileUtil.php';
+
+use Att\Api\Util\FileUtil;
 
 // TODO: Clean up
 class PaymentFileHandler {

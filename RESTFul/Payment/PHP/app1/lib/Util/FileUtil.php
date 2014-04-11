@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Util;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Util Library
@@ -7,17 +9,17 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  Utility 
  * @package   Util
- * @author    Pavel Kazakov <pk9069@att.com>
- * @copyright 2013 AT&T Intellectual Property
+ * @author    pk9069
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
@@ -27,11 +29,11 @@
  * 
  * @category Utility
  * @package  Util
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
-class FileUtil
+final class FileUtil
 {
 
     /** 

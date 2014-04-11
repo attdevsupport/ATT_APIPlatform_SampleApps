@@ -1,7 +1,7 @@
 <?php
 namespace Att\Api\Util;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Utility functions 
@@ -9,22 +9,23 @@ namespace Att\Api\Util;
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  Utility
  * @package   Util
  * @author    pk9069
- * @copyright 2013 AT&T Intellectual Property
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
 use finfo;
+use InvalidArgumentException;
 
 /**
  * Utility class with static helper methods.

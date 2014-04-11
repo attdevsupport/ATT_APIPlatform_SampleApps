@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
 
   #runtime dependencies
   spec.add_runtime_dependency "immutable_struct"
-  spec.add_runtime_dependency "rest-client"
+  spec.add_runtime_dependency "mime-types", "~> 1.25"
+  spec.add_runtime_dependency "rest-client", "~> 1.6"
   spec.add_runtime_dependency "json"
 end

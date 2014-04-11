@@ -3,11 +3,11 @@
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -48,45 +48,47 @@ public class IMMNService extends APIService {
         super(fqdn, token);
     }
 
-    
-    public SendResponse sendMessage(String address, String msg) throws RESTException {
-        String[] addrs = {address};
+    public SendResponse sendMessage(String address, String msg)
+            throws RESTException {
+        String[] addrs = { address };
         return this.sendMessage(addrs, msg);
     }
 
-    public SendResponse sendMessage(String[] addresses, String msg) throws RESTException {
+    public SendResponse sendMessage(String[] addresses, String msg)
+            throws RESTException {
         return this.sendMessage(addresses, msg, null, false, null);
     }
 
-    public SendResponse sendMessage(String address, String subject, 
+    public SendResponse sendMessage(String address, String subject,
             boolean group) throws RESTException {
         return sendMessage(address, null, subject, group);
     }
 
-    public SendResponse sendMessage(String address, String msg, String subject, 
+    public SendResponse sendMessage(String address, String msg, String subject,
             boolean group) throws RESTException {
-        String[] addrs = {address};
+        String[] addrs = { address };
         return sendMessage(addrs, null, subject, group);
     }
 
-    public SendResponse sendMessage(String[] addresses, String subject, 
+    public SendResponse sendMessage(String[] addresses, String subject,
             boolean group) throws RESTException {
         return sendMessage(addresses, null, subject, group);
     }
 
-    public SendResponse sendMessage(String[] addresses, String msg, 
+    public SendResponse sendMessage(String[] addresses, String msg,
             String subject, boolean group) throws RESTException {
         return sendMessage(addresses, msg, subject, group, null);
     }
 
-    public SendResponse sendMessage(String address, String msg, 
-            String subject, boolean group, String[] attachments) throws RESTException {
-        String[] addrs = {address};
+    public SendResponse sendMessage(String address, String msg, String subject,
+            boolean group, String[] attachments) throws RESTException {
+        String[] addrs = { address };
         return sendMessage(addrs, msg, subject, group, attachments);
     }
 
-    public SendResponse sendMessage(String[] addresses, String msg, 
-            String subject, boolean group, String[] attachments) throws RESTException {
+    public SendResponse sendMessage(String[] addresses, String msg,
+            String subject, boolean group, String[] attachments)
+            throws RESTException {
 
         final String endpoint = getFQDN() + "/myMessages/v2/messages";
 
@@ -113,13 +115,13 @@ public class IMMNService extends APIService {
         jsonBody.put("messageRequest", body);
 
         final RESTClient rest = new RESTClient(endpoint)
-            .setHeader("Accept", "application/json")
-            .setHeader("Content-Type", "application/json")
-            .addAuthorizationHeader(this.getToken());
+                .setHeader("Accept", "application/json")
+                .setHeader("Content-Type", "application/json")
+                .addAuthorizationHeader(this.getToken());
 
-        final APIResponse response = (attachments == null) 
-            ? rest.httpPost(jsonBody.toString())
-            : rest.httpPost(jsonBody, attachments);
+        final APIResponse response = (attachments == null) ? rest
+                .httpPost(jsonBody.toString()) : rest.httpPost(jsonBody,
+                attachments);
 
         try {
             JSONObject jobj = new JSONObject(response.getResponseBody());
@@ -129,18 +131,21 @@ public class IMMNService extends APIService {
         }
     }
 
-    public MessageList getMessageList(int limit, int offset) throws RESTException {
-        return getMessageList(new MessageListArgs.Builder(limit, offset).build());
+    public MessageList getMessageList(int limit, int offset)
+            throws RESTException {
+        return getMessageList(new MessageListArgs.Builder(limit, offset)
+                .build());
     }
 
-    public MessageList getMessageList(MessageListArgs args) throws RESTException {
+    public MessageList getMessageList(MessageListArgs args)
+            throws RESTException {
         final String endpoint = getFQDN() + "/myMessages/v2/messages";
 
-        final RESTClient client = new RESTClient(endpoint)    
-            .addAuthorizationHeader(getToken())
-            .setHeader("Accept", "application/json")
-            .setParameter("limit", "" + args.getLimit())
-            .setParameter("offset", "" + args.getOffset());
+        final RESTClient client = new RESTClient(endpoint)
+                .addAuthorizationHeader(getToken())
+                .setHeader("Accept", "application/json")
+                .setParameter("limit", "" + args.getLimit())
+                .setParameter("offset", "" + args.getOffset());
 
         if (args.getMessageIds() != null) {
             String msgIds = StringUtils.join(args.getMessageIds(), ",");
@@ -148,10 +153,11 @@ public class IMMNService extends APIService {
         }
 
         if (args.isFavorite() != null)
-            client.addParameter("isFavorite", args.isFavorite() ? "true" : "false");
+            client.addParameter("isFavorite", args.isFavorite() ? "true"
+                    : "false");
 
         if (args.isUnread() != null)
-            client.addParameter("isUnread", args.isUnread() ? "true" : "false" );
+            client.addParameter("isUnread", args.isUnread() ? "true" : "false");
 
         if (args.getType() != null)
             client.addParameter("type", args.getType().getString());
@@ -160,7 +166,8 @@ public class IMMNService extends APIService {
             client.addParameter("keyword", args.getKeyword());
 
         if (args.isIncoming() != null)
-            client.addParameter("isIncoming", args.isIncoming() ? "true" : "false" );
+            client.addParameter("isIncoming", args.isIncoming() ? "true"
+                    : "false");
 
         try {
             APIResponse response = client.httpGet();
@@ -175,9 +182,8 @@ public class IMMNService extends APIService {
         final String endpoint = getFQDN() + "/myMessages/v2/messages/" + msgId;
 
         final APIResponse response = new RESTClient(endpoint)
-            .addAuthorizationHeader(getToken())
-            .setHeader("Accept", "application/json")
-            .httpGet();
+                .addAuthorizationHeader(getToken())
+                .setHeader("Accept", "application/json").httpGet();
 
         try {
             JSONObject jobj = new JSONObject(response.getResponseBody());
@@ -194,13 +200,18 @@ public class IMMNService extends APIService {
                 + "/parts/" + partNumber;
 
         final APIResponse response = new RESTClient(endpoint)
-            .addAuthorizationHeader(getToken())
-            .setHeader("Accept", "application/json")
-            .httpGet();
+                .addAuthorizationHeader(getToken())
+                .setHeader("Accept", "application/json").httpGet();
 
         String ctype = response.getHeader("Content-Type");
         String clength = response.getHeader("Content-Length");
-        String content = response.getResponseBody();
+        byte[] content;
+        try {
+            content = response.getResponseBody().getBytes("ISO-8859-1");
+        } catch (Exception e) {
+            // Wrapping into RESTException
+            throw new RESTException(e);
+        }
         return new MessageContent(ctype, clength, content);
     }
 

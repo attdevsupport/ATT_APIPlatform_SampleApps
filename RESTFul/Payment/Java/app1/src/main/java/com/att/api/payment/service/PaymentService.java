@@ -4,6 +4,9 @@ import java.text.ParseException;
 
 import com.att.api.oauth.OAuthToken;
 import com.att.api.payment.model.Notary;
+import com.att.api.payment.model.RefundReason;
+import com.att.api.payment.model.Subscription;
+import com.att.api.payment.model.Transaction;
 import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
 import com.att.api.rest.RESTException;
@@ -76,9 +79,17 @@ public class PaymentService extends APIService {
         return this.getPaymentInfo(surl);
     }
 
+    public JSONObject getTransactionStatus(Transaction.Type type, String id) throws RESTException {
+        return this.getTransactionStatus(type.toString(), id);
+    }
+
     public JSONObject getSubscriptionStatus(String type, String id) throws RESTException {
         String surl = SUBSCRIPTION_SUBURL + "/" + type + "/" + id;
         return this.getPaymentInfo(surl);
+    }
+
+    public JSONObject getSubscriptionStatus(Subscription.Type type, String id) throws RESTException {
+        return this.getSubscriptionStatus(type.toString(), id);
     }
 
     public JSONObject getSubscriptionDetails(String merchId, 
@@ -121,11 +132,23 @@ public class PaymentService extends APIService {
         return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded", surl);
     }
 
+    public JSONObject refundSubscription(String subId, String reasonTxt, 
+            RefundReason reasonCode) throws RESTException {
+        return this.refundSubscription(subId, reasonTxt,
+                reasonCode.getValue());
+    }
+
     public JSONObject refundTransaction(String transId, String reasonTxt, 
             int reasonCode) throws RESTException {
         String surl = TRANS_SUBURL + "/" + transId;
 
         return this.sendTransOptStatus(reasonTxt, reasonCode, "Refunded", surl);
+    }
+
+    public JSONObject refundTransaction(String transId, String reasonTxt, 
+            RefundReason reasonCode) throws RESTException {
+        return this.refundTransaction(transId, reasonTxt,
+                reasonCode.getValue());
     }
 
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env ruby
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014
 # TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-# Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+# Copyright 2014 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 # For more information contact developer.support@att.com
 
-require 'rubygems'
 require 'sinatra'
 require 'open-uri'
 require 'uri'
@@ -49,21 +48,25 @@ configure do
 end
 
 before do 
-  drop_down_list
-  load_submitted
+  begin
+    drop_down_list
+    load_submitted
 
-  if @@token.nil?
-    if FILE_EXISTS 
-      @@token = Auth::OAuthToken.load(settings.tokens_file)
-    else
-      @@token = OAuth.createToken(SCOPE)
+    if @@token.nil?
+      if FILE_EXISTS 
+        @@token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        @@token = OAuth.createToken(SCOPE)
+      end
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
     end
-    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
-  end
 
-  if @@token.expired?
-    @@token = OAuth.refreshToken(@@token)
-    Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    if @@token.expired?
+      @@token = OAuth.refreshToken(@@token)
+      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    end
+  rescue Exception => e
+    @error = e.message
   end
 end
 
@@ -78,10 +81,12 @@ post '/SpeechToText' do
 
     chunked = params[:chkChunked]
     context = params[:SpeechContext]
+    subcontext = params[:x_subContext]
 
     @result = service.speechToText(audio_file, 
                                    :xargs => settings.X_arg, 
                                    :context => context, 
+                                   :subcontext => subcontext,
                                    :chunked => chunked)
 
   rescue Exception => e
@@ -93,10 +98,15 @@ end
 def drop_down_list
   @context_types = settings.speech_context.split(", ")
   @type_list = Array.new
+  @context_list = Array.new
   @audio_file_list = Array.new
 
   @context_types.each do |p|
     @type_list.push p
+  end
+
+  settings.X_subContext.split(",").each do |p|
+    @context_list.push p.strip
   end
 
   Dir.entries(AUDIO_DIR).sort.each do |x|

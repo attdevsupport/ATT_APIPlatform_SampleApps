@@ -1,6 +1,6 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
@@ -204,9 +204,9 @@ module Att
         end
       end
 
-      require_relative "service/tts" 
       require_relative "service/ads" 
       require_relative "service/speech" 
+      require_relative "service/tts" 
       require_relative "service/dc" 
       require_relative "service/tl" 
       require_relative "service/mim" 

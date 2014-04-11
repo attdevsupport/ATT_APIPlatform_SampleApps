@@ -104,6 +104,11 @@ h2 {
   display: inline;
 }
 
+#content {
+  padding-top: 2.0833%;
+  padding-left: 1.5625%; 
+}
+
 #content h1 {
   padding-left: 1.5625%; 
   padding-right: 1.5625%; 
@@ -189,6 +194,7 @@ h2 {
   background: #cfc;
   width: 96.785%;
   margin-bottom: 1.2833%;
+  margin-top: 1.2833%;
 }
 .errorWide {
   clear: both;
@@ -197,6 +203,7 @@ h2 {
   border: 3px outset red;
   width: 96.785%;
   margin-bottom: 1.2833%;
+  margin-top: 1.2833%;
 }
 
 /* APP SPECIFIC CSS */

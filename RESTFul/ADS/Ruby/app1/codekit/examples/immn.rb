@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# This quickstart guide requires the Ruby codekit, which can be found at:
+# https://github.com/attdevsupport/codekit-ruby
 
 # Make sure the att-codekit has been installed then require the class
 require 'att/codekit'
@@ -7,7 +9,7 @@ require 'att/codekit'
 include Att::Codekit
 
 # Uncomment to set a proxy if required
-# Transport.proxy("http:/proxyaddress.com:port")
+# Transport.proxy("http://proxyaddress.com:port")
 
 # Use the app settings from developer.att.com for the following values.
 # Make sure IMMN is enabled for the app key/secret.
@@ -15,10 +17,10 @@ include Att::Codekit
 # Enter the value from 'App Key' field
 client_id = 'ENTER VALUE!'
 
-# Enter the value from 'Secret' field
+# Enter the value from 'App Secret' field
 client_secret = 'ENTER VALUE!'
 
-# Set the fqdn to default of https://api.att.com
+# Set the fqdn to the default of https://api.att.com
 fqdn = 'https://api.att.com'
 
 # Set the redirect url for returning after consent flow

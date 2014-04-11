@@ -1,6 +1,6 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
@@ -44,6 +44,17 @@ module Att
         # @return [RestClient::Response] http response object
         def put(url, payload, headers={})
           RestClient.put url, payload, headers
+        end
+
+        # Send a Http patch request with standard headers
+        #
+        # @param url [String] The url to send the request to
+        # @param payload [String] The data to send to the url
+        # @param headers [Hash] A hash of headers
+        #
+        # @return [RestClient::Response] http response object
+        def patch(url, payload, headers={})
+          RestClient.patch url, payload, headers
         end
 
         # Send a Http delete request with standard headers

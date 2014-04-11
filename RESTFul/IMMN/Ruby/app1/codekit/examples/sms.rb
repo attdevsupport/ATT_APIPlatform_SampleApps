@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# This quickstart guide requires the Ruby codekit, which can be found at:
+# https://github.com/attdevsupport/codekit-ruby
 
 # Make sure the att-codekit has been installed then require the class
 require 'att/codekit'
@@ -7,7 +9,7 @@ require 'att/codekit'
 include Att::Codekit
 
 # Uncomment to set a proxy if required
-# Transport.proxy("http:/proxyaddress.com:port")
+# Transport.proxy("http://proxyaddress.com:port")
 
 # Use the app settings from developer.att.com for the following values.
 # Make sure SMS is enabled for the app key/secret.
@@ -38,12 +40,11 @@ addresses = "555-555-5555,444-555-5555"
 # Alternatively we can use an array
 # addresses = [5555555555,"444-555-5555"]
 
-# Use exception handling to see if anything went wrong with the request
+# Send an sms message to the addresses specified
 begin
 
-  # Send a message to the addresses specified
   response = sms.sendSms(addresses, "Message from att's codekit sms example")
-  status = sms.smsStatus(response.id)
+
 
 rescue Service::ServiceException => e
 
@@ -54,8 +55,25 @@ rescue Service::ServiceException => e
 else
 
   puts "Sent SMS with id: #{response.id}"
-  puts "#{response.id} has the resource url: #{response.resource_url}"
-  puts ""
+  puts "Resource url: #{response.resource_url}"
+
+end
+
+puts
+
+# Check the status of the sent message
+begin 
+
+  status = sms.smsStatus(response.id)
+
+rescue Service::ServiceException => e
+
+  # There was an error in execution print what happened
+  puts "There was an error, the api returned the following error code:"
+  puts "#{e.message}"
+
+else
+
   puts "Status response:"
   puts "\tResource URL: #{status.resource_url}"
   puts "\tDelivery Info:"

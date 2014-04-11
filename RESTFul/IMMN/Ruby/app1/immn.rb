@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
-require 'rubygems'
 require 'base64'
 require 'sinatra'
 require 'sinatra/config_file'
@@ -58,11 +57,16 @@ before do
   save_session unless session[:consenting]
   load_attachments
 
-  if params[:code] && session[:token].nil?
-    session[:token] = OAuth.createToken(params[:code])
-  end
-  if session[:token] && session[:token].expired?
-    session[:token] = OAuth.refreshToken(session[:token])
+
+  begin
+    if params[:code] && session[:token].nil?
+      session[:token] = OAuth.createToken(params[:code])
+    end
+    if session[:token] && session[:token].expired?
+      session[:token] = OAuth.refreshToken(session[:token])
+    end
+  rescue Exception => e
+    @oauth_error = e.message
   end
 end
 

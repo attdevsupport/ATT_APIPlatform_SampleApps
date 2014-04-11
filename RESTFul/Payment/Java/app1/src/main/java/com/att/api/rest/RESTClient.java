@@ -1,13 +1,13 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -17,6 +17,7 @@ package com.att.api.rest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -30,9 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -53,7 +56,6 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 import com.att.api.oauth.OAuthToken;
@@ -68,6 +70,7 @@ import com.att.api.oauth.OAuthToken;
  *
  * An example of usage can be found below:
  * <pre>
+ * <code>
  * RESTClient client;
  * try {
  *     client = new RESTClient("http://www.att.com");
@@ -82,12 +85,14 @@ import com.att.api.oauth.OAuthToken;
  *  } catch (RESTException re) {
  *      // Handle Exception
  *  }
+ * </code>
  * </pre>
  *
- * @version 3.0
- * @since 2.2
+ * @version 1.0
+ * @since 1.0
  */
 public class RESTClient {
+
     /**
      * Whether to trust all SSL certificates, which may be used for self-signed
      * or invalidly-signed certs.
@@ -123,7 +128,7 @@ public class RESTClient {
         APIResponse apir = APIResponse.fromHttpResponse(response);
         int statusCode = apir.getStatusCode();
         // TODO (pk9069): allow these codes to be configurable
-        if (statusCode != 200 && statusCode != 201) {
+        if (statusCode != 200 && statusCode != 201 && statusCode != 202 && statusCode != 204) {
             throw new RESTException(statusCode, apir.getResponseBody());
         }
 
@@ -137,8 +142,19 @@ public class RESTClient {
      * @throws RESTException if unable to release connection
      */
     private void releaseConnection(HttpResponse response) throws RESTException {
-        try {
-            EntityUtils.consume(response.getEntity());
+        final HttpEntity entity = response.getEntity();
+
+        if (entity == null) {
+            return;
+        }
+
+        try { 
+            if (entity.isStreaming()) {
+                InputStream instream = entity.getContent();
+                if (instream != null) {
+                    instream.close();
+                }
+            }
         } catch (IOException ioe) {
             throw new RESTException(ioe);
         }
@@ -755,6 +771,7 @@ public class RESTClient {
                 }
                 if (contentType == null)
                     contentType = this.getMIMEType(new File(fname));
+                if (fname.endsWith("srgs")) contentType = "application/srgs+xml";
                 if (fname.endsWith("grxml")) contentType = "application/srgs+xml";
                 if (fname.endsWith("pls")) contentType="application/pls+xml";
                 FileBody fb = new FileBody(new File(fname), contentType, "UTF-8");
@@ -797,6 +814,30 @@ public class RESTClient {
             return buildResponse(response);
         } catch (IOException e) {
             throw new RESTException(e);
+        } finally {
+            if (response != null) {
+                this.releaseConnection(response);
+            }
+        }
+    }
+
+    public APIResponse httpDelete() throws RESTException {
+        HttpClient httpClient = null;
+        HttpResponse response = null;
+
+        try {
+            httpClient = createClient();
+
+            HttpDelete httpDelete = new HttpDelete(this.url);
+
+            addInternalHeaders(httpDelete);
+
+            response = httpClient.execute(httpDelete);
+
+            APIResponse apiResponse = buildResponse(response);
+            return apiResponse;
+        } catch (IOException ioe) {
+            throw new RESTException(ioe);
         } finally {
             if (response != null) {
                 this.releaseConnection(response);

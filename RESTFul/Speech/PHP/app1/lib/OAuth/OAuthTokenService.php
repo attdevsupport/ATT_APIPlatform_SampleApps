@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\OAuth;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * OAuth Library
@@ -7,23 +9,27 @@
  * PHP version 5.4+
  *
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  *
  * @category  Authentication
  * @package   OAuth
- * @author    Pavel Kazakov <pk9069@att.com>
- * @copyright 2013 AT&T Intellectual Property
+ * @author    pk9069
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
 
 require_once __DIR__ . '/OAuthException.php';
 require_once __DIR__ . '../../Srvc/Service.php';
+
+use Att\Api\Srvc\Service;
+use Att\Api\Restful\RestfulRequest;
+use Att\Api\Restful\HttpPost;
 
 /**
  * Implements the OAuth 2.0 Authorization Framework for requesting access
@@ -47,7 +53,7 @@ require_once __DIR__ . '../../Srvc/Service.php';
  *
  * @category Authentication
  * @package  OAuth
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  * @link     https://tools.ietf.org/html/rfc6749
@@ -79,42 +85,27 @@ class OAuthTokenService extends Service
     private $_clientSecret;
 
     /**
-     * Creates a RESTFulRequest object contains common information that all
-     * OAuth method calls share.
-     *
-     * @return RESTFulRequest created request
-     */
-    private function _createRESTFulRequest()
-    {
-        $req = new RESTFulRequest($this->_url);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_POST);
-        $req->addParam('client_id', $this->_clientId);
-        $req->addParam('client_secret', $this->_clientSecret);
-        return $req;
-    }
-
-    /**
      * Parses the result received from sending an API request for an OAuth
      * token.
      *
      * @param array $result the result returned from a restful request
      *
      * @return OAuthToken oauth token if request was successful
-     * @throws ServiceException if request was not successful
+     * @throws OAuthException if request was not successful
      * @see Service::parseResult()
      */
     protected function parseResult($result)
     {
-        $tokenResponse = parent::parseResult($result);
+        $tokenResponse = Service::parseJson($result);
     
         if (!isset($tokenResponse['access_token']))
-            throw new ServiceException('No access token in response.');
+            throw new OAuthException('Parse', 'No access token in response.');
 
         if (!isset($tokenResponse['expires_in']))
-            throw new ServiceException('No expires_in in response.');
+            throw new OAuthException('Parse', 'No expires_in in response.');
 
         if (!isset($tokenResponse['refresh_token']))
-            throw new ServiceException('No refresh_token in response.');
+            throw new OAuthException('Parse', 'No refresh_token in response.');
 
         return new OAuthToken(
             $tokenResponse['access_token'],
@@ -169,10 +160,17 @@ class OAuthTokenService extends Service
      */
     public function getTokenUsingCode(OAuthCode $code)
     {
-        $req = $this->_createRESTFulRequest();
-        $req->addParam('code', '' . $code);
-        $req->addParam('grant_type', 'authorization_code');
-        $result = $req->sendRequest();
+        $httpPost = new HttpPost();
+
+        $httpPost
+            ->setParam('client_id', $this->_clientId)
+            ->setParam('client_secret', $this->_clientSecret)
+            ->setParam('code', '' . $code)
+            ->setParam('grant_type', 'authorization_code');
+
+        $req = new RestfulRequest($this->_url);
+
+        $result = $req->sendHttpPost($httpPost);
         return $this->parseResult($result);
     }
 
@@ -202,12 +200,17 @@ class OAuthTokenService extends Service
      */
     public function getToken($scope)
     {
-        $req = $this->_createRESTFulRequest();
-        $req->addParam('scope', $scope);
-        $req->addParam('grant_type', 'client_credentials');
+        $httpPost = new HttpPost();
 
-        $result = $req->sendRequest();
+        $httpPost
+            ->setParam('scope', $scope)
+            ->setParam('grant_type', 'client_credentials')
+            ->setParam('client_id', $this->_clientId)
+            ->setParam('client_secret', $this->_clientSecret);
 
+        $req = new RestfulRequest($this->_url);
+
+        $result = $req->sendHttpPost($httpPost);
         return $this->parseResult($result);
     }
 
@@ -224,10 +227,17 @@ class OAuthTokenService extends Service
      */
     public function refreshToken(OAuthToken $token)
     {
-        $req = $this->_createRESTFulRequest();
-        $req->addParam('refresh_token', $token->getRefreshToken());
-        $req->addParam('grant_type', 'refresh_token');
-        $result = $req->sendRequest();
+        $httpPost = new HttpPost();
+
+        $httpPost
+            ->setParam('refresh_token', $token->getRefreshToken())
+            ->setParam('grant_type', 'refresh_token')
+            ->setParam('client_id', $this->_clientId)
+            ->setParam('client_secret', $this->_clientSecret);
+
+        $req = new RestfulRequest($this->_url);
+
+        $result = $req->sendHttpPost($httpPost);
         return $this->parseResult($result);
     }
 }

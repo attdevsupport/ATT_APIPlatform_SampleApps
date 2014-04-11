@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Speech;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Speech Library
@@ -7,17 +9,17 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  API
  * @package   Speech 
- * @author    Pavel Kazakov <pk9069@att.com>
- * @copyright 2013 AT&T Intellectual Property
+ * @author    pk9069
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
@@ -26,12 +28,20 @@ require_once __DIR__ . '/NBest.php';
 require_once __DIR__ . '/SpeechMultipart.php';
 require_once __DIR__ . '/SpeechResponse.php';
 
+use Att\Api\OAuth\OAuthToken;
+use Att\Api\Restful\HttpPost;
+use Att\Api\Restful\RestfulRequest;
+use Att\Api\Srvc\APIService;
+use Att\Api\Srvc\Service;
+
+use InvalidArgumentException;
+
 /**
  * Used to interact with version 3 of the Speech API.
  *
  * @category API
  * @package  Speech
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/3/Speech
@@ -58,39 +68,6 @@ class SpeechService extends APIService
         }
         $type = 'audio/' . $ending;
         return $type;
-    }
-
-    /**
-     * Builds a SpeechResponse object from the specified array.
-     *
-     * @param array $jsonArr API response as an array.
-     * 
-     * @return SpeechResponse API response as a SpeechResponse object
-     */
-    private function _buildSpeechResponse($jsonArr)
-    {
-        $recognition = $jsonArr['Recognition'];
-
-        $responseId = $recognition['ResponseId'];
-        $status = $recognition['Status'];
-        $nbests = $recognition['NBest'];
-        $jsonNBest = $nbests[0];
-
-        $nBest = null;
-        if ($status == 'OK') {
-            $nBest = new NBest(
-                $jsonNBest['Hypothesis'],
-                $jsonNBest['LanguageId'],
-                $jsonNBest['Confidence'],
-                $jsonNBest['Grade'],
-                $jsonNBest['ResultText'],
-                $jsonNBest['Words'],
-                $jsonNBest['WordScores']
-            );
-        }
-
-        $sResponse = new SpeechResponse($responseId, $status, $nBest);
-        return $sResponse;
     }
 
     /**
@@ -132,19 +109,19 @@ class SpeechService extends APIService
         $fileBinary = fread($fileResource, filesize($fname));
         fclose($fileResource);
 
-        $endpoint = $this->FQDN . '/speech/v3/speechToText';
+        $endpoint = $this->getFqdn() . '/speech/v3/speechToText';
         $req = new RESTFulRequest($endpoint);
-        $req->setHttpMethod(RESTFULRequest::HTTP_METHOD_POST);
-        $req->addAuthorizationHeader($this->token);
-        $req->setHeader('Accept', 'application/json');
-        $req->setHeader('Content-Type', $this->_getFileMIMEType($fname));
+        $req
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Accept', 'application/json')
+            ->setHeader('Content-Type', $this->_getFileMIMEType($fname))
+            ->setHeader('X-SpeechContext', $speechContext);
 
         if ($chunked) {
             $req->setHeader('Content-Transfer-Encoding', 'chunked');
         } else {
             $req->setHeader('Content-Length', filesize($fname));
         }
-        $req->setHeader('X-SpeechContext', $speechContext);
         if ($xArg != null) {
             $req->setHeader('xArg', $xArg);
         }
@@ -152,11 +129,15 @@ class SpeechService extends APIService
         if ($speechSubContext != null) {
             $req->setHeader('X-SpeechSubContext', $speechSubContext);
         }
+    
+        $httpPost = new HttpPost();
+        $httpPost->setBody($fileBinary);
 
-        $req->setBody($fileBinary);
-        $result = $req->sendRequest();
-        $jsonArr = $this->parseResult($result);
-        return $this->_buildSpeechResponse($jsonArr);
+        $result = $req->sendHttpPost($httpPost);
+
+        $jsonArr = Service::parseJson($result);
+
+        return SpeechResponse::fromArray($jsonArr);
     }
 
     /**
@@ -171,26 +152,28 @@ class SpeechService extends APIService
      */
     public function textToSpeech($ctype, $txt, $xArg = null) 
     {
-        $endpoint = $this->FQDN . '/speech/v3/textToSpeech';
+        $endpoint = $this->getFqdn() . '/speech/v3/textToSpeech';
         $req = new RESTFulRequest($endpoint);
+        $req
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Accept', 'audio/x-wav')
+            ->setHeader('Content-Type', $ctype);
 
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_POST);
-        $req->addAuthorizationHeader($this->token);
-        $req->setHeader('Accept', 'audio/x-wav');
-        $req->setHeader('Content-Type', $ctype);
         if ($xArg != null) {
             $req->setHeader('X-Arg', $xArg);
         }
+        
+        $httpPost = new HttpPost();
+        $httpPost->setBody($txt);
 
-        $req->setBody($txt);
+        $result = $req->sendHttpPost($httpPost);
 
-        $result = $req->sendRequest();
         $code = $result->getResponseCode();
-        $body = $result->getResponseBody();
         if ($code != 200 && $code != 201) {
             throw new ServiceException($body, $code);
         }
 
+        $body = $result->getResponseBody();
         return $body;
     }
 
@@ -198,9 +181,9 @@ class SpeechService extends APIService
      * Sends a custom API request for converting speech to text.
      *
      * @param string $cntxt  speech context.
-     * @param string $fname  file location that contains speech to convert.
-     * @param string $gfname file location that contains grammar.
-     * @param string $dfname file location that contains dictionary.
+     * @param string $fname  path to file that contains speech to convert.
+     * @param string $gfname path to file that contains grammar.
+     * @param string $dfname path to file that contains dictionary.
      * @param string $xArg   optional arguments.
      *
      * @return array API response as an array of key-value pairs.
@@ -209,18 +192,18 @@ class SpeechService extends APIService
     public function speechToTextCustom($cntxt, $fname, $gfname = null, 
         $dfname = null, $xArg = null
     ) {
-        $endpoint = $this->FQDN . '/speech/v3/speechToTextCustom';
+        $endpoint = $this->getFqdn() . '/speech/v3/speechToTextCustom';
+        $mpart = new SpeechMultipartBody();
+
         $req = new RESTFulRequest($endpoint);
-        $req->setHeader('Accept', 'application/json');
-        $req->addAuthorizationHeader($this->token);
+        $req
+            ->setHeader('Accept', 'application/json')
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Content-Type', $mpart->getContentType());
         
         if ($xArg != null) {
             $req->setHeader('X-Arg', $xArg);
         }
-
-        $mpart = new SpeechMultipartBody();
-        $req->setHeader('Content-Type', $mpart->getContentType());
-
         if ($dfname != null) {
             $mpart->addXDictionaryPart($dfname);
         }
@@ -228,10 +211,9 @@ class SpeechService extends APIService
             $mpart->addXGrammarPart($gfname);
         }
         $mpart->addFilePart($fname);
-        $req->setMultipart($mpart);
+        $result = $req->sendHttpMultipart($mpart);
 
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+        return Service::parseJson($result);
     }
 
 }

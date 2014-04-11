@@ -1,7 +1,7 @@
 <?php
 namespace Att\Api\Restful;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Restful Library.
@@ -9,17 +9,17 @@ namespace Att\Api\Restful;
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  Network
  * @package   Restful
  * @author    pk9069
- * @copyright 2013 AT&T Intellectual Property
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
@@ -151,7 +151,8 @@ class RestfulRequest
 
         curl_setopt_array($connection, $this->_options);
         $response = curl_exec($connection);
-        if (!$response) {
+        $responseCode = curl_getinfo($connection, CURLINFO_HTTP_CODE);
+        if (!$response && $responseCode == 0) {
             throw new RuntimeException(curl_error($connection));
         }
 
@@ -274,7 +275,7 @@ class RestfulRequest
         fwrite($fput, $put->getPutData());
         fseek($fput, 0);
         
-        $this->_options[CURLOPT_INFILE] = $this->_fput;
+        $this->_options[CURLOPT_INFILE] = $fput;
         $this->_options[CURLOPT_INFILESIZE] = strlen($put->getPutData());
 
         $response = $this->_sendRequest($this->_url);
@@ -282,7 +283,7 @@ class RestfulRequest
         // There's an issue where the file won't be closed if an exception is
         // thrown. 
         // TODO: fix this issue
-        fclose($this->_fput);
+        fclose($fput);
 
         return $response;
     }

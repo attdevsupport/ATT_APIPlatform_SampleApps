@@ -1,6 +1,6 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013 TERMS
+# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
 # AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
+# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
 # Property. All rights reserved. http://developer.att.com For more information
 # contact developer.support@att.com
 
@@ -107,7 +107,8 @@ module Att
 
         # Get the delta information related to state
         #
-        # @param state [#to_s] a representation of the state to get deltas against
+        # @param state [#to_s] a representation of the state to get deltas 
+        #   against
         #
         # @return [Model::DeltaResponse] object that contains the deltas
         def getDelta(state)
@@ -135,7 +136,7 @@ module Att
 
           list = Array.new
           Array(messages).each do |msg|
-            list << item = { 
+            list << { 
               "messageId" => msg.id.to_s,
               "isUnread" => msg.unread?.to_s,
               "isFavorite" => msg.favorite?.to_s
@@ -166,7 +167,7 @@ module Att
           item["isUnread"] = unread unless unread.nil?
           item["isFavorite"] = favorite unless favorite.nil?
 
-          payload = item.to_json
+          payload = { :message => item }.to_json
 
           begin
             response = self.put(url, payload)

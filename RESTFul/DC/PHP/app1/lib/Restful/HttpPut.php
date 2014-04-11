@@ -7,7 +7,7 @@ class HttpPut
 
     public function __construct($putData)
     {
-        $this->_putData;
+        $this->_putData = $putData;
     }
 
     public function getPutData()

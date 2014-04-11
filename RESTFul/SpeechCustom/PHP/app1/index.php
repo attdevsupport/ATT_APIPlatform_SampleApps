@@ -3,6 +3,9 @@ session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/src/Controller/SpeechController.php';
 require_once __DIR__ . '/lib/Util/Util.php';
+
+use Att\Api\Util\Util;
+
 $controller = new SpeechController();
 $controller->handleRequest();
 $results = $controller->getResults();
@@ -60,10 +63,6 @@ For more information contact developer.support@att.com
           <a id="jump" href="#nav">Main Navigation</a>
         </div>
         <ul class="links" id="nav">
-          <li>
-            <a href="#" target="_blank">Full Page<img src="images/max.png" alt="Max" /></a>
-            <span class="divider"> |&nbsp;</span>
-          </li>
           <li>
             <a href="<?php echo $linkSource; ?>" 
               target="_blank">Source<img src="images/source.png" alt="Source" /></a>
@@ -240,7 +239,7 @@ For more information contact developer.support@att.com
             For more information contact 
             <a href="mailto:developer.support@att.com">developer.support@att.com</a>
             <br> <br>
-            &copy; 2013 AT&amp;T Intellectual Property. All rights reserved.
+            &copy; 2014 AT&amp;T Intellectual Property. All rights reserved.
             <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
           </p>
         </div> <!-- end of ft -->

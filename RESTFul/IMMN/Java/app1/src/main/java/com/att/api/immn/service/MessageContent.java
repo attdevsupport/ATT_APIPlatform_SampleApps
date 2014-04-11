@@ -3,9 +3,9 @@ package com.att.api.immn.service;
 public final class MessageContent {
     private final String contentType;
     private final String contentLength;
-    private final String content;
+    private final byte[] content;
 
-    public MessageContent(String ctype, String clength, String content) {
+    public MessageContent(String ctype, String clength, byte[] content) {
         this.contentType = ctype;
         this.contentLength = clength;
         this.content = content;
@@ -19,7 +19,7 @@ public final class MessageContent {
         return contentLength;
     }
 
-    public String getContent() {
+    public byte[] getContent() {
         return content;
     }
 }

@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# This quickstart guide requires the Ruby codekit, which can be found at:
+# https://github.com/attdevsupport/codekit-ruby
 
 # Make sure the att-codekit has been installed then require the class
 require 'att/codekit'
@@ -7,7 +9,7 @@ require 'att/codekit'
 include Att::Codekit
 
 # Uncomment to set a proxy if required
-# Transport.proxy("http:/proxyaddress.com:port")
+# Transport.proxy("http://proxyaddress.com:port")
 
 # Use the app settings from developer.att.com for the following values.
 # Make sure SPEECH is enabled for the app key/secret.
@@ -51,7 +53,8 @@ else
 
   # Simple dump of all the data returned
   puts "Converted Speech with status response: #{response.status}"
-  puts ""
+  puts "Speech ID: #{response.id}"
+  puts
   puts "NBest values:"
   response.nbest.each do |n|
     puts "---------------"

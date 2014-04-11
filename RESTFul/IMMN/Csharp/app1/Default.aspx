@@ -45,9 +45,7 @@ For more information contact developer.support@att.com
             <div id="menuButton" class="hide">
                 <a id="jump" href="#nav">Main Navigation</a>
             </div>
-            <ul class="links" id="nav">
-                <li><a href="#" target="_blank">Full Page<img src="images/max.png" alt="" /></a> <span
-                    class="divider">|&nbsp;</span> </li>
+            <ul class="links" id="nav">                
                 <li><a id="sourceLink" runat="server" href="<%$ AppSettings:SourceLink %>" target="_blank">
                     Source<img src="images/opensource.png" alt="" />
                 </a><span class="divider">|&nbsp;</span> </li>
@@ -649,7 +647,7 @@ For more information contact developer.support@att.com
                 For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
                 <br />
                 <br />
-                &#169; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
+                &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
                     target="_blank">https://developer.att.com</a>
             </p>
         </div>

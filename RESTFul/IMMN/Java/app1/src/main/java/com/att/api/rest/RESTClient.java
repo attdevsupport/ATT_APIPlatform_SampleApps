@@ -3,11 +3,11 @@
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -771,6 +771,7 @@ public class RESTClient {
                 }
                 if (contentType == null)
                     contentType = this.getMIMEType(new File(fname));
+                if (fname.endsWith("srgs")) contentType = "application/srgs+xml";
                 if (fname.endsWith("grxml")) contentType = "application/srgs+xml";
                 if (fname.endsWith("pls")) contentType="application/pls+xml";
                 FileBody fb = new FileBody(new File(fname), contentType, "UTF-8");

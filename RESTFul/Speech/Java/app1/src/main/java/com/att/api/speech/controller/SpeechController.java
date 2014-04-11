@@ -68,10 +68,10 @@ public class SpeechController extends APIController {
             String audioFolder = appConfig.getProperty("audioFolder");
             File file = new File(getPath() + audioFolder + "/" + fname);
 
-            SpeechResponse response = srvc.sendRequest(file, xarg, 
+            SpeechResponse response = srvc.speechToText(file, xarg, 
                     speechContext, x_subContext);
 
-            request.setAttribute("resultSpeech", response.getResult());
+            request.setAttribute("resultSpeech", response);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorSpeech", e.getMessage());

@@ -1,13 +1,13 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -20,10 +20,10 @@ import com.att.api.oauth.OAuthToken;
  * Provides a common interface, as well as common functionality, for API
  * services.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @author <a href="mailto:kh455g@att.com">Kyle Hill</a>
- * @version 3.0
- * @since 3.0
+ * @author pk9069
+ * @author kh455g
+ * @version 1.0
+ * @since 1.0
  */
 public abstract class APIService {
 

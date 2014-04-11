@@ -1,8 +1,11 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 require_once __DIR__ . '/../../lib/Controller/APIController.php';
 require_once __DIR__ . '/../../lib/Speech/SpeechService.php';
+
+use Att\Api\Controller\APIController;
+use Att\Api\Speech\SpeechService;
 
 class SpeechController extends APIController
 {
@@ -41,7 +44,8 @@ class SpeechController extends APIController
     /**
      * Creates a SpeechService object.
      */
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         // Copy config values to member variables
         require __DIR__ . '/../../config.php';

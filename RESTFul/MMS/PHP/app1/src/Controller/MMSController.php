@@ -51,6 +51,9 @@ class MMSController extends APIController
                 $addr, $attachArr, $subject, null, $notifyDeliveryStatus
             );
 
+            if (!$notifyDeliveryStatus)
+                $_SESSION['id'] = $response->getMessageId();
+
             $this->results[MMSController::RESULT_SEND_MMS] = $response;
         } catch (Exception $e) {
             $this->errors[MMSController::ERROR_SEND_MMS] = $e->getMessage();

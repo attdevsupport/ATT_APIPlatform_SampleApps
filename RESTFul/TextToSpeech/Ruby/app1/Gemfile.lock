@@ -1,26 +1,27 @@
 GEM
   remote: https://rubygems.org/
-  remote: http://ldev.code-api-att.com:8808/
+  remote: http://lprod.code-api-att.com:8808/
   specs:
-    att-codekit (3.1.3)
+    att-codekit (3.2.0)
       bundler (~> 1.3)
       immutable_struct
       json
+      mime-types (~> 1.25)
       rake
-      rest-client
-    backports (3.3.5)
+      rest-client (~> 1.6)
+    backports (3.6.0)
     daemons (1.1.9)
     eventmachine (1.0.3)
     immutable_struct (1.1.1)
     json (1.8.1)
     mime-types (1.25.1)
-    multi_json (1.8.2)
+    multi_json (1.8.4)
     rack (1.5.2)
-    rack-protection (1.5.1)
+    rack-protection (1.5.2)
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
-    rake (10.1.0)
+    rake (10.1.1)
     rest-client (1.6.7)
       mime-types (>= 1.16)
     sinatra (1.4.4)
@@ -47,7 +48,7 @@ DEPENDENCIES
   att-codekit (~> 3.0)
   immutable_struct (~> 1.1)
   json (~> 1.8)
-  mime-types (~> 1.0)
+  mime-types (~> 1.25)
   rack (~> 1.5)
   rest-client (~> 1.6)
   sinatra (~> 1.4)

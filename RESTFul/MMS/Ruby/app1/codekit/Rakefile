@@ -1,7 +1,7 @@
 require "bundler/gem_tasks"
-require 'yard'
 require 'rake/testtask'
 require 'rake/clean'
+require 'yard'
 
 CLEAN.include("pkg/*.gem")
 

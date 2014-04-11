@@ -7,6 +7,26 @@ public class Subscription extends Transaction {
     private String subPeriod;
     private int subPeriodAmount;
 
+    public enum Type {
+        ID("SubscriptionId"),
+        AUTHCODE("SubscriptionAuthCode"),
+        TRANSACTIONID("MerchantTransactionId");
+
+        private String value;
+
+        private Type(String value){
+            this.value = value;
+        }
+
+        public String getValue(){
+            return this.value;
+        }
+
+        public String toString(){
+            return this.getValue();
+        }
+    }
+
     public static class Builder extends Transaction.Builder {
         private String merchSubIdList;
         private boolean iponas;
@@ -24,41 +44,6 @@ public class Subscription extends Transaction {
             this.iponas = false;
             this.subPeriod = "MONTHLY";
             this.subPeriodAmount = 1;
-        }
-
-        /**
-         * @param merchSubIdList the merchSubIdList to set
-         */
-        public void setMerchSubIdList(String merchSubIdList) {
-            this.merchSubIdList = merchSubIdList;
-        }
-
-        /**
-         * @param iponas the iponas to set
-         */
-        public void setIponas(boolean iponas) {
-            this.iponas = iponas;
-        }
-
-        /**
-         * @param recurrences the recurrences to set
-         */
-        public void setRecurrences(int recurrences) {
-            this.recurrences = recurrences;
-        }
-
-        /**
-         * @param subPeriod the subPeriod to set
-         */
-        public void setSubPeriod(String subPeriod) {
-            this.subPeriod = subPeriod;
-        }
-
-        /**
-         * @param subPeriodAmount the subPeriodAmount to set
-         */
-        public void setSubPeriodAmount(int subPeriodAmount) {
-            this.subPeriodAmount = subPeriodAmount;
         }
 
         public Subscription build() {

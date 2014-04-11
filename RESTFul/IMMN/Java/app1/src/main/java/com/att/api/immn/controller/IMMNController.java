@@ -372,13 +372,13 @@ public class IMMNController extends APIController {
             String content = "";
             String type = msg.getContentType().toLowerCase();
             if (type.contains("image")) {
-                byte[] binary = msg.getContent().getBytes("ISO-8859-1");
+                byte[] binary = msg.getContent();
                 String base64 = new String(Base64.encodeBase64(binary));
 
                 content = "<img src=\"data:" + msg.getContentType()
                     + ";base64," + base64 + "\"/>";
             } else if (type.contains("video")){
-                byte[] binary = msg.getContent().getBytes("ISO-8859-1");
+                byte[] binary = msg.getContent();
                 String base64 = new String(Base64.encodeBase64(binary));
 
                 content = "<video controls=\"controls\" autobuffer=\"autobuffer\" autoplay=\"autoplay\">";
@@ -386,7 +386,7 @@ public class IMMNController extends APIController {
                     + ";base64," + base64 + "\" >";
                 content += "</video>";
             } else if(type.contains("audio")) {
-                byte[] binary = msg.getContent().getBytes("ISO-8859-1");
+                byte[] binary = msg.getContent();
                 String base64 = new String(Base64.encodeBase64(binary));
 
                 content = "<audio controls=\"controls\" autobuffer=\"autobuffer\" autoplay=\"autoplay\">";
@@ -394,7 +394,7 @@ public class IMMNController extends APIController {
                     + ";base64," + base64 + "\" >";
                 content += "</audio>";
             } else if (type.contains("text")) {
-                content = msg.getContent();
+                content = new String(msg.getContent());
             }else {
                 content = "Unknown content type!";
             }

@@ -4,7 +4,7 @@
 </jsp:useBean>
 <html lang="en">
   <head>
-    <title>AT&amp;T Sample Speech Application - Speech to Text (Generic)</title>
+    <title>AT&amp;T Sample Speech Application - Speech to Text (Custom)</title>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"> 
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -45,9 +45,6 @@
           <a id="jump" href="#nav">Main Navigation</a>
         </div>
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img 
-              src="images/max.png"></img></a> <span class="divider"> |&nbsp;</span>
-          </li>
           <li><a href="${cfg.linkSource}" target="_blank">Source<img
           src="images/source.png" /></a> <span class="divider"> |&nbsp;</span></li>
           <li><a href="${cfg.linkDownload}" target="_blank">Download<img
@@ -109,7 +106,7 @@
                 <h3>MIME Data:</h3>
                 <textarea id="mimeData" name="mimeData" readonly="readonly" rows="4">${mimeData}</textarea>
                 <br>
-                <button type="submit" name="SpeechToText" id="btnSubmit">Submit</button>
+                <button type="submit" id="SpeechToTextCustom" name="SpeechToTextCustom" id="btnSubmit">Submit</button>
               </div> <!-- end of formData -->
             </form>
           </div> <!-- end of formContainer -->
@@ -123,20 +120,74 @@
           <div class="successWide">
             <strong>SUCCESS:</strong> <br />Response parameters listed below.
           </div>
-          <table class="kvp" class="kvp">
+          <table class="kvp">
             <thead>
               <tr>
-                <th>Parameter</th>
-                <th>Value</th>
+                <th>ResponseId</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-            <c:forEach var="kvp" items="${resultSpeech}">
               <tr>
-                <td data-value="Parameter"><c:out value="${kvp[0]}" /></td>
-                <td data-value="Value"><c:out value="${kvp[1]}" /></td>
+                <td data-value="ResponseId">
+                  <em> <c:out value="${resultSpeech.responseId}" /></em>
+                </td>
+                <td data-value="Status">
+                  <em><c:out value="${resultSpeech.status}" /></em>
+                </td>
               </tr>
-            </c:forEach>
+            </table>
+            <c:if test="${not empty resultSpeech.nbests}">
+            NBests:
+            <c:forEach var="nbest" items="${resultSpeech.nbests}">
+            <table>
+            <thead>
+              <tr>
+                <th>Hypothesis</th>
+                <th>LanguageId</th>
+                <th>Confidence</th>
+                <th>Grade</th>
+                <th>ResultText</th>
+                <th>Words</th>
+                <th>WordScores</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-value="Hypothesis">
+                  <em><c:out value="${nbest.hypothesis}" /></em>
+                </td>
+                <td data-value="LanguageId">
+                  <em><c:out value="${nbest.languageId}" /></em>
+                </td>
+                <td data-value="Confidence">
+                  <em><c:out value="${nbest.confidence}" /></em>
+                </td>
+                <td data-value="Grade">
+                  <em><c:out value="${nbest.grade}" /></em>
+                </td>
+                <td data-value="ResultText">
+                  <em><c:out value="${nbest.resultText}" /></em>
+                </td>
+                <td data-value="Words">
+                  <em>  
+                    <c:forEach var="word" items="${nbest.words}" varStatus="status">
+                    <c:out value="${word}" />
+                    <c:if test="${!status.last}">,</c:if>
+                    </c:forEach>
+                  </em>
+                </td>
+                <td data-value="WordScores">
+                  <em> 
+                    <c:forEach var="score" items="${nbest.wordScores}" varStatus="status">
+                    <c:out value="${score}" />
+                    <c:if test="${!status.last}">,</c:if>
+                    </c:forEach>
+                  </em>
+                </td>
+                </c:forEach>
+                </c:if>
+              </tr>
             </tbody>
           </table>
           </c:if>
@@ -155,7 +206,7 @@
             href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
             <br> For more information contact <a
             href="mailto:developer.support@att.com">developer.support@att.com</a>
-            <br> <br>&copy; 2013 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
+            <br> <br>&copy; 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="http://developer.att.com/"
             target="_blank">http://developer.att.com</a>
           </p>
         </div> <!-- end of ft -->

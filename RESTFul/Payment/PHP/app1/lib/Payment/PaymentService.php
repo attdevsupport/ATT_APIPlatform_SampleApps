@@ -1,5 +1,7 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker: */
+namespace Att\Api\Payment;
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * Payment Library
@@ -7,17 +9,17 @@
  * PHP version 5.4+
  * 
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2013. 
+ * Agreement.' 2014. 
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * 
  * @category  API
  * @package   Payment
- * @author    Pavel Kazakov <pk9069@att.com>
- * @copyright 2013 AT&T Intellectual Property
+ * @author    pk9069
+ * @copyright 2014 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
  */
@@ -25,12 +27,19 @@
 require_once __DIR__ . '../../Notary/NotaryService.php';
 require_once __DIR__ . '../../Srvc/APIService.php';
 
+use Att\Api\OAuth\OAuthToken;
+use Att\Api\Restful\HttpPut;
+use Att\Api\Restful\RestfulRequest;
+use Att\Api\Notary\Notary;
+use Att\Api\Srvc\APIService;
+use Att\Api\Srvc\Service;
+
 /**
  * Used to interact with version 3 of the Payment API.
  *
  * @category API
  * @package  Payment
- * @author   Pavel Kazakov <pk9069@att.com>
+ * @author   pk9069
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @version  Release: @package_version@ 
  * @link     https://developer.att.com/docs/apis/rest/3/Payment
@@ -74,13 +83,13 @@ class PaymentService extends APIService
      */
     private function _getInfo($url)
     {
-        $req = new RESTFulRequest($url);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_GET);
-        $req->setHeader('Accept', 'application/json');
-        $req->addAuthorizationHeader($this->token);
+        $req = new RestfulRequest($url);
+        $result = $req
+            ->setHeader('Accept', 'application/json')
+            ->setAuthorizationHeader($this->getToken())
+            ->sendHttpGet();
 
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+        return Service::parseJson($result);
     }
 
     /**
@@ -100,21 +109,22 @@ class PaymentService extends APIService
         $rReasonTxt, $rReasonCode, $transOptStatus, $url
     ) {
 
-        $req = new RESTFulRequest($url);
-        $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_PUT);
-        $req->setHeader('Accept', 'application/json');
-        $req->setHeader('Content-Type', 'application/json');
-        $req->addAuthorizationHeader($this->token);
+        $req = new RestfulRequest($url);
 
         $bodyArr = array(
-                'TransactionOperationStatus' => $transOptStatus,
-                'RefundReasonCode' => $rReasonCode,
-                'RefundReasonText' => $rReasonTxt,
-                );
+            'TransactionOperationStatus' => $transOptStatus,
+            'RefundReasonCode' => $rReasonCode,
+            'RefundReasonText' => $rReasonTxt,
+        );
+        $httpPut = new HttpPut(json_encode($bodyArr));
 
-        $req->setPutData(json_encode($bodyArr));
-        $result = $req->sendRequest();
-        return $this->parseResult($result);
+        $req->setHeader('Accept', 'application/json')
+            ->setAuthorizationHeader($this->getToken())
+            ->setHeader('Content-Type', 'application/json');
+
+        $result = $req->sendHttpPut($httpPut);
+
+        return Service::parseJson($result);
     }
 
     /**
@@ -151,7 +161,7 @@ class PaymentService extends APIService
         $urlPath = '/rest/3/Commerce/Payment/Transactions/' . $type . '/' 
             . $value;
 
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         return $this->_getInfo($url);
     }
@@ -178,7 +188,7 @@ class PaymentService extends APIService
         $urlPath = '/rest/3/Commerce/Payment/Subscriptions/' . $type . '/' 
             . $value;
 
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         return $this->_getInfo($url);
     }
@@ -186,18 +196,18 @@ class PaymentService extends APIService
     /**
      * Sends an API request for getting details about a subscription.
      * 
-     * @param string $merchantSID merchant subscription id
+     * @param string $merchantSId merchant subscription id
      * @param string $consumerId  consumer id 
      *
      * @return array api response
      * @throws ServiceException if api request was not successful
      */
-    public function getSubscriptionDetails($merchantSID, $consumerId)
+    public function getSubscriptionDetails($merchantSId, $consumerId)
     {
-        $urlPath =  '/rest/3/Commerce/Payment/Subscriptions/' . $merchantSID 
+        $urlPath =  '/rest/3/Commerce/Payment/Subscriptions/' . $merchantSId 
             . '/Detail/' . $consumerId;
 
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         return $this->_getInfo($url);
     }
@@ -215,7 +225,7 @@ class PaymentService extends APIService
     public function cancelSubscription($subId, $reasonTxt, $reasonCode = 1)
     {
         $urlPath = '/rest/3/Commerce/Payment/Transactions/' . $subId;
-        $url = $this->FQDN . $urlPath; 
+        $url = $this->getFqdn() . $urlPath; 
             
         $type = 'SubscriptionCancelled';
         return $this->_sendTransOptStatus($reasonTxt, $reasonCode, $type, $url);
@@ -234,7 +244,7 @@ class PaymentService extends APIService
     public function refundSubscription($subId, $reasonTxt, $reasonCode = 1)
     {
         $urlPath = '/rest/3/Commerce/Payment/Transactions/' . $subId;
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         $type = 'Refunded';
         return $this->_sendTransOptStatus($reasonTxt, $reasonCode, $type, $url);
@@ -253,7 +263,7 @@ class PaymentService extends APIService
     public function refundTransaction($transId, $reasonTxt, $reasonCode = 1)
     {
         $urlPath = '/rest/3/Commerce/Payment/Transactions/' . $transId;
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         $type = 'Refunded';
         return $this->_sendTransOptStatus($reasonTxt, $reasonCode, $type, $url);
@@ -270,7 +280,7 @@ class PaymentService extends APIService
     public function getNotificationInfo($notificationId)
     {
         $urlPath = '/rest/3/Commerce/Payment/Notifications/' . $notificationId;
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         return $this->_getInfo($url);
     }
@@ -291,7 +301,7 @@ class PaymentService extends APIService
     public function deleteNotification($notificationId)
     {
         $urlPath = '/rest/3/Commerce/Payment/Notifications/' . $notificationId;
-        $url = $this->FQDN . $urlPath;
+        $url = $this->getFqdn() . $urlPath;
 
         $req = new RESTFulRequest($url);
         $req->setHttpMethod(RESTFulRequest::HTTP_METHOD_PUT);

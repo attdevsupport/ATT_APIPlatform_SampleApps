@@ -3,9 +3,9 @@
 <jsp:useBean id="dateutil" class="com.att.api.util.DateUtil" scope="request">
 </jsp:useBean>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
+Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
+Copyright 2014 AT&T Intellectual Property. All rights reserved. http://developer.att.com
 For more information contact developer.support@att.com
 -->
 <html lang="en"> 
@@ -38,9 +38,6 @@ For more information contact developer.support@att.com
         <div class="logo"></div> 
         <div id="menuButton" class="hide"><a id="jump" href="#nav">Main Navigation</a></div> 
         <ul class="links" id="nav">
-          <li><a href="#" target="_blank">Full Page<img alt="fullpage" src="images/max.png" /></a>
-            <span class="divider"> |&nbsp;</span>
-          </li>
           <li>
             <a href="${cfg.linkSource}" target="_blank" 
                 id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
@@ -131,7 +128,7 @@ For more information contact developer.support@att.com
                 <c:if test="${not empty requestScope.resultGetStatuses}">
                 <div class="successWide">
                   <strong>SUCCESS: </strong><br>
-                  <strong>Resource URL: </strong>${requestScope.resourceURL}<br>
+                  <strong>ResourceUrl: </strong>${requestScope.resourceURL}<br>
                 </div>
                 <table>
                   <thead>
@@ -265,7 +262,7 @@ For more information contact developer.support@att.com
           For more information contact 
           <a href="mailto:developer.support@att.com">developer.support@att.com</a>
           <br> <br>
-          &copy; 2013 AT&amp;T Intellectual Property. All rights reserved.
+          &copy; 2014 AT&amp;T Intellectual Property. All rights reserved.
           <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
         </p>
       </div> <!-- end of footer -->

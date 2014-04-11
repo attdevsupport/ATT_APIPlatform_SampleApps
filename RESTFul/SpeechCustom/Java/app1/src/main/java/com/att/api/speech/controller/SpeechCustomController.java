@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Hashtable;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -48,13 +47,15 @@ public class SpeechCustomController extends APIController {
         request.setAttribute("mimeData", getMimeData());
         session.setAttribute("sessionmimeData", getMimeData());
 
-        if (request.getParameter("SpeechToText") == null) {
+        if (request.getParameter("SpeechToTextCustom") == null) {
             if (speechContext != null)
             {
-                request.getSession().setAttribute("sessionContextName", speechContext);
+                request.getSession().setAttribute("sessionContextName",
+                        speechContext);
             }
             else {
-                request.getSession().setAttribute("sessionContextName", "GenericHints");
+                request.getSession().setAttribute("sessionContextName",
+                        "GenericHints");
             }
             return;
         }
@@ -66,23 +67,24 @@ public class SpeechCustomController extends APIController {
 
             session.setAttribute("sessionContextName", speechContext);
 
-            SpeechCustomService srvc = new SpeechCustomService(appConfig.getApiFQDN(), token);
+            SpeechCustomService srvc = 
+                new SpeechCustomService(appConfig.getApiFQDN(), token);
 
             String fname = request.getParameter("audio_file");
             session.setAttribute("sessionFileName", fname);
 
             String audioFolder = appConfig.getProperty("audioFolder");
-            File file = new File(getPath() + audioFolder + "/" + fname);
 
-            String [] attachments = new String[3];
-            attachments[0] = new File(getPath() + "/" + appConfig.getProperty("GenericHints.template")).getAbsolutePath();
-            attachments[1] = new File(getPath()+ "/" + appConfig.getProperty("GrammarList.template")).getAbsolutePath();
-            attachments[2] = file.getAbsolutePath();
+            File audioFile = new File(getPath() + audioFolder + "/" + fname);
+            File grammar = new File(getPath()+ "/" +
+                    appConfig.getProperty("GrammarList.template"));
+            File dictionary = new File(getPath() + "/" +
+                    appConfig.getProperty("GenericHints.template"));
 
-            SpeechResponse response = srvc.sendRequest(attachments,
-                     speechContext, xarg);
+            SpeechResponse response = srvc.speechToText(audioFile, grammar,
+                    dictionary, speechContext, xarg);
 
-            request.setAttribute("resultSpeech", response.getResult());
+            request.setAttribute("resultSpeech", response);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorSpeech", e.getMessage());
@@ -92,13 +94,17 @@ public class SpeechCustomController extends APIController {
 
     private String getMimeData()
     {
-        String GrammarList = this.appConfig.getProperty("GrammarList.template");
-        String GenericHints = this.appConfig.getProperty("GenericHints.template");
+        String GrammarList =
+            this.appConfig.getProperty("GrammarList.template");
+        String GenericHints =
+            this.appConfig.getProperty("GenericHints.template");
+
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("x-dictionary:\n");
         stringBuilder.append(readContent(GenericHints));
         stringBuilder.append("\nx-grammar:\n");
         stringBuilder.append(readContent(GrammarList));
+
         return stringBuilder.toString();
     }
 

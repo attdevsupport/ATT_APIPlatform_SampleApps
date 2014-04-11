@@ -5,6 +5,16 @@ require_once __DIR__ . '/../../lib/Payment/PaymentFileHandler.php';
 require_once __DIR__ . '/../../lib/Payment/PaymentService.php';
 require_once __DIR__ . '/../../lib/Util/Util.php';
 
+use Att\Api\Controller\APIController;
+use Att\Api\Notary\NotaryArguments;
+use Att\Api\Notary\NotaryService;
+use Att\Api\Notary\TransactionNotaryArguments;
+use Att\Api\Notary\SubscriptionNotaryArguments;
+use Att\Api\Payment\PaymentFileHandler;
+use Att\Api\Payment\PaymentService;
+use Att\Api\Util\FileUtil;
+use Att\Api\Util\Util;
+
 class PaymentController extends APIController {
     // TODO: Move string indices to constants
 

@@ -1,13 +1,13 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * ====================================================================
  * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
- * Agreement.' 2013.
+ * Agreement.' 2014.
  * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
  * http://developer.att.com/sdk_agreement/
  *
- * Copyright 2013 AT&T Intellectual Property. All rights reserved.
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
  * For more information contact developer.support@att.com
  * ====================================================================
  */
@@ -18,9 +18,9 @@ package com.att.api.rest;
  * Immutable class for holding any config variables for sending RESTFul
  * requests.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  */
 public class RESTConfig {
     /** Default proxy to use, if any. */
