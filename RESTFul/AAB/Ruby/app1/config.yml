@@ -1,0 +1,16 @@
+port:             4567
+proxy: 
+api_key:          
+secret_key:       
+FQDN:             https://api.att.com
+redirect_url:     http://localhost:4567
+
+phone_class: WORK,VOICE CELL HOME,CELL WORK,CELL VOICE HOME,VOICE WORK,VOICE FAX HOME,FAX WORK,FAX VIDEO HOME,VIDEO WORK,VIDEO PAGER CAR OTHER EMPTY
+im_class: HOME WORK AIM ICQ JABBER MSN YAHOO WV SKYPE GTALK
+address_class: HOME WORK EMPTY
+email_class: INTERNET WORK HOME INTERNET INTERNETWORK INTERNETHOME EMPTY
+weburl_class: HOME WORK
+
+help_link:  http://localhost:4567/help
+download_link:  http://localhost:4567/download
+source_link:  http://localhost:4567/source

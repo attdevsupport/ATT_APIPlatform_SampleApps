@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>AT&amp;T Sample Application - Contact Services (Address Book)</title>
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="style/common.css">
+    <link rel="stylesheet" type="text/css" href="style/contacts.css">
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/contacts.js"></script>
+  </head>
+  <body>
+    <div id="pageContainer">
+      <div id="header">
+        <div class="logo"></div>
+        <div id="menuButton" class="hide">
+          <a id="jump" href="#nav">Main Navigation</a>
+        </div>
+        <ul class="links" id="nav">
+          <li>
+          <a href="#" target="_blank">
+            Source<img src="images/opensource.png" />
+          </a> 
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li>
+          <a href="#" target="_blank">
+            Download <img src="images/download.png">
+          </a> 
+          <span class="divider"> |&nbsp;</span>
+          </li>
+          <li> <a href="#" target="_blank">Help</a> </li>
+          <li id="back"> <a href="#top">Back to top</a> </li>
+        </ul>
+        <!-- end of links -->
+      </div>
+      <!-- end of header -->
+      <div id="content">
+        <div id="contentHeading">
+          <h1>AT&amp;T Sample Application - Contact Services (Address Book)</h1>
+          <div class="border"></div>
+          <div id="introtext">
+            <div>
+              <b>Server Time:</b>
+              <%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %>
+            </div>
+            <div>
+              <b>Client Time:</b>
+              <script> document.write("" + new Date()); </script>
+            </div>
+            <div>
+              <b>User Agent:</b>
+              <script> document.write("" + navigator.userAgent); </script>
+            </div>
+          </div> <!-- end of introtext -->
+        </div> <!-- end of contentHeading -->
+
+        <!-- Start of Contacts -->
+        <div class="lightBorder"></div>
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+
+            <% if @oauth_error %>
+              <div class="errorWide">
+                <strong>ERROR:</strong>
+                <%= @oauth_error %>
+              </div>
+            <% end %>
+
+            <a id="contactsToggle"
+              href="javascript:toggle('contacts','contactsToggle', 'Contacts');">Contacts</a>
+            <div class="toggle" id="contacts">
+              <p>
+              <input name="pagetype" type="radio" value="1" onclick="showWindows(this);"/>Create Contact 
+              <input name="pagetype" type="radio" value="2" onclick="showWindows(this);"/>Update/Delete Contact
+              <input name="pagetype" type="radio" value="3" onclick="showWindows(this);"/>Get Contacts
+              </p>
+              <div id="createContact" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="createContact" name="createContactForm">
+                    <table> 
+                      <tr>
+                        <td>firstName</td>
+                        <td><input id="firstName" placeholder="firstName" name="firstName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>middleName</td>
+                        <td><input id="middleName" placeholder="middleName" name="middleName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>lastName</td>
+                        <td><input id="lastName" placeholder="lastName" name="lastName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>prefix</td>
+                        <td><input id="prefix" placeholder="prefix" name="prefix" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>suffix</td>
+                        <td><input id="suffix" placeholder="suffix" name="suffix" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>nickname</td>
+                        <td><input id="nickname" placeholder="nickname" name="nickname" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>organization</td>
+                        <td><input id="organization" placeholder="organization" name="organization" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>jobTitle</td>
+                        <td><input id="jobTitle" placeholder="jobTitle" name="jobTitle" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>anniversary</td>
+                        <td><input id="anniversary" placeholder="anniversary" name="anniversary" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>gender</td>
+                        <td><input id="gender" placeholder="gender" name="gender" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>spouse</td>
+                        <td><input id="spouse" placeholder="spouse" name="spouse" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>children</td>
+                        <td><input id="children" placeholder="children" name="children" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>hobby</td>
+                        <td><input id="hobby" placeholder="hobby" name="hobby" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>assistant</td>
+                        <td><input id="assistant" placeholder="assistant" name="assistant" type="text" /></td>
+                      </tr>
+                    </table>
+                    <fieldset>
+                      <legend>
+                        <button id="addPhone" type="button" onclick="addFields('phone', 'number', '8', '<%= settings.phone_class %>', 'phone');">[+]
+                        </button> Phones 
+                      </legend>
+                      <table id="phone">
+                      </table>
+                    </fieldset>
+                    <fieldset>
+                      <legend>
+                        <button id="addIm" type="button" onclick="addFields('im', 'uri', '4', '<%= settings.im_class %>', 'im');">[+]
+                        </button> IM 
+                      </legend>
+                      <table id="im">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addAddress" type="button" onclick="addFields('address', 'pobox addressLine1 addressLine2 city state zip country', '4', '<%= settings.address_class %>', 'address');">[+]</button> Addresses</legend>
+                      <table id="address">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addEmail" type="button" onclick="addFields('email', 'email_address', '4', '<%= settings.email_class %>', 'email');">[+]</button> Emails </legend>
+                      <table id="email">
+                      </table>
+                    </fieldset>
+                    <fieldset>
+                      <legend>
+                        <button id="addWebURLS" type="button" onclick="addFields('weburl', 'url', '3', '<%= settings.weburl_class %>', 'weburl');">[+]
+                        </button> WebURLS 
+                      </legend>
+                      <table id="weburl">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend>Photo</legend>
+                      <table>
+                        <tr>
+                          <td>
+                            <label> Upload Photo : </label> 
+                          </td>
+                          <td>
+                            <select id="attachPhoto">
+                              <option value="">ATTLogo.jpg</option>
+                              <option value="">Coupon.jpeg</option>
+                            </select>
+                          </td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                    <button id="createContact" type="submit" class="submit">Create Contact</button>
+                    <button id="resetContact" type="reset" class="submit">Rest Fields</button>
+                  </form>
+                </div>
+              </div>
+              <div id="updateContact" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="updateContact" name="updateContactForm">
+                    <table> 
+                      <tr>
+                        <td>contactId</td>
+                        <td>
+                          <input id="contactIdUpd" placeholder="contactId" name="contactId" type="text" />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>formattedName</td>
+                        <td><input id="formattedNameUpd" placeholder="formattedName" name="formattedName" type="text" disabled/></td>
+                      </tr>
+                      <tr>
+                        <td>firstName</td>
+                        <td><input id="firstNameUpd" placeholder="firstName" name="firstName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>middleName</td>
+                        <td><input id="middleNameUpd" placeholder="middleName" name="middleName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>lastName</td>
+                        <td><input id="lastNameUpd" placeholder="lastName" name="lastName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>prefix</td>
+                        <td><input id="prefixUpd" placeholder="prefix" name="prefix" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>suffix</td>
+                        <td><input id="suffixUpd" placeholder="suffix" name="suffix" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>nickname</td>
+                        <td><input id="nicknameUpd" placeholder="nickname" name="nickname" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>organization</td>
+                        <td><input id="organizationUpd" placeholder="organization" name="organization" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>jobTitle</td>
+                        <td><input id="jobTitleUpd" placeholder="jobTitle" name="jobTitle" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>anniversary</td>
+                        <td><input id="anniversaryUpd" placeholder="anniversary" name="anniversary" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>gender</td>
+                        <td><input id="genderUpd" placeholder="gender" name="gender" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>spouse</td>
+                        <td><input id="spouseUpd" placeholder="spouse" name="spouse" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>children</td>
+                        <td><input id="childrenUpd" placeholder="children" name="children" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>hobby</td>
+                        <td><input id="hobbyUpd" placeholder="hobby" name="hobby" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>assistant</td>
+                        <td><input id="assistantUpd" placeholder="assistant" name="assistant" type="text" /></td>
+                      </tr>
+                    </table>
+                    <fieldset><legend><button id="addPhoneUpd" type="button" onclick="addFields('phone', 'number', '8', '<%= settings.phone_class %>', 'phoneUpd');">[+]</button> Phones </legend> 
+                      <table id="phoneUpd">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addImUpd" type="button" onclick="addFields('im', 'uri', '4', '<%= settings.im_class %>', 'imUpd');">[+]</button> IM </legend>
+                      <table id="imUpd">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addAddressUpd" type="button" onclick="addFields('address', 'pobox addressLine1 addressLine2 city state zip country', '4', '<%= settings.address_class %>', 'addressUpd');">[+]</button> Addresses</legend>
+                      <table id="addressUpd">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addEmailUpd" type="button" onclick="addFields('email', 'email_address', '4', '<%= settings.email_class %>', 'emailUpd');">[+]</button> Emails </legend>
+                      <table id="emailUpd">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addWebURLSUpd" type="button" onclick="addFields('webUrl', 'url', '3', '<%= settings.weburl_class %>', 'webUrlsUpd');">[+]</button> WebURLS </legend>
+                      <table id="webUrlsUpd">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend>Photo <i>(only for update operation)</i></legend>
+                      <table>
+                        <tr>
+                          <td>
+                            <label> Upload Photo : </label> 
+                          </td>
+                          <td>
+                            <select id="attachPhotoUpd">
+                              <option value="">ATTLogo.jpg</option>
+                              <option value="">Coupon.jpeg</option>
+                            </select>
+                          </td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                    <button id="updateContact" type="submit" class="submit">Update Contact</button>
+                    <button id="deleteContact" type="submit" class="submit">Delete Contact</button>
+                    <button id="resetContact" type="reset" class="submit">Rest Fields</button>
+                  </form>
+                </div>
+              </div>
+              <div id="getContacts" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="searchContact" name="getContactsForm">
+                    <table> 
+                      <tr>
+                        <td>Search:</td>
+                        <td><input id="searchVal" placeholder="Search Value" name="searchVal" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><button id="GetContacts" type="submit" class="submit">Get Contacts</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% if @create_contact %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+              <%= @create_contact.location %>
+            </div>
+          <% end %>
+          <% if @success_contact %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+              <%= @success_contact.last_modified %>
+            </div>
+          <% end %>
+          <% if @contact_resultset %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+            </div>
+
+            <% contacts = @contact_resultset.contacts %>
+            <% qcontacts = @contact_resultset.quick_contacts %>
+
+            <% if contacts %>
+              <% contacts.each do |contact| %>
+                <fieldset>
+                  <legend>Individual</legend>
+                  <fieldset>
+                    <legend>Information</legend>
+                    <table>
+                      <thead>
+                        <% contact.each_pair do |attr, value| %>
+                          <% if value.is_a? String %>
+                            <th><%= attr %></th>
+                          <% end %>
+                        <% end %>
+                      </thead>
+                      <tbody>
+                        <% contact.each_pair do |attr, value| %>
+                          <% if value.is_a? String %>
+                            <td data-value="<%= attr %>">
+                              <%= value or '-' %>
+                            </td>
+                          <% end %>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% if !contact.phones.empty? %>
+                    <fieldset>
+                      <legend>Phones</legend>
+                      <table>
+                        <thead>
+                          <th>type</th>
+                          <th>number</th>
+                          <th>preferred</th>
+                        </thead>
+                        <tbody>
+                          <% contact.phones.each do |phone| %>
+                            <tr>
+                              <td data-value="type">
+                                <%= phone.type or '-' %>
+                              </td>
+                              <td data-value="number">
+                                <%= phone.number or '-' %>
+                              </td>
+                              <td data-value="preferred">
+                                <%= phone.preferred? or '-' %>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </fieldset>
+                  <% end %>
+                  <% if !contact.emails.empty? %>
+                  <fieldset>
+                    <legend>Emails</legend>
+                    <table>
+                      <thead>
+                        <th>type</th>
+                        <th>address</th>
+                        <th>preferred</th>
+                      </thead>
+                      <tbody>
+                        <% contact.emails.each do |email| %>
+                          <tr>
+                            <td data-value="type">
+                              <%= email.type or '-' %>
+                            </td>
+                            <td data-value="address">
+                              <%= email.address or '-' %>
+                            </td>
+                            <td data-value="preferred">
+                              <%= email.preferred? %>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% end %>
+                  <% if !contact.ims.empty? %>
+                  <fieldset>
+                    <legend>IMs</legend>
+                    <table>
+                      <thead>
+                        <th>type</th>
+                        <th>uri</th>
+                        <th>preferred</th>
+                      </thead>
+                      <tbody>
+                        <% contact.ims.each do |im| %>
+                          <tr>
+                            <td data-value="type">
+                              <%= im.type or '-' %>
+                            </td>
+                            <td data-value="uri">
+                              <%= im.uri or '-' %>
+                            </td>
+                            <td data-value="preferred">
+                              <%= im.preferred? %>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% end %>
+                  <% if !contact.weburls.empty? %>
+                  <fieldset>
+                    <legend>WebUrls</legend>
+                    <table>
+                      <thead>
+                        <th>type</th>
+                        <th>url</th>
+                        <th>preferred</th>
+                      </thead>
+                      <tbody>
+                        <% contact.weburls.each do |web| %>
+                          <tr>
+                            <td data-value="type">
+                              <%= web.type or '-' %>
+                            </td>
+                            <td data-value="url">
+                              <%= web.url or '-' %>
+                            </td>
+                            <td data-value="preferred">
+                              <%= web.preferred? %>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% end %>
+                  <% if !contact.addresses.empty? %>
+                    <fieldset>
+                      <legend>Addresses</legend>
+                      <table>
+                        <thead>
+                          <th>type</th>
+                          <th>preferred</th>
+                          <th>po box</th>
+                          <th>address line 1</th>
+                          <th>address line 2</th>
+                          <th>city</th>
+                          <th>state</th>
+                          <th>zipcode</th>
+                          <th>country</th>
+                        </thead>
+                        <tbody>
+                          <% contact.addresses.each do |addr| %>
+                            <tr>
+                              <td data-value="type">
+                                <%= addr.type or '-' %>
+                              </td>
+                              <td data-value="preferred">
+                                <%= addr.preferred? %>
+                              </td>
+                              <td data-value="po box">
+                                <%= addr.po_box or '-' %>
+                              </td>
+                              <td data-value="address line 1">
+                                <%= addr.address_line_1 or '-' %>
+                              </td>
+                              <td data-value="address line 2">
+                                <%= addr.address_line_2 or '-' %>
+                              </td>
+                              <td data-value="city">
+                                <%= addr.city or '-' %>
+                              </td>
+                              <td data-value="state">
+                                <%= addr.state or '-' %>
+                              </td>
+                              <td data-value="zipcode">
+                                <%= addr.zipcode or '-' %>
+                              </td>
+                              <td data-value="country">
+                                <%= addr.country or '-' %>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </fieldset>
+                  <% end %>
+                </fieldset>
+              <% end %>
+            <% elsif qcontacts %>
+              <% qcontacts.each do |contact| %>
+                <fieldset>
+                  <legend>Individual</legend>
+                  <fieldset>
+                    <legend>Information</legend>
+                    <table>
+                      <thead>
+                        <% contact.each_pair do |attr, value| %>
+                          <% if value.is_a? String %>
+                            <th><%= attr %></th>
+                          <% end %>
+                        <% end %>
+                      </thead>
+                      <tbody>
+                        <% contact.each_pair do |attr, value| %>
+                          <% if value.is_a? String %>
+                            <td data-value="<%= attr %>">
+                              <%= value or '-' %>
+                            </td>
+                          <% end %>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% if contact.phone %>
+                    <fieldset>
+                      <legend>Phone</legend>
+                      <table>
+                        <thead>
+                          <th>type</th>
+                          <th>number</th>
+                          <th>preferred</th>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td data-value="type">
+                              <%= contact.phone.type or '-' %>
+                            </td>
+                            <td data-value="number">
+                              <%= contact.phone.number or '-' %>
+                            </td>
+                            <td data-value="preferred">
+                              <%= contact.phone.preferred? %>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </fieldset>
+                  <% end %>
+                  <% if contact.email %>
+                  <fieldset>
+                    <legend>Email</legend>
+                    <table>
+                      <thead>
+                        <th>type</th>
+                        <th>address</th>
+                        <th>preferred</th>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td data-value="type">
+                            <%= contact.email.type or '-' %>
+                          </td>
+                          <td data-value="address">
+                            <%= contact.email.address or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= contact.email.preferred? %>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% end %>
+                  <% if contact.im %>
+                  <fieldset>
+                    <legend>IM</legend>
+                    <table>
+                      <thead>
+                        <th>type</th>
+                        <th>uri</th>
+                        <th>preferred</th>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td data-value="type">
+                            <%= contact.im.type or '-' %>
+                          </td>
+                          <td data-value="uri">
+                            <%= contact.im.uri or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= contact.im.preferred? %>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% end %>
+                  <% if contact.address %>
+                  <fieldset>
+                    <legend>Address</legend>
+                    <table>
+                      <thead>
+                        <th>type</th>
+                        <th>preferred</th>
+                        <th>po box</th>
+                        <th>address line 1</th>
+                        <th>address line 2</th>
+                        <th>city</th>
+                        <th>state</th>
+                        <th>zipcode</th>
+                        <th>country</th>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td data-value="type">
+                            <%= contact.address.type or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= contact.address.preferred? %>
+                          </td>
+                          <td data-value="po box">
+                            <%= contact.address.po_box or '-' %>
+                          </td>
+                          <td data-value="address line 1">
+                            <%= contact.address.address_line_1 or '-' %>
+                          </td>
+                          <td data-value="address line 2">
+                            <%= contact.address.address_line_2 or '-' %>
+                          </td>
+                          <td data-value="city">
+                            <%= contact.address.city or '-' %>
+                          </td>
+                          <td data-value="state">
+                            <%= contact.address.state or '-' %>
+                          </td>
+                          <td data-value="zipcode">
+                            <%= contact.address.zipcode or '-' %>
+                          </td>
+                          <td data-value="country">
+                            <%= contact.address.country or '-' %>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </fieldset>
+                  <% end %>
+                </fieldset>
+              <% end %>
+            <% end %>
+          <% end %>
+          <% if @contact_error %>
+            <div class="errorWide">
+              <strong>ERROR:</strong>
+              <%= @contact_error %>
+            </div>
+          <% end %>
+        </div>
+        <!-- end of Contacts -->
+
+        <!-- Start of My User Profile -->
+        <div class="lightBorder"></div>
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <a id="userProfileToggle"
+              href="javascript:toggle('userProfile','userProfileToggle', 'My User Profile');">My User Profile</a>
+            <div class="toggle" id="userProfile">
+              <p>
+              <input name="pagetype" type="radio" value="4"  onclick="showWindows(this);"/>Get/Update MyInfo
+              </p>
+              <div id="updateMyinfo" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="updateMyInfo" name="updateMyinfoForm">
+                    <table> 
+                      <tr>
+                        <td>formattedName</td>
+                        <td><input id="formattedNameMyInf" placeholder="formattedName" name="formattedName" type="text" disabled/></td>
+                      </tr>
+                      <tr>
+                        <td>firstName</td>
+                        <td><input id="firstNameMyInf" placeholder="firstName" name="firstName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>middleName</td>
+                        <td><input id="middleNameMyInf" placeholder="middleName" name="middleName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>lastName</td>
+                        <td><input id="lastNameMyInf" placeholder="lastName" name="lastName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>prefix</td>
+                        <td><input id="prefixMyInf" placeholder="prefix" name="prefix" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>suffix</td>
+                        <td><input id="suffixMyInf" placeholder="suffix" name="suffix" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>nickname</td>
+                        <td><input id="nicknameMyInf" placeholder="nickname" name="nickname" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>organization</td>
+                        <td><input id="organizationMyInf" placeholder="organization" name="organization" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>jobTitle</td>
+                        <td><input id="jobTitleMyInf" placeholder="jobTitle" name="jobTitle" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>anniversary</td>
+                        <td><input id="anniversaryMyInf" placeholder="anniversary" name="anniversary" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>gender</td>
+                        <td><input id="genderMyInf" placeholder="gender" name="gender" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>spouse</td>
+                        <td><input id="spouseMyInf" placeholder="spouse" name="spouse" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>children</td>
+                        <td><input id="childrenMyInf" placeholder="children" name="children" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>hobby</td>
+                        <td><input id="hobbyMyInf" placeholder="hobby" name="hobby" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>assistant</td>
+                        <td><input id="assistantMyInf" placeholder="assistant" name="assistant" type="text" /></td>
+                      </tr>
+                    </table>
+                    <fieldset>
+                      <legend>
+                        <button id="addPhoneMyInf" type="button" onclick="addFields('phone', 'number', '8', '<%=settings.phone_class %>', 'phoneMyInf');">[+]
+                        </button> Phones 
+                      </legend>    
+                      <table id="phoneMyInf">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addImMyInf" type="button" onclick="addFields('im', 'uri', '4', '<%=settings.im_class%>', 'imMyInf');">[+]</button> IM </legend>
+                      <table id="imMyInf">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addAddressMyInf" type="button" onclick="addFields('address', 'pobox addressLine1 addressLine2 city state zip country', '4', '<%=settings.address_class %>', 'addressMyInf');">[+]</button> Addresses</legend>
+                      <table id="addressMyInf">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addEmailMyInf" type="button" onclick="addFields('email', 'email_address', '4', '<%=settings.email_class%>', 'emailMyInf');">[+]</button> Emails </legend>
+                      <table id="emailMyInf">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend><button id="addWebURLSMyInf" type="button" onclick="addFields('weburl', 'url', '3', '<%=settings.weburl_class%>', 'webUrlsMyInf');">[+]</button> WebURLS </legend>
+                      <table id="webUrlsMyInf">
+                      </table>
+                    </fieldset>
+                    <fieldset><legend>Photo <i>(only for update operation)</i></legend>
+                      <table>
+                        <tr>
+                          <td>
+                            <label> Upload Photo : </label> 
+                          </td>
+                          <td>
+                            <select id="attachPhotoMyInf" name="photo_image">
+                              <option value="">ATTLogo.jpg</option>
+                              <option value="">Coupon.jpeg</option>
+                            </select>
+                          </td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                    <button id="updateMyinfo" type="submit" class="submit">Update MyInfo</button>
+                    <button id="resetContact" type="reset" class="submit">Rest Fields</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% if @update_myinfo %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+              <%= @update_myinfo.last_modified %>
+            </div>
+          <% end %>
+          <% if @myinfo_error %>
+            <div class="errorWide">
+              <strong>ERROR:</strong>
+              <%= @myinfo_error %>
+            </div>
+          <% end %>
+        </div> <!-- end of My User Profile -->
+
+        <!-- Start of Groups -->
+        <div class="lightBorder"></div>
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <a id="groupsToggle"
+              href="javascript:toggle('groups','groupsToggle', 'Groups');">Groups</a>
+            <div class="toggle" id="groups">
+              <p>
+              <input name="pagetype" type="radio" value="5"  onclick="showWindows(this);"/>Create Group
+              <input name="pagetype" type="radio" value="6"  onclick="showWindows(this);"/>Update Group
+              <input name="pagetype" type="radio" value="7"  onclick="showWindows(this);"/>Delete Group
+              <input name="pagetype" type="radio" value="8"  onclick="showWindows(this);"/>Get Groups
+              </p>
+              <div id="createGroup" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="createGroup" name="createGroupForm">
+                    <table> 
+                      <tr>
+                        <td>groupName</td>
+                        <td><input id="groupName" placeholder="groupName" name="groupName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>groupType</td>
+                        <td><input id="groupType" placeholder="USER" name="groupType" type="text" disabled/></td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><button id="createGrp" type="submit" class="submit">Create Group</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                </div>
+              </div>
+              <div id="updateGroup" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="updateGroup" name="updateGroupForm">
+                    <table>
+                      <tr>
+                        <td>groupId</td>
+                        <td><input id="groupIdUpd" placeholder="groupId" name="groupId" type="text" /></td>
+                      </tr> 
+                      <tr>
+                        <td>groupName</td>
+                        <td><input id="groupNameUpd" placeholder="groupName" name="groupName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>groupType</td>
+                        <td><input id="groupTypeUpd" placeholder="USER" name="groupType" type="text" disabled/></td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><button id="updateGrpBtn" type="submit" class="submit">Update Group</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                </div>
+              </div>
+              <div id="deleteGroup" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="deleteGroup" name="deleteGroupForm">
+                    <table>
+                      <tr>
+                        <td>groupId</td>
+                        <td><input id="groupIdDel" placeholder="groupId" name="groupId" type="text" /></td>
+                      </tr> 
+                      <tr>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><button id="deleteGrp" type="submit" class="submit">Delete Group</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                </div>
+              </div>
+              <div id="getGroups" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="getGroups" name="getGroupForm">
+                    <table> 
+                      <tr>
+                        <td>groupName</td>
+                        <td><input id="getGroupName" placeholder="groupName" name="getGroupName" type="text" /></td>
+                      </tr>
+                      <tr>
+                        <td>order</td>
+                        <td><select name="order">
+                            <option value="ASC">Ascending</option>
+                            <option value="DESC">Descending</option>
+                          </select>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><button id="searchGrp" type="submit" class="submit">Search Group</button></td>
+                      </tr>
+                    </table>
+                  </form>
+                  <label><b>Search Results </b><i>(Displays Max 3 Search Results)</i></label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% if @create_group %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+              <%= @create_group.location %>
+            </div>
+          <% end %>
+          <% if @success_group %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+              <%= @success_group.last_modified %>
+            </div>
+          <% end %>
+          <% if @group_error %>
+            <div class="errorWide">
+              <strong>ERROR:</strong>
+              <%= @group_error %>
+            </div>
+          <% end %>
+
+          <% if @groups %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+            </div>
+            <% if @groups.groups? %>
+              <table>
+                <thead>
+                  <th>groupId</th>
+                  <th>groupName</th>
+                  <th>groupType</th>
+                </thead>
+                <tbody>
+                  <% @groups.groups.each do |group| %>
+                    <tr>
+                      <td data-value="groupId">
+                        <%= group.id or '-' %>
+                      </td>
+                      <td data-value="groupName">
+                        <%= group.name or '-' %>
+                      </td>
+                    <td data-value="groupType">
+                      <%= group.type or '-' %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          <% end %>
+        <% end %>
+        </div>
+        <!-- end of Groups -->
+
+        <!-- Start of Managing Groups/Contacts -->
+        <div class="lightBorder"></div>
+        <div class="formBox" id="formBox">
+          <div id="formContainer" class="formContainer">
+            <a id="grpContactsToggle"
+              href="javascript:toggle('grpContacts','grpContactsToggle', 'Managing Groups/Contacts');">Managing Groups/Contacts</a>
+            <div class="toggle" id="grpContacts">
+              <p>
+              <input name="pagetype" type="radio" value="9"  onclick="showWindows(this);"/>Contact and Group Operations
+              </p>
+              <div id="getGroupContacts" style="display:none;" class="CF">
+                <div id="fields" class="menu">
+                  <form method="post" action="getGroupContacts" name="getGroupContactsForm">
+                    <fieldset><legend>Get Group Contacts</legend>
+                      <table>
+                        <tr>
+                          <td>groupId</td>
+                          <td><input id="groupIdContacts" placeholder="groupId" name="groupId" type="text" /></td>
+                        </tr> 
+                        <tr>
+                          <td></td>
+                          <td><button id="groupIdContactsBtn" type="submit" class="submit">Get Group Contacts</button></td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                  </form>
+                  <form method="post" action="addContactsToGroup" name="addContactsToGroupForm">
+                    <fieldset><legend>Add Contacts to Group</legend>
+                      <table>
+                        <tr>
+                          <td>groupId</td>
+                          <td><input id="groupIdAddDel" placeholder="groupId" name="groupId" type="text" /></td>
+                        </tr>
+                        <tr>
+                          <td>Contact Id's <i>(comma (,) delimited)</i></td>
+                          <td><input id="addContactsGrp" placeholder="contactId(s)" name="contactIds" type="text" /></td>
+                        </tr> 
+                        <tr>
+                          <td></td>
+                          <td><button id="groupIdContactsAddBtn" type="submit" class="submit">Add Contacts to Group</button></td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                  </form>
+                  <form method="post" action="rmContactsFromGroup" name="rmContactsFromGroupForm">
+                    <fieldset><legend>Remove Contacts from Group</legend>
+                      <table>
+                        <tr>
+                          <td>groupId</td>
+                          <td><input id="groupIdRemDel" placeholder="groupId" name="groupId" type="text" /></td>
+                        </tr>
+                        <tr>
+                          <td>Contact Id's <i>(comma (,) delimited)</i></td>
+                          <td><input id="remContactsGrp" placeholder="contactId(s)" name="contactIds" type="text" /></td>
+                        </tr> 
+                        <tr>
+                          <td></td>
+                          <td><button id="groupIdContactsRemBtn" type="submit" class="submit">Remove Contacts from Group</button></td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                  </form>
+                  <form method="post" action="getContactGroups" name="getContactGroupsForm">
+                    <fieldset><legend>Get Contact Groups</legend>
+                      <table>
+                        <tr>
+                          <td>contactId</td>
+                          <td><input id="contactsIdGroups" placeholder="contactId" name="contactId" type="text" /></td>
+                        </tr> 
+                        <tr>
+                          <td></td>
+                          <td><button id="contactsIdGroupsBtn" type="submit" class="submit">Get Contact Groups</button></td>
+                        </tr>
+                      </table>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <% if @group_contact_ids %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+            </div>
+              <table>
+                <thead>
+                  <th>Contact Id</th>
+                </thead>
+                <tbody>
+                  <% @group_contact_ids.each do |id| %>
+                    <tr>
+                      <td data-value="Contact Id">
+                        <%= id or '-' %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+          <% end %>
+
+          <% if @contact_groups %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+            </div>
+            <% if @contact_groups.groups? %>
+              <table>
+                <thead>
+                  <th>groupId</th>
+                  <th>groupName</th>
+                  <th>groupType</th>
+                </thead>
+                <tbody>
+                  <% @contact_groups.groups.each do |group| %>
+                    <tr>
+                      <td data-value="groupId">
+                        <%= group.id or '-' %>
+                      </td>
+                      <td data-value="groupName">
+                        <%= group.name or '-' %>
+                      </td>
+                    <td data-value="groupType">
+                      <%= group.type or '-' %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          <% end %>
+        <% end %>
+
+          <% if @manage_groups %>
+            <div class="successWide">
+              <strong>SUCCESS:</strong>
+              <%= @manage_groups.last_modified %>
+            </div>
+          <% end %>
+
+          <% if @manage_groups_error %>
+            <div class="errorWide">
+              <strong>ERROR:</strong>
+              <%= @manage_groups_error %>
+            </div>
+          <% end %>
+
+        </div> <!-- end of Managing Groups/Contacts -->
+        <div class="lightBorder">
+        </div> <!-- End of Operations  -->
+      </div>
+      <div class="border"></div>
+      <div id="footer">
+        <div id="powered_by">Powered by AT&amp;T Cloud Architecture</div>
+        <p>
+        The Application hosted on this site are working examples intended to
+        be used for reference in creating products to consume AT&amp;T
+        Services and not meant to be used as part of your product. The data
+        in these pages is for test purposes only and intended only for use
+        as a reference in how the services perform. <br>
+        <br> For download of tools and documentation, please go to <a
+          href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
+        <br> For more information contact <a
+          href="mailto:developer.support@att.com">developer.support@att.com</a>
+        <br>
+        <br> &#169; 2014 AT&amp;T Intellectual Property. All rights
+        reserved. <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
+        </p>
+      </div> <!-- end of footer -->
+    </div> <!-- end of page_container -->
+  </body>
+</html>
