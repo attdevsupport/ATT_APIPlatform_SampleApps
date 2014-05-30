@@ -318,8 +318,8 @@ def rm_contacts
   service = Service::AABService.new(settings.FQDN, session[:token])
 
   begin
-    @manage_groups = service.addContactToGroup(session[:groupId], 
-                                               session[:contactIds])
+    @manage_groups = service.removeContactFromGroup(session[:groupId], 
+                                                    session[:contactIds])
   rescue Exception => e
     @manage_groups_error = e
     puts e.backtrace
@@ -343,6 +343,22 @@ def get_contact_groups
     puts e.backtrace
   end
   clear_session([:contactId])
+  erb :aab
+end
+
+get '/getMyInfo' do get_myinfo; end
+post '/getMyInfo' do get_myinfo; end
+def get_myinfo
+  authenticate("getMyInfo")
+
+  service = Service::AABService.new(settings.FQDN, session[:token])
+
+  begin
+    @myinfo = service.getMyInfo()
+  rescue Exception => e
+    @myinfo_error = e
+    puts e.backtrace
+  end
   erb :aab
 end
 

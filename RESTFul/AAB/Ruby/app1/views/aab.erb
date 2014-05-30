@@ -17,21 +17,19 @@
         </div>
         <ul class="links" id="nav">
           <li>
-          <a href="#" target="_blank">
-            Source<img src="images/opensource.png" />
-          </a> 
+          <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
           <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-          <a href="#" target="_blank">
-            Download <img src="images/download.png">
-          </a> 
+          <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png" /></a>
           <span class="divider"> |&nbsp;</span>
           </li>
-          <li> <a href="#" target="_blank">Help</a> </li>
-          <li id="back"> <a href="#top">Back to top</a> </li>
-        </ul>
-        <!-- end of links -->
+          <li>
+          <a href="<%= settings.help_link %>" target="_blank">Help</a>
+          </li>
+          <li id="back"><a href="#top">Back to top</a>
+          </li>
+        </ul> <!-- end of links -->
       </div>
       <!-- end of header -->
       <div id="content">
@@ -692,8 +690,11 @@
             <a id="userProfileToggle"
               href="javascript:toggle('userProfile','userProfileToggle', 'My User Profile');">My User Profile</a>
             <div class="toggle" id="userProfile">
+              <form method="post" action="getMyInfo">
+                <button id="getMyInfo" type="submit">Get My Info</button>
+              </form>
               <p>
-              <input name="pagetype" type="radio" value="4"  onclick="showWindows(this);"/>Get/Update MyInfo
+              <input name="pagetype" type="radio" value="4"  onclick="showWindows(this);"/>Update MyInfo
               </p>
               <div id="updateMyinfo" style="display:none;" class="CF">
                 <div id="fields" class="menu">
@@ -811,6 +812,192 @@
               <strong>SUCCESS:</strong>
               <%= @update_myinfo.last_modified %>
             </div>
+          <% end %>
+          <% if @myinfo %>
+            <% contact = @myinfo %>
+            <fieldset>
+              <legend>Individual</legend>
+              <fieldset>
+                <legend>Information</legend>
+                <table>
+                  <thead>
+                    <% contact.each_pair do |attr, value| %>
+                      <% if value.is_a? String %>
+                        <th><%= attr %></th>
+                      <% end %>
+                    <% end %>
+                  </thead>
+                  <tbody>
+                    <% contact.each_pair do |attr, value| %>
+                      <% if value.is_a? String %>
+                        <td data-value="<%= attr %>">
+                          <%= value or '-' %>
+                        </td>
+                      <% end %>
+                    <% end %>
+                  </tbody>
+                </table>
+              </fieldset>
+              <% if !contact.phones.empty? %>
+                <fieldset>
+                  <legend>Phones</legend>
+                  <table>
+                    <thead>
+                      <th>type</th>
+                      <th>number</th>
+                      <th>preferred</th>
+                    </thead>
+                    <tbody>
+                      <% contact.phones.each do |phone| %>
+                        <tr>
+                          <td data-value="type">
+                            <%= phone.type or '-' %>
+                          </td>
+                          <td data-value="number">
+                            <%= phone.number or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= phone.preferred? or '-' %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </fieldset>
+              <% end %>
+              <% if !contact.emails.empty? %>
+                <fieldset>
+                  <legend>Emails</legend>
+                  <table>
+                    <thead>
+                      <th>type</th>
+                      <th>address</th>
+                      <th>preferred</th>
+                    </thead>
+                    <tbody>
+                      <% contact.emails.each do |email| %>
+                        <tr>
+                          <td data-value="type">
+                            <%= email.type or '-' %>
+                          </td>
+                          <td data-value="address">
+                            <%= email.address or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= email.preferred? %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </fieldset>
+              <% end %>
+              <% if !contact.ims.empty? %>
+                <fieldset>
+                  <legend>IMs</legend>
+                  <table>
+                    <thead>
+                      <th>type</th>
+                      <th>uri</th>
+                      <th>preferred</th>
+                    </thead>
+                    <tbody>
+                      <% contact.ims.each do |im| %>
+                        <tr>
+                          <td data-value="type">
+                            <%= im.type or '-' %>
+                          </td>
+                          <td data-value="uri">
+                            <%= im.uri or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= im.preferred? %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </fieldset>
+              <% end %>
+              <% if !contact.weburls.empty? %>
+                <fieldset>
+                  <legend>WebUrls</legend>
+                  <table>
+                    <thead>
+                      <th>type</th>
+                      <th>url</th>
+                      <th>preferred</th>
+                    </thead>
+                    <tbody>
+                      <% contact.weburls.each do |web| %>
+                        <tr>
+                          <td data-value="type">
+                            <%= web.type or '-' %>
+                          </td>
+                          <td data-value="url">
+                            <%= web.url or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= web.preferred? %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </fieldset>
+              <% end %>
+              <% if !contact.addresses.empty? %>
+                <fieldset>
+                  <legend>Addresses</legend>
+                  <table>
+                    <thead>
+                      <th>type</th>
+                      <th>preferred</th>
+                      <th>po box</th>
+                      <th>address line 1</th>
+                      <th>address line 2</th>
+                      <th>city</th>
+                      <th>state</th>
+                      <th>zipcode</th>
+                      <th>country</th>
+                    </thead>
+                    <tbody>
+                      <% contact.addresses.each do |addr| %>
+                        <tr>
+                          <td data-value="type">
+                            <%= addr.type or '-' %>
+                          </td>
+                          <td data-value="preferred">
+                            <%= addr.preferred? %>
+                          </td>
+                          <td data-value="po box">
+                            <%= addr.po_box or '-' %>
+                          </td>
+                          <td data-value="address line 1">
+                            <%= addr.address_line_1 or '-' %>
+                          </td>
+                          <td data-value="address line 2">
+                            <%= addr.address_line_2 or '-' %>
+                          </td>
+                          <td data-value="city">
+                            <%= addr.city or '-' %>
+                          </td>
+                          <td data-value="state">
+                            <%= addr.state or '-' %>
+                          </td>
+                          <td data-value="zipcode">
+                            <%= addr.zipcode or '-' %>
+                          </td>
+                          <td data-value="country">
+                            <%= addr.country or '-' %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </fieldset>
+              <% end %>
+            </fieldset>
           <% end %>
           <% if @myinfo_error %>
             <div class="errorWide">
