@@ -1,0 +1,50 @@
+#fields table {
+	width:40%;
+  	font-size: .80em;
+	table-layout: fixed;
+	word-wrap: break-word;
+}
+
+#fields tr:nth-of-type(even) {
+  	background: #D8D8D8;
+}
+
+#fields tr:nth-of-type(odd) {
+  	background: #F0F0F0 ;
+}
+#fields th, #fields td {
+  	text-align: left;
+  	padding-left: 10px;
+	border: 1px solid lightgray;
+}
+
+#fields input, #fields button, #fields select {
+  	text-align: left;
+	font-size: .80em;
+}
+
+#fields legend{
+	font-size: .80em;
+}
+
+.menu {border: 2px solid; padding: 0.2em; margin: 1em 3em;}
+
+.errorWide {
+  clear: both;
+  background: #fcc;
+  text-align: left;
+  border: 3px outset red;
+  width: 96.785%;
+  margin-bottom: 1.2833%;
+  font-size: .80em;
+}
+
+.successWide {
+  clear: both;
+  text-align: left;
+  border: 3px outset green;
+  background: #cfc;
+  width: 96.785%;
+  margin-bottom: 1.2833%;
+  font-size: .80em;
+}
