@@ -310,12 +310,12 @@ class SubscriptionNotaryArguments extends NotaryArguments
     /** 
      * Creates a SubscriptionNotaryArguments object.
      * 
-     * Merchant subscription id list is set to P + current time.
+     * @param string merchantSubIdList merchant subscription id list
      */
-    public function __construct()
+    public function __construct($merchantSubIdList)
     {
         parent::__construct();
-        $this->_idList = 'P' . time();
+        $this->_idList = $merchantSubIdList;
     }
 
     /**

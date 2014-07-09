@@ -1,7 +1,14 @@
 <?php
 require_once __DIR__ . '/lib/OAuth/OAuthTokenService.php';
+require_once __DIR__ . '/lib/Payment/NotificationDetails.php';
 require_once __DIR__ . '/lib/Payment/PaymentService.php';
+require_once __DIR__ . '/lib/Restful/RestfulEnvironment.php';
 require_once __DIR__ . '/lib/Util/FileUtil.php';
+
+use Att\Api\OAuth\OAuthTokenService;
+use Att\Api\Payment\NotificationDetails;
+use Att\Api\Restful\RestfulEnvironment;
+use Att\Api\Util\FileUtil;
 
 function getFileToken() 
 {
@@ -27,55 +34,33 @@ function getFileToken()
     return $token;
 }
 
-function getNotificationIds($xmlstr) {
-    $xmlparser = xml_parser_create();
-    xml_parse_into_struct($xmlparser, $xmlstr, $vals);
-    xml_parser_free($xmlparser);
-    $ids = array();
-    foreach ($vals as $val) {
-        if (is_string($val['tag']) 
-                && strcmp($val['tag'], 'HUB:NOTIFICATIONID') == 0) {
-            $ids[] = $val['value'];
-        }
-    }
-
-    return $ids;
-}
-
 // TODO: Avoid accepting all certs
-RESTFulRequest::setDefaultAcceptAllCerts(true);
+RestfulEnvironment::setAcceptAllCerts(true);
 
-$refundXML = file_get_contents('php://input');
-$notificationIds = getNotificationIds($refundXML);
+$rawXml = file_get_contents('php://input');
+$details = NotificationDetails::fromXml($rawXml);
 
-require __DIR__ . '/config.php';
-$token = getFileToken();
+$arr = array(
+    'networkOperatorId' => $details->getNetworkOperatorId(),
+    'ownerIdentifier'   => $details->getOwnerIdentifier(),
+    'purchaseDate'      => $details->getPurchaseDate(),
+    'productIdentifier' => $details->getProductIdentifier(),
+    'purchaseActivityIdentifier' => $details->getPurchaseActivityIdentifier(),
+    'instanceIdentifier' => $details->getInstanceIdentifier(),
+    'minIdentifier'     => $details->getMinIdentifier(),
+    'sequenceNumber'    => $details->getSequenceNumber(),
+    'reasonCode'        => $details->getReasonCode(),
+    'reasonMessage'     => $details->getReasonMessage(),
+    'vendorPurchaseIdentifier' => $details->getVendorPurchaseIdentifier()
+);
 
-foreach ($notificationIds as $notificationId) {
-    // get notificatio info
-    $req = new PaymentService($FQDN, $token);
-    $refundNotification = $req->getNotificationInfo($notificationId);
-    $savedNotifications = FileUtil::loadArray('notifications.db');
-    $nResponse = $refundNotification['GetNotificationResponse'];
-
-    $notification = array();
-    $notification['NotificationId'] = $notificationId;
-    foreach ($nResponse as $k => $v) {
-        $notification[$k] = $v;
-    }
-
-    $savedNotifications[] = $notification;
-
-    // limit on the number of entires
-    // TODO: Get limit from config
-    while (count($savedNotifications) > 5) { 
-        array_shift($savedNotifications);
-    }
-
-    FileUtil::saveArray($savedNotifications, 'notifications.db');
-
-    // obtained notification info; stop server from sending it again
-    $req->deleteNotification($notificationId);
+$notifications = FileUtil::loadArray('notifications.db');
+$notifications[] = $arr;
+// limit on the number of entires
+// TODO: Get limit from config
+while (count($notifications) > 5) {
+    array_shift($savedNotifications);
 }
+FileUtil::saveArray($notifications, 'notifications.db');
 
 ?>

@@ -1,110 +1,300 @@
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+
+/*
+ * ====================================================================
+ * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools
+ * Agreement.' 2014.
+ * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
+ * http://developer.att.com/sdk_agreement/
+ *
+ * Copyright 2014 AT&T Intellectual Property. All rights reserved.
+ * For more information contact developer.support@att.com
+ * ====================================================================
+ */
+
 package com.att.api.payment.model;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
-import org.json.JSONObject;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
-public class Notification {
-    private JSONObject json;
-    private String notificationId;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
-    public Notification(JSONObject json, String id) {
-        this.json = json;
-        this.notificationId = id;
+import com.att.api.rest.RESTException;
+
+/**
+ * Used to hold a Notification sent to a Payment listener
+ *
+ * <p>
+ * This class uses a factory method to construct a notification from XML
+ * </p>
+ *
+ *
+ * @author kh455g
+ * @version 1.0
+ * @since 1.0
+ * @see <a href="https://developer.att.com/apis/payment/docs">Payment Documentation</a>
+ */
+final public class Notification {
+    private String type;
+    private String timestamp;
+    private String effective;
+    private String networkOperatorId;
+    private String ownerId;
+    private String purchaseDate;
+    private String productId;
+    private String instanceId;
+    private String minId;
+    private String oldMinId;
+    private String sequenceNumber;
+    private String purchaseActivityId;
+    private String vendorPurchaseId;
+    private String reasonCode;
+    private String reasonMessage;
+
+    /**
+     * @return the type
+     */
+    public String getType() {
+        return type;
     }
 
-    public JSONObject getRawJson() {
-        return this.json;
+    /**
+     * @return the timestamp
+     */
+    public String getTimestamp() {
+        return timestamp;
     }
 
-    public String getNotificationId() {
-        return this.notificationId;
+    /**
+     * @return the effective
+     */
+    public String getEffective() {
+        return effective;
     }
 
-    public String getHtmlTable(){
-        return this.generateHtmlTable();
+    /**
+     * @return the networkOperatorId
+     */
+    public String getNetworkOperatorId() {
+        return networkOperatorId;
     }
 
-    public String generateHtmlTable() {
-        StringBuilder table = new StringBuilder();
-        StringBuilder tbody = new StringBuilder();
-        StringBuilder thead = new StringBuilder();
+    /**
+     * @return the ownerId
+     */
+    public String getOwnerId() {
+        return ownerId;
+    }
 
-        List<String> headers = new LinkedList<String>();
+    /**
+     * @return the purchaseDate
+     */
+    public String getPurchaseDate() {
+        return purchaseDate;
+    }
 
-        Iterator<String> itr = this.json.keys();
+    /**
+     * @return the productId
+     */
+    public String getProductId() {
+        return productId;
+    }
 
-        //start with creating the table body
-        tbody.append("<tbody><tr>");
-        headers.add("NotificationId");
-        tbody.append("<td data-value=\"NotificationId\">")
-            .append(this.notificationId)
-            .append("</td>");
-        while (itr.hasNext()) {
-            String key = itr.next();
-            if (key.equalsIgnoreCase("GetNotificationResponse")){
-                Iterator<String> subitr = this.json.getJSONObject(key).keys();
-                while (subitr.hasNext()){
-                    String subkey = subitr.next();
-                    String subval = this.json.getJSONObject(key)
-                        .getString(subkey);
+    /**
+     * @return the instanceId
+     */
+    public String getInstanceId() {
+        return instanceId;
+    }
 
-                    headers.add(subkey);
-                    tbody.append("<td data-value=\"")
-                        .append(subkey)
-                        .append("\">");
+    /**
+     * @return the minId
+     */
+    public String getMinId() {
+        return minId;
+    }
 
-                    if (subval.isEmpty())
-                        tbody.append("-");
-                    else
-                        tbody.append(subval);
+    /**
+     * @return the oldMinId
+     */
+    public String getOldMinId() {
+        return oldMinId;
+    }
 
-                    tbody.append("</td>");
-                }
-            }
-            else{
-                headers.add(key);
-                String value = this.json.getString(key);
-                tbody.append("<td data-value=\"")
-                    .append(key)
-                    .append("\">");
-                if (value.isEmpty())
-                    tbody.append("-");
-                else
-                    tbody.append(value);
-                tbody.append("</td>");
-            }
+    /**
+     * @return the sequenceNumber
+     */
+    public String getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    /**
+     * @return the purchaseActivityId
+     */
+    public String getPurchaseActivityId() {
+        return purchaseActivityId;
+    }
+
+    /**
+     * @return the vendorPurchaseId
+     */
+    public String getVendorPurchaseId() {
+        return vendorPurchaseId;
+    }
+
+    /**
+     * @return the reasonCode
+     */
+    public String getReasonCode() {
+        return reasonCode;
+    }
+
+    /**
+     * @return the reasonMessage
+     */
+    public String getReasonMessage() {
+        return reasonMessage;
+    }
+
+    public Notification(String type, String timestamp, String effective,
+            String networkOperatorId, String ownerId, String purchaseDate,
+            String productId, String instanceId, String minId, String oldMinId,
+            String sequenceNumber, String purchaseActivityId,
+            String vendorPurchaseId, String reasonCode, String reasonMessage) {
+
+        this.type = type;
+        this.timestamp = timestamp;
+        this.effective = effective;
+        this.networkOperatorId = networkOperatorId;
+        this.ownerId = ownerId;
+        this.purchaseDate = purchaseDate;
+        this.productId = productId;
+        this.instanceId = instanceId;
+        this.minId = minId;
+        this.oldMinId = oldMinId;
+        this.sequenceNumber = sequenceNumber;
+        this.purchaseActivityId = purchaseActivityId;
+        this.vendorPurchaseId = vendorPurchaseId;
+        this.reasonCode = reasonCode;
+        this.reasonMessage = reasonMessage;
+    }
+
+    public static Notification fromXml(InputStream is) throws RESTException {
+        try {
+            DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder();
+            Document doc = docBuilder.parse(is);
+
+            Element root = doc.getDocumentElement();
+
+            NamedNodeMap attrib = root.getAttributes();
+
+            String type = attrib.getNamedItem("type").getNodeValue();
+            String timestamp = attrib.getNamedItem("timestamp").getNodeValue();
+
+            String effective = null;
+            Node eff = attrib.getNamedItem("effective");
+            if (eff != null)
+                effective = eff.getNodeValue();
+
+            String networkOperatorId =
+                root.getElementsByTagName("networkOperatorId")
+                .item(0).getTextContent();
+
+            String ownerId = 
+                root.getElementsByTagName("ownerIdentifier")
+                .item(0).getTextContent();
+
+            String purchaseDate = 
+                root.getElementsByTagName("purchaseDate")
+                .item(0).getTextContent();
+
+            String productId = 
+                root.getElementsByTagName("productIdentifier")
+                .item(0).getTextContent();
+            
+            String instanceId = 
+                root.getElementsByTagName("instanceIdentifier")
+                .item(0).getTextContent();
+
+            String minId = 
+                root.getElementsByTagName("minIdentifier")
+                .item(0).getTextContent();
+
+            String oldMinId = null;
+            Node omi = root.getElementsByTagName("oldMinIdentifier").item(0);
+            if (omi != null)
+                oldMinId = omi.getTextContent();
+
+            String sequenceNumber = 
+                root.getElementsByTagName("sequenceNumber")
+                .item(0).getTextContent();
+
+            String purchaseActivityId = 
+                root.getElementsByTagName("purchaseActivityIdentifier")
+                .item(0).getTextContent();
+
+            String vendorPurchaseId = 
+                root.getElementsByTagName("vendorPurchaseIdentifier")
+                .item(0).getTextContent();
+
+            String reasonCode = 
+                root.getElementsByTagName("reasonCode")
+                .item(0).getTextContent();
+
+            String reasonMessage = 
+                root.getElementsByTagName("reasonMessage")
+                .item(0).getTextContent();
+
+            return new Notification(type, timestamp, effective,
+                    networkOperatorId, ownerId, purchaseDate, productId,
+                    instanceId, minId, oldMinId, sequenceNumber,
+                    purchaseActivityId, vendorPurchaseId, reasonCode,
+                    reasonMessage);
+
+        } catch (IOException ex) {
+            throw new RESTException(ex);
+        } catch (SAXException ex) {
+            throw new RESTException(ex);
+        } catch (ParserConfigurationException ex) {
+            throw new RESTException(ex);
         }
-        tbody.append("</tr></tbody>");
+    }
 
-        //generate headers
-        thead.append("<thead><tr>");
-        for (String h : headers){
-            thead.append("<th>").append(h).append("</th>");
+    /**
+     * Construct a notification from an xml byte array
+     *
+     * @param xml an xml byte array representation of a notification
+     * @return Notification
+     * @throws RESTException
+     */
+    public static Notification fromXml(byte[] xml) throws RESTException {
+        InputStream is = new ByteArrayInputStream(xml);
+        return (fromXml(is));
+    }
+    /**
+     * Construct a notification from an xml string
+     *
+     * @param xml an xml string representation of a notification
+     * @return Notification
+     * @throws RESTException
+     */
+    public static Notification fromXml(String xml) throws RESTException {
+        try {
+            InputStream is = new ByteArrayInputStream(xml.getBytes("ISO-8859-1"));
+            return(fromXml(is));
+        } catch (UnsupportedEncodingException ex) {
+            throw new RESTException(ex);
         }
-        thead.append("</tr></thead>");
-
-        table.append("<table>")
-            .append(thead)
-            .append(tbody)
-            .append("</table>");
-
-        return table.toString();
-    }
-
-    public String getNotificationType() {
-        JSONObject response = this.json
-                .getJSONObject("GetNotificationResponse");
-        String notificationType = response.getString("NotificationType");
-        return notificationType;
-    }
-
-    public String getTransactionId() {
-        JSONObject response = this.json
-                .getJSONObject("GetNotificationResponse");
-        String transactionId = response.getString("OriginalTransactionId");
-        return transactionId;
     }
 }

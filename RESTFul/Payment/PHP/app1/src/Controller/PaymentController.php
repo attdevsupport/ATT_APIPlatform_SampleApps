@@ -23,6 +23,8 @@ class PaymentController extends APIController {
     private $_minSubValue;
     private $_maxSubValue;
     private $_redirectURL;
+    private $_merchantProdId;
+    private $_merchantSubId;
 
     private $_arrIds;
 
@@ -67,13 +69,13 @@ class PaymentController extends APIController {
     }
 
     private function getSubscriptionNotary($price) {
-        $subArgs = new SubscriptionNotaryArguments();
+        $subArgs = new SubscriptionNotaryArguments($this->_merchantSubId);
         $subArgs
             ->setAmount($price)
             ->setCategory(NotaryArguments::CATEGORY_APPLICATION_OTHER)
             ->setDescription('SAMPLE APP')
             ->setMerchantTransactionId('mtid' . time())
-            ->setMerchantProductId('mpid' . time())
+            ->setMerchantProductId($this->_merchantProdId)
             ->setMerchantRedirectUrl($this->_redirectURL);
 
         $request = new NotaryService($this->apiFQDN, $this->clientId, 
@@ -88,7 +90,7 @@ class PaymentController extends APIController {
             ->setCategory(NotaryArguments::CATEGORY_APPLICATION_OTHER)
             ->setDescription('SAMPLE APP')
             ->setMerchantTransactionId('mtid' . time())
-            ->setMerchantProductId('mpid' . time())
+            ->setMerchantProductId($this->_merchantProdId)
             ->setMerchantRedirectUrl($this->_redirectURL);
 
         $request = new NotaryService($this->apiFQDN, $this->clientId, 
@@ -322,6 +324,8 @@ class PaymentController extends APIController {
         $this->_minSubValue = $minSubscriptionValue;
         $this->_maxSubValue = $maxSubscriptionValue;
         $this->_redirectURL = $redirect_url;
+        $this->_merchantProdId = $merchantProdId;
+        $this->_merchantSubId = $merchantSubId;
 
         $this->_fileHandler = new PaymentFileHandler('saves.db');
     }

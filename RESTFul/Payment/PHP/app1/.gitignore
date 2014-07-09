@@ -1,0 +1,14 @@
+nbproject/
+
+# vim
+*.swp
+*.swo
+<<<<<<< HEAD
+
+# ctags
+tags
+
+# build
+Makefile
+=======
+>>>>>>> origin/dev

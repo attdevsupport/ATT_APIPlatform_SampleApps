@@ -43,7 +43,7 @@ module Att
         alias_method :authenticate_token, :createToken
 
         # Generate a url to redirect to in order to perform authentication
-        # and obtain a code to receive a token, if required.
+        #   and obtain a code to receive a token, if required.
         #
         # @param opts [Hash] Options hash for specifying extra parameters
         # @option opts [String] :scope the scope to authenticate with

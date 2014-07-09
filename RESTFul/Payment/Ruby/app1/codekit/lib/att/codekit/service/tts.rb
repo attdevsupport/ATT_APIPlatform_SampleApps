@@ -36,10 +36,12 @@ module Att
 
           headers = {
             :Accept => accept.to_s,
-            :X_arg => x_arg_val.to_s, 
             :Content_Type => type.to_s,
             :Content_Language => lang.to_s,
           }
+
+          headers[:X_arg] = x_arg_val.to_s unless x_arg_val.to_s.empty?
+          headers[:Content_Language] = lang.to_s unless lang.to_s.empty?
 
           begin
             response = self.post(url, content.to_s, headers)

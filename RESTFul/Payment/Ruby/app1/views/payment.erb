@@ -496,7 +496,22 @@
                         <h2>Notification&nbsp;:&nbsp;<%= count %></h2>
                       <% end %>
                       <% count += 1 %>
-                      <%= note.generateHtmlTable %>
+                        <table>
+                          <thead>
+                            <tr>
+                              <% note.each_pair do |key, value| %>
+                                <th><%= key %></th>
+                              <% end %>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <% note.each_pair do |key, value| %>
+                                <td data-value="<%= key %>"><%= value or '-' %></td>
+                              <% end %>
+                            </tr>
+                          </tbody>
+                        </table>
                     <% end %>
                   <% end %>
                   <form method="post" name="refreshNotifications" action="refreshNotifications">

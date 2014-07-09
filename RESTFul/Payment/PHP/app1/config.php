@@ -35,6 +35,12 @@ $minSubscriptionValue = '0.00';
 // Max subscription value to use during payment request.
 $maxSubscriptionValue = '2.99';
 
+// Merchant product identifier.
+$merchantProdId = 'PHP';
+
+// Merchant subscription identifier.
+$merchantSubId = 'PHP';
+
 // URL Link for this sample app's source code.
 $linkSource = "#";
 

@@ -69,4 +69,16 @@ public class NotificationPool {
             }
         }
     }
+
+    /**
+     * Add a notification to the current list.
+     * The list will remove old notifications if greater than max.
+     *
+     * @param note A single notification object
+     */
+    public void addNotification(Notification note) {
+        List<Notification> notes = new ArrayList<Notification>();
+        notes.add(note);
+        updateNotifications(notes);
+    }
 }

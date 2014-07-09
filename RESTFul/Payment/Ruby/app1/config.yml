@@ -4,7 +4,7 @@ api_key:
 secret_key:                    
 tokens_file:                   tokens
 
-transactions_file:             transactions
+transactions_file:           transactions
 subscriptions_file:          subscriptions
 notifications_file:          notifications
 
@@ -14,9 +14,10 @@ notary_app_view_payload_url:   http://localhost:4567/notary
 payment_redirect_url:          http://localhost:4567/returnTransaction
 subscription_redirect_url:     http://localhost:4567/callbackSubscription
 FQDN:                          https://api.att.com
-listener_url:                  http://localhost:4567/transactionListener
-listener_url:                  http://localhost:4567/subscriptionListener
 notifications_url:             http://localhost:4567
+
+merch_prod_id:  wordGameTrans
+merch_sub_id:  wordGameSub
 
 min_transaction_value: 0.00
 max_transaction_value: 2.99

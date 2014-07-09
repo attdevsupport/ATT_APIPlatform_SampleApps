@@ -76,7 +76,7 @@ public class PaymentController extends APIController {
 
     private Notary getTransactionNotary(double price) throws RESTException {
         String transId = "J" + System.currentTimeMillis();
-        String prodId = "mpid" + System.currentTimeMillis();
+        String prodId = appConfig.getProperty("merchantProductId");
         String redirectUrl = appConfig.getProperty("paymentRedirectURL");
         Transaction trans = new Transaction.Builder(price, AppCategory.APP_OTHER,
                 "Sample App", transId, prodId, redirectUrl).build();
@@ -88,9 +88,9 @@ public class PaymentController extends APIController {
 
     private Notary getSubscriptionNotary(double price) throws RESTException {
         String transId = "J" + System.currentTimeMillis();
-        String mpid = "mpid" + System.currentTimeMillis();
+        String mpid = appConfig.getProperty("merchantProductId");
         String redirectUrl = appConfig.getProperty("paymentRedirectURL");
-        String merchSubIdList = "J" + (System.currentTimeMillis() % 100000000);
+        String merchSubIdList = appConfig.getProperty("merchantSubscriptionId");
 
         Subscription sub = new Subscription.Builder(price, AppCategory.APP_OTHER,
                 "Sample App", transId, mpid, redirectUrl, merchSubIdList).build();

@@ -500,17 +500,55 @@ For more information contact developer.support@att.com
                              <form method="post" name="refreshNotifications" action="payment">
                                  <div class="inputFields">
                                      <div id="notificationDetails" class="columns">
-                                      <c:if test="${not empty notifications}">
-                                          <c:forEach var="n" items="${notifications}" varStatus="count">
-                                              <c:if test="${count.index eq 0}" >
-                                                  <h2>Notification : <c:out value="${count.index + 1}" /> [Displays last 5 notifications]</h2>
-                                              </c:if>
-                                              <c:if test="${count.index ne 0}" >
-                                                  <h2>Notification : <c:out value="${count.index + 1}" /> </h2>
-                                              </c:if>
-                                              ${n.htmlTable}
-                                          </c:forEach>
-                                      </c:if>
+                                       <c:if test="${not empty notifications}">
+                                       <c:forEach var="n" items="${notifications}" varStatus="count">
+                                       <h2>Notification : <c:out value="${count.index + 1}" />
+                                         <c:if test="${count.index eq 0}" >
+                                         [Displays last 5 notifications]
+                                         </c:if>
+                                       </h2>
+                                       <table>
+                                         <thead>
+                                           <tr>
+                                             <th>Type</th>
+                                             <th>Timestamp</th>
+                                             <th>Effective</th>
+                                             <th>Network Operator Id</th>
+                                             <th>Owner Id</th>
+                                             <th>Purchase Date</th>
+                                             <th>Product Id</th>
+                                             <th>Instance Id</th>
+                                             <th>Min Id</th>
+                                             <th>Old Min Id</th>
+                                             <th>Sequence Number</th>
+                                             <th>Purchase Activity Id</th>
+                                             <th>Vendor Purchase Id</th>
+                                             <th>Reason Code</th>
+                                             <th>Reason Message</th>
+                                           </tr> 
+                                         </thead>
+                                         <tbody>
+                                           <tr>
+                                             <td data-value="Type"><c:out value="${n.type}" default="-" /></th>
+                                             <td data-value="Timestamp"><c:out value="${n.timestamp}" default="-" /></th>
+                                             <td data-value="Effective"><c:out value="${n.effective}" default="-" /></th>
+                                             <td data-value="Network Operator Id"><c:out value="${n.networkOperatorId}" default="-" /></th>
+                                             <td data-value="Owner Id"><c:out value="${n.ownerId}" default="-" /></th>
+                                             <td data-value="Purchase Date"><c:out value="${n.purchaseDate}" default="-" /></th>
+                                             <td data-value="Product Id"><c:out value="${n.productId}" default="-" /></th>
+                                             <td data-value="Instance Id"><c:out value="${n.instanceId}" default="-" /></th>
+                                             <td data-value="Min Id"><c:out value="${n.minId}" default="-" /></th>
+                                             <td data-value="Old Min Id"><c:out value="${n.oldMinId}" default="-" /></th>
+                                             <td data-value="Sequence Number"><c:out value="${n.sequenceNumber}" default="-" /></th>
+                                             <td data-value="Purchase Activity Id"><c:out value="${n.purchaseActivityId}" default="-" /></th>
+                                             <td data-value="Vendor Purchase Id"><c:out value="${n.vendorPurchaseId}" default="-" /></th>
+                                             <td data-value="Reason Code"><c:out value="${n.reasonCode}" default="-" /></th>
+                                             <td data-value="Reason Message"><c:out value="${n.reasonMessage}" default="-" /></th>
+                                           </tr>
+                                         </tbody>
+                                       </table>
+                                       </c:forEach>
+                                       </c:if>
                                       <button type="submit" name="refreshNotifications">Refresh</button>
                                     </div> <!-- end of notificationDetails -->
                                 </div> <!-- end of inputFields -->

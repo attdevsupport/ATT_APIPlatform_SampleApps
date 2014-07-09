@@ -38,7 +38,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         amount, channel, description, merchantTransactionId, merchantProductId, merchantApplicationId,
         transactionTimeString, notaryURL, notificationDetailsFile, bypassSSL;
 
-    private string merchantSubscriptionIdList, subscriptionRecurringPeriod, subscriptionRecurringNumber, subscriptionRecurringPeriodAmount, isPurchaseOnNoActiveSubscription;
+    private string merchantSubscriptionId, subscriptionRecurringPeriod, subscriptionRecurringNumber, subscriptionRecurringPeriodAmount, isPurchaseOnNoActiveSubscription;
 
 
     public string TransactionIdFile = string.Empty;
@@ -841,6 +841,14 @@ public partial class Payment_App1 : System.Web.UI.Page
         {
             HelpLink.HRef = "#"; // Default value
         }
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["merchantSubscriptionId"]))
+        {
+            this.merchantSubscriptionId = ConfigurationManager.AppSettings["merchantSubscriptionId"];
+        }
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["merchantProductId"]))
+        {
+            this.merchantProductId = ConfigurationManager.AppSettings["merchantProductId"];
+        }
 
         return true;
     }
@@ -866,7 +874,7 @@ public partial class Payment_App1 : System.Web.UI.Page
                         this.channel + "\",\"Description\":\"" + this.description + "\",\"MerchantTransactionId\":\""
                         + this.merchantTransactionId + "\",\"MerchantProductId\":\"" + this.merchantProductId
                         + "\",\"MerchantPaymentRedirectUrl\":\"" + this.merchantRedirectURI + "\",\"MerchantSubscriptionIdList\":\""
-                        + this.merchantSubscriptionIdList + "\",\"IsPurchaseOnNoActiveSubscription\":"
+                        + this.merchantSubscriptionId + "\",\"IsPurchaseOnNoActiveSubscription\":"
                         + this.isPurchaseOnNoActiveSubscription + ",\"SubscriptionRecurrences\":" + this.subscriptionRecurringNumber
                         + ",\"SubscriptionPeriod\":\"" + this.subscriptionRecurringPeriod
                         + "\",\"SubscriptionPeriodAmount\":" + this.subscriptionRecurringPeriodAmount +
@@ -985,8 +993,8 @@ public partial class Payment_App1 : System.Web.UI.Page
         Session["sub_merTranId"] = this.merchantTransactionId;
         this.merchantProductId = "ProdId" + this.transactionTimeString;
         this.merchantApplicationId = "MerAppId" + this.transactionTimeString;
-        this.merchantSubscriptionIdList = "CML" + new Random().Next();
-        Session["MerchantSubscriptionIdList"] = this.merchantSubscriptionIdList;
+        this.merchantSubscriptionId = "CML" + new Random().Next();
+        Session["MerchantSubscriptionIdList"] = this.merchantSubscriptionId;
 
         this.isPurchaseOnNoActiveSubscription = ConfigurationManager.AppSettings["IsPurchaseOnNoActiveSubscription"];
 

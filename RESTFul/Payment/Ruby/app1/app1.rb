@@ -111,7 +111,7 @@ post '/newTransaction'  do
   description = 'Word game 1'
   merch_transaction_id = 'User' + sprintf('%03d', rand(1000)) + 'Transaction' + sprintf('%04d', rand(10000))
 
-  merch_product_id = 'wordGame1'
+  merch_product_id = settings.merch_prod_id
 
   #generate a payload to populate the notary
   session[:payload] = generate_transaction_payload(
@@ -142,7 +142,7 @@ get '/returnTransaction' do
       response = service.getTransaction(TransactionType::TransactionAuthCode,
                                         params['TransactionAuthCode'])
 
-      new_transaction = JSON.parse response
+      new_transaction = JSON.parse(response.to_json)
       new_transaction[TransactionType::TransactionAuthCode] =
         params['TransactionAuthCode']
 
@@ -177,7 +177,7 @@ post '/getTransactionStatus'  do
       TransactionType::MerchantTransactionId, 
       params['getTransactionMTID']) if params['getTransactionMTID']
 
-    @transaction_status = JSON.parse response
+    @transaction_status = JSON.parse(response.to_json)
 
   rescue RestClient::Exception => e
     @transaction_status_error = e.response 
@@ -195,8 +195,10 @@ post '/refundTransaction'  do
     response = service.refundTransaction(params['refundTransactionId'],
                                          RefundCodes::CP_None, reason)
 
-    @refund = JSON.parse service.getTransaction(TransactionType::TransactionId,
-                                                params['refundTransactionId'])
+    response = service.getTransaction(TransactionType::TransactionId,
+                                      params['refundTransactionId'])
+
+    @refund = JSON.parse(response.to_json)
 
   rescue RestClient::Exception => e
     @refund_error = e.response 
@@ -210,21 +212,11 @@ post '/notificationListener' do
   service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
 
   input = request.env["rack.input"].read
-  xml_doc = REXML::Document.new input
 
-  new_notifications = Array.new
+  notification = Model::PaymentNotification.from_xml(input)
+  updateTransactions(settings.notifications_file, :notifications, 
+                     notification, settings.recent_notifications_stored)
 
-  #iterate the xml notification ids
-  xml_doc.elements.each('*/*notificationId') do |note_id|
-    id = note_id.get_text.value
-    response = JSON.parse service.getNotification(id) 
-    if response then
-      notification = Model::PaymentNotification.new(response, id)
-      updateTransactions(settings.notifications_file, :notifications, 
-                         notification, settings.recent_notifications_stored)
-      service.ackNotification(id) 
-    end
-  end
   #return a string to satisfy the post request
   "success"
 end
@@ -235,13 +227,13 @@ post '/newSubscription' do
 
   amount = params[:product] == "1" ? settings.min_subscription_value : settings.max_subscription_value
   description = 'Word game 1'
-  merchant_product_id = 'wordGame1'
+  merchant_product_id = settings.merch_prod_id
   sub_recurrances = '99999'
 
   merchant_transaction_id = 'User' + sprintf('%03d', rand(1000)) +
     'Subscription' + sprintf('%04d', rand(10000))
 
-  merchant_subscription_id_list = 'R' + sprintf('%04d', rand(10000))
+  merchant_subscription_id = settings.merch_sub_id
 
   session[:payload] = generate_subscription_payload(
     amount, 
@@ -249,7 +241,7 @@ post '/newSubscription' do
     description,
     merchant_transaction_id,
     merchant_product_id,
-    merchant_subscription_id_list,
+    merchant_subscription_id,
     sub_recurrances,
     settings.subscription_redirect_url)
 
@@ -259,7 +251,7 @@ post '/newSubscription' do
     description,
     merchant_transaction_id, 
     merchant_product_id,
-    merchant_subscription_id_list,
+    merchant_subscription_id,
     sub_recurrances, 
     settings.subscription_redirect_url)
 end
@@ -271,7 +263,7 @@ get '/callbackSubscription' do
       response = service.getSubscription(SubscriptionType::SubscriptionAuthCode,
                                          params['SubscriptionAuthCode'])
 
-      new_subscription = JSON.parse response
+      new_subscription = JSON.parse(response.to_json)
       new_subscription[SubscriptionType::SubscriptionAuthCode] = params['SubscriptionAuthCode']
 
       updateTransactions(settings.subscriptions_file, :subscription,
@@ -307,7 +299,7 @@ post '/getSubscriptionStatus' do
         SubscriptionType::MerchantTransactionId, params['getSubscriptionMTID']) 
     end
 
-    @subscription_status = JSON.parse response
+    @subscription_status = JSON.parse(response.to_json)
 
   rescue RestClient::Exception => e
     @subscription_status_error = e.response 
@@ -333,7 +325,7 @@ post '/getSubscriptionDetails' do
 
     response = service.getSubscriptionDetails(consumer_id, merch_id)
 
-    @subscription_detail= JSON.parse response
+    @subscription_detail= JSON.parse(response.to_json)
 
   rescue RestClient::Exception => e
     @subscription_detail_error = e.response 
@@ -352,7 +344,7 @@ post '/cancelSubscription' do
       response = service.cancelSubscription(params['cancelSubscriptionId'],
                                             RefundCodes::CP_None, reason)
 
-      @cancel_subscription = JSON.parse response
+      @cancel_subscription = JSON.parse(response.to_json)
     end
 
   rescue RestClient::Exception => e
@@ -372,7 +364,7 @@ post '/refundSubscription' do
       response = service.refundSubscription(params['refundSubscriptionId'],
                                             RefundCodes::CP_None, reason)
 
-      @refund_subscription = JSON.parse response
+      @refund_subscription = JSON.parse(response.to_json)
     end
 
   rescue RestClient::Exception => e
@@ -398,7 +390,7 @@ def sign_payload(payload)
     service = Service::PaymentService.new(settings.FQDN, @@token, @@client)
     response = service.signPayload(payload)
 
-    from_json = JSON.parse response
+    from_json = JSON.parse(response)
 
     @payload = payload
     @signed_doc = from_json['SignedDocument']
@@ -413,10 +405,11 @@ end
 
 # Using file locking to update one at a time
 #
-#@param file [String] path/name of the file to save to
-#@param type [Symbol] the type we want to save :transactions, :subscription or :notifications
-#@param newdata [Hash] a transaction or subscription descriptor
-#@param store_amount [Integer] the amount of transactions to store
+# @param file [String] path/name of the file to save to
+# @param type [Symbol] the type we want to save :transactions, :subscription or 
+#   :notifications
+# @param newdata [Hash] a transaction or subscription descriptor
+# @param store_amount [Integer] the amount of transactions to store
 def updateTransactions(file, type, newdata=nil, store_amount=5)
   File.open(type.to_s + "_lock", File::CREAT|File::RDONLY) do |lock|
     begin
@@ -425,7 +418,8 @@ def updateTransactions(file, type, newdata=nil, store_amount=5)
         session[type] = Array.new
 
         read.each do |line|
-          session[type].push JSON.load line
+          obj = JSON.load(line)
+          session[type].push(obj) 
         end
 
         if newdata
@@ -437,8 +431,8 @@ def updateTransactions(file, type, newdata=nil, store_amount=5)
       session[type].delete_at 0 if session[type].length > store_amount
 
       File.open(file, 'w') do |out|
-        session[type].each do |array|
-          out.puts JSON.generate(array)
+        session[type].each do |obj|
+          out.puts(obj.to_json)
         end
       end
 
@@ -466,7 +460,7 @@ end
 
 #used to populate notary, service takes care of this.
 def generate_subscription_payload(amount, category, desc, merch_trans_id, 
-                                  merch_prod_id, merch_sub_id_list, 
+                                  merch_prod_id, merch_sub_id, 
                                   sub_recurrances, redirect_uri, opts={})
   sub_period_amount = (opts[:sub_period_amount] || 1) 
   sub_period = (opts[:sub_period] || 'MONTHLY')
@@ -479,7 +473,7 @@ def generate_subscription_payload(amount, category, desc, merch_trans_id,
     :Description => desc,
     :MerchantTransactionId => merch_trans_id,
     :MerchantProductId => merch_prod_id,
-    :MerchantSubscriptionIdList => merch_sub_id_list,
+    :MerchantSubscriptionId => merch_sub_id,
     :SubscriptionRecurrences => sub_recurrances,
     :MerchantPaymentRedirectUrl => redirect_uri,
     :SubscriptionPeriodAmount => sub_period_amount,
