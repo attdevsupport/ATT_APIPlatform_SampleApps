@@ -217,6 +217,7 @@ For more information contact developer.support@att.com
                          <a id="subscriptionToggle" 
                              href="javascript:toggle('subscription','subscriptionToggle', 'Subscription');">Show Subscription</a>
                          <div class="toggle" id="subscription">
+                             <div class="note">Note: You must refund/cancel any previous subscription to subscribe again using the same phone number</div>
                              <h2>Feature 1: Create New Subscription</h2>
                              <form method="post" name="newSubscription" action="payment">
                                  <div class="inputFields">
@@ -510,40 +511,40 @@ For more information contact developer.support@att.com
                                        <table>
                                          <thead>
                                            <tr>
-                                             <th>Type</th>
-                                             <th>Timestamp</th>
-                                             <th>Effective</th>
-                                             <th>Network Operator Id</th>
-                                             <th>Owner Id</th>
-                                             <th>Purchase Date</th>
-                                             <th>Product Id</th>
-                                             <th>Instance Id</th>
-                                             <th>Min Id</th>
-                                             <th>Old Min Id</th>
-                                             <th>Sequence Number</th>
-                                             <th>Purchase Activity Id</th>
-                                             <th>Vendor Purchase Id</th>
-                                             <th>Reason Code</th>
-                                             <th>Reason Message</th>
+                                             <th>type</th>
+                                             <th>timestamp</th>
+                                             <th>effective</th>
+                                             <th>networkOperatorIdentifier</th>
+                                             <th>ownerIdentifier</th>
+                                             <th>purchaseDate</th>
+                                             <th>productIdentifier</th>
+                                             <th>instanceIdentifier</th>
+                                             <th>minIdentifier</th>
+                                             <th>oldMinIdentifier</th>
+                                             <th>sequenceNumber</th>
+                                             <th>purchaseActivityIdentifier</th>
+                                             <th>vendorPurchaseIdentifier</th>
+                                             <th>reasonCode</th>
+                                             <th>reasonMessage</th>
                                            </tr> 
                                          </thead>
                                          <tbody>
                                            <tr>
-                                             <td data-value="Type"><c:out value="${n.type}" default="-" /></th>
-                                             <td data-value="Timestamp"><c:out value="${n.timestamp}" default="-" /></th>
-                                             <td data-value="Effective"><c:out value="${n.effective}" default="-" /></th>
-                                             <td data-value="Network Operator Id"><c:out value="${n.networkOperatorId}" default="-" /></th>
-                                             <td data-value="Owner Id"><c:out value="${n.ownerId}" default="-" /></th>
-                                             <td data-value="Purchase Date"><c:out value="${n.purchaseDate}" default="-" /></th>
-                                             <td data-value="Product Id"><c:out value="${n.productId}" default="-" /></th>
-                                             <td data-value="Instance Id"><c:out value="${n.instanceId}" default="-" /></th>
-                                             <td data-value="Min Id"><c:out value="${n.minId}" default="-" /></th>
-                                             <td data-value="Old Min Id"><c:out value="${n.oldMinId}" default="-" /></th>
-                                             <td data-value="Sequence Number"><c:out value="${n.sequenceNumber}" default="-" /></th>
-                                             <td data-value="Purchase Activity Id"><c:out value="${n.purchaseActivityId}" default="-" /></th>
-                                             <td data-value="Vendor Purchase Id"><c:out value="${n.vendorPurchaseId}" default="-" /></th>
-                                             <td data-value="Reason Code"><c:out value="${n.reasonCode}" default="-" /></th>
-                                             <td data-value="Reason Message"><c:out value="${n.reasonMessage}" default="-" /></th>
+                                             <td data-value="type"><c:out value="${n.type}" default="-" /></th>
+                                             <td data-value="timestamp"><c:out value="${n.timestamp}" default="-" /></th>
+                                             <td data-value="effective"><c:out value="${n.effective}" default="-" /></th>
+                                             <td data-value="networkOperatorIdentifier"><c:out value="${n.networkOperatorId}" default="-" /></th>
+                                             <td data-value="ownerIdentifier"><c:out value="${n.ownerId}" default="-" /></th>
+                                             <td data-value="purchaseDate"><c:out value="${n.purchaseDate}" default="-" /></th>
+                                             <td data-value="productIdentifier"><c:out value="${n.productId}" default="-" /></th>
+                                             <td data-value="instanceIdentifier"><c:out value="${n.instanceId}" default="-" /></th>
+                                             <td data-value="minIdentifier"><c:out value="${n.minId}" default="-" /></th>
+                                             <td data-value="oldMinIdentifier"><c:out value="${n.oldMinId}" default="-" /></th>
+                                             <td data-value="sequenceNumber"><c:out value="${n.sequenceNumber}" default="-" /></th>
+                                             <td data-value="purchaseActivityIdentifier"><c:out value="${n.purchaseActivityId}" default="-" /></th>
+                                             <td data-value="vendorPurchaseIdentifier"><c:out value="${n.vendorPurchaseId}" default="-" /></th>
+                                             <td data-value="reasonCode"><c:out value="${n.reasonCode}" default="-" /></th>
+                                             <td data-value="reasonMessage"><c:out value="${n.reasonMessage}" default="-" /></th>
                                            </tr>
                                          </tbody>
                                        </table>

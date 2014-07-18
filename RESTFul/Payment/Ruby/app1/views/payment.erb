@@ -207,6 +207,7 @@
             <a id="subscriptionToggle" 
               href="javascript:toggle('subscription','subscriptionToggle', 'Subscription');">Show Subscription</a>
             <div class="toggle" id="subscription">
+              <div class="note">Note: You must refund/cancel any previous subscription to subscribe again using the same phone number.</div>
               <h2>Feature 1: Create New Subscription</h2>
               <form method="post" name="newSubscription" action="newSubscription">
                 <div class="inputFields">
@@ -499,16 +500,58 @@
                         <table>
                           <thead>
                             <tr>
-                              <% note.each_pair do |key, value| %>
-                                <th><%= key %></th>
-                              <% end %>
+                                <th>networkOperatorId</th>
+                                <th>ownerIdentifier</th>
+                                <th>purchaseDate</th>
+                                <th>productIdentifier</th>
+                                <th>instanceIdentifier</th>
+                                <th>minIdentifier</th>
+                                <th>oldMinIdentifier</th>
+                                <th>sequenceNumber</th>
+                                <th>purchaseActivityIdentifier</th>
+                                <th>vendorPurchaseIdentifier</th>
+                                <th>reasonCode</th>
+                                <th>reasonMessage</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <% note.each_pair do |key, value| %>
-                                <td data-value="<%= key %>"><%= value or '-' %></td>
-                              <% end %>
+                              <td data-value="networkOperatorId">
+                                <%= note.network_operator_id or '-' %>
+                              </td>
+                              <td data-value="ownerIdentifier">
+                                <%= note.owner_id or '-' %>
+                              </td>
+                              <td data-value="purchaseDate">
+                                <%= note.purchase_date or '-' %>
+                              </td>
+                              <td data-value="productIdentifier">
+                                <%= note.product_id or '-' %>
+                              </td>
+                              <td data-value="instanceIdentifier">
+                                <%= note.instance_id or '-' %>
+                              </td>
+                              <td data-value="minIdentifier">
+                                <%= note.min_id or '-' %>
+                              </td>
+                              <td data-value="oldMinIdentifier">
+                                <%= note.old_min_id or '-' %>
+                              </td>
+                              <td data-value="sequenceNumber">
+                                <%= note.sequence_number or '-' %>
+                              </td>
+                              <td data-value="purchaseActivityIdentifier">
+                                <%= note.purchase_activity_id or '-' %>
+                              </td>
+                              <td data-value="vendorPurchaseIdentifier">
+                                <%= note.vendor_purchase_id or '-' %>
+                              </td>
+                              <td data-value="reasonCode">
+                                <%= note.reason_code or '-' %>
+                              </td>
+                              <td data-value="reasonMessage">
+                                <%= note.reason_message or '-' %>
+                              </td>
                             </tr>
                           </tbody>
                         </table>

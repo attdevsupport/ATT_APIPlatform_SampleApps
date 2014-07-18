@@ -19,7 +19,7 @@ namespace Att\Api\Payment;
  * 
  * @category  API
  * @package   Payment 
- * @author    mp748d
+ * @author    mp748d, pk9069
  * @copyright 2013 AT&T Intellectual Property
  * @license   http://developer.att.com/sdk_agreement AT&amp;T License
  * @link      http://developer.att.com
@@ -39,6 +39,20 @@ use \SimpleXMLElement;
  */
 final class NotificationDetails 
 {
+    /**
+     * Notification type.
+     *
+     * @var string
+     */
+    private $_type;
+
+    /**
+     * Notification timestamp.
+     *
+     * @var string
+     */
+    private $_timestamp;
+
     /**
      * Network operator Id.
      *
@@ -89,6 +103,13 @@ final class NotificationDetails
     private $_minIdentifier;
     
     /**
+     * Subscriber's previous 10 digit MSISDN.
+     *
+     * @var string|null
+     */
+    private $_oldMinIdentifier;
+    
+    /**
      * sequence number, a sequential, unique (per CP), positive number that identifies each message.
      *
      * @var string
@@ -108,6 +129,13 @@ final class NotificationDetails
      * @var string
      */
     private $_reasonMessage;
+
+    /**
+     * Effective timestamp.
+     *
+     * @var string
+     */
+    private $_effective;
     
     /**
      * Vendor purchase identifier.
@@ -185,6 +213,16 @@ final class NotificationDetails
     {
         return $this->_minIdentifier;
     }
+
+    /**
+     * Gets the old min identifier, or null if none.
+     *
+     * @return string|null min identifier or null
+     */
+    public function getOldMinIdentifier() 
+    {
+        return $this->_oldMinIdentifier;
+    }
     
     /**
      * Gets the sequence number.
@@ -225,12 +263,44 @@ final class NotificationDetails
     {
         return $this->_vendorPurchaseIdentifier;
     }
+
+    /**
+     * Gets notification type.
+     *
+     * @return string notification type
+     */
+    public function getNotificationType() 
+    {
+        return $this->_type;
+    }
+
+    /**
+     * Gets notification timestamp.
+     *
+     * @return string notification timestamp
+     */
+    public function getTimestamp() 
+    {
+        return $this->_timestamp;
+    }
+
+    /**
+     * Gets effective timestamp.
+     *
+     * @return string effective timestamp
+     */
+    public function getEffective() 
+    {
+        return $this->_effective;
+    }
     
     /**
      * Disallow instances via default constructor.
      */
     private function __construct() 
     {
+        $this->_effective = null;
+        $this->_oldMinIdentifier = null;
     }
 
     /**
@@ -247,6 +317,15 @@ final class NotificationDetails
         
         $xmlobj = new SimpleXMLElement($xml);
         try {
+            // attributes
+            $attrs = $xmlobj->attributes();
+            $details->_type = $attrs['type']->__toString();
+            $details->_timestamp = $attrs['timestamp']->__toString();
+            if (isset($attrs['effective'])) {
+                $details->_effective = $attrs['effective']->__toString();
+            }
+
+            // child values
             $details->_networkOperatorId = $xmlobj->networkOperatorId->__toString();
             $details->_ownerIdentifier   = $xmlobj->ownerIdentifier->__toString();
             $details->_purchaseDate      = $xmlobj->purchaseDate->__toString();
@@ -254,6 +333,9 @@ final class NotificationDetails
             $details->_purchaseActivityIdentifier = $xmlobj->purchaseActivityIdentifier->__toString();
             $details->_instanceIdentifier = $xmlobj->instanceIdentifier->__toString();
             $details->_minIdentifier     = $xmlobj->minIdentifier->__toString();
+            if (property_exists($xmlobj, 'oldMinIdentifier')) {
+                $details->_oldMinIdentifier = $xmlobj->oldMinIdentifier->__toString();
+            }
             $details->_sequenceNumber    = $xmlobj->sequenceNumber->__toString();
             $details->_reasonCode        = $xmlobj->reasonCode->__toString();
             $details->_reasonMessage     = $xmlobj->reasonMessage->__toString();

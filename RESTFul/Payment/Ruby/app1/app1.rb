@@ -233,7 +233,7 @@ post '/newSubscription' do
   merchant_transaction_id = 'User' + sprintf('%03d', rand(1000)) +
     'Subscription' + sprintf('%04d', rand(10000))
 
-  merchant_subscription_id = settings.merch_sub_id
+  merchant_subscription_id = sprintf('%10d', rand(1000)) #settings.merch_sub_id
 
   session[:payload] = generate_subscription_payload(
     amount, 
@@ -473,7 +473,7 @@ def generate_subscription_payload(amount, category, desc, merch_trans_id,
     :Description => desc,
     :MerchantTransactionId => merch_trans_id,
     :MerchantProductId => merch_prod_id,
-    :MerchantSubscriptionId => merch_sub_id,
+    :MerchantSubscriptionIdList => merch_sub_id,
     :SubscriptionRecurrences => sub_recurrances,
     :MerchantPaymentRedirectUrl => redirect_uri,
     :SubscriptionPeriodAmount => sub_period_amount,

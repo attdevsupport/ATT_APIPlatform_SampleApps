@@ -16,7 +16,7 @@ $errors = $controller->getErrors();
 <!DOCTYPE html>
 <html lang="en"> 
   <head> 
-    <title>AT&amp;T Sample Application - Payment</title>		
+    <title>AT&amp;T Sample Application - Payment</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <link rel="stylesheet" type="text/css" href="style/common.css">
@@ -213,6 +213,7 @@ $errors = $controller->getErrors();
             <a id="subscriptionToggle" 
                 href="javascript:toggle('subscription','subscriptionToggle', 'Subscription');">Show Subscription</a>
             <div class="toggle" id="subscription">
+              <div class="note">Note: You must refund/cancel any previous subscription to subscribe again using the same phone number.</div>
               <h2>Feature 1: Create New Subscription</h2>
               <form method="post" name="newSubscription" action="index.php">
                 <div class="inputFields">

@@ -101,7 +101,7 @@ public class PaymentController extends APIController {
     }
 
     private JSONObject getTransactionInfo(String type, String value)
-            throws RESTException {
+        throws RESTException {
 
         //TODO: update this to enums
         String transType = "TransactionAuthCode";
@@ -141,7 +141,9 @@ public class PaymentController extends APIController {
             JSONObject info = this.getTransactionInfo("1", authCode);
             transactionFile.addTransactionEntry(info, authCode);
             request.setAttribute("showTrans", true);
-            request.setAttribute("resultTransInfo", this.JSONToMap(info));
+            Map<String, String> m = this.JSONToMap(info);
+            m.remove("authCode");
+            request.setAttribute("resultTransInfo", m);
         } catch (Exception e) {
             request.setAttribute("showTrans", true);
             request.setAttribute("errorTransAuthCode", e.getMessage());
@@ -157,7 +159,9 @@ public class PaymentController extends APIController {
             JSONObject info = this.getSubscriptionInfo("1", authCode);
             subscriptionFile.addTransactionEntry(info, authCode);
             request.setAttribute("showSub", true);
-            request.setAttribute("resultSubInfo", this.JSONToMap(info));
+            Map<String, String> m = this.JSONToMap(info);
+            m.remove("authCode");
+            request.setAttribute("resultSubInfo", m);
         } catch (Exception e) {
             request.setAttribute("showSub", true);
             request.setAttribute("errorSubAuthCode", e.getMessage());
@@ -176,7 +180,7 @@ public class PaymentController extends APIController {
                 if (request.getParameter(name) != null) {
                     String value = request.getParameter(name);
                     JSONObject info = this.getTransactionInfo(types[i], value);
-            request.setAttribute("showTrans", true);
+                    request.setAttribute("showTrans", true);
                     request.setAttribute("resultTransInfo", this.JSONToMap(info));
                     return;
                 }
@@ -412,7 +416,7 @@ public class PaymentController extends APIController {
     public void doPost(HttpServletRequest request, HttpServletResponse 
             response) throws ServletException, IOException {
         doGet(request,response);
-    }
+            }
 
     public void doGet(HttpServletRequest request, HttpServletResponse 
             response) throws ServletException, IOException {
@@ -447,5 +451,5 @@ public class PaymentController extends APIController {
         // forward to view
         String forwardStr = "/WEB-INF/payment.jsp";
         request.getRequestDispatcher(forwardStr).forward(request, response);
-    }
+            }
 }

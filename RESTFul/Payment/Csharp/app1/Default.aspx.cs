@@ -138,7 +138,7 @@ public partial class Payment_App1 : System.Web.UI.Page
     public Dictionary<string, string> getSubscriptionDetailsResponse = new Dictionary<string, string>();
 
     public List<Dictionary<string, string>> notificationDetails = new List<Dictionary<string, string>>();
-    
+
     public string showTransaction = string.Empty;
     public string showSubscription = string.Empty;
     public string showNotary = string.Empty;
@@ -166,11 +166,6 @@ public partial class Payment_App1 : System.Web.UI.Page
     {
         BypassCertificateError();
         bool ableToReadFromConfig = this.ReadConfigFile();
-
-        if (ableToReadFromConfig == false)
-        {
-            return;
-        }
 
         if ((Request["TransactionAuthCode"] != null) && (Session["merTranId"] != null) && (Session["tranType"] != null))
         {
@@ -262,7 +257,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         {
             if (sessionValue.CompareTo("product_1") == 0)
                 product_1.Checked = true;
-            else 
+            else
                 product_2.Checked = true;
         }
         //Session["tranType"] = null;
@@ -433,11 +428,11 @@ public partial class Payment_App1 : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            subscription_details_error =  ex.ToString();
+            subscription_details_error = ex.ToString();
         }
     }
 
-    
+
     protected void CancelSubscription_Click(object sender, EventArgs e)
     {
         showSubscription = "true";
@@ -447,7 +442,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         string strReq = "{\"TransactionOperationStatus\":\"SubscriptionCancelled\",\"RefundReasonCode\":1,\"RefundReasonText\":\"Customer was not happy\"}";
         RefundSubscriptionOperation(strReq, subscriptionToCancel, ref subscription_cancel_success, ref subscription_cancel_error);
     }
-    
+
     protected void RefundSubscription_Click(object sender, EventArgs e)
     {
         showSubscription = "true";
@@ -458,7 +453,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         RefundSubscriptionOperation(strReq, subscriptionToRefund, ref subscription_refund_success, ref subscription_refund_error);
     }
 
-    protected void RefundSubscriptionOperation (string strRequest, string subid, ref string success, ref string error)
+    protected void RefundSubscriptionOperation(string strRequest, string subid, ref string success, ref string error)
     {
         string dataLength = string.Empty;
         try
@@ -568,12 +563,12 @@ public partial class Payment_App1 : System.Web.UI.Page
         string resourcePathString = string.Empty + this.endPoint + "/rest/3/Commerce/Payment/Transactions/TransactionId/" + getTransactionTID.SelectedValue.ToString();
         this.getTransactionStatus(resourcePathString, ref transaction_status_error, ref transaction_status_success);
     }
-   
-    protected void getTransactionStatus (string resourcePathString, ref string error, ref string success)
+
+    protected void getTransactionStatus(string resourcePathString, ref string error, ref string success)
     {
         try
         {
-            if (this.ReadAndGetAccessToken( ref error) == true)
+            if (this.ReadAndGetAccessToken(ref error) == true)
             {
                 if (this.accessToken == null || this.accessToken.Length <= 0)
                 {
@@ -613,14 +608,14 @@ public partial class Payment_App1 : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            error =  ex.ToString();
+            error = ex.ToString();
         }
     }
 
     protected void ShowNotifications_Click(object sender, EventArgs e)
     {
         showNotification = "true";
-        this.GetNotificationsFromFile();        
+        this.GetNotificationsFromFile();
     }
 
     private void GetNotificationsFromFile()
@@ -667,7 +662,7 @@ public partial class Payment_App1 : System.Web.UI.Page
 
         if (string.IsNullOrEmpty(ConfigurationManager.AppSettings["MinTransactionAmount"]))
         {
-            this.MinTransactionAmount = "0.00";
+            this.MinTransactionAmount = "0.10";
         }
         else
         {
@@ -687,7 +682,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.MinSubscriptionAmount = ConfigurationManager.AppSettings["MinSubscriptionAmount"];
         if (string.IsNullOrEmpty(this.MinSubscriptionAmount))
         {
-            this.MinSubscriptionAmount = "0.00";
+            this.MinSubscriptionAmount = "0.10";
         }
 
         this.MaxSubscriptionAmount = ConfigurationManager.AppSettings["MaxSubscriptionAmount"];
@@ -706,21 +701,21 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.endPoint = ConfigurationManager.AppSettings["endPoint"];
         if (string.IsNullOrEmpty(this.endPoint))
         {
-             new_transaction_error = "endPoint is not defined in configuration file";
+            new_transaction_error = "endPoint is not defined in configuration file";
             return false;
         }
 
         this.secretKey = ConfigurationManager.AppSettings["secret_key"];
         if (string.IsNullOrEmpty(this.secretKey))
         {
-             new_transaction_error =  "secret_key is not defined in configuration file";
+            new_transaction_error = "secret_key is not defined in configuration file";
             return false;
         }
 
         this.accessTokenFilePath = ConfigurationManager.AppSettings["AccessTokenFilePath"];
         if (string.IsNullOrEmpty(this.accessTokenFilePath))
         {
-            this.accessTokenFilePath = "~\\PayApp1AccessToken.txt";
+            this.accessTokenFilePath = "~\\AccessToken.txt";
         }
 
         this.TransactionIdFile = ConfigurationManager.AppSettings["TransactionIdFile"];
@@ -788,7 +783,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.notificationDetailsFile = ConfigurationManager.AppSettings["notificationDetailsFile"];
         if (string.IsNullOrEmpty(this.notificationDetailsFile))
         {
-            this.notificationDetailsFile = "notificationDetailsFile.txt";
+            this.notificationDetailsFile = "~\\notificationDetailsFile.txt";
         }
 
         this.scope = ConfigurationManager.AppSettings["scope"];
@@ -799,7 +794,7 @@ public partial class Payment_App1 : System.Web.UI.Page
 
         if (ConfigurationManager.AppSettings["MerchantPaymentRedirectUrl"] == null)
         {
-             new_transaction_error =  "MerchantPaymentRedirectUrl is not defined in configuration file";
+            new_transaction_error = "MerchantPaymentRedirectUrl is not defined in configuration file";
             return false; ;
         }
 
@@ -939,7 +934,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         this.transactionTimeString = string.Format("{0:dddMMMddyyyyHHmmss}", this.transactionTime);
         if (ConfigurationManager.AppSettings["Category"] == null)
         {
-            new_transaction_error =  "Category is not defined in configuration file";
+            new_transaction_error = "Category is not defined in configuration file";
             return;
         }
 
@@ -953,15 +948,32 @@ public partial class Payment_App1 : System.Web.UI.Page
             this.channel = ConfigurationManager.AppSettings["Channel"];
         }
 
+        if (ConfigurationManager.AppSettings["merchantSubscriptionId"] == null)
+        {
+            this.merchantSubscriptionId = "CSHARPUAT";
+        }
+        else
+        {
+            this.merchantSubscriptionId = ConfigurationManager.AppSettings["merchantSubscriptionId"];
+        }
+
+        if (ConfigurationManager.AppSettings["merchantProductId"] == null)
+        {
+            this.merchantProductId = "CSHARPUAT";
+        }
+        else
+        {
+            this.merchantProductId = ConfigurationManager.AppSettings["merchantProductId"];
+        }
+
         this.description = "TrDesc" + this.transactionTimeString;
         this.merchantTransactionId = "C" + this.transactionTimeString;
         Session["merTranId"] = this.merchantTransactionId.ToString();
-        this.merchantProductId = "ProdId" + this.transactionTimeString;
         this.merchantApplicationId = "MerAppId" + this.transactionTimeString;
         if (product_1.Checked)
         {
-            this.amount = this.MinTransactionAmount;
             Session["tranType"] = "product_1";
+            this.amount = this.MinTransactionAmount;
         }
         else if (product_2.Checked)
         {
@@ -987,13 +999,29 @@ public partial class Payment_App1 : System.Web.UI.Page
         {
             this.channel = "MOBILE_WEB";
         }
+        if (ConfigurationManager.AppSettings["merchantSubscriptionId"] == null)
+        {
+            this.merchantSubscriptionId = "CSHARPUAT";
+        }
+        else
+        {
+            this.merchantSubscriptionId = ConfigurationManager.AppSettings["merchantSubscriptionId"];
+        }
+
+        if (ConfigurationManager.AppSettings["merchantProductId"] == null)
+        {
+            this.merchantProductId = "CSHARPUAT";
+        }
+        else
+        {
+            this.merchantProductId = ConfigurationManager.AppSettings["merchantProductId"];
+        }
+
 
         this.description = "TrDesc" + this.transactionTimeString;
         this.merchantTransactionId = "C" + this.transactionTimeString;
         Session["sub_merTranId"] = this.merchantTransactionId;
-        this.merchantProductId = "ProdId" + this.transactionTimeString;
         this.merchantApplicationId = "MerAppId" + this.transactionTimeString;
-        this.merchantSubscriptionId = "CML" + new Random().Next();
         Session["MerchantSubscriptionIdList"] = this.merchantSubscriptionId;
 
         this.isPurchaseOnNoActiveSubscription = ConfigurationManager.AppSettings["IsPurchaseOnNoActiveSubscription"];
@@ -1183,7 +1211,7 @@ public partial class Payment_App1 : System.Web.UI.Page
     /// </summary>
     public void UpdateListToFile(string filename, ref List<string> list)
     {
-        try 
+        try
         {
             if (list.Count != 0)
             {
@@ -1220,7 +1248,6 @@ public partial class Payment_App1 : System.Web.UI.Page
             return;
         string transactionToRefund = refundTransactionId.SelectedValue.ToString();
         string strReq = "{\"TransactionOperationStatus\":\"Refunded\",\"RefundReasonCode\":1,\"RefundReasonText\":\"Customer was not happy\"}";
-        // string strReq = "{\"RefundReasonCode\":1,\"RefundReasonText\":\"Customer was not happy\"}";
         string dataLength = string.Empty;
         try
         {
@@ -1267,7 +1294,7 @@ public partial class Payment_App1 : System.Web.UI.Page
         catch (Exception ex)
         {
             //// + strReq + transactionToRefund.ToString() + dataLength
-            refund_error = ex.ToString() ;
+            refund_error = ex.ToString();
         }
     }
 
