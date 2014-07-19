@@ -233,7 +233,7 @@ post '/newSubscription' do
   merchant_transaction_id = 'User' + sprintf('%03d', rand(1000)) +
     'Subscription' + sprintf('%04d', rand(10000))
 
-  merchant_subscription_id = sprintf('%10d', rand(1000)) #settings.merch_sub_id
+  merchant_subscription_id = settings.merch_sub_id
 
   session[:payload] = generate_subscription_payload(
     amount, 
