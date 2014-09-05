@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.json.JSONObject;
-import java.text.ParseException;
 
 public class PaymentFileHandler {
     private File path = null;
@@ -26,7 +25,7 @@ public class PaymentFileHandler {
     }
 
     public void addTransactionEntry(JSONObject entry, String authCode)
-        throws IOException, ParseException {
+        throws IOException{
 
         entry.put("authCode", authCode);
         List<JSONObject> entries = this.getTransactionEntrys();
@@ -61,7 +60,7 @@ public class PaymentFileHandler {
     }
 
     public List<JSONObject> getTransactionEntrys() 
-        throws IOException, ParseException {
+        throws IOException {
         FileInputStream fInputStream = null;
         FileLock fLock = null;
 
@@ -81,8 +80,6 @@ public class PaymentFileHandler {
             }
             return entries;
         } catch (IOException e) {
-            throw e;
-        }catch (ParseException e){
             throw e;
         }finally {
             if (fLock != null) fLock.release();

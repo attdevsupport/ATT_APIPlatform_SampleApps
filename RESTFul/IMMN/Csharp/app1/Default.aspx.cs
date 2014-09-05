@@ -148,7 +148,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
     {
         try
         {
-            Response.Redirect(string.Empty + this.endPoint + "/oauth/authorize?scope=" + this.scope + "&client_id=" + this.apiKey + "&redirect_url=" + this.authorizeRedirectUri);
+            Response.Redirect(string.Empty + this.endPoint + "/oauth/v4/authorize?scope=" + this.scope + "&client_id=" + this.apiKey + "&redirect_url=" + this.authorizeRedirectUri);
         }
         catch (Exception ex)
         {
@@ -280,7 +280,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
         try
         {
             DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
-            WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/token");
+            WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/v4/token");
             accessTokenRequest.Method = "POST";
             string oauthParameters = string.Empty;
 

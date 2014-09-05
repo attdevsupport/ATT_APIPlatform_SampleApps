@@ -60,7 +60,8 @@ module Att
       end
 
       # Metadata for a message 
-      class MessageContentMetaData < ImmutableStruct.new(:name, :content_type, :type, :url)
+      class MessageContentMetaData < ImmutableStruct.new(:name, :content_type, 
+                                                         :type, :url)
         # @!attribute [r] name
         #   @return [String] name of the content
         # @!attribute [r] content_type
@@ -122,9 +123,10 @@ module Att
       end
 
       # A representation of a message object
-      class Message < ImmutableStruct.new(:id, :from, :recipients, :subject, :text, 
-                                          :timestamp, :favorite, :unread, :type, 
-                                          :segmentation_details, :incoming, :content)
+      class Message < ImmutableStruct.new(:id, :from, :recipients, :subject, 
+                                          :text, :timestamp, :favorite, 
+                                          :unread, :type, :segmentation_details,
+                                          :incoming, :content)
         # @!attribute [r] id
         #   @return [String] the message id
         # @!attribute [r] from
@@ -144,12 +146,12 @@ module Att
         # @!attribute [r] type
         #   @return [String] type of message
         # @!attribute [r] segmentation_details
-        #   @return [SegmentationDetails] preset if message is segmented (may be nil)
+        #   @return [SegmentationDetails] preset if message is segmented 
+        #     (may be nil)
         # @!attribute [r] incoming
         #   @return [Boolean] true if message was received
         # @!attribute [r] content
         #   @return [MessageContentMetaData] mms content if present (may be nil)
-
         # Check if message is a favorite
         #
         # @return [Boolean] true if message is favorited
@@ -223,7 +225,8 @@ module Att
           read = msg["isUnread"]
           type = msg["type"]
           incoming = msg["isIncoming"]
-          content = MessageContentMetaData.createFromParsedJson(msg['mmsContent'])
+          content = MessageContentMetaData.createFromParsedJson(
+            msg['mmsContent'])
 
           typeMetaData = msg["typeMetaData"]
           subject = typeMetaData["subject"]

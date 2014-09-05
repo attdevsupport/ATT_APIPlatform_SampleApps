@@ -35,14 +35,14 @@ module Att
 
         # Send in an audio file to convert into text
         #
-        # @param file [String] path of file to convert
+        # @param audio_file [String] path of file to convert
         # @param opts [Hash] Options hashmap for extra params
         # @option opts [String] :context meta info on context (default: Generic)
         # @option opts [String] :xargs custom extra parameters to send for decoding
         # @option opts [Boolean] :chunked set transfter encoding to chunked
         #
         # @return (see speechToText)
-        def stdSpeechToText(file, opts={})
+        def stdSpeechToText(audio_file, opts={})
           # set to empty string if nil
           xArgs = (opts[:xargs] || opts[:xarg] || "") 
           chunked = opts[:chunked]
@@ -51,9 +51,9 @@ module Att
 
           x_arg_val = URI.escape(xArgs)
 
-          filecontents = File.read(file)
+          filecontents = File.open(audio_file, 'rb') {|io| io.read}
 
-          filetype = CloudService.getMimeType file
+          filetype = CloudService.getMimeType audio_file
 
           headers = {
             :X_arg => "#{x_arg_val}",
@@ -83,7 +83,7 @@ module Att
         # @param opts [Hash] optional parameter hash
         # @option opts [String] :context The speech context 
         #   (default: GenericHints)
-        # @option opts [String] :grammar The type of grammar of the grammar file 
+        # @option opts [String] :grammar The type of grammar of the grammar file
         #   (default: x-grammar)
         # @option opts [String] :xargs Custom parameters to send along with the 
         #   request (default: "")
@@ -98,6 +98,8 @@ module Att
           dictionary_name = File.basename(dictionary)
           grammar_name = File.basename(grammar)
           filename = File.basename(audio_file)
+
+          filecontents = File.open(audio_file, "rb") {|io| io.read}
 
           dheaders = {
             "Content-Disposition" => %(form-data; name="x-dictionary"; filename="#{dictionary_name}"),
@@ -124,7 +126,7 @@ module Att
           }
           file_part = {
             :headers => fheaders,
-            :data => File.read(audio_file)
+            :data => filecontents
           }
 
           multipart = [dict_part, grammar_part, file_part]

@@ -1,7 +1,7 @@
 <?php
 namespace Att\Api\OAuth;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * OAuth Library

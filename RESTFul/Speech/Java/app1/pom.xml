@@ -19,9 +19,9 @@
       <version>1.7</version>
     </dependency>
     <dependency>
-      <groupId>com.metaparadigm</groupId>
-      <artifactId>json-rpc</artifactId>
-      <version>1.0</version>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20140107</version>
     </dependency>
     <dependency>
         <groupId>org.apache.commons</groupId>

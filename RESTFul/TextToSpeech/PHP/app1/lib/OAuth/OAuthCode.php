@@ -33,7 +33,7 @@ namespace Att\Api\OAuth;
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
-class OAuthCode
+final class OAuthCode
 {
     /**
      * Authorization code.

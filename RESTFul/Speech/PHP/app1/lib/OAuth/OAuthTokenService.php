@@ -60,7 +60,7 @@ use Att\Api\Restful\HttpPost;
  */
 class OAuthTokenService extends Service
 {
-    const URL_PATH = '/oauth/token';
+    const URL_PATH = '/oauth/v4/token';
 
     /**
      * URL to which request for an OAuth token will be sent.

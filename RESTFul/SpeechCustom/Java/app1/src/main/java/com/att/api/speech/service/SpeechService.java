@@ -1,7 +1,6 @@
 package com.att.api.speech.service;
 
 import java.io.File;
-import java.text.ParseException;
 
 import org.json.JSONObject;
 
@@ -109,12 +108,8 @@ public class SpeechService extends APIService {
             restClient.addHeader("X-SpeechSubContext", subContext);
         }
         APIResponse apiResponse = restClient.httpPost(audio);
-        try {
-            return SpeechResponse.valueOf(
-                    new JSONObject(apiResponse.getResponseBody()));
-        } catch (ParseException e) {
-            throw new RESTException(e);
-        }
+        return SpeechResponse.valueOf(
+                new JSONObject(apiResponse.getResponseBody()));
     }
 
     /**

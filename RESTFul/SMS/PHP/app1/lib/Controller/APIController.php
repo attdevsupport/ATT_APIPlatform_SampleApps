@@ -120,7 +120,7 @@ abstract class APIController
 
         // No token or token is expired... send token request
         if (!$token || $token->isAccessTokenExpired()) {
-            $codeURL = $this->oauthFQDN . '/oauth/authorize';
+            $codeURL = $this->oauthFQDN . '/oauth/v4/authorize';
             $codeRequest = new OAuthCodeRequest(
                 $codeURL, $this->clientId, $this->scope, 
                 $authorize_redirect_uri
@@ -200,7 +200,9 @@ abstract class APIController
     protected function clearSession($vnames) 
     {
         foreach ($vnames as $vname) {
-            unset($_SESSION[$vname]);
+            if (isset($_SESSION[$vname])) {
+                unset($_SESSION[$vname]);
+            }
         }
     }
 

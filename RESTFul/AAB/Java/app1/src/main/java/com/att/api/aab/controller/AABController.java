@@ -10,12 +10,17 @@ import javax.servlet.http.HttpSession;
 
 import com.att.api.aab.model.ConfigBean;
 import com.att.api.aab.service.AABService;
+import com.att.api.aab.service.Address;
 import com.att.api.aab.service.Contact;
 import com.att.api.aab.service.ContactResultSet;
+import com.att.api.aab.service.Email;
 import com.att.api.aab.service.Gender;
 import com.att.api.aab.service.Group;
 import com.att.api.aab.service.GroupResultSet;
+import com.att.api.aab.service.Im;
 import com.att.api.aab.service.PageParams;
+import com.att.api.aab.service.Phone;
+import com.att.api.aab.service.WebURL;
 import com.att.api.controller.APIController;
 import com.att.api.oauth.OAuthToken;
 
@@ -43,46 +48,6 @@ public class AABController extends APIController {
         "contactIdGroupsBtn",
     };
 
-    private Contact buildContact(HttpServletRequest request) {
-        final HttpSession session = request.getSession();
-        
-        Contact.Builder cbuilder = new Contact.Builder();
-
-        String attr = (String) session.getAttribute("firstName");
-        if (attr != null && !attr.isEmpty()) cbuilder.setFirstName(attr);
-        attr = (String) session.getAttribute("middleName");
-        if (attr != null && !attr.isEmpty()) cbuilder.setMiddleName(attr);
-        attr = (String) session.getAttribute("lastName");
-        if (attr != null && !attr.isEmpty()) cbuilder.setLastName(attr);
-        attr = (String) session.getAttribute("prefix");
-        if (attr != null && !attr.isEmpty()) cbuilder.setPrefix(attr);
-        attr = (String) session.getAttribute("suffix");
-        if (attr != null && !attr.isEmpty()) cbuilder.setSuffix(attr);
-        attr = (String) session.getAttribute("nickname");
-        if (attr != null && !attr.isEmpty()) cbuilder.setNickname(attr);
-        attr = (String) session.getAttribute("organization");
-        if (attr != null && !attr.isEmpty()) cbuilder.setOrganization(attr);
-        attr = (String) session.getAttribute("jobTitle");
-        if (attr != null && !attr.isEmpty()) cbuilder.setJobTitle(attr);
-        attr = (String) session.getAttribute("anniversary");
-        if (attr != null && !attr.isEmpty()) cbuilder.setAnniversary(attr);
-        attr = (String) session.getAttribute("gender");
-        if (attr != null && !attr.isEmpty()) cbuilder.setGender(Gender.fromString(attr));
-        attr = (String) session.getAttribute("spouse");
-        if (attr != null && !attr.isEmpty()) cbuilder.setSpouse(attr);
-        attr = (String) session.getAttribute("children");
-        if (attr != null && !attr.isEmpty()) cbuilder.setChildren(attr);
-        attr = (String) session.getAttribute("hobby");
-        if (attr != null && !attr.isEmpty()) cbuilder.setHobby(attr);
-        attr = (String) session.getAttribute("assistant");
-        if (attr != null && !attr.isEmpty()) cbuilder.setAssistant(attr);
-
-        //TODO: update to handle photos
-        //attr = (String) session.getAttribute("attachPhoto");
-        //if (attr != null) cbuilder.setPhoto(attr);
-
-        return cbuilder.build();
-    }
 
     public boolean handleCreateContact(HttpServletRequest request,
             HttpServletResponse response) {
@@ -104,6 +69,7 @@ public class AABController extends APIController {
             clearSession(request, params);
         } catch (Exception e) {
             clearSession(request, params);
+            e.printStackTrace();
             request.setAttribute("contactError", e.getMessage());
         }
         return false;
@@ -487,5 +453,188 @@ public class AABController extends APIController {
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doPost(request, response);
+    }
+
+    private Phone[] buildPhones(final HttpSession session) {
+        String[] phoneTypes = (String[]) session.getAttribute("phone[][type]");
+        String[] phoneNumber = (String[]) session.getAttribute("phone[][number]");
+
+        if (phoneTypes == null || phoneNumber == null) 
+            return null;
+
+        String p = (String) session.getAttribute("phonePref");
+        int phonePref = -1;
+        if (p != null)
+            phonePref = Integer.valueOf(p);
+
+        int size = phoneTypes.length;
+
+        Phone[] phones = new Phone[size];
+        for (int i = 0; i < size; ++i) {
+            boolean pref = (phonePref == i);
+            phones[i] = new Phone(phoneTypes[i], phoneNumber[i], pref);
+        }
+
+        return phones;
+    }
+
+    private Im[] buildIms(final HttpSession session) {
+        String[] imTypes = (String[]) session.getAttribute("im[][type]");
+        String[] imUri = (String[]) session.getAttribute("im[][uri]");
+
+        if (imTypes == null || imUri == null) 
+            return null;
+
+        String p = (String) session.getAttribute("imPref");
+        int imPref = -1;
+        if (p != null) 
+            imPref = Integer.valueOf(p);
+
+        int size = imTypes.length;
+
+        Im[] ims = new Im[size];
+        for (int i = 0; i < size; ++i) {
+            boolean pref = (imPref == i);
+            ims[i] = new Im(imTypes[i], imUri[i], pref);
+        }
+
+        return ims;
+    }
+
+    private Email[] buildEmails(final HttpSession session) {
+        String[] emailTypes = (String[]) session.getAttribute("email[][type]");
+        String[] emailAddress = (String[]) session.getAttribute("im[][email_address]");
+
+        if (emailTypes == null || emailAddress == null)
+            return null;
+
+        String p = (String) session.getAttribute("emailPref");
+        int emailPref = -1;
+        if (p != null)
+            emailPref = Integer.valueOf(p);
+
+        int size = emailTypes.length;
+
+        Email[] emails = new Email[size];
+        for (int i = 0; i < size; ++i) {
+            boolean pref = (emailPref == i);
+            emails[i] = new Email(emailTypes[i], emailAddress[i], pref);
+        }
+
+        return emails;
+    }
+
+    private WebURL[] buildWebUrls(final HttpSession session) {
+        String[] weburlType = (String[]) session.getAttribute("weburl[][type]");
+        String[] weburl = (String[]) session.getAttribute("weburl[][url]");
+
+        if (weburlType == null || weburl == null)
+            return null;
+
+        String p = (String) session.getAttribute("weburlPref");
+        int weburlPref = -1;
+        if (p != null)
+            weburlPref = Integer.valueOf(p);
+
+        int size = weburlType.length;
+
+        WebURL[] weburls = new WebURL[size];
+        for (int i = 0; i < size; ++i) {
+            boolean pref = (weburlPref == i);
+            weburls[i] = new WebURL(weburlType[i], weburl[i], pref);
+        }
+
+        return weburls;
+    }
+
+    private Address[] buildAddresses(final HttpSession session) {
+        String[] pobox = (String[]) session.getAttribute("address[][pobox]");
+        String[] addressLine1 = (String[]) session.getAttribute("address[][addressLine1]");
+        String[] addressLine2 = (String[]) session.getAttribute("address[][addressLine2]");
+        String[] city = (String[]) session.getAttribute("address[][city]");
+        String[] state = (String[]) session.getAttribute("address[][state]");
+        String[] zip = (String[]) session.getAttribute("address[][zip]");
+        String[] country = (String[]) session.getAttribute("address[][country]");
+        String[] type = (String[]) session.getAttribute("address[][type]");
+
+        if (addressLine1 == null)
+            return null;
+
+        String p = (String) session.getAttribute("addressPref");
+        int addressPref = -1;
+        if (p != null)
+            addressPref = Integer.valueOf(p);
+
+        int size = pobox.length;
+
+        Address[] addresses = new Address[size];
+        for (int i = 0; i < size; ++i) {
+            boolean pref = (addressPref == i);
+            addresses[i] = new Address.Builder()
+                .setPoBox(pobox[i])
+                .setAddrLineOne(addressLine1[i])
+                .setAddrLineTwo(addressLine2[i])
+                .setCity(city[i])
+                .setState(state[i])
+                .setZipcode(zip[i])
+                .setCountry(country[i])
+                .setType(type[i])
+                .setPreferred(pref)
+                .build();
+        }
+
+        return addresses;
+    }
+
+    private Contact buildContact(HttpServletRequest request) {
+        final HttpSession session = request.getSession();
+        
+        Contact.Builder cbuilder = new Contact.Builder();
+
+        String attr = (String) session.getAttribute("firstName");
+        if (attr != null && !attr.isEmpty()) cbuilder.setFirstName(attr);
+        attr = (String) session.getAttribute("middleName");
+        if (attr != null && !attr.isEmpty()) cbuilder.setMiddleName(attr);
+        attr = (String) session.getAttribute("lastName");
+        if (attr != null && !attr.isEmpty()) cbuilder.setLastName(attr);
+        attr = (String) session.getAttribute("prefix");
+        if (attr != null && !attr.isEmpty()) cbuilder.setPrefix(attr);
+        attr = (String) session.getAttribute("suffix");
+        if (attr != null && !attr.isEmpty()) cbuilder.setSuffix(attr);
+        attr = (String) session.getAttribute("nickname");
+        if (attr != null && !attr.isEmpty()) cbuilder.setNickname(attr);
+        attr = (String) session.getAttribute("organization");
+        if (attr != null && !attr.isEmpty()) cbuilder.setOrganization(attr);
+        attr = (String) session.getAttribute("jobTitle");
+        if (attr != null && !attr.isEmpty()) cbuilder.setJobTitle(attr);
+        attr = (String) session.getAttribute("anniversary");
+        if (attr != null && !attr.isEmpty()) cbuilder.setAnniversary(attr);
+        attr = (String) session.getAttribute("gender");
+        if (attr != null && !attr.isEmpty()) cbuilder.setGender(Gender.fromString(attr));
+        attr = (String) session.getAttribute("spouse");
+        if (attr != null && !attr.isEmpty()) cbuilder.setSpouse(attr);
+        attr = (String) session.getAttribute("children");
+        if (attr != null && !attr.isEmpty()) cbuilder.setChildren(attr);
+        attr = (String) session.getAttribute("hobby");
+        if (attr != null && !attr.isEmpty()) cbuilder.setHobby(attr);
+        attr = (String) session.getAttribute("assistant");
+        if (attr != null && !attr.isEmpty()) cbuilder.setAssistant(attr);
+
+        Phone[] phones = buildPhones(session);
+        if (phones != null) cbuilder.setPhones(phones);
+
+        Im[] ims = buildIms(session);
+        if (ims != null) cbuilder.setIms(ims);
+
+        Address[] addresses = buildAddresses(session);
+        if (addresses != null) cbuilder.setAddresses(addresses);
+
+        Email[] emails = buildEmails(session);
+        if (emails != null) cbuilder.setEmails(emails);
+
+        WebURL[] weburls = buildWebUrls(session);
+        if (weburls != null) cbuilder.setWeburls(weburls);
+
+        return cbuilder.build();
     }
 }

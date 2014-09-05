@@ -34,6 +34,18 @@ class HttpGet
         return $this;
     }
 
+    /**
+     * Sets query parameters using an array.
+     *
+     * @param array $arr associative array containing query parameters.
+     */
+    public function setParams($arr)
+    {
+        foreach($arr as $k => $v) {
+            $this->_params[$k] = $v;
+        }
+    }
+
     public function getQueryParameters()
     {
         if ($this->_params == null) {

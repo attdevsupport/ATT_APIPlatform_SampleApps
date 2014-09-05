@@ -29,7 +29,7 @@ module Att
         #   do not use unless you absolutely know what you are doing (default: '/oauth/authorize')
         def initialize(fqdn, client_id, client_secret, opts={}) 
           super(fqdn, client_id, client_secret, opts)
-          @auth_url = (opts[:auth_url] || '/oauth/authorize')
+          @auth_url = (opts[:auth_url] || '/oauth/v4/authorize')
           @redirect = opts[:redirect]
         end
 
@@ -43,7 +43,7 @@ module Att
         alias_method :authenticate_token, :createToken
 
         # Generate a url to redirect to in order to perform authentication
-        # and obtain a code to receive a token, if required.
+        #   and obtain a code to receive a token, if required.
         #
         # @param opts [Hash] Options hash for specifying extra parameters
         # @option opts [String] :scope the scope to authenticate with

@@ -365,7 +365,7 @@ public partial class Speech_App1 : System.Web.UI.Page
             {
                 DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
 
-                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.fqdn + "/oauth/token");
+                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.fqdn + "/oauth/v4/token");
                 accessTokenRequest.Method = "POST";
                 string oauthParameters = string.Empty;
                 if (type == AccessType.ClientCredential)
@@ -468,7 +468,7 @@ public partial class Speech_App1 : System.Web.UI.Page
             {
                 DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
 
-                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.fqdn + "/oauth/token");
+                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.fqdn + "/oauth/v4/token");
                 accessTokenRequest.Method = "POST";
 
                 string oauthParameters = "grant_type=refresh_token&client_id=" + this.apiKey + "&client_secret=" + this.secretKey + "&refresh_token=" + this.refreshToken;

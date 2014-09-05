@@ -80,19 +80,15 @@ public class MMSService extends APIService {
 
         JSONObject jvars = new JSONObject();
         jvars.put("outboundMessageRequest", outboundRequest);
-        try {
-            final String endpoint = getFQDN() + "/mms/v3/messaging/outbox";
-            APIResponse response =
-                new RESTClient(endpoint)
-                .setHeader("Content-Type", "application/json")
-                .setHeader("Accept", "application/json")
-                .addAuthorizationHeader(getToken())
-                .httpPost(jvars, fnames);
+        final String endpoint = getFQDN() + "/mms/v3/messaging/outbox";
+        APIResponse response =
+            new RESTClient(endpoint)
+            .setHeader("Content-Type", "application/json")
+            .setHeader("Accept", "application/json")
+            .addAuthorizationHeader(getToken())
+            .httpPost(jvars, fnames);
 
-            return new JSONObject(response.getResponseBody());
-        } catch (ParseException e) {
-            throw new RESTException(e);
-        }
+        return new JSONObject(response.getResponseBody());
     }
 
     /**
@@ -105,16 +101,12 @@ public class MMSService extends APIService {
     public JSONObject getMMSStatus(String mmsId) throws RESTException {
         // TODO (pk9069): avoid returning a JSONObject and move to explicit
         // model
-        try {
-            String endpoint = getFQDN() + "/mms/v3/messaging/outbox/" + mmsId;
-            APIResponse response =
-                new RESTClient(endpoint)
-                .setHeader("Accept", "application/json")
-                .addAuthorizationHeader(getToken())
-                .httpGet();
-            return new JSONObject(response.getResponseBody());
-        } catch (ParseException e) {
-            throw new RESTException(e);
-        }
+        String endpoint = getFQDN() + "/mms/v3/messaging/outbox/" + mmsId;
+        APIResponse response =
+            new RESTClient(endpoint)
+            .setHeader("Accept", "application/json")
+            .addAuthorizationHeader(getToken())
+            .httpGet();
+        return new JSONObject(response.getResponseBody());
     }
 }

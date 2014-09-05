@@ -27,7 +27,7 @@ module Att
           parsed_addresses = CloudService.format_addresses(addresses)
 
           # send in array if more than one, otherwise string
-          parsed_addresses = parsed_addresses.to_s unless parsed_addresses.size > 1
+          parsed_addresses = parsed_addresses[0] unless parsed_addresses.size > 1
 
           boundary = "#{((rand*10000000) + 10000000).to_i}.#{Time.new.to_i}"
 
@@ -122,8 +122,6 @@ module Att
           type    = /Content\-Type: image\/([^;]+)/.match(body[0])[1];
           date    = Time.now.utc
 
-          random  = rand(10_000_000).to_s
-
           text = parts.length > 4 ? Base64.decode64(parts[3].split("BASE64")[1]).strip : ""
 
           attachment = Base64.decode64 body[1]
@@ -135,3 +133,5 @@ module Att
     end
   end
 end
+
+#  vim: set ts=8 sw=2 tw=80 et :

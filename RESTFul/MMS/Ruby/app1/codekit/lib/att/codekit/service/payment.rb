@@ -148,7 +148,7 @@ module Att
             :Description => desc,
             :MerchantTransactionId => merch_trans_id,
             :MerchantProductId => merch_prod_id,
-            :MerchantSubscriptionId => merch_sub_id,
+            :MerchantSubscriptionIdList => merch_sub_id,
             :SubscriptionRecurrences => sub_recurrances,
             :MerchantPaymentRedirectUrl => redirect_uri,
             :SubscriptionPeriodAmount => sub_period_amount,
@@ -274,7 +274,7 @@ module Att
             :RefundReasonText => refund_reason_text,
           }.to_json
 
-          url = "#{@fqdn}#{SERVICE_URL::Transactions}/#{transaction_id}?#{action}"
+          url = "#{@fqdn}#{SERVICE_URL::Transactions}/#{transaction_id}?Action=#{action}"
 
           Model::TransactionRefund.createFromJson(self.put(url, payload))
         end
@@ -308,6 +308,7 @@ module Att
         # Get the notification details for specified id                            
         #                                                                          
         # @param notification_id [String] the notification id to request
+        # @deprecated
         def getNotification(notification_id)                                     
           url = "#{@fqdn}#{SERVICE_URL::Notifications}/#{notification_id}"           
 
@@ -320,6 +321,7 @@ module Att
         #   accessible by #getNotification
         #
         # @param notification_id [String] the id of the notification to remove
+        # @deprecated
         def ackNotification(notification_id)                                       
           url = "#{@fqdn}#{SERVICE_URL::Notifications}/#{notification_id}"
 

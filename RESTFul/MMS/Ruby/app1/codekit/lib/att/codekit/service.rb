@@ -162,8 +162,8 @@ module Att
         def self.query_param_string(query_params)
           parameters = Array.new
           query_params.each do |key,value|
-            unless value.nil?
-              parameters << %(#{key}=#{CGI.escape(Array(value).join(","))}) 
+            unless value.to_s.empty?
+              parameters << %(#{key}=#{CGI.escape(Array(value.strip).join(","))}) 
             end
           end
           parameters.join("&")
@@ -242,6 +242,7 @@ module Att
         end
       end
 
+      require_relative "service/aab" 
       require_relative "service/ads" 
       require_relative "service/speech" 
       require_relative "service/tts" 

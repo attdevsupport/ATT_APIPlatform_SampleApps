@@ -2,8 +2,13 @@
 
 Library for easy access to AT&T's cloud services.
 
+## Requirements
+
+Ruby 1.9.3 or higher (Ruby 2.1 recommended)
+
 ## Installation
 ### Easy install
+<<<<<<< HEAD
 
 Add the server host of the gem file:
 
@@ -11,6 +16,15 @@ Add the server host of the gem file:
 
 Install the gem:
 
+=======
+
+Add the server host of the gem file:
+
+    $ gem sources --add http://lprod.code-api-att.com:8808
+
+Install the gem:
+
+>>>>>>> 3ada9dc924e01727eceb6765ef3dc1bd1fd0ea2e
     $ gem install att-codekit
 
 ### Manual install
@@ -28,6 +42,22 @@ You can install per user by issuing:
 
 Substituting version for the compiled version to install
 
+## Documentation
+
+The Codekit contains inline documentation, which can be generated using
+yard doc via the yard command. Install by running
+
+    $ gem install yard
+
+For example, to generate the documentation which can then be viewed via browser
+run:
+  
+    $ yard server
+
+Then goto the specified address in your preferred web browser, usually:
+
+    http://localhost:8808
+
 ## Usage
 
 ###Require the library
@@ -43,6 +73,7 @@ Substituting version for the compiled version to install
 
 You will need to use AuthCode or ClientCred according to which api you wish to use.
 These immutable objects will perform all steps required for using oauth services.
+<<<<<<< HEAD
 
     # Create an authcode oauth service 
     authcode = AuthCode.new(fqdn, client_id, client_secret)
@@ -52,6 +83,17 @@ These immutable objects will perform all steps required for using oauth services
 
 ###Create token object
 
+=======
+
+    # Create an authcode oauth service 
+    authcode = AuthCode.new(fqdn, client_id, client_secret)
+
+    # Create a client credential oauth service
+    client = ClientCred.new(fqdn, client_id, client_secret)
+
+###Create token object
+
+>>>>>>> 3ada9dc924e01727eceb6765ef3dc1bd1fd0ea2e
 Now that we have an oauth service object we can use it to generate a token.
 
     # Authorization code must first redirect the user to grant authorization
@@ -69,3 +111,7 @@ Now to create an api service we just pass the oauth token to the api we want to 
     
     immn = IMMNService.new(fqdn, authToken)
     sms = SMSService.new(fqdn, clientToken)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3ada9dc924e01727eceb6765ef3dc1bd1fd0ea2e

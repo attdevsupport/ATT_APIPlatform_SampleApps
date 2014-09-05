@@ -147,7 +147,7 @@ final class ADSResponse
     }
 
     /**
-     * Createa an ADSResponse object from the specified array.
+     * Creates an ADSResponse object from the specified array.
      *
      * @param array $arr array to use for creating an ADSResponse object
      * 

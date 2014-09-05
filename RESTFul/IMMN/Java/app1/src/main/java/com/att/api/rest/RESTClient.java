@@ -700,7 +700,7 @@ public class RESTClient {
 
             HttpPost httpPost = new HttpPost(url);
             this.setHeader("Content-Type",
-                    "multipart/form-data; type=\"application/json\"; "
+                    "multipart/related; type=\"application/json\"; "
                     + "start=\"<startpart>\"; boundary=\"foo\"");
             addInternalHeaders(httpPost);
 

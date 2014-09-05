@@ -1,7 +1,6 @@
 package com.att.api.payment.controller;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -405,9 +404,6 @@ public class PaymentController extends APIController {
             request.setAttribute("subscriptions", createSubscriptionEntries(
                         subscriptionFile.getTransactionEntrys()));
         } catch (IOException e) {
-            // don't handle, print stack trace
-            e.printStackTrace();
-        } catch (ParseException e){
             // don't handle, print stack trace
             e.printStackTrace();
         }

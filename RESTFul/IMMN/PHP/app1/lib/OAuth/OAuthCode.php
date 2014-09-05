@@ -1,7 +1,7 @@
 <?php
 namespace Att\Api\OAuth;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * OAuth Library.
@@ -33,7 +33,7 @@ namespace Att\Api\OAuth;
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
-class OAuthCode
+final class OAuthCode
 {
     /**
      * Authorization code.

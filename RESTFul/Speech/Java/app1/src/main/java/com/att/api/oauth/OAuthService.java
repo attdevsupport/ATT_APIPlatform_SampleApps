@@ -14,12 +14,11 @@
 
 package com.att.api.oauth;
 
-import java.text.ParseException;
-
 import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
 import com.att.api.rest.RESTException;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -82,7 +81,7 @@ import org.json.JSONObject;
 public class OAuthService {
 
     /** Added to fqdn to use for sending OAuth requests. */
-    public static final String API_URL = "/oauth/token";
+    public static final String API_URL = "/oauth/v4/token";
 
     /** Fully qualified domain name. */
     private final String fqdn;
@@ -117,7 +116,7 @@ public class OAuthService {
             }
 
             return new OAuthToken(accessToken, expiresIn, refreshToken);
-        } catch (ParseException e) {
+        } catch (JSONException e) {
             String msg = e.getMessage();
             String err = "API Server returned unexpected result: " + msg;
             throw new RESTException(err);

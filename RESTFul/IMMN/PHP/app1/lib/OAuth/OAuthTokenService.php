@@ -1,7 +1,7 @@
 <?php
 namespace Att\Api\OAuth;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * OAuth Library
@@ -60,7 +60,7 @@ use Att\Api\Restful\HttpPost;
  */
 class OAuthTokenService extends Service
 {
-    const URL_PATH = '/oauth/token';
+    const URL_PATH = '/oauth/v4/token';
 
     /**
      * URL to which request for an OAuth token will be sent.

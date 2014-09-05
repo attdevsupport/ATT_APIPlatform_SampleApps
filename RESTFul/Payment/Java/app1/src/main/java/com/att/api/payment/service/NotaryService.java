@@ -1,7 +1,5 @@
 package com.att.api.payment.service;
 
-import java.text.ParseException;
-
 import org.json.JSONObject;
 
 import com.att.api.payment.model.Notary;
@@ -56,15 +54,11 @@ public class NotaryService extends APIService {
         this.setHeaders(client);
         APIResponse response = client.httpPost(rawStr);
 
-        try {
-            JSONObject jresponse = new JSONObject(response.getResponseBody());
-            String signedDoc = jresponse.getString("SignedDocument");
-            String signature = jresponse.getString("Signature");
+        JSONObject jresponse = new JSONObject(response.getResponseBody());
+        String signedDoc = jresponse.getString("SignedDocument");
+        String signature = jresponse.getString("Signature");
 
-            return new Notary(rawStr, signedDoc, signature);
-        } catch (ParseException e){
-            throw new RESTException(e);
-        }
+        return new Notary(rawStr, signedDoc, signature);
     }
 
     public Notary getTransactionNotary(Transaction args) throws RESTException {

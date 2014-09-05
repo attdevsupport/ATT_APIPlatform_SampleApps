@@ -1,7 +1,5 @@
 package com.att.api.payment.service;
 
-import java.text.ParseException;
-
 import com.att.api.oauth.OAuthToken;
 import com.att.api.payment.model.Notary;
 import com.att.api.payment.model.RefundReason;
@@ -41,11 +39,7 @@ public class PaymentService extends APIService {
             .addAuthorizationHeader(getToken())
             .httpGet();
 
-        try {
-            return new JSONObject(response.getResponseBody());
-        } catch (ParseException e) {
-            throw new RESTException(e);
-        }
+        return new JSONObject(response.getResponseBody());
     }
 
     private JSONObject sendTransOptStatus(String rReasonTxt, int rReasonCode, 
@@ -63,11 +57,7 @@ public class PaymentService extends APIService {
             .addAuthorizationHeader(getToken())
             .httpPut(req.toString());
 
-        try {
-            return new JSONObject(response.getResponseBody());
-        } catch (ParseException e) {
-            throw new RESTException(e);
-        }
+        return new JSONObject(response.getResponseBody());
     } 
         
     public PaymentService(String fqdn, OAuthToken token) {
@@ -112,11 +102,7 @@ public class PaymentService extends APIService {
             .addAuthorizationHeader(getToken())
             .httpPut("");
 
-        try {
-            return new JSONObject(response.getResponseBody());
-        } catch (ParseException e) {
-            throw new RESTException(e);
-        }
+        return new JSONObject(response.getResponseBody());
     }
 
     public JSONObject cancelSubscription(String subId, String reasonTxt, 

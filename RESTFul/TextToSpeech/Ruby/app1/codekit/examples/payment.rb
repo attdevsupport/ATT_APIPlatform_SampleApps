@@ -1,60 +1,64 @@
 #!/usr/bin/env ruby
-# This quickstart guide requires the Ruby codekit, which can be found at:
-# https://github.com/attdevsupport/codekit-ruby
+# This Quickstart Guide for the Payment API requires the Ruby code kit, 
+# which can be found at: https://github.com/attdevsupport/codekit-ruby
 
-# Make sure the att-codekit has been installed then require the class
+# Make sure that the att-codekit has been installed, then require the class.
 require 'att/codekit'
 
-# Include the name spaces to reduce the code required (Optional)
+# Include the name spaces to reduce the code required (Optional).
 include Att::Codekit
 include Att::Codekit::Service
 
-# Uncomment to set a proxy if required
+# If a proxy is required, uncomment the following line to set the proxy.
 # Transport.proxy("http://proxyaddress.com:port")
 
 # Use the application settings from developer.att.com for the following values.
-# Make sure Payment is enabled for the App key and App Secret.
+# Make sure that the API scope is set to PAYMENT for the Payment API before 
+# retrieving the App Key and App Secret.
 
-# Enter the value from 'App Key' field
+# Enter the value from 'App Key' field obtained at developer.att.com 
+# in your app account.
 client_id = 'ENTER VALUE!'
 
-# Enter the value from 'App Secret' field
+# Enter the value from 'App Secret' field obtained at developer.att.com 
+# in your app account.
 client_secret = 'ENTER VALUE!'
 
-# Set the fqdn to default of https://api.att.com
+# Set the fully-qualified domain name to: https://api.att.com
 fqdn = 'https://api.att.com'
 
-# Setup a client object for use with payment service
+# Set up a client object for use with the Payment API.
 client = Auth::Client.new(client_id, client_secret)
 
-# Create service for requesting an OAuth token
+# Create the service for requesting an OAuth access token.
 clientcred = Auth::ClientCred.new(fqdn, 
                                   client.id,
                                   client.secret)
 
-# Get OAuth token using the Payment scope
+# Get the OAuth access token using the API scope set to PAYMENT.
 token = clientcred.createToken('PAYMENT')
 
-# Create service for interacting with the Payment api
+# Create the service for interacting with the Payment API.
 payment = PaymentService.new(fqdn, token, client)
 
-# Define how much the product costs 
+# Specify how much the product costs.
 AMOUNT = 1
 
-# Give the item a description
+# Specify a description of the item.
 DESC = 'example game xtreme'
 
-# Define a uniq merchant transaction id
+# Specify a unique merchant transaction ID.
 MERCH_TRANS_ID = "example#{rand(1_000_000)}"
 
-# Set the merchant product id
+# Specify the merchant product ID.
 MERCH_PROD_ID = 'exampleGame'
 
-# Set the url to redirect to after authorizing a payment
+# Set the URI to redirect to after authorizing a payment.
 REDIRECT = 'http://localhost:123123/auth'
 
-# Consent Flow is required per purchase to authenticate the purchase by user
-# Note: Completing consent flow will charge the phone used to autenticate
+# A consent flow is required to perform authentication for each purchase. 
+# Completing the consent flow will charge the purchase to the phone used for 
+# autenticateauthentication. 
 puts payment.newTransaction(AMOUNT,
                             Categories::IN_APP_GAMES,
                             DESC,
@@ -62,27 +66,27 @@ puts payment.newTransaction(AMOUNT,
                             MERCH_PROD_ID,
                             REDIRECT)
 
-# Wait for user input after spawning auth flow
+# Wait for user input after spawning Authorization flow.
 puts
 puts "Please input the TransactionAuthCode from the query "
 puts "parameters after doing consent flow:"
 code = gets.strip
 
-# Get the transaction details
+# Get the transaction details.
 begin
   
-  # Obtain the status of the transaction via authentication code
+  # Obtain the status of the transaction using the OAuth authorization code.
   transaction = payment.getTransactionByAuthCode(code)
 
 rescue Exception => e
 
-  # There was an error in execution print what happened
-  puts "There was an error, the api returned the following error code:"
+  # Display any error codes returned by the API Gateway.
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simply display all the values
+  # Display all the values.
   transaction.each_pair do |key, value|
     puts "#{key}: #{value}"
   end
@@ -91,7 +95,7 @@ end
 
 puts
 
-# Refund the transaction made
+# Refund the test transaction that was just made.
 begin
   reason_code = RefundCodes::CP_Other
   reason_text = "Testing out the Payment API"
@@ -102,13 +106,13 @@ begin
 
 rescue Exception => e
 
-  # There was an error in execution print what happened
-  puts "There was an error, the api returned the following error code:"
+  # Display any error codes returned by the API Gateway.
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simply display all the values
+  # Display all of the values.
   refund.each_pair do |key, value|
     puts "#{key}: #{value}"
   end
@@ -120,8 +124,9 @@ puts
 MERCH_SUB_ID = "ExampleMerchSubID"
 RECURRANCES = '99999'
 
-# Consent Flow is required per purchase to authenticate the purchase by user
-# Note: Completing consent flow will charge the phone used to autenticate
+# A consent flow is required to perform authentication for each subscription 
+# purchase. Completing the consent flow will charge the purchase to the phone 
+# used for authentication.
 puts payment.newSubscription(AMOUNT,
                              Categories::IN_APP_GAMES,
                              DESC,
@@ -131,55 +136,55 @@ puts payment.newSubscription(AMOUNT,
                              RECURRANCES,
                              REDIRECT)
 
-# Wait for user input after spawning auth flow
+# Wait for user input after spawning authorization flow.
 puts "Please input the TransactionAuthCode from the query "
 puts "parameters after doing consent flow:"
 code = gets.strip
 
-# Get the subscription status
+# Get the subscription status.
 begin
 
-  # Obtain the status via authentication code
+  # Obtain the status using the OAuth authorization code.
   sub_status = payment.getSubscriptionByAuthCode(code)
 
 rescue Exception => e
 
-  # There was an error in execution print what happened
-  puts "There was an error, the api returned the following error code:"
+  # Display any error codes returned by the API Gateway.
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simply display all the values
+  # Display all of the values.
   sub_status.each_pair do |key, value|
     puts "#{key}: #{value}"
   end
 
 end
 
-# Get the subscription details
+# Get the subscription details.
 begin
 
-  # Obtain the details via consumer id and merchant subscription id
+  # Obtain the details using the consumer ID and merchant subscription ID.
   details = payment.getSubscriptionDetails(sub_status.consumer_id,
                                            sub_status.merchant_subscription_id)
 
 rescue Exception => e
 
-  # There was an error in execution print what happened
-  puts "There was an error, the api returned the following error code:"
+  # Display any error codes returned by the API Gateway.
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simply display all the values
+  # Display all of the values.
   details.each_pair do |key, value|
     puts "#{key}: #{value}"
   end
 
 end
 
-# Cancel and refund the subscription
+# Cancel and refund the subscription.
 begin
 
   reason_code = RefundCodes::Subscriber_Did_Not_Use
@@ -189,13 +194,13 @@ begin
 
 rescue Exception => e
 
-  # There was an error in execution print what happened
-  puts "There was an error, the api returned the following error code:"
+  # Display any error codes returned by the API Gateway.
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simply display all the values
+  # Display all of the values.
   refund.each_pair do |key, value|
     puts "#{key}: #{value}"
   end

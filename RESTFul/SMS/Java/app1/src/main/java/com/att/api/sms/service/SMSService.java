@@ -23,8 +23,6 @@ import com.att.api.service.APIService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.text.ParseException;
-
 /**
  * Used to interact with version 3 of the SMS API.
  *
@@ -86,13 +84,7 @@ public class SMSService extends APIService {
         final String responseBody = response.getResponseBody();
 
         JSONObject jsonResponse;
-        try {
-            jsonResponse = new JSONObject(responseBody);
-        } catch (ParseException pe) {
-            throw new RESTException("Invalid response from API Server"
-                    + ". ParseError: " + pe.getMessage());
-        }
-
+        jsonResponse = new JSONObject(responseBody);
         return jsonResponse;
     }
 
@@ -114,13 +106,7 @@ public class SMSService extends APIService {
         final String responseBody = response.getResponseBody();
 
         JSONObject jsonResponse;
-        try {
-            jsonResponse = new JSONObject(responseBody);
-        } catch (ParseException pe) {
-            throw new RESTException(
-                "Invalid response from API Server. ParseError: "
-                + pe.getMessage());
-        }
+        jsonResponse = new JSONObject(responseBody);
         return jsonResponse;
     }
 
@@ -145,12 +131,7 @@ public class SMSService extends APIService {
         final String responseBody = response.getResponseBody();
 
         JSONObject jsonResponse;
-        try {
-            jsonResponse = new JSONObject(responseBody);
-        } catch (ParseException pe) {
-            throw new RESTException("Invalid response from API Server"
-                    + ". ParseError: " + pe.getMessage());
-        }
-            return jsonResponse;
+        jsonResponse = new JSONObject(responseBody);
+        return jsonResponse;
     }
 }

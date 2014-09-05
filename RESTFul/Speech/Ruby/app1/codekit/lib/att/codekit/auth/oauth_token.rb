@@ -15,24 +15,28 @@ module Att
       class OAuthToken
         include Enumerable
 
-        attr_reader :access_token, :refresh_token 
+        attr_reader :access_token, :refresh_token, :expiry, :expires_in
         # @!attribute [r] access_token
         #   @return [String] token used for authentication
         # @!attribute [r] refresh_token
         #   @return [String] token used to refresh access_token if it expires
+        alias_method :access, :access_token
+        alias_method :refresh, :refresh_token
 
         # Construct an OAuthToken object
         #
-        # @note Due to overflow of the time object in ruby <= 1.8, if the expiry exceeds year 2038 it is set to never expire.
         # @param access_token [String] token used for authentication
-        # @param expiry [#to_i] a representation of time in seconds since epoch of when the token should expire. set nil if never expires
-        # @param refresh_token [String] token used for re-obtaining an access_token after expiry.
-        def initialize(access_token, expiry, refresh_token)
+        # @param expiry [#to_i] a representation of time in seconds since 
+        #   epoch of when the token should expire. set nil if never expires
+        # @param refresh_token [String] token used for re-obtaining an 
+        #   access_token after expiry.
+        # @param expires_in [#to_i]  the original api response 'unparsed' 
+        #   expires_in (default: nil)
+        def initialize(access_token, expiry, refresh_token, expires_in=nil)
           @access_token = access_token
           @refresh_token = refresh_token
-          if expiry
-            @expiry = expiry.to_i 
-          end
+          @expiry = expiry.to_i if expiry
+          @expires_in = expires_in
         end
 
         # Returns if this token can expire
@@ -44,20 +48,26 @@ module Att
 
         # Check if access token is expired 
         #
-        # @return [Boolean] true if access token is expired, false if it's valid.
+        # @return [Boolean] true if access token is expired, false if it's 
+        #   valid.
         def expired?
           can_expire? && @expiry < Time.now.to_i
         end
 
         # 'Each' definition for OAuthToken object
         #
-        # @yieldparam access_token [String] The access token used for authentication
+        # @yieldparam access_token [String] The access token used for 
+        #   authentication
         # @yieldparam expiry [Time] the time that the access token expires
-        # @yieldparam refresh_token [String] the token used to obtain an access token after expiry
+        # @yieldparam refresh_token [String] the token used to obtain an 
+        #   access token after expiry
+        # @yieldparam expires_in [Integer] the original api response 'unparsed' 
+        #   expires_in if not nil (for backwards compatibility)
         def each
           yield @access_token
           yield @expiry
           yield @refresh_token
+          yield @expires_in unless @expires_in.nil?
         end
 
         def eql?(other)
@@ -72,7 +82,7 @@ module Att
         def to_json(*a)
           {
             "json_class" => self.class.name,
-            "data" => [@access_token, @expiry, @refresh_token]
+            "data" => [@access_token, @expiry, @refresh_token, @expires_in]
           }.to_json(*a)
         end
 
@@ -100,13 +110,13 @@ module Att
             if expires_in
               #if expires_in is 0 then set expiration to 100 years
               if expires_in.to_i == 0
-                expires_in = Time.now.to_i + (60*60*24*365*100) - 30 
+                expiry = Time.now.to_i + (60*60*24*365*100) - 30 
               else
-                expires_in = Time.now.to_i + expires_in.to_i - 30 
+                expiry = Time.now.to_i + expires_in.to_i - 30 
               end
             end
 
-            new(access_token, expires_in, refresh_token)
+            new(access_token, expiry, refresh_token, expires_in)
           end
 
           # Deserialize a token object

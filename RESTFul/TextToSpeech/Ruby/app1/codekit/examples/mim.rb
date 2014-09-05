@@ -1,56 +1,59 @@
 #!/usr/bin/env ruby
-# This quickstart guide requires the Ruby codekit, which can be found at:
+# This Quickstart Guide requires the Ruby code kit, 
+# which can be found at: 
 # https://github.com/attdevsupport/codekit-ruby
 
-# Make sure the att-codekit has been installed then require the class
+# Make sure that the att-codekit has been installed, then require the class.
 require 'att/codekit'
 
-# Include the name spaces to reduce the code required (Optional)
+# Include the name spaces to reduce the code required (Optional).
 include Att::Codekit
 
-# Uncomment to set a proxy if required
+# If a proxy is required, uncomment the following line to set the proxy.
 # Transport.proxy("http://proxyaddress.com:port")
 
-# Use the app settings from developer.att.com for the following values.
-# Make sure IMMN is enabled for the app key/secret.
+# Use the app account settings from developer.att.com for the following values.
+# Make sure that the API scope is set to MIM before retrieving the App Key and App Secret.
 
-# Enter the value from 'App Key' field
+# Enter the value from 'App Key' field obtained at developer.att.com 
+# in your app account.
 client_id = 'ENTER VALUE!'
 
-# Enter the value from 'Secret' field
+# Enter the value from 'App Secret' field obtained at developer.att.com 
+# in your app account.
 client_secret = 'ENTER VALUE!'
 
-# Set the fqdn to default of https://api.att.com
+# Set the fully-qualified domain name to: https://api.att.com
 fqdn = 'https://api.att.com'
 
-# Set the redirect url for returning after consent flow
+# Set the redirect URI for returning after consent flow.
 base_redirect_url = "http://localhost:4567"
 
-# Create service for requesting an OAuth token
+# Create the service for requesting an OAuth access token.
 authcode = Auth::AuthCode.new(fqdn, 
                               client_id,
                               client_secret)
 
 
-# Authenticate the user. note: this requires a browser
+# Authenticate the user. Note: This requires a Web browser.
 
-# Obtain the url string that will be used for consent flow
+# Obtain the url string that is used for consent flow.
 consent_url = authcode.consentFlow(:redirect => base_redirect_url)
 
-# display a link with the consent flow url 
+# Display the link with the consent flow URI. 
 puts consent_url
 
-# Wait for user input after spawning consent flow
+# Wait for user input after spawning consent flow.
 puts "Please input the code in the query parameters after doing consent flow:" 
 code = gets.strip
 
-# Get the token using the authentication code
+# Get the OAuth access token using the OAuth authentication code.
 token = authcode.createToken(code)
 
-# Create a service for making the API call
+# Create a service for making the method request.
 mim = Service::MIMService.new(fqdn, token)
 
-# Obtain a list of messages sent to authenticated phone
+# Obtain a list of the messages sent to the authenticated phone.
 begin
 
   COUNT = 10
@@ -58,12 +61,12 @@ begin
   msg_list = mim.getMessageList(COUNT)
 
 rescue Service::ServiceException => e
-  puts "There was an error, the api returned the following error code:"
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simple dump of results
+  # Display the results.
   msg_list.each_pair do |attribute, value|
     puts "#{attribute}: \t#{value}"
   end
@@ -72,22 +75,23 @@ end
 
 puts
 
-# Obtain a message by ID
+# Obtain a message by ID.
 begin
 
-  # Note: this is redundant and only an example; message will contain the same
+  # Note: this property also returns the first message in the list and can be used to
+  # confirm the return value of the getMessage example that follows.
   # data as msg_list.messages.first
   
-  # Get the first message from above msg_list
+  # Get the first message from the previous msg_list.
   message = mim.getMessage(msg_list.messages.first.id)
 
 rescue Service::ServiceException => e
-  puts "There was an error, the api returned the following error code:"
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simple dump of results
+  # Display the results.
   message.each_pair do |attribute, value|
     puts "#{attribute}: \t#{value}"
   end
@@ -96,20 +100,20 @@ end
 
 puts
 
-# Obtain content of an mms message
+# Obtain the content of an MMS message.
 begin
 
-  # Note: you will only be able to obtain the content of an mms message
+  # Note: You will be able to only obtain the content of an MMS message.
   
   content = mim.getMessageContent(msg_list.messages.first.id)
 
 rescue Service::ServiceException => e
-  puts "There was an error, the api returned the following error code:"
+  puts "There was an error, the API Gateway returned the following error code:"
   puts "#{e.message}"
 
 else
 
-  # Simple dump of results
+  # Display the results.
   puts "Content type: #{content.content_type}"
   puts "Content length: #{content.content_length}"
   puts "Image? #{content.image?}"

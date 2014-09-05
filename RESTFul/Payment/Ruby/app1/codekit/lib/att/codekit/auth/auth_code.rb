@@ -29,7 +29,7 @@ module Att
         #   do not use unless you absolutely know what you are doing (default: '/oauth/authorize')
         def initialize(fqdn, client_id, client_secret, opts={}) 
           super(fqdn, client_id, client_secret, opts)
-          @auth_url = (opts[:auth_url] || '/oauth/authorize')
+          @auth_url = (opts[:auth_url] || '/oauth/v4/authorize')
           @redirect = opts[:redirect]
         end
 

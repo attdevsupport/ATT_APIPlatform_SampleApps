@@ -93,7 +93,7 @@ module Att
         #
         # @raise [ServiceException] contains the api response in case of failure
         # @return [Model::MessageContent] Message content object
-        def getMessageContent(message_id, part_number)
+        def getMessageContent(message_id, part_number=0)
           url = "#{@fqdn}#{SERVICE_URL}"
           url << "/#{CGI.escape(message_id.to_s)}/parts/#{part_number.to_i}"
 

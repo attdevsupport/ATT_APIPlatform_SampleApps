@@ -116,7 +116,7 @@ public partial class Ad_App1 : System.Web.UI.Page
             {
                 DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
 
-                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/token");
+                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/v4/token");
                 accessTokenRequest.Method = "POST";
                 string oauthParameters = string.Empty;
                 if (type == AccessType.ClientCredential)

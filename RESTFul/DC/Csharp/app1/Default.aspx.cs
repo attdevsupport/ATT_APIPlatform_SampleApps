@@ -253,7 +253,7 @@ public partial class DC_App1 : System.Web.UI.Page
         {
             DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
 
-            WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/token");
+            WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/v4/token");
             accessTokenRequest.Method = "POST";
 
             string oauthParameters = string.Empty;
@@ -348,7 +348,7 @@ public partial class DC_App1 : System.Web.UI.Page
     private void GetAuthCode()
     {
         Session["cs_dc_state"] = "FetchAuthCode";
-        Response.Redirect(this.endPoint + "/oauth/authorize?scope=" + this.scope + "&client_id=" + this.apiKey + "&redirect_url=" + this.authorizeRedirectUri);
+        Response.Redirect(this.endPoint + "/oauth/v4/authorize?scope=" + this.scope + "&client_id=" + this.apiKey + "&redirect_url=" + this.authorizeRedirectUri);
     }      
       
      /// <summary>

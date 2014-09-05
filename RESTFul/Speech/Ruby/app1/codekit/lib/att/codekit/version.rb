@@ -1,5 +1,5 @@
 module Att
   module Codekit
-    VERSION = "3.1.6"
+    VERSION = "4.2.0"
   end
 end

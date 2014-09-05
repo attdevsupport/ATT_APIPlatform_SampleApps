@@ -21,7 +21,6 @@ import com.att.api.rest.RESTClient;
 import com.att.api.rest.RESTException;
 import com.att.api.service.APIService;
 import org.json.JSONObject;
-import java.text.ParseException;
 
 /**
  * Used to interact with version 2 of the Device Capabilities API.
@@ -59,11 +58,7 @@ public class DCService extends APIService {
 
         final String responseBody = response.getResponseBody();
 
-        try {
-            JSONObject jsonResponse = new JSONObject(responseBody);
-            return DCResponse.valueOf(jsonResponse);
-        } catch (ParseException pe) {
-            throw new RESTException(pe);
-        }
+        JSONObject jsonResponse = new JSONObject(responseBody);
+        return DCResponse.valueOf(jsonResponse);
     }
 }

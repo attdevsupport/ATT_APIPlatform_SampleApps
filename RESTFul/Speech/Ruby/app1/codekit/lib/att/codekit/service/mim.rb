@@ -93,7 +93,7 @@ module Att
         #
         # @raise [ServiceException] contains the api response in case of failure
         # @return [Model::MessageContent] Message content object
-        def getMessageContent(message_id, part_number)
+        def getMessageContent(message_id, part_number=0)
           url = "#{@fqdn}#{SERVICE_URL}"
           url << "/#{CGI.escape(message_id.to_s)}/parts/#{part_number.to_i}"
 
@@ -107,7 +107,8 @@ module Att
 
         # Get the delta information related to state
         #
-        # @param state [#to_s] a representation of the state to get deltas against
+        # @param state [#to_s] a representation of the state to get deltas 
+        #   against
         #
         # @return [Model::DeltaResponse] object that contains the deltas
         def getDelta(state)
@@ -135,7 +136,7 @@ module Att
 
           list = Array.new
           Array(messages).each do |msg|
-            list << item = { 
+            list << { 
               "messageId" => msg.id.to_s,
               "isUnread" => msg.unread?.to_s,
               "isFavorite" => msg.favorite?.to_s
@@ -166,7 +167,7 @@ module Att
           item["isUnread"] = unread unless unread.nil?
           item["isFavorite"] = favorite unless favorite.nil?
 
-          payload = item.to_json
+          payload = { :message => item }.to_json
 
           begin
             response = self.put(url, payload)

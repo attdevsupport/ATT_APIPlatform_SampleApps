@@ -40,7 +40,7 @@ module Att
           @client_secret = client_secret
 
           @scope = opts[:scope]
-          @suburl = (opts[:suburl] || '/oauth/token')
+          @suburl = (opts[:suburl] || '/oauth/v4/token')
         end
 
         # Creates a new oauth token
