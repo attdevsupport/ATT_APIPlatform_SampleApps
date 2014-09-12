@@ -43,6 +43,13 @@ configure do
   @@token = nil
 end
 
+helpers do
+  def h(html)
+    Rack::Utils.escape_html(html)
+  end
+end
+
+
 #update listeners data before every request
 before do 
   begin

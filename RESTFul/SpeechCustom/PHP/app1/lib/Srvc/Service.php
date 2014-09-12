@@ -71,7 +71,6 @@ abstract class Service
         foreach ($successCodes as $successCode) {
             if ($responseCode == $successCode) {
                 return json_decode($responseBody, true);
-                break;
             }
         }
 

@@ -24,12 +24,6 @@ namespace Att\Api\Restful;
  * @link      http://developer.att.com
  */
 
-// CURL is required for this class to work 
-if (!function_exists('curl_init')) {
-    $err = 'RestfulRequest class requires the CURL extension for PHP.';
-    throw new Exception($err);
-}
-
 require_once __DIR__ . '/HttpMultipart.php';
 require_once __DIR__ . '/RestfulResponse.php';
 require_once __DIR__ . '/RestfulEnvironment.php';
@@ -37,8 +31,15 @@ require_once __DIR__ . '/HttpPost.php';
 require_once __DIR__ . '/HttpPut.php';
 require_once __DIR__ . '/HttpGet.php';
 
+use Exception;
 use RuntimeException;
 use Att\Api\OAuth\OAuthToken;
+
+// CURL is required for this class to work 
+if (!function_exists('curl_init')) {
+    $err = 'RestfulRequest class requires the CURL extension for PHP.';
+    throw new Exception($err);
+}
 
 /**
  * Used for sending restful requests. 
@@ -76,7 +77,7 @@ use Att\Api\OAuth\OAuthToken;
  * @category Network
  * @package  Restful 
  * @author   pk9069
- * @version  1.0
+ * @version  1.1
  * @license  http://developer.att.com/sdk_agreement AT&amp;T License
  * @link     http://developer.att.com
  */
@@ -98,8 +99,32 @@ class RestfulRequest
      */
     private $_url;
 
-
     private $_options;
+
+    private function _parseHeaders($headerStr)
+    {
+        $headers = array();
+
+        // 0x0D: carriage return
+        // 0x0A: newline
+        // 0x20: space
+        // 0x09: horizontal tab
+        $headerStr = preg_replace('/\x0D\x0A[\x20\x09]+/', "\x09", $headerStr);
+
+        $headerLines = explode("\x0D\x0A", $headerStr);
+
+        foreach($headerLines as $line) {
+            if (preg_match('/([^:]+): (.+)/m', $line, $matches)) {
+                $key = $matches[1];
+                $value = trim($matches[2]);
+
+                $headers[$key] = $value;
+            }
+        }
+
+        return $headers;
+    }
+
 
     private function _setInternalOptions($url) 
     {
@@ -109,6 +134,9 @@ class RestfulRequest
 
         // get result as a string instead of printing it out
         $this->_options[CURLOPT_RETURNTRANSFER] = true;
+
+        // return headers as part of response
+        $this->_options[CURLOPT_HEADER] = true;
 
         // set the URL
         $this->_options[CURLOPT_URL] = $url;
@@ -156,10 +184,12 @@ class RestfulRequest
             throw new RuntimeException(curl_error($connection));
         }
 
-        $headers = curl_getinfo($connection);
-        $responseCode = curl_getinfo($connection, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($connection, CURLINFO_HEADER_SIZE);
+        $headerStr = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+        $headers = $this->_parseHeaders($headerStr);
 
-        return new RestfulResponse($response, $responseCode, $headers);
+        return new RestfulResponse($body, $responseCode, $headers);
     }
 
     /**
@@ -170,7 +200,6 @@ class RestfulRequest
      */
     public function __construct($url) 
     {
-
         // TODO: Implement encoding
 
         $this->_chunked = false;
@@ -231,6 +260,8 @@ class RestfulRequest
         
         if ($post != null && $post->getBody() != null) {
             $this->_options[CURLOPT_POSTFIELDS] = $post->getBody();
+        } else {
+            $this->_options[CURLOPT_POSTFIELDS] = '';
         }
 
         return $this->_sendRequest($this->_url);
@@ -297,6 +328,23 @@ class RestfulRequest
         $this->_options[CURLOPT_PUT] = false;
 
         $this->_options[CURLOPT_CUSTOMREQUEST] = 'DELETE';
+
+        return $this->_sendRequest($this->_url);
+    }
+
+    public function sendHttpPatch(HttpPatch $patch=null)
+    {
+        $this->_options = array();
+
+        $this->_options[CURLOPT_HTTPGET] = false;
+        $this->_options[CURLOPT_POST] = false;
+        $this->_options[CURLOPT_PUT] = false;
+
+        $this->_options[CURLOPT_CUSTOMREQUEST] = 'PATCH';
+
+        if ($patch != null) {
+            $this->_options[CURLOPT_POSTFIELDS] = $patch->getBody();
+        }
 
         return $this->_sendRequest($this->_url);
     }

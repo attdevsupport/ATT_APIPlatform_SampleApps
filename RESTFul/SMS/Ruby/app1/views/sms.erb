@@ -39,15 +39,15 @@ For more information contact developer.support@att.com
           <a id="jump" href="#nav">Main Navigation</a></div>
         <ul class="links" id="nav">
           <li>
-            <a href="<%= settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
+            <a href="<%= h settings.source_link %>" target="_blank">Source<img src="images/opensource.png" /></a>
             <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-            <a href="<%= settings.download_link %>" target="_blank">Download<img src="images/download.png" /></a>
+            <a href="<%= h settings.download_link %>" target="_blank">Download<img src="images/download.png" /></a>
             <span class="divider"> |&nbsp;</span>
           </li>
           <li>
-            <a href="<%= settings.help_link %>" target="_blank">Help</a>
+            <a href="<%= h settings.help_link %>" target="_blank">Help</a>
           </li>
           <li id="back"><a href="#top">Back to top</a>
           </li>
@@ -62,7 +62,7 @@ For more information contact developer.support@att.com
           </div>
           <div id="introtext">
             <div>
-              <b>Server Time:&nbsp;</b><%= Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
+              <b>Server Time:&nbsp;</b><%= h Time.now.utc.strftime("%a, %B %d, %Y %H:%M:%S UTC") %></div>
             <div>
               <b>Client Time:</b>
               <script language="JavaScript" type="text/javascript">
@@ -86,7 +86,7 @@ For more information contact developer.support@att.com
               <div id="sendSMSdiv">
                 <h2>Feature 1: Send SMS</h2>
                 <form method="post" action="sendSms" name="sendSMSForm" id="sendSMSForm">
-                  <input placeholder="Address" name="address" id="address" type="text" value="<%= session[:sms1_address] %>" />
+                  <input placeholder="Address" name="address" id="address" type="text" value="<%= h session[:sms1_address] %>" />
                   <label>
                     Message
                     <select name="message" id="message">
@@ -103,14 +103,14 @@ For more information contact developer.support@att.com
                 <% if @send_error %>
                   <div class="errorWide">
                     <strong>ERROR: </strong><br>
-                    <%= @send_error %>
+                    <%= h @send_error %>
                   </div>
                 <% elsif @send %>
                   <div class="successWide">
                     <strong>SUCCESS: </strong><br>
-                    <strong>messageId: </strong><%= @send.id %><br>
+                    <strong>messageId: </strong><%= h @send.id %><br>
                     <% if @send.resource_url %>
-                      <strong>resourceURL: </strong><%= @send.resource_url %><br>
+                      <strong>resourceURL: </strong><%= h @send.resource_url %><br>
                     <% end %>
                   </div>
                 <% end %>
@@ -120,19 +120,19 @@ For more information contact developer.support@att.com
               <div id="getStatusdiv">
                 <h2>Feature 2: Get Delivery Status</h2>
                 <form method="post" action="getDeliveryStatus" name="getStatusForm" id="getStatusForm">
-                  <input placeholder="Message ID" name="messageId" id="messageId" type="text" value="<%= session[:sms_id] %>" />
+                  <input placeholder="Message ID" name="messageId" id="messageId" type="text" value="<%= h session[:sms_id] %>" />
                   <button type="submit" class="submit" name="getStatus" id="getStatus">Get Status</button>
                 </form>
                 <% if @delivery_error %>
                   <div class="errorWide">
                     <strong>ERROR: </strong><br>
-                    <%= @delivery_error %>
+                    <%= h @delivery_error %>
                   </div>
                 <% elsif @status %>
                   <div class="successWide">
                     <strong>SUCCESS: </strong><br>
                     <% if @status_resource_url %>
-                      <strong>ResourceUrl: </strong><%= @status_resource_url %><br>
+                      <strong>ResourceUrl: </strong><%= h @status_resource_url %><br>
                     <% end %>
                   </div>
                   <table>
@@ -147,9 +147,9 @@ For more information contact developer.support@att.com
                       <% if @status.delivery_info %>
                         <% @status.delivery_info.each do |info| %>
                           <tr>
-                            <td data-value="Message Id"><%= info.id %></td>
-                            <td data-value="Address"><%= info.address %></td>
-                            <td data-value="Delivery Status"><%= info.status %></td>
+                            <td data-value="Message Id"><%= h info.id %></td>
+                            <td data-value="Address"><%= h info.address %></td>
+                            <td data-value="Delivery Status"><%= h info.status %></td>
                           </tr>
                         <% end %>
                       <% end %>
@@ -180,9 +180,9 @@ For more information contact developer.support@att.com
                           <% notification = status["deliveryInfoNotification"] %>
                           <% info = notification["deliveryInfo"] %>
                           <tr>
-                            <td data-value="Message ID"><%= notification["messageId"] %></td>
-                            <td data-value="Address"><%= info["address"] %></td>
-                            <td data-value="Delivery Status"><%= info["deliveryStatus"] %></td>
+                            <td data-value="Message ID"><%= h notification["messageId"] %></td>
+                            <td data-value="Address"><%= h info["address"] %></td>
+                            <td data-value="Delivery Status"><%= h info["deliveryStatus"] %></td>
                           </tr>
                         <% end %>
                       </tbody>
@@ -192,7 +192,7 @@ For more information contact developer.support@att.com
               <div class="lightBorder">
               </div>
               <div id="getMessagesDiv">
-                <h2>Feature 4: Get Messages <%= settings.short_code_1 %></h2>
+                <h2>Feature 4: Get Messages <%= h settings.short_code_1 %></h2>
                 <form method="post" action="getReceivedSms" name="getMessagesForm" id="getMessagesForm">
                   <button type="submit" class="submit" name="getMessages" id="getMessages">
                     Get Messages</button>
@@ -200,13 +200,13 @@ For more information contact developer.support@att.com
                 <% if @received_error %>
                   <div class="errorWide">
                     <strong>ERROR: </strong><br>
-                    <%= @received_error %>
+                    <%= h @received_error %>
                   </div>
                 <% elsif @messages %>
                   <div class="successWide">
                     <strong>SUCCESS:</strong><br>
-                    <strong>Messages in this batch: <strong><%= @messages.count %><br>
-                      <strong>Messages pending: <strong><%= @messages.pending %><br>
+                    <strong>Messages in this batch: <strong><%= h @messages.count %><br>
+                      <strong>Messages pending: <strong><%= h @messages.pending %><br>
                       </div>
                       <table>
                         <thead>
@@ -222,9 +222,9 @@ For more information contact developer.support@att.com
                               @messages.messages.each do |msg|
                             %>
                             <tr>
-                              <td data-value="Message Index"><%= msg.id %></td>
-                              <td data-value="Message Text"><%= msg.message %></td>
-                              <td data-value="Sender Address"><%= msg.sender %></td>
+                              <td data-value="Message Index"><%= h msg.id %></td>
+                              <td data-value="Message Text"><%= h msg.message %></td>
+                              <td data-value="Sender Address"><%= h msg.sender %></td>
                             </tr>
                           <% end %>
                         <% end %>
@@ -235,7 +235,7 @@ For more information contact developer.support@att.com
               <div class="lightBorder">
               </div>
               <div id="receiveMsgs">
-                <h2>Feature 5: Receive Messages <%= settings.short_code_2 %></h2>
+                <h2>Feature 5: Receive Messages <%= h settings.short_code_2 %></h2>
                 <form method="get" action="receiveMessages" name="receiveMessagesForm" id="receiveMessagesForm">
                   <button type="submit" class="submit" name="receiveMessages" id="receiveMessages">
                     Refresh Received Messages</button>
@@ -254,11 +254,11 @@ For more information contact developer.support@att.com
                     <tbody>
                       <% @message_listener.each do |msg| %>
                         <tr>
-                          <td data-value="DateTime"> <%= msg['DateTime'] %></td>
-                          <td data-value="Message Id"><%= msg['MessageId'] %></td>
-                          <td data-value="Message"> <%= msg['Message'] %></td>
-                          <td data-value="Sender Address"><%= msg['SenderAddress'] %></td>
-                          <td data-value="Destination Address"><%= msg['DestinationAddress'] %></td>
+                          <td data-value="DateTime"> <%= h msg['DateTime'] %></td>
+                          <td data-value="Message Id"><%= h msg['MessageId'] %></td>
+                          <td data-value="Message"> <%= h msg['Message'] %></td>
+                          <td data-value="Sender Address"><%= h msg['SenderAddress'] %></td>
+                          <td data-value="Destination Address"><%= h msg['DestinationAddress'] %></td>
                         </tr>
                       <% end %>
                   </tbody>

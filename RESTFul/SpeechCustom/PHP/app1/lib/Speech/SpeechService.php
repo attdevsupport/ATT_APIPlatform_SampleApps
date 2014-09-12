@@ -185,21 +185,23 @@ class SpeechService extends APIService
      * @param string $gfname path to file that contains grammar.
      * @param string $dfname path to file that contains dictionary.
      * @param string $xArg   optional arguments.
+     * @param string $lang   language used to set the Content-Language header.
      *
      * @return array API response as an array of key-value pairs.
      * @throws ServiceException if API request was not successful.
      */
     public function speechToTextCustom($cntxt, $fname, $gfname = null, 
-        $dfname = null, $xArg = null
+        $dfname = null, $xArg = null, $lang = 'en-US'
     ) {
         $endpoint = $this->getFqdn() . '/speech/v3/speechToTextCustom';
         $mpart = new SpeechMultipartBody();
 
         $req = new RESTFulRequest($endpoint);
         $req
+            ->setHeader('X-SpeechContext', $cntxt)
             ->setHeader('Accept', 'application/json')
-            ->setAuthorizationHeader($this->getToken())
-            ->setHeader('Content-Type', $mpart->getContentType());
+            ->setHeader('Content-Language', $lang)
+            ->setAuthorizationHeader($this->getToken());
         
         if ($xArg != null) {
             $req->setHeader('X-Arg', $xArg);

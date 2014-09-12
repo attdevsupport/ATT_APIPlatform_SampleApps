@@ -24,7 +24,6 @@ class HttpGet
      */
     public function setParam($name, $value) 
     {
-
         // lazy init
         if ($this->_params == null) {
             $this->_params = array();
@@ -32,6 +31,18 @@ class HttpGet
 
         $this->_params[$name] = $value;
         return $this;
+    }
+
+    /**
+     * Sets query parameters using an array.
+     *
+     * @param array $arr associative array containing query parameters.
+     */
+    public function setParams($arr)
+    {
+        foreach($arr as $name => $value) {
+            $this->setParam($name, $value);
+        }
     }
 
     public function getQueryParameters()
