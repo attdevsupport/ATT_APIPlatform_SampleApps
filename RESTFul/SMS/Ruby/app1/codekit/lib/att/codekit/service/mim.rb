@@ -1,8 +1,16 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
-# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
-# Property. All rights reserved. http://developer.att.com For more information
-# contact developer.support@att.com
+# Copyright 2014 AT&T
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'cgi'
 require 'json'
@@ -61,8 +69,12 @@ module Att
             url << %(&#{key}=#{CGI.escape(Array(value).join(","))}) unless value.nil?
           end
           
+          headers = {
+            :Accept => "application/json",
+          }
+
           begin
-            response = self.get(url)
+            response = self.get(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -78,8 +90,12 @@ module Att
         def getMessage(id)
           url = "#{@fqdn}#{SERVICE_URL}/#{CGI.escape(id.to_s)}"
 
+          headers = {
+            :Accept => "application/json",
+          }
+
           begin
-            response = self.get(url)
+            response = self.get(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -115,8 +131,12 @@ module Att
           url = "#{@fqdn}#{DELTA_URL}"
           url << "?state=#{CGI.escape(state.to_s)}"
 
+          headers = {
+            :Accept => "application/json",
+          }
+
           begin
-            response = self.get(url)
+            response = self.get(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -144,8 +164,13 @@ module Att
           end
           payload = { "messages" => list }.to_json
 
+          headers = {
+            :Accept => "application/json",
+            :Content_Type => "application/json",
+          }
+
           begin
-            response = self.put(url, payload)
+            response = self.put(url, payload, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -169,8 +194,13 @@ module Att
 
           payload = { :message => item }.to_json
 
+          headers = {
+            :Accept => "application/json",
+            :Content_Type => "application/json",
+          }
+
           begin
-            response = self.put(url, payload)
+            response = self.put(url, payload, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -204,8 +234,12 @@ module Att
         def getIndexInfo
           url = "#{@fqdn}#{SERVICE_URL}/index/info"
 
+          headers = {
+            :Accept => "application/json",
+          }
+
           begin
-            response = self.get(url)
+            response = self.get(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -242,8 +276,12 @@ module Att
           url = "#{@fqdn}#{NOTIFICATION_URL}"
           url << "?queues=#{CGI.escape(queues.to_s)}"
 
+          headers = {
+            :Accept => "application/json",
+          }
+
           begin
-            response = self.get(url)
+            response = self.get(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end

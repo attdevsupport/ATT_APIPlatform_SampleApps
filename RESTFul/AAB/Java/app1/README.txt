@@ -1,11 +1,3 @@
-<!--
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 
-2013 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-http://developer.att.com/sdk_agreement/ Copyright 2013 AT&T Intellectual
-Property. All rights reserved. http://developer.att.com For more information
-contact developer.support@att.com -->
--->
-
 AT&T API Platform Sample Application
 -------------------------------------
 
@@ -21,7 +13,7 @@ based on the generated API keys and secrets.
   registered with the proper services and endpoints, depending on the type of
   client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login
+  To register an application, go to https://developer.att.com/apis/oauth-2/docs and login
   with your valid username and password.  Next, choose "My Apps" from the bar
   at the top of the page and click the "Setup a New Application" button. 
 
@@ -43,10 +35,7 @@ based on the generated API keys and secrets.
 
   Depending on the kind of authentication used, an application may be based on
   either the Autonomous Client or the Web-Server Client OAuth flow (see
-  https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow
-  or
-  https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow
-  respectively).
+  https://developer.att.com/apis/oauth-2/docs).
 
 
 2. Installation

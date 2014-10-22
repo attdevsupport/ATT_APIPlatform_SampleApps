@@ -1,34 +1,21 @@
 <?php
 namespace Att\Api\Restful;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
-
-/**
- * Restful Library.
- * 
- * PHP version 5.4+
- * 
- * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2014. 
- * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
- * http://developer.att.com/sdk_agreement/
+/*
+ * Copyright 2014 AT&T
  *
- * Copyright 2014 AT&T Intellectual Property. All rights reserved.
- * For more information contact developer.support@att.com
- * 
- * @category  Network
- * @package   Restful
- * @author    pk9069
- * @copyright 2014 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&amp;T License
- * @link      http://developer.att.com
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-// CURL is required for this class to work 
-if (!function_exists('curl_init')) {
-    $err = 'RestfulRequest class requires the CURL extension for PHP.';
-    throw new Exception($err);
-}
 
 require_once __DIR__ . '/HttpMultipart.php';
 require_once __DIR__ . '/RestfulResponse.php';
@@ -37,8 +24,15 @@ require_once __DIR__ . '/HttpPost.php';
 require_once __DIR__ . '/HttpPut.php';
 require_once __DIR__ . '/HttpGet.php';
 
+use Exception;
 use RuntimeException;
 use Att\Api\OAuth\OAuthToken;
+
+// CURL is required for this class to work 
+if (!function_exists('curl_init')) {
+    $err = 'RestfulRequest class requires the CURL extension for PHP.';
+    throw new Exception($err);
+}
 
 /**
  * Used for sending restful requests. 
@@ -76,8 +70,8 @@ use Att\Api\OAuth\OAuthToken;
  * @category Network
  * @package  Restful 
  * @author   pk9069
- * @version  1.0
- * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @version  Release: @package_version@
+ * @license  http://www.apache.org/licenses/LICENSE-2.0
  * @link     http://developer.att.com
  */
 class RestfulRequest
@@ -98,8 +92,32 @@ class RestfulRequest
      */
     private $_url;
 
-
     private $_options;
+
+    private function _parseHeaders($headerStr)
+    {
+        $headers = array();
+
+        // 0x0D: carriage return
+        // 0x0A: newline
+        // 0x20: space
+        // 0x09: horizontal tab
+        $headerStr = preg_replace('/\x0D\x0A[\x20\x09]+/', "\x09", $headerStr);
+
+        $headerLines = explode("\x0D\x0A", $headerStr);
+
+        foreach($headerLines as $line) {
+            if (preg_match('/([^:]+): (.+)/m', $line, $matches)) {
+                $key = $matches[1];
+                $value = trim($matches[2]);
+
+                $headers[$key] = $value;
+            }
+        }
+
+        return $headers;
+    }
+
 
     private function _setInternalOptions($url) 
     {
@@ -109,6 +127,9 @@ class RestfulRequest
 
         // get result as a string instead of printing it out
         $this->_options[CURLOPT_RETURNTRANSFER] = true;
+
+        // return headers as part of response
+        $this->_options[CURLOPT_HEADER] = true;
 
         // set the URL
         $this->_options[CURLOPT_URL] = $url;
@@ -156,10 +177,12 @@ class RestfulRequest
             throw new RuntimeException(curl_error($connection));
         }
 
-        $headers = curl_getinfo($connection);
-        $responseCode = curl_getinfo($connection, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($connection, CURLINFO_HEADER_SIZE);
+        $headerStr = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+        $headers = $this->_parseHeaders($headerStr);
 
-        return new RestfulResponse($response, $responseCode, $headers);
+        return new RestfulResponse($body, $responseCode, $headers);
     }
 
     /**
@@ -170,7 +193,6 @@ class RestfulRequest
      */
     public function __construct($url) 
     {
-
         // TODO: Implement encoding
 
         $this->_chunked = false;
@@ -231,6 +253,8 @@ class RestfulRequest
         
         if ($post != null && $post->getBody() != null) {
             $this->_options[CURLOPT_POSTFIELDS] = $post->getBody();
+        } else {
+            $this->_options[CURLOPT_POSTFIELDS] = '';
         }
 
         return $this->_sendRequest($this->_url);
@@ -301,6 +325,24 @@ class RestfulRequest
         return $this->_sendRequest($this->_url);
     }
 
+    public function sendHttpPatch(HttpPatch $patch=null)
+    {
+        $this->_options = array();
+
+        $this->_options[CURLOPT_HTTPGET] = false;
+        $this->_options[CURLOPT_POST] = false;
+        $this->_options[CURLOPT_PUT] = false;
+
+        $this->_options[CURLOPT_CUSTOMREQUEST] = 'PATCH';
+
+        if ($patch != null) {
+            $this->_options[CURLOPT_POSTFIELDS] = $patch->getBody();
+        }
+
+        return $this->_sendRequest($this->_url);
+    }
+
 }
 
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 ?>

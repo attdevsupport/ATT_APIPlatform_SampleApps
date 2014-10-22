@@ -4,7 +4,7 @@
   <groupId>com.att.api</groupId>
   <artifactId>aab</artifactId>
   <packaging>war</packaging>
-  <version>1.0</version>
+  <version>2.3</version>
   <name>AAB Sample App</name>
   <url>http://maven.apache.org</url>
 

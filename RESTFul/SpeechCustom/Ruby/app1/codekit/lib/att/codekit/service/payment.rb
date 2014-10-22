@@ -1,8 +1,16 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
-# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
-# Property. All rights reserved. http://developer.att.com For more information
-# contact developer.support@att.com
+# Copyright 2014 AT&T
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'json'
 require_relative '../model/payment'
@@ -177,7 +185,13 @@ module Att
           raise ServiceException, "Unknown Transaction type: " + transaction_type unless TransactionType.const_defined? transaction_type
           url = "#{@fqdn}#{SERVICE_URL::Transactions}/#{transaction_type}/#{transaction_id}"
 
-          Model::TransactionStatus.createFromJson(self.get(url))
+          headers = {
+            :Accept => 'application/json',
+          }
+
+          response = self.get(url, headers)
+
+          Model::TransactionStatus.createFromJson(response)
         end
 
         # Get the transaction status based on transaction id
@@ -220,7 +234,12 @@ module Att
           raise ServiceException, "Unknown Subscription type: " + subscription_type unless SubscriptionType.const_defined? subscription_type
           url = "#{@fqdn}#{SERVICE_URL::Subscriptions}/#{subscription_type}/#{subscription_id}"
 
-          Model::SubscriptionStatus.createFromJson(self.get(url))
+          headers = {
+            :Accept => 'application/json',
+          }
+
+          response = self.get(url, headers)
+          Model::SubscriptionStatus.createFromJson(response)
         end
 
         def getSubscriptionByAuthCode(auth_code)
@@ -248,7 +267,11 @@ module Att
         def getSubscriptionDetails(consumer_id, merchant_subscription_id)
           url = "#{@fqdn}#{SERVICE_URL::Subscriptions}/#{merchant_subscription_id}/Detail/#{consumer_id}"
 
-          Model::SubscriptionDetails.createFromJson(self.get(url))
+          headers = {
+            :Accept => 'application/json',
+          }
+          response = self.get(url, headers)
+          Model::SubscriptionDetails.createFromJson(response)
         end
 
         # Refund a previous transaction
@@ -268,15 +291,21 @@ module Att
                               action="refund")
           raise ServiceException, "Unknown Transaction state: " + transaction_state unless TransactionState.const_defined? transaction_state
 
+          url = "#{@fqdn}#{SERVICE_URL::Transactions}/#{transaction_id}?Action=#{action}"
+
           payload = {
             :TransactionOperationStatus => transaction_state,
             :RefundReasonCode => refund_reason,
             :RefundReasonText => refund_reason_text,
           }.to_json
 
-          url = "#{@fqdn}#{SERVICE_URL::Transactions}/#{transaction_id}?Action=#{action}"
+          headers = {
+            :Accept => 'application/json',
+            :Content_Type => 'application/json',
+          }
 
-          Model::TransactionRefund.createFromJson(self.put(url, payload))
+          response = self.put(url, payload, headers)
+          Model::TransactionRefund.createFromJson(response)
         end
         alias_method :refundSubscription, :refundTransaction
 
@@ -298,6 +327,8 @@ module Att
           url = "#{@fqdn}#{SERVICE_URL::NotarySignature}"
 
           headers = {
+            :Accept => "application/json",
+            :Content_Type => "application/json",
             'client_id' => @client.id,
             'client_secret' => @client.secret
           }
@@ -312,7 +343,11 @@ module Att
         def getNotification(notification_id)                                     
           url = "#{@fqdn}#{SERVICE_URL::Notifications}/#{notification_id}"           
 
-          self.get(url)
+          headers = {
+            :Accept => "application/json",
+          }
+
+          self.get(url, headers)
         end                                                                        
 
         # Acknowledge/Delete a notification
@@ -325,7 +360,11 @@ module Att
         def ackNotification(notification_id)                                       
           url = "#{@fqdn}#{SERVICE_URL::Notifications}/#{notification_id}"
 
-          self.put(url, "") 
+          headers = {
+            :Accept => 'application/json',
+          }
+
+          self.put(url, "", headers) 
         end    
         alias_method :deleteNotification, :ackNotification
 

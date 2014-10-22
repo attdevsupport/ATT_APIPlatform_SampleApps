@@ -2,20 +2,14 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="dateutil" class="com.att.api.util.DateUtil" scope="request">
 </jsp:useBean>
-<!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2014 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
--->
 <html lang="en"> 
   <head> 
     <title>AT&amp;T Sample DC Application - Get Device Capabilities Application</title>
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <link rel="stylesheet" type="text/css" href="style/common.css">
     <script type="text/javascript">
-	    var _gaq = _gaq || [];
-	    _gaq.push(['_setAccount', 'UA-33466541-1']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
         _gaq.push(['_trackPageview']);
 
         (function () {
@@ -134,11 +128,11 @@ For more information contact developer.support@att.com
         product. The data in these pages is for test purposes only and
         intended only for use as a reference in how the services perform.
         <br /><br />
-        For download of tools and documentation, please go to 
-        <a href="https://devconnect-api.att.com/" 
-          target="_blank">https://devconnect-api.att.com</a>
-        <br> For more information contact 
-        <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+        To access your apps, please go to
+        <a href="https://developer.att.com/developer/mvc/auth/login"
+        target="_blank">https://developer.att.com/developer/mvc/auth/login</a>
+        <br> For support refer to
+        <a href="https://developer.att.com/support">https://developer.att.com/support</a>
         <br /><br />
         &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. 
         <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>

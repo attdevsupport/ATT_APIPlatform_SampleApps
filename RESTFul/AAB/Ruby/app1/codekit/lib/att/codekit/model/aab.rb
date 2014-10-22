@@ -1,8 +1,16 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
-# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
-# Property. All rights reserved. http://developer.att.com For more information
-# contact developer.support@att.com
+# Copyright 2014 AT&T
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'json'
 require 'immutable_struct'
@@ -176,7 +184,7 @@ module Att
       end
 
       class MyContactInfo < Contact
-        def createFromParsedJson(json)
+        def self.createFromParsedJson(json)
           root = (json["myInfo"] || json)
           super(root)
         end
@@ -258,7 +266,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["address"] || json)
+          root = json.is_a?(Array) ? json : (json["address"] || json)
 
           type = root["type"]
           pref = root["preferred"]
@@ -290,7 +298,7 @@ module Att
         def self.createFromParsedJson(json)
           return Array.new if json.nil?
 
-          root = (json["emails"] || json)
+          root = (json["email"] || json)
 
           emails = Array.new
           Array(root).each do |email|
@@ -343,7 +351,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["email"] || json)
+          root = json.is_a?(Array) ? json : (json["email"] || json)
 
           type = root["type"]
           addr = root["emailAddress"]
@@ -363,7 +371,7 @@ module Att
         def self.createFromParsedJson(json)
           return Array.new if json.nil?
 
-          root = (json["ims"] || json)
+          root = (json["im"] || json)
 
           ims = Array.new
           Array(root).each do |im|
@@ -412,7 +420,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["im"] || json)
+          root = json.is_a?(Array) ? json : (json["im"] || json)
 
           type = root["type"]
           uri = root["imUri"]
@@ -436,7 +444,7 @@ module Att
 
           phones = Array.new
           Array(root).each do |phone|
-            phones << Phones.createFromParsedJson(phone)
+            phones << Phone.createFromParsedJson(phone)
           end
           phones
         end
@@ -477,7 +485,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["phone"] || json)
+          root = json.is_a?(Array) ? json : (json["phone"] || json)
 
           type = root["type"]
           num = root["number"]
@@ -498,7 +506,7 @@ module Att
         def self.createFromParsedJson(json)
           return Array.new if json.nil?
 
-          root = (json["weburls"] || json)
+          root = (json["webUrl"] || json)
 
           weburls = Array.new
           Array(root).each do |weburl|
@@ -537,7 +545,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["weburl"] || json)
+          root = json.is_a?(Array) ? json : (json["weburl"] || json)
 
           type = root["type"]
           url = root["url"]
@@ -597,7 +605,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["snapi"] || json)
+          root = json.is_a?(Array) ? json : (json["snapi"] || json)
 
           type = root["type"]
           uri = root["uri"]
@@ -633,7 +641,7 @@ module Att
         def self.createFromParsedJson(json)
           return nil if json.nil?
 
-          root = (json["photo"] || json)
+          root = json.is_a?(Array) ? json : (json["photo"] || json)
 
           encoding = root["encoding"]
           value = root["value"]
@@ -725,7 +733,7 @@ module Att
         end
 
         def self.createFromParsedJson(json)
-          root = (json["quickContact"] || json)
+          root = json.is_a?(Array) ? json : (json["quickContact"] || json)
 
           qcontacts = Array.new
           Array(root).each do |q|
@@ -758,7 +766,7 @@ module Att
         end
 
         def self.createFromParsedJson(json)
-          root = (json["quickContact"] || json)
+          root = json.is_a?(Array) ? json : (json["quickContact"] || json)
 
           cid = root["contactId"]
           org = root["organization"]
@@ -834,7 +842,7 @@ module Att
         end
 
         def self.createFromParsedJson(json)
-          root = (json["resultSet"] || json)
+          root = json.is_a?(Array) ? json : (json["resultSet"] || json)
 
           trecs = root["totalRecords"]
           tpages = root["totalPages"]

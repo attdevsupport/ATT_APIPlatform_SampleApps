@@ -178,11 +178,13 @@
             to be used for reference in creating products to consume AT&amp;T
             Services and not meant to be used as part of your product. The data
             in these pages is for test purposes only and intended only for use
-            as a reference in how the services perform. <br> <br> For
-            download of tools and documentation, please go to <a
-            href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
-            <br> For more information contact <a
-            href="mailto:developer.support@att.com">developer.support@att.com</a>
+            as a reference in how the services perform.
+            <br> <br>
+            To access your apps, please go to
+            <a href="https://developer.att.com/developer/mvc/auth/login"
+            target="_blank">https://developer.att.com/developer/mvc/auth/login</a>
+            <br> For support refer to
+            <a href="https://developer.att.com/support">https://developer.att.com/support</a>
             <br> <br> � 2014 AT&amp;T Intellectual Property. All
             rights reserved. <a href="http://developer.att.com/"
             target="_blank">http://developer.att.com</a>

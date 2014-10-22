@@ -11,5 +11,6 @@ gem 'rest-client', '~>1.6'
 
 
 # include codekit source and gem
-source "http://lprod.code-api-att.com:8808"
-gem 'att-codekit', '~>4.0', :require => 'att/codekit'
+gem 'att-codekit', '~>4.3', 
+  :require => 'att/codekit',
+  :source => "http://lprod.code-api-att.com:8808" 

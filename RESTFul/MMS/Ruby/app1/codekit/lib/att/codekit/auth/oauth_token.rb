@@ -1,8 +1,16 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
-# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
-# Property. All rights reserved. http://developer.att.com For more information
-# contact developer.support@att.com
+# Copyright 2014 AT&T
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'json'
 
@@ -15,11 +23,22 @@ module Att
       class OAuthToken
         include Enumerable
 
-        attr_reader :access_token, :refresh_token, :expiry, :expires_in
+        # Set default refresh token expiry to 24 hours (in seconds)
+        DEFAULT_REFRESH_EXPIRES_IN = 60*60*24
+
+        attr_reader :access_token, :refresh_token, :expiry, :expires_in, :refresh_expiry
         # @!attribute [r] access_token
         #   @return [String] token used for authentication
         # @!attribute [r] refresh_token
         #   @return [String] token used to refresh access_token if it expires
+        # @!attribute [r] expiry
+        #   @return [String] the date (seconds from epoch) the token expires
+        # @!attribute [r] expires_in
+        #   @return [String] the original seconds from request the token
+        #     expires
+        # @!attribute [r] refresh_expiry
+        #   @return [String] the date (seconds from epoch) the refresh token
+        #     expires
         alias_method :access, :access_token
         alias_method :refresh, :refresh_token
 
@@ -32,11 +51,12 @@ module Att
         #   access_token after expiry.
         # @param expires_in [#to_i]  the original api response 'unparsed' 
         #   expires_in (default: nil)
-        def initialize(access_token, expiry, refresh_token, expires_in=nil)
+        def initialize(access_token, expiry, refresh_token, expires_in=nil, refresh_expiry=nil)
           @access_token = access_token
           @refresh_token = refresh_token
           @expiry = expiry.to_i if expiry
           @expires_in = expires_in
+          @refresh_expiry = refresh_expiry.to_i
         end
 
         # Returns if this token can expire
@@ -54,6 +74,21 @@ module Att
           can_expire? && @expiry < Time.now.to_i
         end
 
+        # Returns if this refresh token can expire
+        #
+        # @return [Boolean] true if the token is allowed to expire
+        def can_refresh_expire?
+          return !!@refresh_expiry
+        end
+
+        # Check if refresh token is expired 
+        #
+        # @return [Boolean] true if refresh token is expired, false if it's 
+        #   valid.
+        def refresh_expired?
+          can_refresh_expire? && @refresh_expiry < Time.now.to_i
+        end
+
         # 'Each' definition for OAuthToken object
         #
         # @yieldparam access_token [String] The access token used for 
@@ -68,6 +103,7 @@ module Att
           yield @expiry
           yield @refresh_token
           yield @expires_in unless @expires_in.nil?
+          yield @refresh_expiry unless @refresh_expiry.nil?
         end
 
         def eql?(other)
@@ -75,6 +111,7 @@ module Att
             @access_token == other.access_token &&
             @expiry == other.expiry &&
             @refresh_token == other.refresh_token
+            @refresh_expiry == other.refresh_expiry
         end
         alias == eql?
 
@@ -82,7 +119,7 @@ module Att
         def to_json(*a)
           {
             "json_class" => self.class.name,
-            "data" => [@access_token, @expiry, @refresh_token, @expires_in]
+            "data" => [@access_token, @expiry, @refresh_token, @expires_in, @refresh_expiry]
           }.to_json(*a)
         end
 
@@ -107,16 +144,20 @@ module Att
             access_token = json['access_token']
             refresh_token = json['refresh_token']
 
+            now = Time.now.to_i
+
             if expires_in
               #if expires_in is 0 then set expiration to 100 years
               if expires_in.to_i == 0
-                expiry = Time.now.to_i + (60*60*24*365*100) - 30 
+                expiry = now + (60*60*24*365*100) - 30 
               else
-                expiry = Time.now.to_i + expires_in.to_i - 30 
+                expiry = now + expires_in.to_i - 30 
               end
             end
 
-            new(access_token, expiry, refresh_token, expires_in)
+            refresh_expiry = now + DEFAULT_REFRESH_EXPIRES_IN
+
+            new(access_token, expiry, refresh_token, expires_in, refresh_expiry)
           end
 
           # Deserialize a token object
@@ -170,3 +211,4 @@ module Att
     end
   end
 end
+#  vim: set ts=8 sw=2 sts=2 tw=79 et :

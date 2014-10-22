@@ -1,38 +1,31 @@
 <?php
 namespace Att\Api\Srvc;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
-
-/**
- * Service Library.
- * 
- * PHP version 5.4+
- * 
- * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2014. 
- * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
- * http://developer.att.com/sdk_agreement/
+/*
+ * Copyright 2014 AT&T
  *
- * Copyright 2014 AT&T Intellectual Property. All rights reserved.
- * For more information contact developer.support@att.com
- * 
- * @category  API
- * @package   Service
- * @author    pk9069
- * @copyright 2014 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&amp;T License
- * @link      http://developer.att.com
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 use Exception;
 
 /**
  * Basic class for storing any exceptions related to API requests.
- * 
+ *
  * @category API
  * @package  Service
  * @author   pk9069
- * @license  http://developer.att.com/sdk_agreement AT&amp;T License
+ * @license  http://www.apache.org/licenses/LICENSE-2.0
  * @link     http://developer.att.com
  * @see      Exception
  */
@@ -98,4 +91,5 @@ final class ServiceException extends Exception
     }
 }
 
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 ?>

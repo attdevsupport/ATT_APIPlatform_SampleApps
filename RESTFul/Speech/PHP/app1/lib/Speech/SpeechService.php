@@ -1,28 +1,22 @@
 <?php
 namespace Att\Api\Speech;
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
-
-/**
- * Speech Library
- * 
- * PHP version 5.4+
- * 
- * LICENSE: Licensed by AT&T under the 'Software Development Kit Tools 
- * Agreement.' 2014. 
- * TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTIONS:
- * http://developer.att.com/sdk_agreement/
+/*
+ * Copyright 2014 AT&T
  *
- * Copyright 2014 AT&T Intellectual Property. All rights reserved.
- * For more information contact developer.support@att.com
- * 
- * @category  API
- * @package   Speech 
- * @author    pk9069
- * @copyright 2014 AT&T Intellectual Property
- * @license   http://developer.att.com/sdk_agreement AT&amp;T License
- * @link      http://developer.att.com
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 require_once __DIR__ . '../../Srvc/APIService.php';
 require_once __DIR__ . '/NBest.php';
 require_once __DIR__ . '/SpeechMultipart.php';
@@ -42,17 +36,17 @@ use InvalidArgumentException;
  * @category API
  * @package  Speech
  * @author   pk9069
- * @license  http://developer.att.com/sdk_agreement AT&amp;T License
- * @version  Release: @package_version@ 
+ * @license  http://www.apache.org/licenses/LICENSE-2.0
+ * @version  Release: @package_version@
  * @link     https://developer.att.com/docs/apis/rest/3/Speech
  */
 class SpeechService extends APIService
 {
 
     /**
-     * Gets the MIME type of the specified file. 
+     * Gets the MIME type of the specified file.
      *
-     * This implementation currently only looks at the file ending and is 
+     * This implementation currently only looks at the file ending and is
      * therefore very trivial.
      *
      * @param string $fname file name to examine.
@@ -64,7 +58,7 @@ class SpeechService extends APIService
         $arr = explode('.', $fname);
         $ending = end($arr);
         if (strcmp('spx', $ending) == 0) {
-            $ending = 'x-speex'; 
+            $ending = 'x-speex';
         }
         $type = 'audio/' . $ending;
         return $type;
@@ -74,31 +68,31 @@ class SpeechService extends APIService
      * Creates an SpeechService object that can be used to interact with
      * the Speech API.
      *
-     * @param string     $FQDN  fully qualified domain name to which requests 
+     * @param string     $FQDN  fully qualified domain name to which requests
      *                          will be sent
-     * @param OAuthToken $token OAuth token used for authorization 
+     * @param OAuthToken $token OAuth token used for authorization
      */
     public function __construct($FQDN, OAuthToken $token)
     {
-        parent::__construct($FQDN, $token); 
+        parent::__construct($FQDN, $token);
     }
 
     /**
      * Sends a request to the API for converting speech to text.
      *
-     * @param string      $fname            file location that contains speech 
+     * @param string      $fname            file location that contains speech
      *                                      to convert.
      * @param string      $speechContext    speech context to use.
-     * @param string|null $speechSubContext speech sub context to use, if not 
+     * @param string|null $speechSubContext speech sub context to use, if not
      *                                      null.
-     * @param string|null $xArg             optional arguments to use, if not 
+     * @param string|null $xArg             optional arguments to use, if not
      *                                      null.
      * @param boolean     $chunked          whether to send the request chunked.
      *
      * @return SpeechResponse API response as a SpeechResponse object.
      * @throws ServiceException if API request was not successful.
      */
-    public function speechToText($fname, $speechContext, 
+    public function speechToText($fname, $speechContext,
         $speechSubContext = null, $xArg = null, $chunked = true
     ) {
         // read file
@@ -129,7 +123,7 @@ class SpeechService extends APIService
         if ($speechSubContext != null) {
             $req->setHeader('X-SpeechSubContext', $speechSubContext);
         }
-    
+
         $httpPost = new HttpPost();
         $httpPost->setBody($fileBinary);
 
@@ -150,7 +144,7 @@ class SpeechService extends APIService
      * @return raw audio/x-wave data.
      * @throws ServiceException if API request was not successful.
      */
-    public function textToSpeech($ctype, $txt, $xArg = null) 
+    public function textToSpeech($ctype, $txt, $xArg = null)
     {
         $endpoint = $this->getFqdn() . '/speech/v3/textToSpeech';
         $req = new RESTFulRequest($endpoint);
@@ -162,7 +156,7 @@ class SpeechService extends APIService
         if ($xArg != null) {
             $req->setHeader('X-Arg', $xArg);
         }
-        
+
         $httpPost = new HttpPost();
         $httpPost->setBody($txt);
 
@@ -220,4 +214,5 @@ class SpeechService extends APIService
 
 }
 
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 ?>

@@ -1,8 +1,16 @@
-# Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2014 TERMS
-# AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION:
-# http://developer.att.com/sdk_agreement/ Copyright 2014 AT&T Intellectual
-# Property. All rights reserved. http://developer.att.com For more information
-# contact developer.support@att.com
+# Copyright 2014 AT&T
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'json'
 require_relative '../model/immn'
@@ -72,8 +80,13 @@ module Att
             }
           }
 
+          headers = {
+            :Content_Type => 'application/json',
+            :Accept => 'application/json',
+          }
+
           begin
-            response = self.post(url, payload.to_json)
+            response = self.post(url, payload.to_json, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -119,14 +132,14 @@ module Att
             payload[:isGroup] = false
           end
 
-          headers = {
+          part_headers = {
             "Content-Type" => "application/json; charset=UTF-8",
             "Content-Disposition" => 'form-data; name="root-fields"',
             "Content-ID" => "<startpart>"
           }
 
           json_payload = {
-            :headers => headers,
+            :headers => part_headers,
             :data => { :messageRequest => payload }.to_json
           }
 
@@ -140,7 +153,7 @@ module Att
                 mime = CloudService.getMimeType(attach);
                 filename = attach.split("/")[-1]
 
-                headers = {
+                part_headers = {
                   "Content-Disposition" => %(attachment; name="file#{count}"; filename="#{filename}"),
                   "Content-Type" => %(#{mime}; charset="binary"),
                   "Content-ID" => "#{count}",
@@ -148,7 +161,7 @@ module Att
                 }
 
                 file_payload = {
-                  :headers => headers,
+                  :headers => part_headers,
                   :data => data.to_s
                 }
 
@@ -162,8 +175,13 @@ module Att
 
           content_type = %{multipart/related; type="application/json"; start="<startpart>"; boundary="#{boundary}"}
 
+          headers = {
+            :Content_Type => content_type,
+            :Accept => 'application/json',
+          }
+
           begin
-            response = self.post(url, multipart, :Content_Type => content_type)
+            response = self.post(url, multipart, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
