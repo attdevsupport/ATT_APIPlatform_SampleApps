@@ -1,9 +1,18 @@
-﻿// <copyright file="Default.aspx.cs" company="AT&amp;T">
-// Licensed by AT&amp;T under 'Software Development Kit Tools Agreement.' 2013
-// TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-// Copyright 2013 AT&amp;T Intellectual Property. All rights reserved. http://developer.att.com
-// For more information contact developer.support@att.com
-// </copyright>
+﻿/*
+* Copyright 2014 AT&T
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #region References
 using System;
@@ -29,7 +38,9 @@ using Newtonsoft.Json;
 ///  which can be found at: https://github.com/attdevsupport/codekit-csharp
 ///  Make sure that the ATT.AAB has been compiled and referenced in the project.
 /// </summary>
-using ATT_AAB;
+using ATT.Codekit.AAB;
+using ATT.Codekit.Authorization;
+
 
 #endregion
 public partial class AAB_App1 : System.Web.UI.Page
@@ -53,11 +64,11 @@ public partial class AAB_App1 : System.Web.UI.Page
     public string contactID = string.Empty;
     public string queryString = string.Empty;
     public static int contactsResponseCount = 0;
-    public QuickContactJSON.RootObject qContactResult = null;
-    public ContactJSON.RootObject myInfoResult = null;
-    public GroupJSON.RootObject groupResult = null;
-    public GroupJSON.RootObject contactGroupResult = null;
-    public ContactIdJSON.RootObject contactIdResult = null;
+    public QuickContactObj.RootObject qContactResult = null;
+    public ContactObj.RootObject myInfoResult = null;
+    public GroupObj.RootObject groupResult = null;
+    public GroupObj.RootObject contactGroupResult = null;
+    public ContactIdObj.RootObject contactIdResult = null;
     public string JSONstring = string.Empty;
     public string groupID = string.Empty;
     public string AttachmentFilesDir = string.Empty;
@@ -90,212 +101,311 @@ public partial class AAB_App1 : System.Web.UI.Page
         if ((string)Session["cs_rest_appState"] == "GetToken" && Request["Code"] != null)
         {
             this.oauth.authCode = Request["code"].ToString();
-            if (oauth.GetAccessToken(OAuth.AccessTokenType.Authorization_Code) == true)
+            try
             {
-                StoreAccessTokenToSession(oauth.access_token_json);
-                this.addressbook = new AddressBook(this.endPoint, this.accessToken);
-                Operation operation = (Operation)Session["cs_rest_ServiceRequest"];
-                switch (operation)
+                if (oauth.GetAccessToken(OAuth.AccessTokenType.AuthorizationCode) == true)
                 {
-                    case Operation.CreateContactOperation:
-                        if (!addressbook.createContact(Session["JSONstring"].ToString()))
-                        {
-                            this.contact_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.create_contact = new Success();
-                            this.create_contact.location = this.addressbook.location;
-                        }
-                        break;
-                    case Operation.UpdateContactOperation:
-                        if (!addressbook.updateContact(Session["contactid"].ToString(), Session["JSONstring"].ToString()))
-                        {
-                            this.contact_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.success_contact = new Success();
-                            this.success_contact.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.DeleteContactOperation:
-                        if (!addressbook.deleteContact(Session["contactid"].ToString()))
-                        {
-                            this.contact_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.success_contact = new Success();
-                            this.success_contact.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.GetContactsOperation:
-                        if (!addressbook.getContacts(Session["querystring"].ToString()))
-                        {
-                            this.contact_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
+                    StoreAccessTokenToSession(oauth.accessTokenJson);
+                    this.addressbook = new AddressBook(this.endPoint, this.accessToken);
+                    Operation operation = (Operation)Session["cs_rest_ServiceRequest"];
+                    switch (operation)
+                    {
+                        case Operation.CreateContactOperation:
                             try
                             {
-                                this.qContactResult = serializer.Deserialize<QuickContactJSON.RootObject>(addressbook.JSONstring);
+                                if (null == addressbook.createContact(Session["JSONstring"].ToString()))
+                                {
+                                    this.contact_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.create_contact = new Success();
+                                    this.create_contact.location = this.addressbook.apiService.apiResponse.location;
+                                }
                             }
                             catch (Exception ex)
                             {
                                 this.contact_error = ex.Message;
                             }
-                        }
-                        break;
-                    case Operation.UpdateMyInfoOperation:
-                        if (!addressbook.updateMyInfo(Session["JSONstring"].ToString()))
-                        {
-                            this.myinfo_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.update_myinfo = new Success();
-                            this.update_myinfo.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.GetMyInfoOperation:
-                        if (!addressbook.getMyInfo())
-                        {
-                            this.myinfo_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
+                            break;
+                        case Operation.UpdateContactOperation:
                             try
                             {
-                                this.myInfoResult = serializer.Deserialize<ContactJSON.RootObject>(addressbook.JSONstring);
+                                if (!addressbook.updateContact(Session["contactid"].ToString(), Session["JSONstring"].ToString()))
+                                {
+                                    this.contact_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.success_contact = new Success();
+                                    this.success_contact.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.contact_error = ex.Message;
+                            }
+                            break;
+                        case Operation.DeleteContactOperation:
+                            try
+                            {
+                                if (!addressbook.deleteContact(Session["contactid"].ToString()))
+                                {
+                                    this.contact_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.success_contact = new Success();
+                                    this.success_contact.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.contact_error = ex.Message;
+                            }
+                            break;
+                        case Operation.GetContactsOperation:
+                            try
+                            {
+                                this.qContactResult = addressbook.getContacts(Session["querystring"].ToString());
+                                if (null == this.qContactResult)
+                                {
+                                    this.contact_error = this.addressbook.apiService.errorResponse;
+                                }
+                                //else
+                                //{
+                                    //try
+                                    //{
+                                        //this.qContactResult = serializer.Deserialize<QuickContactObj.RootObject>(addressbook.JSONstring);
+                                      //  this.qContactResult = addressbook.getContacts(Session["querystring"].ToString());
+                                    //}
+                                    //catch (Exception ex)
+                                    //{
+                                     //   this.contact_error = ex.Message;
+                                    //}
+                                //}
+                            }
+                            catch (Exception ex)
+                            {
+                                this.contact_error = ex.Message;
+                            }
+                            break;
+                        case Operation.UpdateMyInfoOperation:
+                            try
+                            {
+                                if (!addressbook.updateMyInfo(Session["JSONstring"].ToString()))
+                                {
+                                    this.myinfo_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.update_myinfo = new Success();
+                                    this.update_myinfo.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                                }
                             }
                             catch (Exception ex)
                             {
                                 this.myinfo_error = ex.Message;
                             }
-                        }
-                        break;
-                    case Operation.CreateGroupOperation:
-                        if (!addressbook.createGroup(Session["JSONstring"].ToString()))
-                        {
-                            this.group_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.create_group = new Success();
-                            this.create_group.location = this.addressbook.location;
-                        }
-                        break;
-                    case Operation.UpdateGroupOperation:
-                        if (!addressbook.updateGroup(Session["groupid"].ToString(), Session["JSONstring"].ToString()))
-                        {
-                            this.group_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.success_group = new Success();
-                            this.success_group.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.DeleteGroupOperation:
-                        if (!addressbook.deleteGroup(Session["groupid"].ToString()))
-                        {
-                            this.group_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.success_group = new Success();
-                            this.success_group.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.GetGroupsOperation:
-                        if (!addressbook.getGroups(Session["querystring"].ToString()))
-                        {
-                            this.group_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
+                            break;
+                        case Operation.GetMyInfoOperation:
                             try
                             {
-                                this.groupResult = serializer.Deserialize<GroupJSON.RootObject>(addressbook.JSONstring);
+                                string result = addressbook.getMyInfo();
+                                if (null == result)
+                                {
+                                    this.myinfo_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    //try
+                                    //{
+                                    this.myInfoResult = serializer.Deserialize<ContactObj.RootObject>(result);
+                                    //}
+
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.myinfo_error = ex.Message;
+                            }
+                            break;
+                        case Operation.CreateGroupOperation:
+                            try
+                            {
+                                if (null == addressbook.createGroup(Session["JSONstring"].ToString()))
+                                {
+                                    this.group_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.create_group = new Success();
+                                    this.create_group.location = this.addressbook.apiService.apiResponse.location;
+                                }
                             }
                             catch (Exception ex)
                             {
                                 this.group_error = ex.Message;
                             }
-                        }
-                        break;
-                    case Operation.GetGroupContactsOperation:
-                        if (!addressbook.getGroupContacts(Session["groupid"].ToString()))
-                        {
-                            this.manage_groups_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
+                            break;
+                        case Operation.UpdateGroupOperation:
                             try
                             {
-                                this.contactIdResult = serializer.Deserialize<ContactIdJSON.RootObject>(addressbook.JSONstring);
+                                if (!addressbook.updateGroup(Session["groupid"].ToString(), Session["JSONstring"].ToString()))
+                                {
+                                    this.group_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.success_group = new Success();
+                                    this.success_group.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.group_error = ex.Message;
+                            }
+                            break;
+                        case Operation.DeleteGroupOperation:
+                            if (!addressbook.deleteGroup(Session["groupid"].ToString()))
+                            {
+                                this.group_error = this.addressbook.apiService.errorResponse;
+                            }
+                            else
+                            {
+                                this.success_group = new Success();
+                                this.success_group.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                            }
+                            break;
+                        case Operation.GetGroupsOperation:
+                            try
+                            {
+                                this.groupResult = addressbook.getGroups(Session["querystring"].ToString());
+                                if (null == this.groupResult)
+                                {
+                                    this.group_error = this.addressbook.apiService.errorResponse;
+                                }
+                                //else
+                                //{
+                                //  try
+                                //{
+                                //this.groupResult = serializer.Deserialize<GroupObj.RootObject>(addressbook.JSONstring);
+
+                                //}
+
+                                //}
+                            }
+                            catch (Exception ex)
+                            {
+                                this.group_error = ex.Message;
+                            }
+                            break;
+                        case Operation.GetGroupContactsOperation:
+                            try
+                            {
+                                String result = addressbook.getGroupContacts(Session["groupid"].ToString());
+                                if (null == result)
+                                {
+                                    this.manage_groups_error = this.addressbook.apiService.errorResponse;
+                                }
+                                //else
+                                //{
+                                //  try
+                                //{
+
+                                //}
+                                this.contactIdResult = serializer.Deserialize<ContactIdObj.RootObject>(result);
+
                             }
                             catch (Exception ex)
                             {
                                 this.manage_groups_error = ex.Message;
                             }
-                        }
-                        break;
-                    case Operation.AddContctsToGroupOperation:
-                        if(!addressbook.addContactToGroup(Session["groupid"].ToString(), Session["contactids"].ToString()))
-                        {
-                            this.manage_groups_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.manage_groups = new Success();
-                            this.manage_groups.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.RemoveContactsFromGroupOperation:
-                        if (!addressbook.removeContactsFromGroup(Session["groupid"].ToString(), Session["contactids"].ToString()))
-                        {
-                            this.manage_groups_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
-                            this.manage_groups = new Success();
-                            this.manage_groups.last_modified = this.addressbook.last_mod;
-                        }
-                        break;
-                    case Operation.GetContactGroupsOperation:
-                        if (addressbook.getContactGroups(Session["contactid"].ToString()))
-                        {
-                            this.manage_groups_error = this.addressbook.errorResponse;
-                        }
-                        else
-                        {
+                            break;
+                        case Operation.AddContctsToGroupOperation:
                             try
                             {
-                                this.contactGroupResult = serializer.Deserialize<GroupJSON.RootObject>(addressbook.JSONstring);
+
+                                if (!addressbook.addContactToGroup(Session["groupid"].ToString(), Session["contactids"].ToString()))
+                                {
+                                    this.manage_groups_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.manage_groups = new Success();
+                                    this.manage_groups.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                                }
                             }
                             catch (Exception ex)
                             {
                                 this.manage_groups_error = ex.Message;
                             }
-                        }
-                        break;
+                            break;
+                        case Operation.RemoveContactsFromGroupOperation:
+                            try
+                            {
+                                if (!addressbook.removeContactsFromGroup(Session["groupid"].ToString(), Session["contactids"].ToString()))
+                                {
+                                    this.manage_groups_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    this.manage_groups = new Success();
+                                    this.manage_groups.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.manage_groups_error = ex.Message;
+                            }
+                            break;
+                        case Operation.GetContactGroupsOperation:
+                            try
+                            {
+                                String result = addressbook.getContactGroups(Session["contactid"].ToString());
+                                if (null == result)
+                                {
+                                    this.manage_groups_error = this.addressbook.apiService.errorResponse;
+                                }
+                                else
+                                {
+                                    //   try
+                                    //  {
+                                    //this.contactGroupResult = serializer.Deserialize<GroupObj.RootObject>(result);
+                                    //}
+
+                                    //}
+
+                                    this.contactGroupResult = serializer.Deserialize<GroupObj.RootObject>(result);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                this.manage_groups_error = ex.Message;
+                            }
+
+                            break;
+                    }
+                    ResetRequestSessionVariables(operation);
                 }
-                ResetRequestSessionVariables(operation);
+                else
+                {
+                    if (oauth.getAuthCodeError != null)
+                    {
+                        this.oauth_error = "GetAuthCodeError: " + oauth.getAuthCodeError;
+                    }
+                    if (oauth.GetAccessTokenError != null)
+                    {
+                        this.oauth_error = "GetAccessTokenError: " + oauth.GetAccessTokenError;
+                    }
+                    this.ResetTokenSessionVariables();
+                    return;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                if (oauth.getAuthCodeError != null)
-                {
-                    this.oauth_error = "GetAuthCodeError: " + oauth.getAuthCodeError;
-                }
-                if (oauth.GetAccessTokenError != null)
-                {
-                    this.oauth_error = "GetAccessTokenError: " + oauth.GetAccessTokenError;
-                }
+                this.oauth_error = "GetAuthCodeError: " + ex.Message;
                 this.ResetTokenSessionVariables();
-                return;
             }
 
         }
@@ -307,82 +417,109 @@ public partial class AAB_App1 : System.Web.UI.Page
     #region Contact Operations
     public void createContact_Click(object sender, EventArgs e)
     {
-        checkAccessToken(Operation.CreateContactOperation);
-        var json = this.getContactJSON(Operation.CreateContactOperation);
-        if (!addressbook.createContact(json))
+        try
         {
-            this.contact_error = this.addressbook.errorResponse;
+            checkAccessToken(Operation.CreateContactOperation);
+            var json = this.getContactJSON(Operation.CreateContactOperation);
+        
+            if (null == addressbook.createContact(json))
+            {
+                this.contact_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.create_contact = new Success();
+                this.create_contact.location = this.addressbook.apiService.apiResponse.location;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.create_contact = new Success();
-            this.create_contact.location = this.addressbook.location;
+            this.contact_error = ex.Message;
         }
     }
 
     public void updateContact_Click(object sender, EventArgs e)
     {
         var contactid = contactIdUpd.Text.Trim();
-        if (contactid == "")
+        try
         {
-            this.contact_error = "Please enter contact ID.";
-        }
-        else
-        {
-            checkAccessToken(Operation.UpdateContactOperation);
-            var json = this.getContactJSON(Operation.UpdateContactOperation);
-            if (!addressbook.updateContact(contactid, json))
+            if (contactid == "")
             {
-                this.contact_error = this.addressbook.errorResponse;
+                this.contact_error = "Please enter contact ID.";
             }
             else
             {
-                this.success_contact = new Success();
-                this.success_contact.last_modified = this.addressbook.last_mod;
+                checkAccessToken(Operation.UpdateContactOperation);
+                var json = this.getContactJSON(Operation.UpdateContactOperation);
+                if (!addressbook.updateContact(contactid, json))
+                {
+                    this.contact_error = this.addressbook.apiService.errorResponse;
+                }
+                else
+                {
+                    this.success_contact = new Success();
+                    this.success_contact.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            this.contact_error = ex.Message;
         }
     }
 
     public void deleteContact_Click(object sender, EventArgs e)
     {
         var contactid = contactIdUpd.Text;
-        if (contactid == "")
+        try
         {
-            this.contact_error = "Please enter contact ID.";
-        }
-        else
-        {
-            checkAccessToken(Operation.DeleteContactOperation);
-            if (!addressbook.deleteContact(contactid))
+            if (contactid == "")
             {
-                this.contact_error = this.addressbook.errorResponse;
+                this.contact_error = "Please enter contact ID.";
             }
             else
             {
-                this.success_contact = new Success();
-                this.success_contact.last_modified = this.addressbook.last_mod;
+                checkAccessToken(Operation.DeleteContactOperation);
+                if (!addressbook.deleteContact(contactid))
+                {
+                    this.contact_error = this.addressbook.apiService.errorResponse;
+                }
+                else
+                {
+                    this.success_contact = new Success();
+                    this.success_contact.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            this.contact_error = ex.Message;
         }
     }
 
     public void getContacts_Click(object sender, EventArgs e)
     {
-        checkAccessToken(Operation.GetContactsOperation);
-        var qs = "search=" + searchVal.Text;
-        if (!addressbook.getContacts(qs))
+        try
         {
-            this.contact_error = this.addressbook.errorResponse;
+            checkAccessToken(Operation.GetContactsOperation);
+            var qs = searchVal.Text;
+            this.qContactResult = addressbook.getContacts(qs);
+            if (null == this.qContactResult)
+            {
+                this.contact_error = this.addressbook.apiService.errorResponse;
+            }
+            //else
+            //{
+            //try
+            //{
+            //  this.qContactResult = serializer.Deserialize<QuickContactObj.RootObject>(addressbook.JSONstring);
+            //}
+
+            //}
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                this.qContactResult = serializer.Deserialize<QuickContactJSON.RootObject>(addressbook.JSONstring);
-            }
-            catch (Exception ex)
-            {
-                this.contact_error = ex.Message;
-            }
+            this.contact_error = ex.Message;
         }
     }
 
@@ -391,36 +528,48 @@ public partial class AAB_App1 : System.Web.UI.Page
     #region MyInfo Operations
     public void updateMyInfo_Click(object sender, EventArgs e)
     {
-        checkAccessToken(Operation.UpdateMyInfoOperation);
-        var json = this.getContactJSON(Operation.UpdateMyInfoOperation);
-        if (!addressbook.updateMyInfo(json))
+        try
         {
-            this.myinfo_error = this.addressbook.errorResponse;
+            checkAccessToken(Operation.UpdateMyInfoOperation);
+            var json = this.getContactJSON(Operation.UpdateMyInfoOperation);
+            if (!addressbook.updateMyInfo(json))
+            {
+                this.myinfo_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.update_myinfo = new Success();
+                this.update_myinfo.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.update_myinfo = new Success();
-            this.update_myinfo.last_modified = this.addressbook.last_mod;
+            this.myinfo_error = ex.Message;
         }
     }
 
     public void getMyInfo_Click(object sender, EventArgs e)
     {
         checkAccessToken(Operation.GetMyInfoOperation);
-        if (!addressbook.getMyInfo())
+        try
         {
-            this.myinfo_error = this.addressbook.errorResponse;
+
+            string result = addressbook.getMyInfo();
+            if (null == result)
+            {
+                this.myinfo_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+
+                this.myInfoResult = serializer.Deserialize<ContactObj.RootObject>(result);
+
+
+            }
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                this.myInfoResult = serializer.Deserialize<ContactJSON.RootObject>(addressbook.JSONstring);
-            }
-            catch (Exception ex)
-            {
-                this.myinfo_error = ex.Message;
-            }
+            this.myinfo_error = ex.Message;
         }
     }
 
@@ -431,14 +580,21 @@ public partial class AAB_App1 : System.Web.UI.Page
     {
         checkAccessToken(Operation.CreateGroupOperation);
         var json = this.getGroupJSON(Operation.CreateGroupOperation);
-        if (!addressbook.createGroup(json))
+        try
         {
-            this.group_error = this.addressbook.errorResponse;
+            if (null == addressbook.createGroup(json))
+            {
+                this.group_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.create_group = new Success();
+                this.create_group.location = this.addressbook.apiService.apiResponse.location;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.create_group = new Success();
-            this.create_group.location = this.addressbook.location;
+            this.group_error = ex.Message;
         }
     }
 
@@ -446,28 +602,42 @@ public partial class AAB_App1 : System.Web.UI.Page
     {
         checkAccessToken(Operation.UpdateGroupOperation);
         var json = this.getGroupJSON(Operation.UpdateGroupOperation);
-        if (!addressbook.updateGroup(groupIdUpd.Text, json))
+        try
         {
-            this.group_error = this.addressbook.errorResponse;
+            if (!addressbook.updateGroup(groupIdUpd.Text, json))
+            {
+                this.group_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.success_group = new Success();
+                this.success_group.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.success_group = new Success();
-            this.success_group.last_modified = this.addressbook.last_mod;
+            this.group_error = ex.Message;
         }
     }
 
     public void deleteGroup_Click(object sender, EventArgs e)
     {
         checkAccessToken(Operation.DeleteGroupOperation);
-        if (!addressbook.deleteGroup(groupIdDel.Text))
+        try
         {
-            this.group_error = this.addressbook.errorResponse;
+            if (!addressbook.deleteGroup(groupIdDel.Text))
+            {
+                this.group_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.success_group = new Success();
+                this.success_group.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.success_group = new Success();
-            this.success_group.last_modified = this.addressbook.last_mod;
+            this.group_error = ex.Message;
         }
     }
 
@@ -475,20 +645,24 @@ public partial class AAB_App1 : System.Web.UI.Page
     {
         checkAccessToken(Operation.GetGroupsOperation);
         var qs = "?order=" + order.SelectedValue + "&groupName=" + getGroupName.Text;
-        if (!addressbook.getGroups(qs))
+        try
         {
-            this.group_error = this.addressbook.errorResponse;
+            this.groupResult = addressbook.getGroups(qs);
+            if (null == this.groupResult)
+            {
+                this.group_error = this.addressbook.apiService.errorResponse;
+            }
+            //else
+            //{
+            // try
+            //{
+            //  this.groupResult = serializer.Deserialize<GroupObj.RootObject>(addressbook.JSONstring);
+            //}
+            //}
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                this.groupResult = serializer.Deserialize<GroupJSON.RootObject>(addressbook.JSONstring);
-            }
-            catch (Exception ex)
-            {
-                this.group_error = ex.Message;
-            }
+            this.group_error = ex.Message;
         }
     }
     #endregion
@@ -497,68 +671,93 @@ public partial class AAB_App1 : System.Web.UI.Page
     public void groupIdContacts_Click(object sender, EventArgs e)
     {
         checkAccessToken(Operation.GetGroupContactsOperation);
-        if (!addressbook.getGroupContacts(groupIdContacts.Text))
+        try
         {
-            this.manage_groups_error = this.addressbook.errorResponse;
+            string result = addressbook.getGroupContacts(groupIdContacts.Text);
+            if (null == result)
+            {
+                this.manage_groups_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                //try
+                //{
+                this.contactIdResult = serializer.Deserialize<ContactIdObj.RootObject>(result);
+                //}
+
+            }
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                this.contactIdResult = serializer.Deserialize<ContactIdJSON.RootObject>(addressbook.JSONstring);
-            }
-            catch (Exception ex)
-            {
-                this.manage_groups_error = ex.Message;
-            }
+            this.manage_groups_error = ex.Message;
         }
     }
 
     public void addContctsToGroup_Click(object sender, EventArgs e)
     {
-        checkAccessToken(Operation.AddContctsToGroupOperation);
-        if (!addressbook.addContactToGroup(groupIdAddDel.Text.Trim(), addContactsGrp.Text.Trim()))
+        try
         {
-            this.manage_groups_error = this.addressbook.errorResponse;
+            checkAccessToken(Operation.AddContctsToGroupOperation);
+            if (!addressbook.addContactToGroup(groupIdAddDel.Text.Trim(), addContactsGrp.Text.Trim()))
+            {
+                this.manage_groups_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.manage_groups = new Success();
+                this.manage_groups.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.manage_groups = new Success();
-            this.manage_groups.last_modified = this.addressbook.last_mod;
+            this.manage_groups_error = ex.Message;
         }
     }
 
     public void removeContctsFromGroup_Click(object sender, EventArgs e)
     {
-        checkAccessToken(Operation.RemoveContactsFromGroupOperation);
-        if (!addressbook.removeContactsFromGroup(groupIdRemDel.Text.Trim(), remContactsGrp.Text.Trim()))
+        try
         {
-            this.manage_groups_error = this.addressbook.errorResponse;
+            checkAccessToken(Operation.RemoveContactsFromGroupOperation);
+            if (!addressbook.removeContactsFromGroup(groupIdRemDel.Text.Trim(), remContactsGrp.Text.Trim()))
+            {
+                this.manage_groups_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                this.manage_groups = new Success();
+                this.manage_groups.last_modified = this.addressbook.apiService.apiResponse.lastModified;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            this.manage_groups = new Success();
-            this.manage_groups.last_modified = this.addressbook.last_mod;
+            this.manage_groups_error = ex.Message;
         }
     }
 
     public void getContactGroups_Click(object sender, EventArgs e)
     {
-        checkAccessToken(Operation.GetContactGroupsOperation);
-        if (!addressbook.getContactGroups(contactsIdGroups.Text))
+        try
         {
-            this.manage_groups_error = this.addressbook.errorResponse;
+            checkAccessToken(Operation.GetContactGroupsOperation);
+        
+            string result = addressbook.getContactGroups(contactsIdGroups.Text);
+            if (null == result)
+            {
+                this.manage_groups_error = this.addressbook.apiService.errorResponse;
+            }
+            else
+            {
+                //try
+                //{
+                this.contactGroupResult = serializer.Deserialize<GroupObj.RootObject>(result);
+                //}
+
+            }
         }
-        else
+        catch (Exception ex)
         {
-            try
-            {
-                this.contactGroupResult = serializer.Deserialize<GroupJSON.RootObject>(addressbook.JSONstring);
-            }
-            catch (Exception ex)
-            {
-                this.manage_groups_error = ex.Message;
-            }
+            this.manage_groups_error = ex.Message;
         }
     }
     #endregion
@@ -592,7 +791,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                 Session["groupid"] = groupIdUpd.Text;
                 break;
             case Operation.GetContactsOperation:
-                Session["querystring"] = "search=" + searchVal.Text;
+                Session["querystring"] = searchVal.Text;
                 break;
             case Operation.DeleteGroupOperation:
                 Session["groupid"] = groupIdDel.Text.Trim();
@@ -719,7 +918,7 @@ public partial class AAB_App1 : System.Web.UI.Page
         DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
         try
         {
-            var deserializedJsonObj = serializer.Deserialize<AccessTokenJSON>(access_token_json);
+            var deserializedJsonObj = serializer.Deserialize<OAuthToken.AccessToken>(access_token_json);
             if (deserializedJsonObj.access_token != null)
             {
                 this.accessToken = deserializedJsonObj.access_token;
@@ -776,7 +975,7 @@ public partial class AAB_App1 : System.Web.UI.Page
         }
         else if (tokentResult == "REFRESH_TOKEN")
         {
-            if (!oauth.GetAccessToken(OAuth.AccessTokenType.Refresh_Token))
+            if (!oauth.GetAccessToken(OAuth.AccessTokenType.RefreshToken))
             {
                 this.oauth_error = oauth.getAuthCodeError; ;
                 this.ResetTokenSessionVariables();
@@ -784,7 +983,7 @@ public partial class AAB_App1 : System.Web.UI.Page
             }
             else
             {
-                StoreAccessTokenToSession(oauth.access_token_json);
+                StoreAccessTokenToSession(oauth.accessTokenJson);
             }
         }
         if (oauth.accessToken == null || oauth.accessToken.Length <= 0)
@@ -895,18 +1094,18 @@ public partial class AAB_App1 : System.Web.UI.Page
         }
         int phone_int_pref = Convert.ToInt32(phonePref);
 
-        var phone = new List<ContactJSON.Phone>();
+        var phone = new List<ContactObj.Phone>();
         for (int i = 0; i < ptype.Length; i++)
         {
             bool pref = i == phone_int_pref ? true : false;
-            phone.Add(new ContactJSON.Phone() { type = ptype[i], number = pnumber[i], preferred = pref });
+            phone.Add(new ContactObj.Phone() { type = ptype[i], number = pnumber[i], preferred = pref });
         }
-        var phones = new ContactJSON.Phones();
+        var phones = new ContactObj.Phones();
         phones.phone = phone;
 
-        var empty_phone = new List<ContactJSON.Phone>();
-        empty_phone.Add(new ContactJSON.Phone() { type = string.Empty, number = string.Empty, preferred = true });
-        var empty_phones = new ContactJSON.Phones();
+        var empty_phone = new List<ContactObj.Phone>();
+        empty_phone.Add(new ContactObj.Phone() { type = string.Empty, number = string.Empty, preferred = true });
+        var empty_phones = new ContactObj.Phones();
         empty_phones.phone = empty_phone;
 
         string Pref = Request["imPref"] != null ? Request["imPref"].ToString() : "0";
@@ -918,18 +1117,18 @@ public partial class AAB_App1 : System.Web.UI.Page
             throw new Exception("Number of fields does not match the number of values");
         }
         int im_int_pref = Convert.ToInt32(Pref);
-        var im = new List<ContactJSON.Im>();
+        var im = new List<ContactObj.Im>();
         for (int i = 0; i < im_type.Length; i++)
         {
             bool pref = i == im_int_pref ? true : false;
-            im.Add(new ContactJSON.Im() { type = im_type[i], imUri = im_im[i], preferred = pref });
+            im.Add(new ContactObj.Im() { type = im_type[i], imUri = im_im[i], preferred = pref });
         };
-        var ims = new ContactJSON.Ims();
+        var ims = new ContactObj.Ims();
         ims.im = im;
 
-        var empty_im = new List<ContactJSON.Im>();
-        empty_im.Add(new ContactJSON.Im() { type = string.Empty, imUri = string.Empty, preferred = true });
-        var empty_ims = new ContactJSON.Ims();
+        var empty_im = new List<ContactObj.Im>();
+        empty_im.Add(new ContactObj.Im() { type = string.Empty, imUri = string.Empty, preferred = true });
+        var empty_ims = new ContactObj.Ims();
         empty_ims.im = empty_im;
 
         string emailPref = Request["emailPref"] != null ? Request["emailPref"].ToString() : "0";
@@ -941,18 +1140,18 @@ public partial class AAB_App1 : System.Web.UI.Page
             throw new Exception("Number of fields does not match the number of values");
         }
         int email_int_pref = Convert.ToInt32(emailPref);
-        var email = new List<ContactJSON.Email>();
+        var email = new List<ContactObj.Email>();
         for (int i = 0; i < email_type.Length; i++)
         {
             bool pref = i == email_int_pref ? true : false;
-            email.Add(new ContactJSON.Email() { type = email_type[i], emailAddress = email_email[i], preferred = pref });
+            email.Add(new ContactObj.Email() { type = email_type[i], emailAddress = email_email[i], preferred = pref });
         }
-        var emails = new ContactJSON.Emails();
+        var emails = new ContactObj.Emails();
         emails.email = email;
 
-        var empty_email = new List<ContactJSON.Email>();
-        empty_email.Add(new ContactJSON.Email() { type = string.Empty, emailAddress = string.Empty, preferred = true });
-        var empty_emails = new ContactJSON.Emails();
+        var empty_email = new List<ContactObj.Email>();
+        empty_email.Add(new ContactObj.Email() { type = string.Empty, emailAddress = string.Empty, preferred = true });
+        var empty_emails = new ContactObj.Emails();
         empty_emails.email = email;
 
         string weburlPref = Request["weburlPref"] != null ? Request["weburlPref"].ToString() : "0";
@@ -964,18 +1163,18 @@ public partial class AAB_App1 : System.Web.UI.Page
             throw new Exception("Number of fields does not match the number of values");
         }
         int weburl_int_pref = Convert.ToInt32(weburlPref);
-        var weburl = new List<ContactJSON.WebUrl>();
+        var weburl = new List<ContactObj.WebUrl>();
         for (int i = 0; i < weburl_type.Length; i++)
         {
             bool pref = i == weburl_int_pref ? true : false;
-            weburl.Add(new ContactJSON.WebUrl() { type = weburl_type[i], url = weburl_weburl[i], preferred = pref });
+            weburl.Add(new ContactObj.WebUrl() { type = weburl_type[i], url = weburl_weburl[i], preferred = pref });
         }
-        var weburls = new ContactJSON.Weburls();
+        var weburls = new ContactObj.Weburls();
         weburls.webUrl = weburl;
 
-        var empty_weburl = new List<ContactJSON.WebUrl>();
-        empty_weburl.Add(new ContactJSON.WebUrl() { type = string.Empty, url = string.Empty, preferred = true });
-        var empty_weburls = new ContactJSON.Weburls();
+        var empty_weburl = new List<ContactObj.WebUrl>();
+        empty_weburl.Add(new ContactObj.WebUrl() { type = string.Empty, url = string.Empty, preferred = true });
+        var empty_weburls = new ContactObj.Weburls();
         empty_weburls.webUrl = weburl;
 
         //address
@@ -991,11 +1190,11 @@ public partial class AAB_App1 : System.Web.UI.Page
         int entryCount = atype.Length;
         string[] address_list = new String[entryCount];
         int address_int_pref = Convert.ToInt32(addressPref);
-        var address = new List<ContactJSON.Address>();
+        var address = new List<ContactObj.Address>();
         for (int i = 0; i < entryCount; i++)
         {
             bool pref = i == address_int_pref ? true : false;
-            address.Add(new ContactJSON.Address()
+            address.Add(new ContactObj.Address()
             {
                 type = atype[i],
                 poBox = apoBox[i],
@@ -1008,11 +1207,11 @@ public partial class AAB_App1 : System.Web.UI.Page
                 country = acountry[i]
             });
         }
-        var addresses = new ContactJSON.Addresses();
+        var addresses = new ContactObj.Addresses();
         addresses.address = address;
 
-        var empty_address = new List<ContactJSON.Address>();
-        empty_address.Add(new ContactJSON.Address()
+        var empty_address = new List<ContactObj.Address>();
+        empty_address.Add(new ContactObj.Address()
         {
             type = string.Empty,
             poBox = string.Empty,
@@ -1024,15 +1223,15 @@ public partial class AAB_App1 : System.Web.UI.Page
             zipcode = string.Empty,
             country = string.Empty
         });
-        var empty_addresses = new ContactJSON.Addresses();
+        var empty_addresses = new ContactObj.Addresses();
         empty_addresses.address = address;
 
         //var contact = new List<ContactJSON.Contact>();
-        var contact_obj = new ContactJSON.Contact();
-        var photo = new ContactJSON.Photo();
+        var contact_obj = new ContactObj.Contact();
+        var photo = new ContactObj.Photo();
         photo.encoding = "BASE64";
 
-        var empty_photo = new ContactJSON.Photo();
+        var empty_photo = new ContactObj.Photo();
         empty_photo.encoding = "BASE64";
         empty_photo.value = "";
         if (JsonConvert.SerializeObject(phones) != JsonConvert.SerializeObject(empty_phones))
@@ -1059,7 +1258,7 @@ public partial class AAB_App1 : System.Web.UI.Page
         {
             contact_obj.photo = photo;
         }
-        var contactRoot = new ContactJSON.RootObject();
+        var contactRoot = new ContactObj.RootObject();
         if (operation == Operation.CreateContactOperation)
         {
             string imgString = getImageto64base(attachPhoto.Value);
@@ -1223,7 +1422,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     private string getGroupJSON(Operation operation)
     {
-        var group = new GroupJSON.Group();
+        var group = new GroupObj.Group();
         if (operation == Operation.CreateGroupOperation)
         {
             group.groupName = groupName.Text;
@@ -1236,7 +1435,7 @@ public partial class AAB_App1 : System.Web.UI.Page
         }
 
         var serializer = new JavaScriptSerializer();
-        var groupRoot = new GroupJSON.RootObject();
+        var groupRoot = new GroupObj.RootObject();
         groupRoot.group = group;
         return JsonConvert.SerializeObject(groupRoot, Formatting.Indented,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });

@@ -1,10 +1,25 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="AAB_App1" %>
 
 <!DOCTYPE html>
+<!-- 
+* Copyright 2014 AT&T
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
 <html lang="en">
 <head runat="server">
     <title>AT&amp;T Sample Application - Contact Services (Address Book)</title>
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" >
     <link rel="stylesheet" type="text/css" href="style/common.css">
     <link rel="stylesheet" type="text/css" href="style/contacts.css">
     <script src="scripts/utils.js"></script>
@@ -1327,10 +1342,10 @@
                         <br>
                                             <br>
                                             For download of tools and documentation, please go to <a
-                                                href="https://devconnect-api.att.com/" target="_blank">https://devconnect-api.att.com</a>
+                                                href="https://developer.att.com/developer/mvc/auth/login" target="_blank">https://developer.att.com/developer/mvc/auth/login</a>
                                             <br>
-                                            For more information contact <a
-                                                href="mailto:developer.support@att.com">developer.support@att.com</a>
+                                            For more information please go to <a
+                                                href="https://developer.att.com/support" target="_blank">https://developer.att.com/support</a>
                                             <br>
                                             <br>
                                             &#169; 2014 AT&amp;T Intellectual Property. All rights
