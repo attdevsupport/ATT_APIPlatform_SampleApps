@@ -113,8 +113,12 @@ module Att
           url = "#{@fqdn}#{SERVICE_URL}"
           url << "/#{CGI.escape(message_id.to_s)}/parts/#{part_number.to_i}"
 
+          headers = {
+            :Accept => "application/json",
+          }
+
           begin
-            response = self.get(url)
+            response = self.get(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -219,8 +223,12 @@ module Att
           ids = Array(message_id).map{|msg| msg.strip}.join(",")
           url << "?messageIds=#{CGI.escape(ids.to_s)}"
 
+          headers = {
+            :Accept => "application/json"
+          }
+
           begin
-            response = self.delete(url)
+            response = self.delete(url, headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end
@@ -253,8 +261,12 @@ module Att
         def createIndex
           url = "#{@fqdn}#{SERVICE_URL}/index"
 
+          headers = {
+            :Accept => "application/json"
+          }
+
           begin
-            response = self.post(url, "")
+            response = self.post(url, "", headers)
           rescue RestClient::Exception => e
             raise(ServiceException, e.response || e.message, e.backtrace)
           end

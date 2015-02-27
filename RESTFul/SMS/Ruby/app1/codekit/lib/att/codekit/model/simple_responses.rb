@@ -35,6 +35,14 @@ module Att
         end
       end
 
+      class SuccessDeleted < ImmutableStruct.new(:id)
+        def self.from_response(response)
+          id = response.headers[:x_systemTransactionId] unless response.nil?
+
+          new(id)
+        end
+      end
+
     end
   end
 end

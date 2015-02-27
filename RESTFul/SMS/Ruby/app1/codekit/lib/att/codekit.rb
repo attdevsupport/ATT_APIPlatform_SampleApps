@@ -20,5 +20,8 @@ module Att
       require_relative "codekit/service"
     end
 
+    module Util
+        require_relative "codekit/util"
+    end
   end
 end

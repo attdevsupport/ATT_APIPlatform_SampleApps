@@ -32,9 +32,9 @@ module Att
         # @option opts [#to_s] :redirect location to redirect after consent flow
         # @option opts [String, Array<String>] :scope the scope(s) in which to request a token
         # @option opts [String] :suburl the suburl of the fqdn for requesting tokens, 
-        #   do not use unless you absolutely know what you are doing (default: '/oauth/token')
+        #   do not use unless you absolutely know what you are doing (default: '/oauth/v4/token')
         # @option opts [String] :auth_url the suburl of the fqdn for performing consent flow, 
-        #   do not use unless you absolutely know what you are doing (default: '/oauth/authorize')
+        #   do not use unless you absolutely know what you are doing (default: '/oauth/v4/authorize')
         def initialize(fqdn, client_id, client_secret, opts={}) 
           super(fqdn, client_id, client_secret, opts)
           @auth_url = (opts[:auth_url] || '/oauth/v4/authorize')
