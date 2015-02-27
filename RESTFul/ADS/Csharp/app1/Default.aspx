@@ -2,10 +2,19 @@
 
 <!DOCTYPE html>
 <!-- 
-Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-For more information contact developer.support@att.com
+* Copyright 2014 AT&T
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
 -->
 <!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
 <!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
@@ -330,7 +339,8 @@ For more information contact developer.support@att.com
                 For download of tools and documentation, please go to <a href="https://developer.att.com/"
                     target="_blank">https://developer.att.com</a>
                 <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
+                For more information please go to <a href="https://developer.att.com/support"
+                    target="_blank">https://developer.att.com/support</a>
                 <br />
                 <br />
                 &copy; 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"

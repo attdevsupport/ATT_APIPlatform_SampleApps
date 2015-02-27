@@ -1,8 +1,17 @@
 ******************************************************************************************
-* Licensed by AT&T under 'Software Development Kit Tools Agreement.' 2013
-* TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION: http://developer.att.com/sdk_agreement/
-* Copyright 2013 AT&T Intellectual Property. All rights reserved. http://developer.att.com
-* For more information contact developer.support@att.com<mailto:developer.support@att.com>
+* Copyright 2014 AT&T
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
 ******************************************************************************************
 
   AT&T API Platform Samples - Ad App 1
@@ -29,7 +38,7 @@ create and run one's own full-fledged sample applications.
   on developer site with the proper services and endpoints, depending on the type of
   client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://developer.att.com/ and login with
+  To register an application, go to https://developer.att.com/ developer/mvc/auth/login and login with
   your valid username and password. Next, choose "My Apps" from the bar at the top
   of the page and click the "Setup a New Application" button. 
 

@@ -1342,7 +1342,7 @@
                         <br>
                                             <br>
                                             For download of tools and documentation, please go to <a
-                                                href="https://developer.att.com/developer/mvc/auth/login" target="_blank">https://developer.att.com/developer/mvc/auth/login</a>
+                                                href="https://developer.att.com" target="_blank">https://developer.att.com</a>
                                             <br>
                                             For more information please go to <a
                                                 href="https://developer.att.com/support" target="_blank">https://developer.att.com/support</a>
