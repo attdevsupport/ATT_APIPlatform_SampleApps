@@ -16,9 +16,16 @@ module Att
       require_relative "codekit/auth" 
     end
 
+    module Model
+      require_relative "codekit/model"
+    end
+
     module Service
       require_relative "codekit/service"
     end
 
+    module Util
+        require_relative "codekit/util"
+    end
   end
 end

@@ -1,7 +1,7 @@
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.util.HashMap;
 import java.util.Properties;
+
+import org.json.JSONObject;
 
 /**
  * An immutable OAuthToken object that encapsulates an OAuth 2.0 token, which
@@ -74,8 +76,11 @@ public class OAuthToken {
     /** Access token. */
     private final String accessToken;
 
-    /** Unix timestamp, in seconds, to denote access token expiry. */
-    private final long accessTokenExpiry;
+    /** Seconds at which access token will expire relative to creation.  **/
+    private final long expiresIn;
+
+    /** Unix timestamp, in seconds, to denote access token creation date. */
+    private final long creationTime;
 
     /** Refresh token. */
     private final String refreshToken;
@@ -111,15 +116,10 @@ public class OAuthToken {
      */
     public OAuthToken(String accessToken, long expiresIn, String refreshToken,
             long creationTime) {
-
-        if (expiresIn == OAuthToken.NO_EXPIRATION) {
-            this.accessTokenExpiry = OAuthToken.NO_EXPIRATION;
-        } else {
-            this.accessTokenExpiry = expiresIn + creationTime;
-        }
-
         this.accessToken = accessToken;
+        this.expiresIn = expiresIn;
         this.refreshToken = refreshToken;
+        this.creationTime = creationTime;
     }
 
     /**
@@ -129,7 +129,6 @@ public class OAuthToken {
      * @param accessToken access token
      * @param expiresIn time in seconds token expires from current time
      * @param refreshToken refresh token
-     * @see #OAuthToken(String, long, String, long)
      */
     public OAuthToken(String accessToken, long expiresIn, String refreshToken) {
         this(accessToken, expiresIn, refreshToken, xtimestamp());
@@ -142,8 +141,8 @@ public class OAuthToken {
      *         otherwise
      */
     public boolean isAccessTokenExpired() {
-        return accessTokenExpiry != NO_EXPIRATION
-            && xtimestamp() >= accessTokenExpiry;
+        return this.getAccessTokenExpiry() != NO_EXPIRATION
+            && xtimestamp() >= this.getAccessTokenExpiry();
     }
 
     /**
@@ -156,12 +155,55 @@ public class OAuthToken {
     }
 
     /**
+     * Get the Unix timestamp, in seconds, that the token will expire
+     *
+     * @return the accessTokenExpiry
+     */
+    public long getAccessTokenExpiry() {
+        return this.expiresIn == OAuthToken.NO_EXPIRATION 
+            ? OAuthToken.NO_EXPIRATION : this.expiresIn + this.creationTime;
+    }
+
+    /**
+     * Get the number of seconds that the token will expire relative to
+     * creationTime.
+     *
+     * @return the expiresIn
+     */
+    public long getExpiresIn() {
+        return expiresIn;
+    }
+
+    /**
+     * Get the Unix timestamp, in seconds, that the token was created.
+     *
+     * @return the creationTime
+     */
+    public long getCreationTime() {
+        return creationTime;
+    }
+
+    /**
      * Gets refresh token.
      *
      * @return refresh token
      */
     public String getRefreshToken() {
         return refreshToken;
+    }
+
+
+    public static OAuthToken valueOf(JSONObject jobj) {
+        final String accessToken = jobj.getString("access_token");
+        final String refreshToken = jobj.getString("refresh_token");
+        long expiresIn = jobj.getLong("expires_in");
+
+        // 0 indicates no expiry
+        if (expiresIn == 0) {
+            expiresIn = OAuthToken.NO_EXPIRATION;
+        }
+
+        return new OAuthToken(accessToken, expiresIn, refreshToken);
     }
 
     /**
@@ -187,7 +229,8 @@ public class OAuthToken {
                 fLock = fOutputStream.getChannel().lock();
                 Properties props = new Properties();
                 props.setProperty("accessToken", accessToken);
-                props.setProperty("accessTokenExpiry", String.valueOf(accessTokenExpiry));
+                props.setProperty("creationTime", String.valueOf(creationTime));
+                props.setProperty("expiresIn", String.valueOf(expiresIn));
                 props.setProperty("refreshToken", refreshToken);
                 props.store(fOutputStream, "Token Information");
             } catch (IOException e) {
@@ -204,7 +247,8 @@ public class OAuthToken {
      * manner.
      *
      * <p>
-     * If <code>fpath</code> does not exist, null is returned.
+     * If <code>fpath</code> does not exist or some required values are missing
+     * from the saved file, null is returned.
      * </p>
      *
      * <p>
@@ -238,14 +282,26 @@ public class OAuthToken {
                 fLock = fInputStream.getChannel().lock(0L, Long.MAX_VALUE, true);
                 Properties props = new Properties();
                 props.load(fInputStream);
+                if (!props.containsKey("creationTime") 
+                        || !props.containsKey("expiresIn")) {
+                    return null;
+                }
+
                 String accessToken = props.getProperty("accessToken");
                 if (accessToken == null || accessToken.equals("")) {
                     return null;
                 }
-                String sExpiry = props.getProperty("accessTokenExpiry", "0");
-                long expiry = new Long(sExpiry).longValue();
+
                 String refreshToken = props.getProperty("refreshToken");
-                return new OAuthToken(accessToken, expiry, refreshToken);
+
+                String sExpiresIn = props.getProperty("expiresIn");
+                long expiresIn = new Long(sExpiresIn).longValue();
+
+                String sCreationTime = props.getProperty("creationTime");
+                long creationTime = new Long(sCreationTime).longValue();
+
+                return new OAuthToken(accessToken, expiresIn, refreshToken,
+                        creationTime);
             } catch (IOException e) {
                 throw e; // pass along exception
             } finally {

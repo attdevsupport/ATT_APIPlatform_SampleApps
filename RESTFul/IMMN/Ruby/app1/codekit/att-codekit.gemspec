@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Standardized interface for making calls to ATT's cloud API services}
   spec.summary       = %q{Codekit for accessing AT&T's cloud services}
   spec.homepage      = "http://developer.att.com"
-  spec.license       = "AT&T: Software Development Kit Tools Agreement"
+  spec.license       = "Apache 2.0"
   spec.has_rdoc      = true
 
   spec.files         = Dir['lib/**/*', 'examples/**/*']
@@ -27,5 +27,5 @@ Gem::Specification.new do |spec|
   #runtime dependencies
   spec.add_runtime_dependency "json"
   spec.add_runtime_dependency "immutable_struct"
-  spec.add_runtime_dependency "rest-client", "~> 1.6"
+  spec.add_runtime_dependency "rest-client", "~> 1.7"
 end

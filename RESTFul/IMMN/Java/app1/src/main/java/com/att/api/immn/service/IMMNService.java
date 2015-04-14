@@ -21,6 +21,7 @@ package com.att.api.immn.service;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 import com.att.api.oauth.OAuthToken;
 import com.att.api.rest.APIResponse;
@@ -125,8 +126,12 @@ public class IMMNService extends APIService {
                 .httpPost(jsonBody.toString()) : rest.httpPost(jsonBody,
                 attachments);
 
-        JSONObject jobj = new JSONObject(response.getResponseBody());
-        return SendResponse.valueOf(jobj);
+        try {
+            JSONObject jobj = new JSONObject(response.getResponseBody());
+            return SendResponse.valueOf(jobj);
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     public MessageList getMessageList(int limit, int offset)
@@ -167,9 +172,13 @@ public class IMMNService extends APIService {
             client.addParameter("isIncoming", args.isIncoming() ? "true"
                     : "false");
 
-        APIResponse response = client.httpGet();
-        JSONObject jobj = new JSONObject(response.getResponseBody());
-        return MessageList.valueOf(jobj);
+        try {
+            APIResponse response = client.httpGet();
+            JSONObject jobj = new JSONObject(response.getResponseBody());
+            return MessageList.valueOf(jobj);
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     public Message getMessage(final String msgId) throws RESTException {
@@ -179,8 +188,12 @@ public class IMMNService extends APIService {
                 .addAuthorizationHeader(getToken())
                 .setHeader("Accept", "application/json").httpGet();
 
-        JSONObject jobj = new JSONObject(response.getResponseBody());
-        return Message.valueOf(jobj.getJSONObject("message"));
+        try {
+            JSONObject jobj = new JSONObject(response.getResponseBody());
+            return Message.valueOf(jobj.getJSONObject("message"));
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     public MessageContent getMessageContent(String msgId, String partNumber)
@@ -214,8 +227,12 @@ public class IMMNService extends APIService {
             .addParameter("state", state)
             .httpGet();
 
-        JSONObject jobj = new JSONObject(response.getResponseBody());
-        return DeltaResponse.valueOf(jobj);
+        try {
+            JSONObject jobj = new JSONObject(response.getResponseBody());
+            return DeltaResponse.valueOf(jobj);
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     public void updateMessages(DeltaChange[] messages) throws RESTException {
@@ -332,8 +349,13 @@ public class IMMNService extends APIService {
             .addAuthorizationHeader(getToken())
             .httpGet();
 
-        JSONObject jobj = new JSONObject(response.getResponseBody());
-        return MessageIndexInfo.valueOf(jobj);
+        try {
+            JSONObject jobj = new JSONObject(response.getResponseBody());
+
+            return MessageIndexInfo.valueOf(jobj);
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     public NotificationConnectionDetails getNotificationConnectionDetails(
@@ -348,8 +370,12 @@ public class IMMNService extends APIService {
             .setParameter("queues", queues)
             .httpGet();
 
-        JSONObject jobj = new JSONObject(response.getResponseBody());
-        return NotificationConnectionDetails.valueOf(jobj);
+        try {
+            JSONObject jobj = new JSONObject(response.getResponseBody());
+            return NotificationConnectionDetails.valueOf(jobj);
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
 }

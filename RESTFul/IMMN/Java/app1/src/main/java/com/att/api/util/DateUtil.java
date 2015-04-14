@@ -71,4 +71,14 @@ public class DateUtil {
         String serverDate = df.format(new Date());
         return serverDate;
     }
+
+    /**
+     * Gets the current time as a Unix timestamp.
+     *
+     * @return seconds since Unix epoch
+     */
+    public static long xtimestamp() {
+        return System.currentTimeMillis() / 1000;
+    }
+
 }

@@ -17,7 +17,7 @@ namespace Att\Api\Restful;
  * limitations under the License.
  */
 
-class HttpPut
+final class HttpPut
 {
     private $_putData;
 

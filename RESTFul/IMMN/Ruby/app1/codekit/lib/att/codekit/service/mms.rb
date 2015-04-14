@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'cgi'
 require 'json'
 require_relative '../model/mms'
 
@@ -113,7 +114,7 @@ module Att
         #
         # @return [Model::MMSStatus] parsed api response
         def mmsStatus(mms_id)
-          url = "#{@fqdn}#{SERVICE_URL_SEND}/#{mms_id}"
+          url = "#{@fqdn}#{SERVICE_URL_SEND}/#{CGI.escape(mms_id.to_s)}"
 
           headers = {
             :Accept => "application/json",

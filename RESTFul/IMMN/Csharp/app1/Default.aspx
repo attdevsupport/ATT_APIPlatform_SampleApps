@@ -1,33 +1,43 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="IMMN_App1" %>
-
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="IMMN_App1" %>
 <!DOCTYPE html>
-<!-- 
-* Copyright 2014 AT&T
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
+<!--
+Copyright 2015 AT&T
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 -->
-<!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!-->
 <html lang="en">
-<!--<![endif]-->
-<head>
-    <title>AT&amp;T Sample Application - In App Messaging</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>In-App Messaging</title>
+
+    <!-- jquery and bootstrap js -->
+    <script src="https://lprod.code-api-att.com/public_files/js/jquery.min.js"></script>
+    <script src="https://lprod.code-api-att.com/public_files/js/bootstrap.min.js"></script>
+ 
+    <!-- custom js -->
+ <%--   <script src="js/config.js"></script>--%>
+    <%--<script src="js/form_handler.js"></script>--%>
+    <%--<script src="js/response_handler.js"></script>--%>
+    <%--<script src="js/sample_app.js"></script>--%>
+
+    <!-- bootstrap css -->
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap-theme.min.css">
+    <!-- custom css -->
+    <link href="https://lprod.code-api-att.com/public_files/css/custom.css" rel="stylesheet">
+
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33466541-1']);
@@ -38,164 +48,248 @@
             ga.type = 'text/javascript';
             ga.async = true;
             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-                                      : 'http://www')
-                                      + '.google-analytics.com/ga.js';
+                                        : 'https://www')
+                                        + '.google-analytics.com/ga.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ga, s);
         })();
     </script>
+ 
     <script src="scripts/utils.js" type="text/javascript"></script>
-</head>
-<body>
-    <div id="pageContainer">
-        <div id="header">
-            <div class="logo" id="top">
-            </div>
-            <div id="menuButton" class="hide">
-                <a id="jump" href="#nav">Main Navigation</a>
-            </div>
-            <ul class="links" id="nav">                
-                <li><a id="sourceLink" runat="server" href="<%$ AppSettings:SourceLink %>" target="_blank">
-                    Source<img src="images/opensource.png" alt="" />
-                </a><span class="divider">|&nbsp;</span> </li>
-                <li><a id="downloadLink" runat="server" href="<%$ AppSettings:DownloadLink %>" target="_blank">
-                    Download<img src="images/download.png" alt="" />
-                </a><span class="divider">|&nbsp;</span> </li>
-                <li><a id="helpLink" runat="server" href="<%$ AppSettings:HelpLink %>" target="_blank">
-                    Help </a></li>
-                <li id="back"><a href="#top">Back to top</a></li>
-            </ul>
-        </div>
+    <!--[if lt IE 9]>
+      <script src="https://lprod.code-api-att.com/public_files/js/html5shiv.min.js"></script>
+      <script src="https://lprod.code-api-att.com/public_files/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="header">
+          <ul class="nav nav-pills pull-left">
+            <li>
+              <a class="brand" href="https://developer.att.com">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-developer.png">
+              </a>
+            </li>
+          </ul>
+        </div><!--./header-->
+      </div><!--./row-->
         <form id="form1" runat="server">
-        <div id="content">
-            <div id="contentHeading">
-                <h1>
-                    AT&amp;T Sample Application - In App Messaging from mobile number</h1>
-                <div class="border">
-                </div>
-                <div id="introtext">
-                    <div>
-                        <b>Server Time:</b>
-                        <%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %>
-                    </div>
-                    <div>
-                        <b>Client Time:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            var myDate = new Date();
-                            document.write(myDate);
-                        </script>
-                    </div>
-                    <div>
-                        <b>User Agent:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            document.write("" + navigator.userAgent);
-                        </script>
-                    </div>
-                </div>
-            </div>
-            <div class="lightBorder"></div>
-            <div class="formBox" id="formBox">
-                <div id="formContainer" class="formContainer">
-                    <a id="sendMsgToggle" href="javascript:toggle('sendMsg','sendMsgToggle', 'Send Message');">Send Message </a>
-                    <div id="sendMsg" class="toggle">
-                        <br />
-                        <label><i>Max message size shall be 1MB or less</i></label><br/><br/>
-                        <h2>Operation : Send Message</h2>
-                        <div class="inputFields">
-                            <asp:TextBox ID="Address" name="message" placeholder="Address" runat="server"></asp:TextBox>
+      <div class="row">
+        <h3 class="text-center">In-App Messaging</h3>
+      </div>
+      <div class="row">
+        <h5 class="text-center">This sample application showcases sending, receiving, updating, and deleting MMS and SMS messages on behalf of a specific user.</h5>
+      </div>
+      <hr>
+      <div class="inline-row">
+        <a class="btn btn-warning" id="github" href="#">Github</a>
+        <a class="btn btn-warning" id="download" href="#">Download</a>
+      </div><!--./row-->
+      <hr>
+      <div class="row">
+        <div class="alert alert-info">
+          Note: All features except for Send Message require a subscription to
+          <a href="http://messages.att.net">AT&amp;T Messages</a>
+        </div>
+      </div><!--./row-->
+      <div class="row">
+        <div class="col-md-12">
+          <!-- TODO: finish this portion -->
+          <div role="tabpanel" id="tabs">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#send-msg" aria-controls="send-msg" role="tab" data-toggle="tab">Send Message</a>
+              </li>
+              <li role="presentation">
+                <a href="#create-msg-index" aria-controls="create-msg-index" role="tab"
+                  data-toggle="tab">Message Index</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a href="#" id="messages-tab" class="dropdown-toggle" data-toggle="dropdown"
+                  aria-controls="messages-tab-contents">Get Message <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="messages-tab" id="messages-tab-contents">
+                  <li>
+                    <a href="#get-msg-list" tabindex="-1" role="tab" id="get-msg-list-tab" data-toggle="tab"
+                      aria-controls="get-msg-list">Get Message List</a>
+                  </li>
+                  <li>
+                    <a href="#get-msg" tabindex="-1" role="tab" id="get-msg-tab" data-toggle="tab"
+                      aria-controls="get-msg">Get Message</a>
+                  </li>
+                  <li>
+                    <a href="#get-msg-content" tabindex="-1" role="tab" id="get-msg-content-tab" data-toggle="tab"
+                      aria-controls="get-msg-content">Get Message Content</a>
+                  </li>
+                  <li>
+                    <a href="#get-delta" tabindex="-1" role="tab" id="get-delta-tab" data-toggle="tab"
+                      aria-controls="get-delta">Get Delta</a>
+                  </li>
+                  <li>
+                    <a href="#get-msg-index-info" tabindex="-1" role="tab" id="get-msg-index-info-tab"
+                      data-toggle="tab" aria-controls="get-msg-index-info">Get Message Index Info</a>
+                  </li>
+                </ul>
+              </li>
+              <li role="presentation">
+                <a href="#update-msg" aria-controls="update-msg" role="tab" data-toggle="tab">Update Message</a>
+              </li>
+              <li role="presentation">
+                <a href="#delete-msg" aria-controls="delete-msg" role="tab" data-toggle="tab">Delete Message</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a href="#" id="notifications-tab" class="dropdown-toggle" data-toggle="dropdown"
+                  aria-controls="notification-tab-contents">Notifications <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu"
+                  aria-labelledby="notifications-tab" id="notification-tab-contents">
+                  <li>
+                    <a href="#get-notification-details" tabindex="-1" role="tab" id="get-notification-details-tab"
+                      data-toggle="tab" aria-controls="get-notification-details">Websockets: Get Connection Details</a>
+                  </li>
+                  <li>
+                    <a href="#create-subscription" tabindex="-1" role="tab" id="create-subscription-tab"
+                      data-toggle="tab" aria-controls="create-subscription">Webhooks: Create Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#update-subscription" tabindex="-1" role="tab" id="update-subscription-tab"
+                      data-toggle="tab" aria-controls="update-subscription">Webhooks: Update Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#get-subscription" tabindex="-1" role="tab" id="get-subscription-tab" data-toggle="tab"
+                      aria-controls="get-subscription">Webhooks: Get Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#delete-subscription" tabindex="-1" role="tab" id="delete-subscription-tab"
+                      data-toggle="tab" aria-controls="delete-subscription">Webhooks: Delete Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#view-notification-details" tabindex="-1" role="tab" id="view-notification-details-tab"
+                      data-toggle="tab" aria-controls="view-notification-details">Webhooks: View Notifications</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <!-- Tab panes -->
+              <%--<asp:HiddenField ID="selected_tab" runat="server" />--%>
+
+            <div class="tab-content">
+              <div role="tabpanel" class="tab-pane active" id="send-msg">
+                <%--<-- <form id="sendMsg" runat="server"> -->--%>
+                      <div class="inputFields">
+                          <label >
+                            Address
+                            <br />
+                            <asp:TextBox ID="Address" class="form-control" data-toggle="tooltip" data-placement="bottom"
+                      data-title="Format must be one of: tel:15555555" name="message" placeholder="Address" runat="server"></asp:TextBox>
+                          </label>
+                          <br/>
                             <label>
-                                Group:
-                                <asp:CheckBox ID="groupCheckBox" runat="server" name="groupCheckBox" />
+                                <asp:CheckBox ID="groupCheckBox" runat="server" name="groupCheckBox" /> Group
                             </label>
+                          <br/>
                             <label>
                                 Message: <i>max 200 characters are allowed</i>
-                                <asp:TextBox ID="message" name="message" placeholder="ATT IMMN sample message" maxlength="200" runat="server"></asp:TextBox>
+                                <br/>
+                                <asp:TextBox ID="message" class="form-control" name="message" placeholder="ATT IMMN sample message" maxlength="200" runat="server"></asp:TextBox>
                             </label>
+                          <br/>
                             <label>
                                 Subject: <i>max 30 characters are allowed</i>
-                                    <asp:TextBox ID="subject" runat="server" name="subject" placeholder="Subject : ATT IMMN APP"  maxlength="30"></asp:TextBox>
+                                <br/>
+                                    <asp:TextBox ID="subject" class="form-control"  runat="server" name="subject" placeholder="Subject : ATT IMMN APP"  maxlength="30"></asp:TextBox>
                             </label>
+                          <br/>
                             <label>
                                 Attachment:
                             </label>
-                            <select name="attachment" id="attachment" runat="server">
+                          <br/>
+                            <select name="attachment" class="form-control" id="attachment" runat="server">
                                  <option>None</option>
                             </select><br />
-                            <asp:Button ID="sendMessage" class="submit" runat="server" Text="Send Message" OnClick="Button1_Click" />
+                            <asp:Button ID="sendMessage" runat="server" class="btn btn-primary" Text="Send Message" OnClick="Button1_Click" />
                         </div>
                         <% if (!string.IsNullOrEmpty(sendMessageSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>
                             <%=sendMessageSuccessResponse.ToString() %>
                         </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(sendMessageErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=sendMessageErrorResponse.ToString()%>
                         </div>
                         <% } %>
-                    </div>
-                    <!-- end of sendMessages -->
-                     <div class="lightBorder"></div>
-						<label>
-						  <b>Note:</b> In order to use the following features, you must be subscribed to 
-						  <a href="http://messages.att.net">AT&amp;T Messages</a>
-						</label>
-						<div class="lightBorder"></div>
-				     <a id="createMsgToggle" href="javascript:toggle('createMsg','createMsgToggle', 'Create Message Index ');">Create Message Index </a>
-				     <div class="toggle" id="createMsg">
-				        <br />
-				        <h2>Create Message Index</h2>
-					    <div class="inputFields">
-                            <asp:Button ID="createIndexId" runat="server" Text="Create Index" OnClick="createMessageIndex_Click"/>
+                <%--</form>--%>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="create-msg-index">
+                <%--<form id="createIndex" runat="server"> -->--%>
+                  		<div class="inputFields">
+                        <label>
+                            Create Message Index:
+                            <br />
+                            <br />
+                            
+                            <asp:Button ID="createIndexId" class="btn btn-primary" runat="server" Text="Create Index" OnClick="createMessageIndex_Click"/>
 					    </div>
-					        <label>* - <i>Call <b>Create Message Index</b> method to create an index cache for the subscribers inbox</i></label>
+                        </label>
+					        
                         <% if (!string.IsNullOrEmpty(createMessageIndexSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>
                             <%=createMessageIndexSuccessResponse.ToString()%>
                         </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(createMessageIndexErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=createMessageIndexErrorResponse.ToString()%>
                         </div>
                         <% } %>
-                     </div>
-                    <div class="lightBorder">
-                    </div>
-                    <a id="getMsgToggle" href="javascript:toggle('getMsg','getMsgToggle', 'Get Message ');">Get Message </a>
-                    <div id="getMsg" class="toggle"><br />
-                    <h2>Get Message List <i>(Displays last 5 messages from the list)</i></h2>
+                <%--</form>--%>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="get-msg-list">
+                <%--<form id="getMsgList" runat="server"> -->--%>
+                  <label>Get Message List (Displays last 5 messages from the list):</label>
+                  <br />
+                  <br />
                         <div class="inputFields">
                             <label>
                                 <asp:CheckBox ID="CheckBox1" runat="server" name="groupCheckBox" /> Filter by favorite
                             </label>
+                            <br/>
                              <label>
                                 <asp:CheckBox ID="CheckBox2" runat="server" name="groupCheckBox" /> Filter by unread flag
                             </label>
+                            <br/>
                              <label>
                                 <asp:CheckBox ID="CheckBox3" runat="server" name="groupCheckBox" /> Filter by incoming flag
                             </label>
+                            <br/>
+                            <label>
+                                Filter by recipients:
+                                <br />
 							<asp:TextBox ID="FilterKeyword" runat="server" name="FilterKeyword" placeholder="555-555-5555"></asp:TextBox>
-                            <asp:Button ID="getMessageLst" runat="server" Text="Get Message List" OnClick="getMessageList_Click" />
+                            </label>
+                            <br />
+                            <br />
+                            <asp:Button ID="getMessageLst" class="btn btn-primary" runat="server" Text="Get Message List" OnClick="getMessageList_Click" />
                         </div>
                         <br/>			
                         <% if (!string.IsNullOrEmpty(getMessageListSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>
                             
                         </div>
-                        
-                        <table>
-						  <thead>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
 							<tr>
 							  <th>limit</th>
 							  <th>offset</th>
@@ -216,7 +310,7 @@
 							</tr>
 						  </tbody>
 						</table>
-						
+						</div>
 						<% 
 						int count = 1;
 						foreach (var message in csGetMessageListDetailsResponse.messages)
@@ -228,7 +322,8 @@
                         %>
                         Message <%=count%>
 						<br/> 
-						<table>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
 						  <thead>
 							<tr>
 							  <th>message id</th>
@@ -256,6 +351,7 @@
 							</tr>
 						  </tbody>
 						</table> 
+                        </div> 
                         <%
                         count = count+1; 
                         } %> 
@@ -263,24 +359,33 @@
                         } %>
                         <% if (!string.IsNullOrEmpty(getMessageListErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=getMessageListErrorResponse.ToString()%>
                         </div>
                         <% } %>				        
                         <br />
-                        <h2>Get Message </h2>
+                <%--<-- </form> -->--%>
+              </div> <!--./get-msg-list-->
+              <div role="tabpanel" class="tab-pane" id="get-msg">
+<%--                < <form id="getMsg" runat="server"> -->--%>
+                        <label>Get Message </label>
                         <div class="inputFields">
+                            <label>Message Id
+                                <br />
                             <asp:TextBox ID="MessageId" value="" runat="server" name="MessageId" placeholder="Message ID"></asp:TextBox>
-                            <asp:Button ID="btnGetMessage" runat="server" Text="Get Message" OnClick="getMessage_Click" />
+                            </label>
+                            <br />
+                            <asp:Button ID="btnGetMessage" class="btn btn-primary" runat="server" Text="Get Message" OnClick="getMessage_Click" />
                         </div>
                         <% if (!string.IsNullOrEmpty(getMessageSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>      
                         </div>
-                        <table>
-						  <thead>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
 							<tr>
 							  <th>message id</th>
 							  <th>from</th>
@@ -306,44 +411,66 @@
 							  <td><%= getMessageDetailsResponse.type%></td>
 							</tr>
 						  </tbody>
-						</table> 
+						</table>
+                        </div> 
                         <% } %>
                         <% if (!string.IsNullOrEmpty(getMessageErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=getMessageErrorResponse.ToString()%>
                         </div>
                         <% } %>
                         <br />
-                        <h2>Get Message Content</h2>
+<%--                <-- </form> -->--%>
+              </div> <!--./get-msg-->
+              <div role="tabpanel" class="tab-pane" id="get-msg-content">
+<%--                <-- <form id="getMsgContent" runat="server"> -->--%>
+                        <label>Get Message Content:</label>
                         <div class="inputFields">
-                            <asp:TextBox ID="MessageIdForContent" runat="server" name="MessageIdForContent" placeholder="Message ID"></asp:TextBox>
-                            <asp:TextBox ID="PartNumberForContent" runat="server" name="PartNumberForContent" placeholder="Part Number"></asp:TextBox>
-                            <asp:Button ID="getMessageContent" runat="server" Text="Get Message Content" OnClick="GetMessageContentByIDnPartNumber" />
+                            <label>Message Id
+                            <br />
+                            <asp:TextBox ID="MessageIdForContent" class="form-control" runat="server" name="MessageIdForContent" placeholder="Message ID"></asp:TextBox>
+                            </label>
+                            <br />
+                            <label>Part Number
+                            <br />
+                            <asp:TextBox ID="PartNumberForContent" class="form-control" runat="server" name="PartNumberForContent" placeholder="Part Number"></asp:TextBox>
+                            </label>
+                            <br />
+                            <asp:Button ID="getMessageContent" class="btn btn-primary" runat="server" Text="Get Message Content" OnClick="GetMessageContentByIDnPartNumber" />
                         </div>
                         <% if (!string.IsNullOrEmpty(getMessageContentSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>                                                  
                         </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(getMessageContentErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=getMessageContentErrorResponse.ToString()%>
                         </div>
                         <% } %>
                         <br />
-                        <h2>Get Delta </h2>
+                <%--<-- </form> -->--%>
+              </div> <!--./get-msg-content-->
+              <div role="tabpanel" class="tab-pane" id="get-delta">
+                <%--<-- <form id="getDelta" runat="server"> -->--%>
+                        <label>Get Delta: </label>
+                        <br />
                         <div class="inputFields">
-                            <asp:TextBox ID="MessageIdForDelta" runat="server" name="MessageIdForDelta" placeholder="Message State"  ></asp:TextBox>
-                            <asp:Button ID="btnGetDelta" runat="server" Text="Get Delta" OnClick="getDelta_Click" />
+                            <label>Message State
+                            <br />
+                            <asp:TextBox ID="MessageIdForDelta" class="form-control" runat="server" name="MessageIdForDelta" placeholder="Message State"  ></asp:TextBox>
+                            </label>
+                            <br />
+                            <asp:Button ID="btnGetDelta" class="btn btn-primary" runat="server" Text="Get Delta" OnClick="getDelta_Click" />
                         </div>
                         <% if (!string.IsNullOrEmpty(deltaSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>                            
                         </div>
                         <b>Delta Type : TEXT</b>
@@ -351,8 +478,9 @@
                                 foreach (var deltaRes in csDeltaResponse.delta)
                                { 
                                if (deltaRes.type.Equals("TEXT", StringComparison.InvariantCultureIgnoreCase)) {
-                               %>                                                           
-								<table>
+                               %>
+                                <div class="table-responsive">
+                                <table class="table table-condensed table-striped table-bordered">                                                           
 								  <thead>
 									<tr>
 									  <th>DeltaOperation</th>
@@ -406,6 +534,7 @@
                                     } %>
                                     </tbody>
                             </table>
+                            </div>
                          <% } %>
                         
                         <% 
@@ -416,8 +545,9 @@
                                 foreach (var deltaRes in csDeltaResponse.delta)
                                { 
                                if (deltaRes.type.Equals("TEXT", StringComparison.InvariantCultureIgnoreCase)) {
-                               %>                                                           
-								<table>
+                               %>
+                                <div class="table-responsive">
+                                <table class="table table-condensed table-striped table-bordered">                                                           
 								  <thead>
 									<tr>
 									  <th>DeltaOperation</th>
@@ -471,6 +601,7 @@
                                     } %>
                                     </tbody>
                             </table>
+                            </div>
                          <% } %>
                         
                         <% 
@@ -480,23 +611,29 @@
                         
                         <% if (!string.IsNullOrEmpty(deltaErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=deltaErrorResponse.ToString()%>
                         </div>
                         <% } %>
                         <br />
-                        <h2>Get Message Index Info</h2>
+                <%--!-- </form> -->--%>
+              </div> <!--./get-delta-->
+              <div role="tabpanel" class="tab-pane" id="get-msg-index-info">
+                <%--!-- <form id="getMsgIndexInfo" runat="server"> -->--%>
+                        <label>Get Message Index Info:</label>
+                        <br />
                         <div class="inputFields">
-                            <asp:Button ID="getMessageIndexInfo" runat="server" Text="Get Message Index Info" OnClick="getMessageIndex_Click" />
+                            <asp:Button ID="getMessageIndexInfo" class="btn btn-primary" runat="server" Text="Get Message Index Info" OnClick="getMessageIndex_Click" />
                         </div>
                         <% if (!string.IsNullOrEmpty(messageIndexSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>                            
                         </div>
-                        <table>
-						  <thead>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
 							<tr>
 							  <th>Status</th>
 							  <th>State</th>
@@ -510,98 +647,103 @@
 							  <td data-value="https url"><%= getMessageIndexInfoResponse.messageCount%></td>							
 							</tr>
 						  </tbody>
-						</table>  
+						</table>
+                        </div>  
                         <% } %>
                         <% if (!string.IsNullOrEmpty(messageIndexErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=messageIndexErrorResponse.ToString()%>
                         </div>
                         <% } %>
-                    
-                </div>
-                    
-                    <div class="lightBorder"></div>
-                    <a id="updateMsgToggle" 
-				        href="javascript:toggle('updateMsg','updateMsgToggle', 'Update Message ');">Update Message </a>
-				    <div class="toggle" id="updateMsg">
-				        <br/>
-				        <h2>Update Message/Messages</h2>
+                <%--!-- </form>->--%>
+              </div> <!--./get-msg-index-info-->
+              <div role="tabpanel" class="tab-pane" id="update-msg">
+                <%--!-- <form id="updateMsg" runat="server"> -->--%>
+				        <label>Update Message(s)</label>
 					    <div class="inputFields">
-					        <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
-                            <asp:TextBox ID="updateMessageId" runat="server" name="updateMessageId" placeholder="Message ID"  ></asp:TextBox>
+					        <label>Message Id
+                            <br />
+                            <asp:TextBox ID="updateMessageId" class="form-control" runat="server" name="updateMessageId" placeholder="Message ID" data-toggle="tooltip" data-placement="bottom"
+                      data-title="More than one message ID can be separated by a comma (,)" ></asp:TextBox>
+                            </label>
+                            <br />
 						    <label> Change Status : 
+                            <br />
                             <input type="radio" id="read" runat="server" name="changeStatus" value="Read" checked /> Read
                             <input type="radio" id="unread" runat="server" name="changeStatus" value="UnRead" /> UnRead
 					        </label>
-                            <asp:Button ID="btnUpdateMessage" runat="server" Text="Update Message/Messages" OnClick="updateMessage_Click" />
+                            <br />
+                            <asp:Button ID="btnUpdateMessage" class="btn btn-primary" runat="server" Text="Update Message(s)" OnClick="updateMessage_Click" />
 					    </div>
                         <% if (!string.IsNullOrEmpty(updateMessageSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>
                             <%=updateMessageSuccessResponse.ToString()%>
                         </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(updateMessageErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=updateMessageErrorResponse.ToString()%>
                         </div>
                         <% } %>
-                     </div>
-
-                     <div class="lightBorder"></div>
-				     <a id="delMsgToggle" 
-				      href="javascript:toggle('delMsg','delMsgToggle', 'Delete Message ');">Delete Message </a>
-				     <div class="toggle" id="delMsg">
-				        <br/>
-				        <h2>Delete Message/Messages</h2>
+                <%--!-- </form> -->--%>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="delete-msg">
+                <%--!-- <form id="delMsg" runat="server"> -->--%>
+				        <label>Delete Message(s)</label>
+                        <br />
 					    <div class="inputFields">
-					        <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
-                            <asp:TextBox ID="deleteMessageId" runat="server" name="deleteMessageId" placeholder="Message ID"></asp:TextBox>
-                            <asp:Button ID="deleteMessages" runat="server" Text="Delete Message/Messages" OnClick="deleteMessage_Click" />                              												
+					        <label>Message Id
+                            <br />
+                            <asp:TextBox ID="deleteMessageId" class="form-control" runat="server" name="deleteMessageId" placeholder="Message ID" data-toggle="tooltip" data-placement="bottom"
+                      data-title="More than one message ID can be separated by a comma (,)"></asp:TextBox>
+                            </label>
+                            <br />
+                            <asp:Button ID="deleteMessages" class="btn btn-primary" runat="server" Text="Delete Message(s)" OnClick="deleteMessage_Click" />                              												
 					    </div>
                         <% if (!string.IsNullOrEmpty(deleteMessageSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>
                             <%=deleteMessageSuccessResponse.ToString()%>
                         </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(deleteMessageErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=deleteMessageErrorResponse.ToString()%>
                         </div>
                         <% } %>
-                     </div>
-
-           			 
-                     <div class="lightBorder"></div>
-                     <a id="getMsgNotToggle" 
-				                href="javascript:toggle('getMsgNot','getMsgNotToggle', 'Get Notification Connection Details ');">Get Notification Connection Details </a>
-				     <div class="toggle" id="getMsgNot">
-				        <br />
-				        <h2>Get Notification Connection Details</h2>
+                <%---- </form> -->--%>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="get-notification-details">
+                <%---- <form id="getNotiDetails" runat="server"> -->--%>
+				        <label>Get Notification Connection Details:</label>
+                        <br />
 					    <div class="inputFields">
 						    <label> Notification Subscription : 
+                             
                                 <input type="radio" id="notificationText" runat="server" name="notifciationDetails" value="TEXT" checked/> TEXT
                                 <input type="radio" id="notificationMms" runat="server" name="notifciationDetails" value="MMS" /> MMS
 					        </label>
-                            <asp:Button ID="GetNotificationDetailsId" runat="server" Text="Get Details" OnClick="getNotificationConnectionDetails_Click" />
+                            <br />
+                            <asp:Button ID="GetNotificationDetailsId" class="btn btn-primary" runat="server" Text="Get Details" OnClick="getNotificationConnectionDetails_Click" />
                         </div>
                         <% if (!string.IsNullOrEmpty(getNotificationConnectionDetailsSuccessResponse))
                            { %>
-                        <div class="successWide">
+                        <div class="alert alert-success" align="left">
                             <strong>SUCCESS:</strong>                                                     
                         </div>
                         <label> Connection Details </label><br />
-                        <table>
-						  <thead>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
 							<tr>
 							  <th>Username</th>
 							  <th>Password</th>
@@ -620,72 +762,413 @@
 							</tr>
 						  </tbody>
 						</table>                        
+                        </div>
                         <% } %>
                         <% if (!string.IsNullOrEmpty(getNotificationConnectionDetailsErrorResponse))
                            { %>
-                        <div class="errorWide">
+                        <div class="alert alert-danger">
                             <strong>ERROR:</strong><br />
                             <%=getNotificationConnectionDetailsErrorResponse.ToString()%>
                         </div>
                         <% } %>
-                 </div>    
-                 
-             </div>
-               <!-- END HEADER CONTENT RESULTS -->
+                <%--!-- </form> -->--%>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="create-subscription">
+                <%---- <form id="createSubscription" runat="server"> -->--%>
+                            <label>Create Subscription:</label>
+                        <br/>
+                        <br/>
+                        <div class="inputFields">
+							<label>Callback Data
+                            <br />
+							<asp:TextBox ID="callbackText" class="form-control" runat="server" name="FilterKeyword" placeholder="Callback Data"></asp:TextBox>
+                            </label>
+                            <br />
+                            <label>
+                                <asp:CheckBox ID="subscribeCheckBox1" runat="server" name="subscribeCheckBox1" /> TEXT
+                            </label>
+                            <br />
+                             <label>
+                                <asp:CheckBox ID="subscribeCheckBox2" runat="server" name="subscribeCheckBox2" /> MMS
+                            </label>
+                            <br />
+                            
+                            <asp:Button ID="Button1" class="btn btn-primary" runat="server" Text="Create Subscription" OnClick="createSubscription_Click" />
+                        </div>
+                        <% if (!string.IsNullOrEmpty(createSubscriptionSuccessResponse))
+                           { %>
+                        <div class="alert alert-success" align="left">
+                            <strong>SUCCESS:</strong>      
+                        </div>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
+							<tr>
+							  <th>subscription Id</th>
+							  <th>expiresIn</th>
+							</tr>
+						  </thead>
+						  <tbody>
+							<tr>
+							  <td><%= createSubscriptionResponse.subscriptionId%></td>
+							  <td><%= createSubscriptionResponse.expiresIn%></td>
+							</tr>
+						  </tbody>
+						</table> 
+                        </div>
+                        <% } %>
+                        <% if (!string.IsNullOrEmpty(createSubscriptionErrorResponse))
+                           { %>
+                        <div class="alert alert-danger">
+                            <strong>ERROR:</strong><br />
+                            <%=createSubscriptionErrorResponse.ToString()%>
+                        </div>
+                        <% } %>
+                <%--!-- </form> -->--%>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="update-subscription">
+                <%--!-- <form id="updateSubscription" runat="server">-->--%>
+                            <label>Update Subscription:</label>
+                        <br/>                
+                        <br/>
+                        <div class="inputFields">
+							<label>Callback Data
+                            <br />
+							<asp:TextBox ID="callbackText2" class="form-control" runat="server" name="FilterKeyword" placeholder="Callback Data"></asp:TextBox>
+                            </label>
+                            <br/>
+                            <label>
+                                <asp:CheckBox ID="subscribeCheckBox3" runat="server" name="subscribeCheckBox3" /> TEXT
+                            </label>
+                            <br/>
+                            
+                             <label>
+                                <asp:CheckBox ID="subscribeCheckBox4" runat="server" name="subscribeCheckBox4" /> MMS
+                            </label>
+                            
+                            <br />
+                            <asp:Button ID="Button2" class="btn btn-primary" runat="server" Text="Update Subscription" OnClick="updateSubscription_Click" />
+                        </div>
+                        <% if (!string.IsNullOrEmpty(updateSubscriptionSuccessResponse))
+                           { %>
+                        <div class="alert alert-success" align="left">
+                            <strong>SUCCESS:</strong>      
+                        </div>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
+							<tr>
+							  <th>subscription id</th>
+							  <th>expiresIn</th>
+							</tr>
+						  </thead>
+						  <tbody>
+							<tr>
+							  <td><%= updateSubscriptionResponse.subscriptionId%></td>
+							  <td><%= updateSubscriptionResponse.expiresIn%></td>
+							</tr>
+						  </tbody>
+						</table> 
+                        </div>
+                        <% } %>
+                        <% if (!string.IsNullOrEmpty(updateSubscriptionErrorResponse))
+                           { %>
+                        <div class="alert alert-danger">
+                            <strong>ERROR:</strong><br />
+                            <%=updateSubscriptionErrorResponse.ToString()%>
+                        </div>
+                        <% } %>
+                <%--!-- </form> -->--%>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="get-subscription">
+                <%--!-- <form id="getSubscription" runat="server"> -->--%>
+                  <label>Get Subscription:</label>
+                  <br />
+                        <div class="inputFields">
+                            <asp:Button ID="Button4" class="btn btn-primary" runat="server" Text="Get Subscription" OnClick="getSubscription_Click" />
+                        </div>
+                        <% if (!string.IsNullOrEmpty(getSubscriptionSuccessResponse))
+                           { %>
+                        <div class="alert alert-success" align="left">
+                            <strong>SUCCESS:</strong>      
+                        </div>
+                        <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
+                          <thead>
+							<tr>
+							  <th>Subscription Id</th>
+							  <th>Expires In</th>
+							  <th>Queues</th>
+							  <th>Callback Data</th>
+							</tr>
+						  </thead>
+						  <tbody>
+							<tr>
+							  <td><%= getSubscriptionResponse.subscriptionId%></td>
+							  <td><%= getSubscriptionResponse.expiresIn%></td>
+							  <td><%= getSubscriptionResponseFilters%></td>
+							  <td><%= getSubscriptionResponse.callbackData%></td>
+							</tr>
+						  </tbody>
+						</table> 
+                        </div>
+                        <% } %>
+                        <% if (!string.IsNullOrEmpty(getSubscriptionErrorResponse))
+                           { %>
+                        <div class="alert alert-danger">
+                            <strong>ERROR:</strong><br />
+                            <%=getSubscriptionErrorResponse.ToString()%>
+                        </div>
+                        <% } %>
+                <%--!-- </form> -->--%>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="delete-subscription">
+                <%--!-- <form id="deleteSubscription" runat="server"> -->--%>
+                  <label>Delete Subscription:</label>
+                  <br />
+                        <div class="inputFields">
+                            <asp:Button ID="Button3" class="btn btn-primary" runat="server" Text="Delete Subscription" OnClick="deleteSubscription_Click" />
+                        </div>
+                        <% if (!string.IsNullOrEmpty(deleteSubscriptionSuccessResponse))
+                           { %>
+                        <div class="alert alert-success" align="left">
+                            <strong>SUCCESS:</strong>      
+                        </div>
+                        <% } %>
+                        <% if (!string.IsNullOrEmpty(deleteSubscriptionErrorResponse))
+                           { %>
+                        <div class="alert alert-danger">
+                            <strong>ERROR:</strong><br />
+                            <%=deleteSubscriptionErrorResponse.ToString()%>
+                        </div>
+                        <% } %>
+                <%--!-- </form> -->--%>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="view-notification-details">
+                <%--!-- <form id="viewNotificationDetails" runat="server"> -->--%>
+                        <label>Notification Details:</label>
+                  <br />
+                  <div class="alert alert-info">
+                    Note: Webhooks requires apps to create a channel for receiving notifications. This app-specific
+                    resource has already been created for this sample app.
+                  </div>
+                  <div id="channelTable"></div>
+                  <div id="createSubscriptionAlert" class="alert alert-info">
+                    Webhooks requires apps to create subscriptions for customers' message inbox in order to
+                    receive notifications. Create one using the tab option for 'Webhooks: Create Subscription'
+                  </div>
+                  <%--<div id="receivingNotifications" class="hidden">--%>
+                    <div class="alert alert-info">
+                      Note: Webhooks will provide a stream of notifications if a subscription and the user's inbox are
+                      both active. For seeing notifications, you will have to receive / delete messages on the phone used
+                      to authorize this sample app. You will only see notifications for the phone you used.
+                    </div>
+                      <br />
+                        <label>Notification Payload
+                        </label>
+                        <div class="inputFields">
+                        <% if (notificationObjArray != null && notificationObjArray.Count != 0)
+                        {%>
+                        <%  foreach (var notificationObject in notificationObjArray)
+                        {%>
+                        <% if (notificationObject != null && notificationObject.messageNotifications != null && notificationObject.messageNotifications.subscriptionNotifications.Count != 0)
+                            {%>
+                            <div class="alert alert-success" align="left">
+                                <strong>SUCCESS:</strong>
+                            </div>
+                            <div class="table-responsive">
+                            <table class="table table-condensed table-striped table-bordered">
+                                <thead>
+                                    <th>subscriptionId</th>
+                                    <th>callbackData</th>
+                                    <th>messageId</th>
+                                    <th>Conversation Thread Id</th>
+                                    <th>Event Type</th>
+                                    <th>Queue</th>
+                                    <th>Text</th>
+                                    <th>isTruncated</th>
+                                    <th>isFavourite</th>
+                                    <th>isUnread</th>
+                                </thead>
+                                <tbody>
+                                    <%  foreach (var notificationEvent in notificationObject.messageNotifications.subscriptionNotifications[0].notificationevents)
+                                        {%>
+                                    <tr>
+                                        <td data-value="subscriptionId">
+                                            <%= notificationObject.messageNotifications.subscriptionNotifications[0].subscriptionId %>
+                                        </td>
+                                        <td data-value="callbackData">
+                                            <%= notificationObject.messageNotifications.subscriptionNotifications[0].callbackData %>
+                                        </td>
+                                        <td data-value="messageId">
+                                            <%= notificationEvent.messageId %>
+                                        </td>
+                                        <td data-value="Conversation Thread Id">
+                                            <%= notificationEvent.conversationThreadId %>
+                                        </td>
+                                        <td data-value="Event Type">
+                                            <%= notificationEvent.eventType %>
+                                        </td>
+                                        <td data-value="Queue">
+                                            <%= notificationEvent.@event %>
+                                        </td>
+                                        <td data-value="Text">
+                                            <%= notificationEvent.text %>
+                                        </td>
+                                        <td data-value="isTruncated">
+                                            <%= notificationEvent.isTextTruncated %>
+                                        </td>
+                                        <td data-value="isFavourite">
+                                            <%= notificationEvent.isFavourite %>
+                                        </td>
+                                        <td data-value="isUnread">
+                                            <%= notificationEvent.isUnread %>
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                            </div>
+                        <% } %>
+                        <% } %>                                
+                        <% } %>                                
+                        <button id="Button6" type="submit" class="btn btn-primary" name="refreshNotifications" runat="server" onserverclick="getNotifications_Click">Refresh</button>
+                        </div>
+                        <br/>
+                  <%--</div>--%><!--./hidden-->
+                <%--<-- </form> -->--%>
+              </div><!--./tab-pane-->
             </div>
-            <!-- SAMPLE APP CONTENT ENDS HERE! -->
-            </div>
-        </form>
-        <br style="clear: both" />
-        <div class="border">
-        </div>
-        <div id="footer">
-            <div id="powered_by">
-                Powered by AT&amp;T Cloud Architecture
-            </div>
+          </div>
+        </div><!--./col-md-12-->
+      <%--</div><!--./row-->--%>
+            
+             </form>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="hidden" id="response"></div>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <hr>
+      <div class="row"><div class="col-md-12"><b>Server Time:&nbsp;</b><span id="serverTime"></span></div></div>
+      <div class="row"><div class="col-md-12"><b>Client Time:</b> <script>document.write("" + new Date());</script></div></div>
+      <div class="row"><div class="col-md-12"><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div></div>
+      <hr>
+      <div class="footer text-muted">
+        <div class="row">
+          <div class="col-sm-12 text-left">
             <p>
-                The Application hosted on this site are working examples intended to be used for
-                reference in creating products to consume AT&amp;T Services and not meant to be
-                used as part of your product. The data in these pages is for test purposes only
-                and intended only for use as a reference in how the services perform.
-                <br />
-                <br />
-                For download of tools and documentation, please go to <a href="https://developer.att.com/"
-                    target="_blank">https://developer.att.com</a>
-                <br />
-                For more information contact <a href="mailto:developer.support@att.com">developer.support@att.com</a>
-                <br />
-                <br />
-                &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
-                    target="_blank">https://developer.att.com</a>
+              <small>
+                The application hosted on this site is a working example
+                intended to be used for reference in creating products to
+                consume AT&amp;T Services and not meant to be used as part of
+                your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services
+                perform.
+              </small>
             </p>
-        </div>
-        <!-- end of footer -->
-    </div>
-    <!-- <script type="text/javascript">        setup();</script> -->
-	<% if (!string.IsNullOrEmpty(showSendMsg))
+          </div> <!--./col-->
+        </div> <!--./row-->
+        <hr>
+        <div class="row">
+          <div class="text-left col-sm-6">
+            <div class="col-sm-1">
+              <a class="brand" href="https://developer.att.com" target="_blank">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-globe.png">
+              </a>
+            </div>
+            <div class="col-sm-11">
+              <p>
+                <small>
+                  <a href="https://www.att.com/gen/general?pid=11561" target="_blank">Terms of Use</a>
+                  <a href="https://www.att.com/gen/privacy-policy?pid=2506" target="_blank">Privacy Policy</a>
+                  <a href="https://developer.att.com/support" target="_blank">Contact Us</a>
+                  <br>
+                  &#169; 2015 AT&amp;T Intellectual Property. All rights reserved.
+                </small>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6 left-border">
+            <p class="text-right">
+              <small>
+                AT&amp;T, the AT&amp;T logo and all other AT&amp;T marks
+                contained herein are trademarks of
+                <br>
+                AT&amp;T Intellectual Property and/or AT&amp;T affiliated
+                companies. AT&amp;T 36USC220506
+              </small>
+            </p>
+          </div>
+        </div><!--./row-->
+      </div><!--./footer-->
+    </div><!--./container-->
+
+    <!-- enable bootstrap custom tootips -->
+    <script>$(function () { $('[data-toggle="tooltip"]').tooltip() });</script>
+
+      	<% if (!string.IsNullOrEmpty(showSendMsg))
            { %>
-        <script type="text/javascript">        toggle('sendMsg','sendMsgToggle', 'Send Message');</script>
+        <script type="text/javascript">   $('#tabs a[href="#send-msg"]').tab('show');</script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showCreateMessageIndex))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#create-msg-index"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showGetMessageList))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#get-msg-list"]').tab('show'); </script>
         <% } %>
         <% if (!string.IsNullOrEmpty(showGetMessage))
            { %>
-        <script type="text/javascript">        toggle('getMsg','getMsgToggle', 'Get Message ');</script>
+        <script type="text/javascript">        $('#tabs a[href="#get-msg"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showGetMessageContent))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#get-msg-content"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showGetDelta))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#get-delta"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showGetMessageIndexInfo))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#get-msg-index-info"]').tab('show'); </script>
         <% } %>
         <% if (!string.IsNullOrEmpty(showUpdateMessage))
            { %>
-        <script type="text/javascript">        toggle('updateMsg','updateMsgToggle', 'Update Message ');</script>
+        <script type="text/javascript">        $('#tabs a[href="#update-msg"]').tab('show'); </script>
         <% } %>
-         <% if (!string.IsNullOrEmpty(showDeleteMessage))
+        <% if (!string.IsNullOrEmpty(showDeleteMessage))
            { %>
-        <script type="text/javascript">        toggle('delMsg','delMsgToggle', 'Delete Message ');</script>
+        <script type="text/javascript">        $('#tabs a[href="#delete-msg"]').tab('show'); </script>
         <% } %>
-         <% if (!string.IsNullOrEmpty(showCreateMessageIndex))
+        <% if (!string.IsNullOrEmpty(showGetNotificationConnectionDetails))
            { %>
-        <script type="text/javascript">        toggle('createMsg','createMsgToggle', 'Create Message Index ');</script>
+        <script type="text/javascript">        $('#tabs a[href="#get-notification-details"]').tab('show'); </script>
         <% } %>
-         <% if (!string.IsNullOrEmpty(showGetNotificationConnectionDetails))
+        <% if (!string.IsNullOrEmpty(showCreateSubscription))
            { %>
-        <script type="text/javascript">        toggle('getMsgNot','getMsgNotToggle', 'Get Notification Connection Details ');</script>
+        <script type="text/javascript">        $('#tabs a[href="#create-subscription"]').tab('show'); </script>
         <% } %>
-</body>
+        <% if (!string.IsNullOrEmpty(showUpdateSubscription))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#update-subscription"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showGetSubscription))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#get-subscription"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showDeleteSubscription))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#delete-subscription"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showWebHookNotifications))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#view-notification-details"]').tab('show'); </script>
+        <% } %>
+        
+
+  </body>
 </html>
+<!-- vim: set ts=2 sts=2 sw=2 et : -->

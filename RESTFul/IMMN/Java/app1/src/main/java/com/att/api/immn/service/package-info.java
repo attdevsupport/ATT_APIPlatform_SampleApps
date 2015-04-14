@@ -1,3 +1,4 @@
+
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
 
 /*
@@ -28,7 +29,7 @@
  * @author pk9069
  * @author kh455g
  * @since 1.0
- * @see com.att.api.mmn.service.IMMNService
+ * @see com.att.api.immn.service.IMMNService
  */
 
 package com.att.api.immn.service;

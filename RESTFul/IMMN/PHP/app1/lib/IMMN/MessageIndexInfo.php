@@ -39,8 +39,8 @@ final class IMMNMessageIndexInfo
     {
         return $this->_state;
     }
-    
-    public function getMessagecount()
+
+    public function getMessageCount()
     {
         return $this->_msgCount;
     }

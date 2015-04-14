@@ -17,6 +17,8 @@ namespace Att\Api\Util;
  * limitations under the License.
  */
 
+use Exception;
+
 /**
  * Utility class for file handling. 
  * 

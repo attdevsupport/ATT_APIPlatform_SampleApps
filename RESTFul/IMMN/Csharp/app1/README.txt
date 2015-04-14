@@ -38,7 +38,7 @@ sample applications.
   on developer site with the proper services and endpoints, depending on the type of 
   client-side application (autonomous/non-autonomous). 
 
-  To register an application, go to https://developer.att.com/ and login with
+  To register an application, go to https://developer.att.com/ developer/mvc/auth/login and login with
   your valid username and password. Next, choose "My Apps" from the bar at the top
   of the page and click the "Setup a New Application" button. 
 

@@ -74,7 +74,7 @@ module Att
         #
         # @return [Model::SMSStatus] the status of the sms with specified id
         def smsStatus(sms_id)
-          url = self.getResourceUrl(CGI.escape(sms_id))
+          url = self.getResourceUrl(CGI.escape(sms_id.to_s))
 
           headers = {
             :Accept => "application/json",
@@ -96,7 +96,7 @@ module Att
         # @return [Model::SMSMessageList] the message list that was retrieved
         #   at the short code
         def getReceivedMessages(short_code)
-          url = "#{@fqdn}#{SERVICE_URL_RECEIVE}/#{CGI.escape(short_code)}"
+          url = "#{@fqdn}#{SERVICE_URL_RECEIVE}/#{CGI.escape(short_code.to_s)}"
 
           headers = {
             :Accept => "application/json",
@@ -116,7 +116,7 @@ module Att
         #
         # @return [String] the url that the resource is contained
         def getResourceUrl(sms_id)
-          "#{@fqdn}#{SERVICE_URL_SEND}/#{CGI.escape(sms_id)}"
+          "#{@fqdn}#{SERVICE_URL_SEND}/#{CGI.escape(sms_id.to_s)}"
         end
 
         def self.handleSmsMessage(input)

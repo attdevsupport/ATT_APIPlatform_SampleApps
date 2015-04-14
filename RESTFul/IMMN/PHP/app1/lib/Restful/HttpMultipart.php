@@ -32,7 +32,7 @@ use RuntimeException;
  * @license  http://www.apache.org/licenses/LICENSE-2.0
  * @link     http://developer.att.com
  */
-final class HttpMultipart
+class HttpMultipart
 {
     /**
      * Raw HTTP data.

@@ -27,11 +27,17 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls;
+
 
 
 #endregion
 public partial class IMMN_App1 : System.Web.UI.Page
 {
+    //protected System.Web.UI.WebControls.HiddenField txtSelectedTabID;
+
+    protected string ActiveTab { get; private set; }
     #region Instance variables
 
     private string endPoint;
@@ -49,6 +55,16 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     private string AttachmentFilesDir = string.Empty;
 
+    private string webhookaccessTokenFilePath = string.Empty;
+    private string webhooknotificationChannelFilePath = string.Empty;
+    private string webHookSubscriptionIdFile = string.Empty;
+    private string webhookaccessTokenExpiryTime = string.Empty;
+    private string webhookrefreshTokenExpiryTime = string.Empty;
+    private string webhookaccessToken = string.Empty;
+    private string webhookrefreshToken = string.Empty;
+
+    private string webhookscope = "NOTIFICATIONCHANNEL";
+
     #endregion
     public List<string> attachments = null;
     public string sendMessageSuccessResponse = string.Empty;
@@ -60,13 +76,54 @@ public partial class IMMN_App1 : System.Web.UI.Page
     public string getMessageContentErrorResponse = string.Empty;
     public string getMessageErrorResponse = string.Empty;
     public string filters = string.Empty;
-
+    public List<string> webHookSubscriptionIdList = new List<string>();
+    public List<string> webHookSubscriptionIds = null;
     public string createMessageIndexSuccessResponse = string.Empty;
     public string createMessageIndexErrorResponse = string.Empty;
     public string csGetMessageListDetailsErrorResponse = string.Empty;
     public string csGetMessageListDetailsSuccessResponse = string.Empty;
     public string getNotificationConnectionDetailsSuccessResponse = string.Empty;
     public string getNotificationConnectionDetailsErrorResponse = string.Empty;
+
+    
+    public string notificationChannelSuccessResponse = string.Empty;
+    public string notificationChannelErrorResponse = string.Empty;
+    public NotificationChannel notificationChannel = new NotificationChannel();
+    public bool channelCreated = false;
+
+    public string createSubscriptionSuccessResponse = string.Empty;
+    public string createSubscriptionErrorResponse = string.Empty;
+    public SubscriptionObj createSubscriptionResponse = new SubscriptionObj();
+    public string updateSubscriptionSuccessResponse = string.Empty;
+    public string updateSubscriptionErrorResponse = string.Empty;
+    public SubscriptionObj updateSubscriptionResponse = new SubscriptionObj();
+    public string getSubscriptionSuccessResponse = string.Empty;
+    public string getSubscriptionErrorResponse = string.Empty;
+    public GetSubscriptionObj getSubscriptionResponse = new GetSubscriptionObj();
+    public string getSubscriptionResponseFilters = string.Empty;
+    public string deleteSubscriptionSuccessResponse = string.Empty;
+    public string deleteSubscriptionErrorResponse = string.Empty;
+    public SubscriptionObj deleteSubscriptionResponse = new SubscriptionObj();
+    public WebhookNotification notificationResponse = new WebhookNotification();
+    public List<notificationMsg> notificationObjArray = new List<notificationMsg>();
+
+    
+    
+    
+    public string showWebHooks = string.Empty;
+    private string notificationDetailsFile;
+    /// <summary>
+    /// Global Variable Declaration
+    /// </summary>
+    private int recordsToDisplay = 0;
+
+    /// <summary>
+    /// Global Variable Declaration
+    /// </summary>
+    private int category, noOfNotificationsToDisplay;
+
+    public List<Dictionary<string, string>> notificationDetails = new List<Dictionary<string, string>>();
+    
     public csNotificationConnectionDetails getNotificationConnectionDetailsResponse = new csNotificationConnectionDetails();
     public MessageList csGetMessageListDetailsResponse = new MessageList();
     public DeltaResponse csDeltaResponse = new DeltaResponse();
@@ -94,11 +151,40 @@ public partial class IMMN_App1 : System.Web.UI.Page
     public string showDeleteMessage = string.Empty;
     public string showUpdateMessage = string.Empty;
     public string showGetMessage = string.Empty;
+    public string showGetMessageList = string.Empty;
+    public string showGetMessageContent = string.Empty;
+    public string showGetDelta = string.Empty;
+    public string showGetMessageIndexInfo = string.Empty;
+    public string showCreateSubscription = string.Empty;
+    public string showUpdateSubscription = string.Empty;
+    public string showGetSubscription = string.Empty;
+    public string showDeleteSubscription = string.Empty;
+    public string showWebHookNotifications = string.Empty;
 
     protected void Page_Load(object sender, EventArgs e)
     {
         this.BypassCertificateError();
         this.ReadConfigFile();
+
+        // Create Channel for Web Hook Notifications
+
+        if (this.channelCreated == false)
+        {
+            if (this.ReadWebhookNotificationChannelFile(ref notificationChannelErrorResponse) == false)
+            {
+                if (this.notificationChannel.channelId == null)
+                {
+                    createChannel_Click(ref notificationChannelErrorResponse);
+                }
+            }
+/*            else
+            {
+                deleteChannel_Click(ref notificationChannelErrorResponse);
+                createChannel_Click(ref notificationChannelErrorResponse);
+            } */
+        }
+
+        
 
         if ((Session["cs_rest_appState"] == "GetToken") && (Request["Code"] != null))
         {
@@ -118,13 +204,22 @@ public partial class IMMN_App1 : System.Web.UI.Page
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deletemessage") == 0)
                     this.deleteMessage();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deltamessage") == 0)
-                    this.getDelta();
+                    this.getDeltaPL();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getmessagelist") == 0)
                     this.getMessageList();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "messageindex") == 0)
                     this.getMessageIndex();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "updatemessage") == 0)
                     this.updateMessage();
+                if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "createsubscription") == 0)
+                    this.createSubscriptionPL();
+                if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "updatesubscription") == 0)
+                    this.updateSubscriptionPL();
+                if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getsubscription") == 0)
+                    this.getSubscriptionPL();
+                if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deletesubscription") == 0)
+                    this.deleteSubscriptionPL();
+               
             }
             else
             {
@@ -134,6 +229,28 @@ public partial class IMMN_App1 : System.Web.UI.Page
                 return;
             }
         }
+
+        if (!IsPostBack)
+        {
+            updateListsForWebHookSubscriptionId();
+            Session["cs_Rest_tabid"] = this.Request["txtSelectedTabID"];
+            //Session["cs_Rest_tabid"] = document.getElementById("txtSelectedTabID");
+            //Session["cs_Rest_tabid"] = TextBoxee1.Text;
+
+            // 0 is the first tab
+            //this.ActiveTab = "0";
+        }
+        else
+        {
+            /*this.ActiveTab = HiddevActiveTab.Value;
+            if (string.IsNullOrWhiteSpace(this.ActiveTab))
+            {
+                this.ActiveTab = "0";
+            }*/
+            
+        }
+
+        this.GetNotificationsFromFile();
 
     }
 
@@ -200,6 +317,26 @@ public partial class IMMN_App1 : System.Web.UI.Page
                                                 "updatemessage") == 0))
             {
                 updateMessageErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                            "createsubscription") == 0))
+            {
+                createSubscriptionErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                                        "updatesubscription") == 0))
+            {
+                updateSubscriptionErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                                        "getsubscription") == 0))
+            {
+                getSubscriptionErrorResponse = ex.Message;
+            }
+            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
+                                                                        "deletesubscription") == 0))
+            {
+                deleteSubscriptionErrorResponse = ex.Message;
             }
             else
             {
@@ -481,6 +618,49 @@ public partial class IMMN_App1 : System.Web.UI.Page
                 }
             }
         }
+
+        this.webhookaccessTokenFilePath = ConfigurationManager.AppSettings["WebHookAccessTokenFilePath"];
+        if (string.IsNullOrEmpty(this.webhookaccessTokenFilePath))
+        {
+            this.webhookaccessTokenFilePath = "~\\AccessToken.txt";
+        }
+
+        this.webhooknotificationChannelFilePath = ConfigurationManager.AppSettings["WebHookNotificationChannelFilePath"];
+        if (string.IsNullOrEmpty(this.webhookaccessTokenFilePath))
+        {
+            this.webhookaccessTokenFilePath = "~\\AccessToken.txt";
+        }
+
+        this.webHookSubscriptionIdFile = ConfigurationManager.AppSettings["WebHookSubscriptionIdFile"];
+        if (string.IsNullOrEmpty(this.webHookSubscriptionIdFile))
+        {
+            this.webHookSubscriptionIdFile = "~\\WebHookSubscriptionIdFile.txt";
+        }
+
+        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["recordsToDisplay"]))
+        {
+            this.recordsToDisplay = Convert.ToInt32(ConfigurationManager.AppSettings["recordsToDisplay"]);
+        }
+        else
+        {
+            this.recordsToDisplay = 5;
+        }
+
+        if (string.IsNullOrEmpty(ConfigurationManager.AppSettings["noOfNotificationsToDisplay"]))
+        {
+            this.noOfNotificationsToDisplay = 5;
+        }
+        else
+        {
+            noOfNotificationsToDisplay = Convert.ToInt32(ConfigurationManager.AppSettings["noOfNotificationsToDisplay"]);
+        }
+
+        this.notificationDetailsFile = ConfigurationManager.AppSettings["notificationDetailsFile"];
+        if (string.IsNullOrEmpty(this.notificationDetailsFile))
+        {
+            this.notificationDetailsFile = "~\\notificationDetailsFile.txt";
+        }
+
         return true;
     }
 
@@ -774,6 +954,13 @@ public partial class IMMN_App1 : System.Web.UI.Page
             Session["cs_rest_GetNotificationConnectionDetailsQueue"] = notificationText.Value;
         Session["cs_rest_deleteMessageId"] = deleteMessageId.Text;
         Session["cs_rest_updateMessageId"] = updateMessageId.Text;
+        Session["cs_rest_createSubscriptionCheckbox1"] = subscribeCheckBox1.Checked.ToString();
+        Session["cs_rest_createSubscriptionCheckbox2"] = subscribeCheckBox2.Checked.ToString();
+        Session["cs_rest_createSubscriptionCheckbox3"] = subscribeCheckBox3.Checked.ToString();
+        Session["cs_rest_createSubscriptionCheckbox4"] = subscribeCheckBox4.Checked.ToString();
+        Session["cs_rest_createSubscriptioncallbackText"] = callbackText.Text;
+        Session["cs_rest_createSubscriptioncallbackText2"] = callbackText2.Text;
+        
     }
 
     protected void ResetRequestSessionVariables()
@@ -790,6 +977,10 @@ public partial class IMMN_App1 : System.Web.UI.Page
         Session["cs_rest_GetNotificationConnectionDetailsQueue"] = null;
         Session["cs_rest_deleteMessageId"] = null;
         Session["cs_rest_updateMessageId"] = null;
+        Session["cs_rest_createSubscriptionCheckbox1"] = null;
+        Session["cs_rest_createSubscriptionCheckbox2"] = null;
+        Session["cs_rest_createSubscriptioncallbackText"] = null;
+        Session["cs_rest_SubscriptionId"] = null;
     }
 
     protected void RestoreRequestSessionVariables()
@@ -813,6 +1004,15 @@ public partial class IMMN_App1 : System.Web.UI.Page
         }
         deleteMessageId.Text = Session["cs_rest_deleteMessageId"].ToString();
         updateMessageId.Text = Session["cs_rest_updateMessageId"].ToString();
+
+        subscribeCheckBox1.Checked = Convert.ToBoolean(Session["cs_rest_createSubscriptionCheckbox1"].ToString());
+        subscribeCheckBox2.Checked = Convert.ToBoolean(Session["cs_rest_createSubscriptionCheckbox2"].ToString());
+        subscribeCheckBox3.Checked = Convert.ToBoolean(Session["cs_rest_createSubscriptionCheckbox3"].ToString());
+        subscribeCheckBox4.Checked = Convert.ToBoolean(Session["cs_rest_createSubscriptionCheckbox4"].ToString());
+        callbackText.Text = Session["cs_rest_createSubscriptioncallbackText"].ToString();
+        callbackText2.Text = Session["cs_rest_createSubscriptioncallbackText2"].ToString();
+//        if ( Session["cs_rest_SubscriptionId"] != null )
+//            createSubscriptionResponse.subscriptionId = Session["cs_rest_SubscriptionId"].ToString() ;
     }
 
     #region updateMessageRoutines
@@ -1015,7 +1215,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     protected void getMessageList_Click(object sender, EventArgs e)
     {
-        showGetMessage = "true";
+        showGetMessageList = "true";
         this.ReadTokenSessionVariables();
 
         string tokentResult = this.IsTokenValid();
@@ -1076,7 +1276,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     private void getMessageList()
     {
-        showDeleteMessage = "show";
+        showGetMessageList = "true";
         this.getMessageList(this.accessToken, this.endPoint, this.filters);
     }
 
@@ -1177,7 +1377,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     private void getMessage()
     {
-        showGetMessage = "show";
+        showGetMessage = "true";
         this.getMessage(this.accessToken, this.endPoint, MessageId.Text);
     }
 
@@ -1244,7 +1444,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     protected void getDelta_Click(object sender, EventArgs e)
     {
-        showGetMessage = "true";
+        showGetDelta = "true";
         this.ReadTokenSessionVariables();
 
         string tokentResult = this.IsTokenValid();
@@ -1271,16 +1471,16 @@ public partial class IMMN_App1 : System.Web.UI.Page
         {
             return;
         }
-        this.getDelta(this.accessToken, this.endPoint, MessageIdForDelta.Text);
+        this.getDeltaEx(this.accessToken, this.endPoint, MessageIdForDelta.Text);
     }
 
-    private void getDelta()
+    private void getDeltaPL()
     {
-        //showDeltaMessage = "show";
-        this.getDelta(this.accessToken, this.endPoint, MessageIdForDelta.Text);
+        showGetDelta = "true";
+        this.getDeltaEx(this.accessToken, this.endPoint, MessageIdForDelta.Text);
     }
 
-    private void getDelta(string accTok, string endP, string delta)
+    private void getDeltaEx(string accTok, string endP, string delta)
     {
         try
         {
@@ -1341,7 +1541,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     protected void getMessageIndex_Click(object sender, EventArgs e)
     {
-        showGetMessage = "true";
+        showGetMessageIndexInfo = "true";
         this.ReadTokenSessionVariables();
 
         string tokentResult = this.IsTokenValid();
@@ -1373,7 +1573,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     private void getMessageIndex()
     {
-        //showDeltaMessage = "show";
+        showGetMessageIndexInfo = "true";
         this.getMessageIndex(this.accessToken, this.endPoint);
     }
 
@@ -1579,7 +1779,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     private void createMessageIndex()
     {
-        showCreateMessageIndex = "show";
+        showCreateMessageIndex = "true";
         this.createMessageIndex(this.accessToken, this.endPoint);
     }
 
@@ -1630,6 +1830,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
     }
     #endregion
 
+    
     protected void Button1_Click(object sender, EventArgs e)
     {
         showSendMsg = "true";
@@ -1664,6 +1865,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     protected void SendMessageRequest()
     {
+        showSendMsg = "true";
         this.IsValidAddress();
         string attachFile = this.AttachmentFilesDir + attachment.Value.ToString();
         ArrayList attachmentList = new ArrayList();
@@ -1677,7 +1879,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     protected void GetMessageContentByIDnPartNumber(object sender, EventArgs e)
     {
-        showGetMessage = "true";
+        showGetMessageContent = "true";
         this.ReadTokenSessionVariables();
 
         string tokentResult = this.IsTokenValid();
@@ -1710,6 +1912,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     protected void GetMessageContentByIDnPartNumber()
     {
+        showGetMessageContent = "true";
         this.GetMessageContentByIDnPartNumber(this.accessToken, this.endPoint, MessageIdForContent.Text, PartNumberForContent.Text);
     }
     /// <summary>
@@ -2087,5 +2290,1416 @@ public partial class IMMN_App1 : System.Web.UI.Page
         public MessageIndexInfo messageIndexInfo { get; set; }
     }
     #endregion
+
+#region webHooksRoutines
+
+    protected void createChannel_Click(ref string error)
+    {
+        //showcreateChannel = "true";
+        try
+        {
+            if (this.ReadAndGetAccessToken(ref error) == true)
+            {
+                if (this.webhookaccessToken == null || this.webhookaccessToken.Length <= 0)
+                {
+                    return;
+                }
+                this.createChannel(this.webhookaccessToken, this.endPoint);
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationChannelErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+
+    private void createChannel(string accTok, string endP)
+    {
+        FileStream fileStream = null;
+        StreamWriter streamWriter = null;
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/notification/v1/channels";
+
+            HttpWebRequest createChannelWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            createChannelWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            createChannelWebRequest.Method = "POST";
+            createChannelWebRequest.KeepAlive = true;
+            createChannelWebRequest.Accept = "application/json";
+            createChannelWebRequest.ContentType = "application/json";
+
+            string payLoadString = "{\"channel\": { \"serviceName\": \"MIM\", \"notificationContentType\": \"application/json\", \"notificationVersion\": 1.0 } }" ;
+
+            UTF8Encoding encoding = new UTF8Encoding();
+            byte[] postBytes = encoding.GetBytes(payLoadString);
+            createChannelWebRequest.ContentLength = postBytes.Length;
+
+            Stream postStream = createChannelWebRequest.GetRequestStream();
+            postStream.Write(postBytes, 0, postBytes.Length);
+            postStream.Close();
+            WebResponse createChannelWebResponse = createChannelWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(createChannelWebResponse.GetResponseStream()))
+            {
+                string createChannelData = stream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csGetChannelDetails deserializedJsonObj = (csGetChannelDetails)deserializeJsonObject.Deserialize(createChannelData, typeof(csGetChannelDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    notificationChannelSuccessResponse = "Success : " + createChannelData ;
+                    this.notificationChannel = deserializedJsonObj.channel;
+                    this.notificationChannel.notificationContentType = "application/json";
+                    this.notificationChannel.channelType = "http_callback";
+                    this.channelCreated = true;
+
+                    fileStream = new FileStream(Request.MapPath(this.webhooknotificationChannelFilePath), FileMode.OpenOrCreate, FileAccess.Write);
+                    streamWriter = new StreamWriter(fileStream);
+                    streamWriter.WriteLine(this.notificationChannel.channelId);
+                    streamWriter.WriteLine(this.notificationChannel.channelType);
+                    streamWriter.WriteLine(this.notificationChannel.maxEventsPerNotification);
+                    streamWriter.WriteLine(this.notificationChannel.notificationContentType);
+
+                }
+                else
+                {
+                    notificationChannelErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                notificationChannelErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                notificationChannelErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationChannelErrorResponse = ex.Message;
+            return;
+        }
+        finally
+        {
+            if (null != streamWriter)
+            {
+                streamWriter.Close();
+            }
+
+            if (null != fileStream)
+            {
+                fileStream.Close();
+            }
+        }
+
+    }
+
+
+    protected void deleteChannel_Click(ref string error)
+    {
+        //showcreateChannel = "true";
+        try
+        {
+            if (this.ReadAndGetAccessToken(ref error) == true)
+            {
+                if (this.webhookaccessToken == null || this.webhookaccessToken.Length <= 0)
+                {
+                    return;
+                }
+                this.deleteChannel(this.webhookaccessToken, this.endPoint);
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationChannelErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+
+    private void deleteChannel(string accTok, string endP)
+    {
+        FileStream fileStream = null;
+        StreamWriter streamWriter = null;
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/notification/v1/channels/" + this.notificationChannel.channelId;
+
+            HttpWebRequest deleteChannelWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            deleteChannelWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            deleteChannelWebRequest.Method = "DELETE";
+            deleteChannelWebRequest.KeepAlive = true;
+
+            WebResponse deleteChannelWebResponse = deleteChannelWebRequest.GetResponse();
+            // Need to check for the HTTP Status Code of 204 No Content
+            using (StreamReader stream = new StreamReader(deleteChannelWebResponse.GetResponseStream()))
+            {
+                string deleteChannelData = stream.ReadToEnd();
+
+                if (null != deleteChannelData)
+                {
+                    notificationChannelSuccessResponse = "Success : " + deleteChannelData;
+//                    this.channelCreated = false;
+                    // Need to delete the webhooknotificationChannelFile here
+/*                    fileStream = new FileStream(Request.MapPath(this.webhooknotificationChannelFilePath), FileMode.OpenOrCreate, FileAccess.Write);
+                    streamWriter = new StreamWriter(fileStream);
+                    streamWriter.WriteLine(this.notificationChannel.channelId);
+                    streamWriter.WriteLine(this.notificationChannel.channelType);
+                    streamWriter.WriteLine(this.notificationChannel.maxEventsPerNotification);
+                    streamWriter.WriteLine(this.notificationChannel.notificationContentType);
+ */
+
+                }
+                else
+                {
+                    notificationChannelErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                notificationChannelErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                notificationChannelErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationChannelErrorResponse = ex.Message;
+            return;
+        }
+        finally
+        {
+            if (null != streamWriter)
+            {
+                streamWriter.Close();
+            }
+
+            if (null != fileStream)
+            {
+                fileStream.Close();
+            }
+        }
+
+    }
+
+    protected void createSubscription_Click(object sender, EventArgs e)
+    {
+        showCreateSubscription = "true";
+
+        this.ReadTokenSessionVariables();
+
+        if ((subscribeCheckBox1.Checked == false) && (subscribeCheckBox2.Checked == false))
+        {
+            createSubscriptionErrorResponse = "Specify kind of events (TEXT or MMS or Both) for creating the subscription";
+            return;
+        }
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "createsubscription";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                createSubscriptionErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.createSubscriptionEx(this.accessToken, this.endPoint, subscribeCheckBox1.Checked.ToString().ToLower(), subscribeCheckBox2.Checked.ToString().ToLower(), callbackText.Text);
+
+    }
+    private void createSubscriptionPL()
+    {
+        showCreateSubscription = "true";
+        // instead of having createSubscriptionResponse.subscriptionId it should be a persistent object for that AT.
+        this.createSubscriptionEx(this.accessToken, this.endPoint, subscribeCheckBox1.Checked.ToString().ToLower(), subscribeCheckBox2.Checked.ToString().ToLower(), callbackText.Text);
+    }
+
+    private void createSubscriptionEx(string accTok, string endP, string textFlag, string mmsFlag, string callbackData)
+    {
+        try
+        {
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/notification/v1/channels/" + this.notificationChannel.channelId + "/subscriptions";
+
+            HttpWebRequest createSubscriptionWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            createSubscriptionWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            createSubscriptionWebRequest.Method = "POST";
+            createSubscriptionWebRequest.KeepAlive = true;
+            createSubscriptionWebRequest.Accept = "application/json";
+            createSubscriptionWebRequest.ContentType = "application/json";
+            string events = string.Empty;
+
+            if (mmsFlag == "true" && textFlag == "false")
+            {
+                events += "\"MMS\"" ;
+            }
+            else if (mmsFlag == "false" && textFlag == "true")
+            {
+                events += "\"TEXT\"";
+            }
+            else
+            {
+                events = "\"MMS\", \"TEXT\"";
+            }
+
+            string payLoadString = "{\"subscription\":{\"events\": [ " + events + "]";
+            if (!string.IsNullOrEmpty(callbackText.Text))
+            {
+                payLoadString += ", \"callbackData\" : \"" + callbackText.Text + "\"";
+            }
+            payLoadString += ", \"expiresIn\": 16836 } }";
+            
+
+            UTF8Encoding encoding = new UTF8Encoding();
+            byte[] postBytes = encoding.GetBytes(payLoadString);
+            createSubscriptionWebRequest.ContentLength = postBytes.Length;
+
+            Stream postStream = createSubscriptionWebRequest.GetRequestStream();
+            postStream.Write(postBytes, 0, postBytes.Length);
+            postStream.Close();
+
+            WebResponse createSubscriptionWebResponse = createSubscriptionWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(createSubscriptionWebResponse.GetResponseStream()))
+            {
+                string createSubscriptionData = stream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csCreateSubscriptionDetails deserializedJsonObj = (csCreateSubscriptionDetails)deserializeJsonObject.Deserialize(createSubscriptionData, typeof(csCreateSubscriptionDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    createSubscriptionSuccessResponse = "Success : " + createSubscriptionData;
+                    createSubscriptionResponse = deserializedJsonObj.subscription;
+                    Session["cs_rest_SubscriptionId"] = createSubscriptionResponse.subscriptionId;
+                    if (this.CheckItemInFile(createSubscriptionResponse.subscriptionId, this.webHookSubscriptionIdFile) == false)
+                    {
+                        updateListsForWebHookSubscriptionId();
+                        string tempString = accTok + " " + createSubscriptionResponse.subscriptionId;
+                        this.webHookSubscriptionIdList.Add(tempString);
+                        this.WriteListToFile(ref webHookSubscriptionIdList, this.webHookSubscriptionIdFile);
+                        //updateListsForWebHookSubscriptionId();
+                    }
+                }
+                else
+                {
+                    createSubscriptionErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                createSubscriptionErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                createSubscriptionErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            createSubscriptionErrorResponse = ex.Message;
+            return;
+        }
+
+    }       
+     
+    protected void updateSubscription_Click(object sender, EventArgs e)
+    {
+        showUpdateSubscription = "true";
+        this.ReadTokenSessionVariables();
+
+        if ((subscribeCheckBox3.Checked == false) && (subscribeCheckBox4.Checked == false))
+        {
+            createSubscriptionErrorResponse = "Specify kind of events (TEXT or MMS or Both) for creating the subscription";
+            return;
+        }
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "updatesubscription";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                updateSubscriptionErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        this.updateSubscriptionEx(this.accessToken, this.endPoint, createSubscriptionResponse.subscriptionId, subscribeCheckBox3.Checked.ToString().ToLower(), subscribeCheckBox4.Checked.ToString().ToLower(), callbackText2.Text);
+
+    }
+
+    private void updateSubscriptionPL()
+    {
+        showUpdateSubscription = "true";
+        // instead of having createSubscriptionResponse.subscriptionId it should be a persistent object for that AT.
+        this.updateSubscriptionEx(this.accessToken, this.endPoint, createSubscriptionResponse.subscriptionId, subscribeCheckBox3.Checked.ToString().ToLower(), subscribeCheckBox4.Checked.ToString().ToLower(), callbackText2.Text);
+    }
+
+    private void updateSubscriptionEx(string accTok, string endP, string subscriptionId, string textFlag, string mmsFlag, string callbackData)
+    {
+        try
+        {
+            Session["cs_rest_SubscriptionId"] = this.RetrieveSubscriptionIdFromFile(accTok, this.webHookSubscriptionIdFile);
+            if (Session["cs_rest_SubscriptionId"] != null)
+            {
+                subscriptionId = Session["cs_rest_SubscriptionId"].ToString();
+                
+            }
+            else
+            {
+                updateSubscriptionErrorResponse = "Create the Subscription before using this operation";
+                return;
+            }
+
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/notification/v1/channels/" + notificationChannel.channelId + "/subscriptions/" + subscriptionId;
+
+            HttpWebRequest updateSubscriptionWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            updateSubscriptionWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            updateSubscriptionWebRequest.Method = "PUT";
+            updateSubscriptionWebRequest.KeepAlive = true;
+            updateSubscriptionWebRequest.Accept = "application/json";
+            updateSubscriptionWebRequest.ContentType = "application/json";
+            string events = string.Empty;
+
+            if (mmsFlag == "true" && textFlag == "false")
+            {
+                events += "\"MMS\"";
+            }
+            else if (mmsFlag == "false" && textFlag == "true")
+            {
+                events += "\"TEXT\"";
+            }
+            else
+            {
+                events = "\"MMS\", \"TEXT\"";
+            }
+
+            string payLoadString = "{\"subscription\":{\"events\": [ " + events + "]";
+            if (!string.IsNullOrEmpty(callbackData))
+            {
+                payLoadString += ", \"callbackData\" : \"" + callbackData + "\"";
+            }
+            payLoadString += ", \"expiresIn\": 16836 } }";
+
+
+            UTF8Encoding encoding = new UTF8Encoding();
+            byte[] postBytes = encoding.GetBytes(payLoadString);
+            updateSubscriptionWebRequest.ContentLength = postBytes.Length;
+
+            Stream postStream = updateSubscriptionWebRequest.GetRequestStream();
+            postStream.Write(postBytes, 0, postBytes.Length);
+            postStream.Close();
+
+
+            WebResponse updateSubscriptionWebResponse = updateSubscriptionWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(updateSubscriptionWebResponse.GetResponseStream()))
+            {
+                string updateSubscriptionData = stream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csUpdateSubscriptionDetails deserializedJsonObj = (csUpdateSubscriptionDetails)deserializeJsonObject.Deserialize(updateSubscriptionData, typeof(csUpdateSubscriptionDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    updateSubscriptionSuccessResponse = updateSubscriptionData + ":Success";
+                    updateSubscriptionResponse = deserializedJsonObj.subscription;
+                }
+                else
+                {
+                    updateSubscriptionErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                updateSubscriptionErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                updateSubscriptionErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            updateSubscriptionErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+
+    
+    protected void getSubscription_Click(object sender, EventArgs e)
+    {
+
+        showGetSubscription = "true";
+        this.ReadTokenSessionVariables();
+
+        string tokentResult = this.IsTokenValid();
+
+        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
+        {
+            SetRequestSessionVariables();
+            Session["cs_rest_ServiceRequest"] = "getsubscription";
+            Session["cs_rest_appState"] = "GetToken";
+            this.GetAuthCode();
+        }
+        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
+        {
+            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
+            {
+                getSubscriptionErrorResponse = "Failed to get Access token";
+                this.ResetTokenSessionVariables();
+                this.ResetTokenVariables();
+                return;
+            }
+        }
+
+        if (this.accessToken == null || this.accessToken.Length <= 0)
+        {
+            return;
+        }
+        
+        this.getSubscriptionEx(this.accessToken, this.endPoint, createSubscriptionResponse.subscriptionId);
+        
+    }
+
+    private void getSubscriptionPL()
+    {
+        showGetSubscription = "true";
+        // instead of having createSubscriptionResponse.subscriptionId it should be a persistent object for that AT.
+        this.getSubscriptionEx(this.accessToken, this.endPoint, createSubscriptionResponse.subscriptionId);
+    }
+
+    private void getSubscriptionEx(string accTok, string endP, string subscriptionId)
+    {
+        getSubscriptionResponseFilters = string.Empty;
+        try
+        {
+            Session["cs_rest_SubscriptionId"] = this.RetrieveSubscriptionIdFromFile(accTok, this.webHookSubscriptionIdFile);
+
+            if (Session["cs_rest_SubscriptionId"] != null)
+            {
+                subscriptionId = Session["cs_rest_SubscriptionId"].ToString();
+
+            }
+            else
+            {
+                getSubscriptionErrorResponse = "Create the Subscription before using this operation";
+                return;
+            }
+
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/notification/v1/channels/" + notificationChannel.channelId + "/subscriptions/" + subscriptionId;
+
+            HttpWebRequest getSubscriptionWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            getSubscriptionWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            getSubscriptionWebRequest.Method = "GET";
+            getSubscriptionWebRequest.KeepAlive = true;
+            getSubscriptionWebRequest.Accept = "application/json";
+            WebResponse getSubscriptionWebResponse = getSubscriptionWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(getSubscriptionWebResponse.GetResponseStream()))
+            {
+                string getSubscriptionData = stream.ReadToEnd();
+                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                csGetSubscriptionDetails deserializedJsonObj = (csGetSubscriptionDetails)deserializeJsonObject.Deserialize(getSubscriptionData, typeof(csGetSubscriptionDetails));
+
+                if (null != deserializedJsonObj)
+                {
+                    getSubscriptionSuccessResponse = "Success: " + getSubscriptionData;
+                    getSubscriptionResponse = deserializedJsonObj.subscription;
+                    int count = 0;
+                    foreach (string s in getSubscriptionResponse.eventFilters)
+                    {
+                        if (count == 0)
+                        {
+                            count++;
+                        }
+                        else
+                        {
+                            getSubscriptionResponseFilters += ",";
+                        }
+                        getSubscriptionResponseFilters += s.ToString();
+                        
+                    }
+                }
+                else
+                {
+                    getSubscriptionErrorResponse = "No response from server";
+                }
+
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                getSubscriptionErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                getSubscriptionErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            getSubscriptionErrorResponse = ex.Message;
+            return;
+        }
+
+    }
+
+    protected void deleteSubscription_Click(object sender, EventArgs e)
+    {
+        showDeleteSubscription = "true";
+        try
+        {
+            if (this.ReadAndGetAccessToken(ref deleteSubscriptionErrorResponse) == true)
+            {
+                if (this.webhookaccessToken == null || this.webhookaccessToken.Length <= 0)
+                {
+                    return;
+                }
+                this.deleteSubscriptionEx(this.webhookaccessToken, this.endPoint, createSubscriptionResponse.subscriptionId);
+            }
+        }
+        catch (Exception ex)
+        {
+            deleteSubscriptionErrorResponse = ex.Message;
+            return;
+        }
+        
+    }
+
+    private void deleteSubscriptionPL()
+    {
+        showDeleteSubscription = "true";
+        // instead of having createSubscriptionResponse.subscriptionId it should be a persistent object for that AT.
+        this.deleteSubscriptionEx(this.webhookaccessToken, this.endPoint, createSubscriptionResponse.subscriptionId);
+    }
+    protected void deleteSubscriptionEx(string accTok, string endP, string subscriptionId)
+    {
+        try
+        {
+            if (Session["cs_rest_SubscriptionId"] != null)
+            {
+                subscriptionId = Session["cs_rest_SubscriptionId"].ToString();
+
+            }
+            else
+            {
+                deleteSubscriptionErrorResponse = "Create the Subscription before using this operation";
+                return;
+            }
+
+            string contextURL = string.Empty;
+            contextURL = string.Empty + endP + "/notification/v1/channels/" + notificationChannel.channelId + "/subscriptions/" + subscriptionId;
+
+            HttpWebRequest deleteSubscriptionWebRequest = (HttpWebRequest)WebRequest.Create(contextURL);
+            deleteSubscriptionWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
+            deleteSubscriptionWebRequest.Method = "DELETE";
+            deleteSubscriptionWebRequest.KeepAlive = true;
+            deleteSubscriptionWebRequest.Accept = "application/json";
+            WebResponse deleteSubscriptionWebResponse = deleteSubscriptionWebRequest.GetResponse();
+            using (StreamReader stream = new StreamReader(deleteSubscriptionWebResponse.GetResponseStream()))
+            {
+                deleteSubscriptionSuccessResponse = ":Success";
+                Session["cs_rest_SubscriptionId"] = null;
+                string tempString = Session["cs_rest_AccessToken"] + " " + subscriptionId;
+                if (this.CheckItemInFile(tempString, this.webHookSubscriptionIdFile) == true)
+                {
+                    updateListsForWebHookSubscriptionId();
+                    this.webHookSubscriptionIdList.Remove(tempString);
+                    this.WriteListToFile(ref webHookSubscriptionIdList, this.webHookSubscriptionIdFile);
+                    //updateListsForWebHookSubscriptionId();
+                }
+                stream.Close();
+            }
+        }
+        catch (WebException we)
+        {
+            string errorResponse = string.Empty;
+            try
+            {
+                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                {
+                    errorResponse = sr2.ReadToEnd();
+                    sr2.Close();
+                }
+                deleteSubscriptionErrorResponse = errorResponse;
+            }
+            catch
+            {
+                errorResponse = "Unable to get response";
+                deleteSubscriptionErrorResponse = errorResponse;
+            }
+        }
+        catch (Exception ex)
+        {
+            deleteSubscriptionErrorResponse = ex.Message;
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Method to read the entries from file and update list.
+    /// </summary>
+    public void GetListFromFile(string filename, ref List<string> list)
+    {
+        try
+        {
+
+            FileStream file = new FileStream(Request.MapPath(filename), FileMode.Open, FileAccess.Read);
+            StreamReader sr = new StreamReader(file);
+            string line;
+
+            while ((line = sr.ReadLine()) != null)
+            {
+                list.Add(line);
+            }
+
+            sr.Close();
+            file.Close();
+            list.Reverse(0, list.Count);
+        }
+        catch (Exception ex)
+        {
+            return;
+        }
+    }
+
+    protected void getNotifications_Click(object sender, EventArgs e)
+    {
+        showWebHookNotifications = "true";
+        this.GetNotificationsFromFile();
+    }
+
+    private void GetNotificationsFromFile_Old()
+    {
+        if (null != notificationDetails)
+        {
+            notificationDetails.Clear();
+        }
+
+        List<string> notifications = new List<string>();
+        this.GetListFromFile(this.notificationDetailsFile, ref notifications);
+
+        Dictionary<string, string> notificationPair = null;
+        int count = 1;
+        foreach (string notification in notifications)
+        {
+            if (count > this.recordsToDisplay) break;
+
+            string[] kvps = notification.Split('$');
+            notificationPair = new Dictionary<string, string>();
+            foreach (string kvp in kvps)
+            {
+                string[] values = kvp.Split('%');
+                if (null != values)
+                {
+                    if (values.Length > 1)
+                    {
+                        notificationPair.Add(values[0], values[1]);
+                    }
+                }
+            }
+
+            notificationDetails.Add(notificationPair);
+            count++;
+        }
+    }
+
+    private void GetNotificationsFromFile()
+    {
+        //showWebHookNotifications = "true";
+        FileStream fileStream = null;
+        StreamReader streamReader = null;
+
+        this.notificationObjArray.Clear();
+
+        try
+        {
+            if (Session["cs_rest_SubscriptionId"] != null)
+            {
+                fileStream = new FileStream(Request.MapPath(this.notificationDetailsFile), FileMode.OpenOrCreate, FileAccess.Read);
+                streamReader = new StreamReader(fileStream);
+                string jsonString = "";
+                notificationMsg notificationObj;
+                while ((jsonString = streamReader.ReadLine()) != null)
+                {
+                    if (!String.IsNullOrEmpty(jsonString))
+                    {
+                        JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+                        notificationObj = (notificationMsg)deserializeJsonObject.Deserialize(jsonString, typeof(notificationMsg));
+                        if (notificationObj.messageNotifications.subscriptionNotifications[0].subscriptionId == Session["cs_rest_SubscriptionId"].ToString())
+                        {
+                            this.notificationObjArray.Add(notificationObj);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            
+        }
+        finally
+        {
+            if (null != streamReader)
+            {
+                streamReader.Close();
+            }
+
+            if (null != fileStream)
+            {
+                fileStream.Close();
+            }
+        }
+
+     
+    }
+
+
+    /// <summary>
+    /// This function is used to read access token file and validate the access token
+    /// this function returns true if access token is valid, or else false is returned
+    /// </summary>
+    /// <param name="panelParam">Panel Details</param>
+    /// <returns>Returns Boolean</returns>
+    private bool ReadAndGetAccessToken(ref string responseString)
+    {
+        bool result = true;
+        if (this.ReadWebhookAccessTokenFile(ref responseString) == false)
+        {
+            result = this.GetWebHooksAccessToken(WebHookNotificationAccessType.ClientCredential, ref responseString);
+        }
+        else
+        {
+            string tokenValidity = this.IsWebhookTokenValid();
+            if (tokenValidity == "REFRESH_TOKEN")
+            {
+                result = this.GetWebHooksAccessToken(WebHookNotificationAccessType.RefreshToken, ref responseString);
+            }
+            else if (string.Compare(tokenValidity, "INVALID_ACCESS_TOKEN") == 0)
+            {
+                result = this.GetWebHooksAccessToken(WebHookNotificationAccessType.ClientCredential, ref responseString);
+            }
+        }
+
+        if (this.webhookaccessToken == null || this.webhookaccessToken.Length <= 0)
+        {
+            return false;
+        }
+        else
+        {
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// This function reads the Access Token File and stores the values of access token, expiry seconds
+    /// refresh token, last access token time and refresh token expiry time
+    /// This funciton returns true, if access token file and all others attributes read successfully otherwise returns false
+    /// </summary>
+    /// <param name="panelParam">Panel Details</param>
+    /// <returns>Returns boolean</returns>    
+    private bool ReadWebhookAccessTokenFile(ref string message)
+    {
+        FileStream fileStream = null;
+        StreamReader streamReader = null;
+        try
+        {
+            fileStream = new FileStream(Request.MapPath(this.webhookaccessTokenFilePath), FileMode.OpenOrCreate, FileAccess.Read);
+            streamReader = new StreamReader(fileStream);
+            this.webhookaccessToken = streamReader.ReadLine();
+            this.webhookaccessTokenExpiryTime = streamReader.ReadLine();
+            this.webhookrefreshToken = streamReader.ReadLine();
+            this.webhookrefreshTokenExpiryTime = streamReader.ReadLine();
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            return false;
+        }
+        finally
+        {
+            if (null != streamReader)
+            {
+                streamReader.Close();
+            }
+
+            if (null != fileStream)
+            {
+                fileStream.Close();
+            }
+        }
+
+        if ((this.webhookaccessToken == null) || (this.webhookaccessTokenExpiryTime == null) || (this.webhookrefreshToken == null) || (this.webhookrefreshTokenExpiryTime == null))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// This function reads the Access Token File and stores the values of access token, expiry seconds
+    /// refresh token, last access token time and refresh token expiry time
+    /// This funciton returns true, if access token file and all others attributes read successfully otherwise returns false
+    /// </summary>
+    /// <param name="panelParam">Panel Details</param>
+    /// <returns>Returns boolean</returns>    
+    private bool ReadWebhookNotificationChannelFile(ref string message)
+    {
+        FileStream fileStream = null;
+        StreamReader streamReader = null;
+        try
+        {
+            fileStream = new FileStream(Request.MapPath(this.webhooknotificationChannelFilePath), FileMode.OpenOrCreate, FileAccess.Read);
+            streamReader = new StreamReader(fileStream);
+            this.notificationChannel.channelId = streamReader.ReadLine();
+            this.notificationChannel.channelType = streamReader.ReadLine();
+            this.notificationChannel.maxEventsPerNotification = Convert.ToInt32(streamReader.ReadLine());
+            this.notificationChannel.notificationContentType = streamReader.ReadLine();
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            return false;
+        }
+        finally
+        {
+            if (null != streamReader)
+            {
+                streamReader.Close();
+            }
+
+            if (null != fileStream)
+            {
+                fileStream.Close();
+            }
+        }
+
+        if ((this.notificationChannel.channelId == null) || (this.notificationChannel.channelType == null) || (this.notificationChannel.maxEventsPerNotification == null) || (this.notificationChannel.notificationContentType == null))
+        {
+            return false;
+        }
+        this.channelCreated = true;
+        return true;
+    }
+
+    /// <summary>
+    /// This function get the access token based on the type parameter type values.
+    /// If type value is 1, access token is fetch for client credential flow
+    /// If type value is 2, access token is fetch for client credential flow based on the exisiting refresh token
+    /// </summary>
+    /// <param name="type">Type as integer</param>
+    /// <param name="panelParam">Panel details</param>
+    /// <returns>Return boolean</returns>
+    private bool GetWebHooksAccessToken(WebHookNotificationAccessType type, ref string message)
+    {
+        FileStream fileStream = null;
+        Stream postStream = null;
+        StreamWriter streamWriter = null;
+
+        // This is client credential flow
+        if (type == WebHookNotificationAccessType.ClientCredential)
+        {
+            try
+            {
+                DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
+
+                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/v4/token");
+                accessTokenRequest.Method = "POST";
+                string oauthParameters = string.Empty;
+                if (type == WebHookNotificationAccessType.ClientCredential)
+                {
+                    oauthParameters = "client_id=" + this.apiKey + "&client_secret=" + this.secretKey + "&grant_type=client_credentials&scope=" + this.webhookscope;
+                }
+                else
+                {
+                    oauthParameters = "grant_type=refresh_token&client_id=" + this.apiKey + "&client_secret=" + this.secretKey + "&refresh_token=" + this.webhookrefreshToken;
+                }
+
+                accessTokenRequest.ContentType = "application/x-www-form-urlencoded";
+
+                UTF8Encoding encoding = new UTF8Encoding();
+                byte[] postBytes = encoding.GetBytes(oauthParameters);
+                accessTokenRequest.ContentLength = postBytes.Length;
+
+                postStream = accessTokenRequest.GetRequestStream();
+                postStream.Write(postBytes, 0, postBytes.Length);
+
+                WebResponse accessTokenResponse = accessTokenRequest.GetResponse();
+                using (StreamReader accessTokenResponseStream = new StreamReader(accessTokenResponse.GetResponseStream()))
+                {
+                    string jsonAccessToken = accessTokenResponseStream.ReadToEnd().ToString();
+                    JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+
+                    AccessTokenResponse deserializedJsonObj = (AccessTokenResponse)deserializeJsonObject.Deserialize(jsonAccessToken, typeof(AccessTokenResponse));
+
+                    this.webhookaccessToken = deserializedJsonObj.access_token;
+                    this.webhookaccessTokenExpiryTime = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in)).ToString();
+                    this.webhookrefreshToken = deserializedJsonObj.refresh_token;
+
+                    DateTime refreshExpiry = currentServerTime.AddHours(this.refreshTokenExpiresIn);
+
+                    if (deserializedJsonObj.expires_in.Equals("0"))
+                    {
+                        int defaultAccessTokenExpiresIn = 100; // In Yearsint yearsToAdd = 100;
+                        this.webhookaccessTokenExpiryTime = currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongDateString() + " " + currentServerTime.AddYears(defaultAccessTokenExpiresIn).ToLongTimeString();
+                    }
+
+                    this.webhookrefreshTokenExpiryTime = refreshExpiry.ToLongDateString() + " " + refreshExpiry.ToLongTimeString();
+
+                    fileStream = new FileStream(Request.MapPath(this.webhookaccessTokenFilePath), FileMode.OpenOrCreate, FileAccess.Write);
+                    streamWriter = new StreamWriter(fileStream);
+                    streamWriter.WriteLine(this.webhookaccessToken);
+                    streamWriter.WriteLine(this.webhookaccessTokenExpiryTime);
+                    streamWriter.WriteLine(this.webhookrefreshToken);
+                    streamWriter.WriteLine(this.webhookrefreshTokenExpiryTime);
+
+                    // Close and clean up the StreamReader
+                    accessTokenResponseStream.Close();
+                    return true;
+                }
+            }
+            catch (WebException we)
+            {
+                string errorResponse = string.Empty;
+
+                try
+                {
+                    using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                    {
+                        errorResponse = sr2.ReadToEnd();
+                        sr2.Close();
+                    }
+                }
+                catch
+                {
+                    errorResponse = "Unable to get response";
+                }
+
+                message = errorResponse; // +Environment.NewLine + we.ToString();
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                return false;
+            }
+            finally
+            {
+                if (null != postStream)
+                {
+                    postStream.Close();
+                }
+
+                if (null != streamWriter)
+                {
+                    streamWriter.Close();
+                }
+
+                if (null != fileStream)
+                {
+                    fileStream.Close();
+                }
+            }
+        }
+        else if (type == WebHookNotificationAccessType.RefreshToken)
+        {
+            try
+            {
+                DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
+
+                WebRequest accessTokenRequest = System.Net.HttpWebRequest.Create(string.Empty + this.endPoint + "/oauth/v4/token");
+                accessTokenRequest.Method = "POST";
+
+                string oauthParameters = "grant_type=refresh_token&client_id=" + this.apiKey + "&client_secret=" + this.secretKey + "&refresh_token=" + this.webhookrefreshToken;
+                accessTokenRequest.ContentType = "application/x-www-form-urlencoded";
+
+                UTF8Encoding encoding = new UTF8Encoding();
+                byte[] postBytes = encoding.GetBytes(oauthParameters);
+                accessTokenRequest.ContentLength = postBytes.Length;
+
+                postStream = accessTokenRequest.GetRequestStream();
+                postStream.Write(postBytes, 0, postBytes.Length);
+
+                WebResponse accessTokenResponse = accessTokenRequest.GetResponse();
+                using (StreamReader accessTokenResponseStream = new StreamReader(accessTokenResponse.GetResponseStream()))
+                {
+                    string accessTokenJSon = accessTokenResponseStream.ReadToEnd().ToString();
+                    JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
+
+                    AccessTokenResponse deserializedJsonObj = (AccessTokenResponse)deserializeJsonObject.Deserialize(accessTokenJSon, typeof(AccessTokenResponse));
+                    this.webhookaccessToken = deserializedJsonObj.access_token.ToString();
+                    this.webhookaccessTokenExpiryTime = currentServerTime.AddSeconds(Convert.ToDouble(deserializedJsonObj.expires_in)).ToString();
+                    this.webhookrefreshToken = deserializedJsonObj.refresh_token.ToString();
+
+                    fileStream = new FileStream(Request.MapPath(this.webhookaccessTokenFilePath), FileMode.OpenOrCreate, FileAccess.Write);
+                    streamWriter = new StreamWriter(fileStream);
+                    streamWriter.WriteLine(this.webhookaccessToken);
+                    streamWriter.WriteLine(this.webhookaccessTokenExpiryTime);
+                    streamWriter.WriteLine(this.webhookrefreshToken);
+
+                    // Refresh token valids for 24 hours
+                    DateTime refreshExpiry = currentServerTime.AddHours(24);
+                    this.webhookrefreshTokenExpiryTime = refreshExpiry.ToLongDateString() + " " + refreshExpiry.ToLongTimeString();
+                    streamWriter.WriteLine(refreshExpiry.ToLongDateString() + " " + refreshExpiry.ToLongTimeString());
+
+                    accessTokenResponseStream.Close();
+                    return true;
+                }
+            }
+            catch (WebException we)
+            {
+                string errorResponse = string.Empty;
+
+                try
+                {
+                    using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
+                    {
+                        errorResponse = sr2.ReadToEnd();
+                        sr2.Close();
+                    }
+                }
+                catch
+                {
+                    errorResponse = "Unable to get response";
+                }
+
+                message = errorResponse; // +Environment.NewLine + we.ToString();
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                return false;
+            }
+            finally
+            {
+                if (null != postStream)
+                {
+                    postStream.Close();
+                }
+
+                if (null != streamWriter)
+                {
+                    streamWriter.Close();
+                }
+
+                if (null != fileStream)
+                {
+                    fileStream.Close();
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private string IsWebhookTokenValid()
+    {
+        try
+        {
+            DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
+            if (currentServerTime >= DateTime.Parse(this.webhookaccessTokenExpiryTime))
+            {
+                if (currentServerTime >= DateTime.Parse(this.webhookrefreshTokenExpiryTime))
+                {
+                    return "INVALID_ACCESS_TOKEN";
+                }
+                else
+                {
+                    return "REFRESH_TOKEN";
+                }
+            }
+            else
+            {
+                return "VALID_ACCESS_TOKEN";
+            }
+        }
+        catch
+        {
+            return "INVALID_ACCESS_TOKEN";
+        }
+    }
+
+    public void updateListsForWebHookSubscriptionId()
+    {
+        webHookSubscriptionIdList.Clear();
+        //ResetList(ref webHookSubscriptionIds);
+        GetListFromFile(webHookSubscriptionIdFile, ref webHookSubscriptionIdList);        
+    }
+
+    public void ResetList(ref List<string> list)
+    {
+        if (list.Count > 0)
+            list.RemoveRange(0, list.Count);
+    }
+
+
+    /// <summary>
+    /// Method to check item in file.
+    /// </summary>
+    /// <param name="transactionid">Transaction Id</param>
+    /// <param name="merchantTransactionId">Merchant Transaction Id</param>
+    /// <returns>Return Boolean</returns>
+    public bool CheckItemInFile(string valueToSearch, string filename)
+    {
+        try
+        {
+            string line;
+            System.IO.StreamReader file = new System.IO.StreamReader(Request.MapPath(filename));
+            while ((line = file.ReadLine()) != null)
+            {
+                if (line.CompareTo(valueToSearch) == 0)
+                {
+                    file.Close();
+                    return true;
+                }
+            }
+            file.Close();
+            return false;
+        }
+        catch (Exception ex)
+        {
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Method to check item in file.
+    /// </summary>
+    /// <param name="transactionid">Transaction Id</param>
+    /// <param name="merchantTransactionId">Merchant Transaction Id</param>
+    /// <returns>Return Boolean</returns>
+    public string RetrieveSubscriptionIdFromFile(string accTok, string filename)
+    {
+        try
+        {
+            string line;
+            
+            System.IO.StreamReader file = new System.IO.StreamReader(Request.MapPath(filename));
+            while ((line = file.ReadLine()) != null)
+            {
+                if (line.Contains(accTok) == true)
+                {
+                    file.Close();
+                    string[] words = line.Split(' ');
+                    return words[1];
+                }
+            }
+            file.Close();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+
+    /// <summary>
+    /// Method to update file.
+    /// </summary>
+    /// <param name="transactionid">Transaction Id</param>
+    /// <param name="merchantTransactionId">Merchant Transaction Id</param>
+    public void WriteListToFile(ref List<string> list, string filename)
+    {
+        FileStream fileStream = null;
+        StreamWriter sw = null;
+        int tempCount = 0;
+        try
+        {
+            fileStream = new FileStream(Request.MapPath(this.webHookSubscriptionIdFile), FileMode.Create, FileAccess.Write);
+            sw = new StreamWriter(fileStream);
+            while (tempCount < list.Count)
+            {
+                string lineToWrite = list[tempCount];
+                sw.WriteLine(lineToWrite);
+                tempCount++;
+            }
+            sw.Close();
+        }
+        catch (Exception ex)
+        {
+            return;
+        }
+    }
+    
+    public enum WebHookNotificationAccessType
+    {
+        ClientCredential,
+        RefreshToken
+    }
+
+    public class NotificationChannel
+    {
+        public string channelId { get; set; }
+        public string channelType { get; set; }
+        public int maxEventsPerNotification { get; set; }
+        public string notificationContentType { get; set; }
+    }
+    public class GetSubscriptionObj
+    {
+        public string subscriptionId { get; set; }
+        public int expiresIn { get; set; }
+        public string callbackData { get; set; }
+        public List<string> eventFilters { get; set; }
+    }
+    
+    public class SubscriptionObj
+    {
+        public string subscriptionId { get; set; }
+        public int expiresIn { get; set; }
+        public string callbackData { get; set; }
+        public string queues { get; set; }
+    }
+    public class WebhookNotification
+    {
+        public string subscriptionId { get; set; }
+        public string callbackDate { get; set; }
+        public string messageId { get; set; }
+        public string conversationThreadId { get; set; }
+        public string eventType { get; set; }
+        public string queue { get; set; }
+        public string text { get; set; }
+        public bool isTruncated { get; set; }
+        public bool isFavourite { get; set; }
+        public bool isUnread { get; set; }
+    }
+    public class csGetChannelDetails
+    {
+        public NotificationChannel channel { get; set; }
+    }
+
+    public class csGetSubscriptionDetails
+    {
+        public GetSubscriptionObj subscription { get; set; }
+    }
+    public class csCreateSubscriptionDetails
+    {
+        public SubscriptionObj subscription { get; set; }
+    }
+    public class csUpdateSubscriptionDetails
+    {
+        public SubscriptionObj subscription { get; set; }
+    }
+
+    public class notificationMsg
+    {
+        public Notification messageNotifications { get; set; }
+    }
+
+    public class Notification
+    {
+        public List<Subscription> subscriptionNotifications { get; set; }
+    }
+    public class Subscription
+    {
+        public string subscriptionId { get; set; }
+        public string callbackData { get; set; }
+        public List<NotificationEvent> notificationevents { get; set; }
+    }
+    public class NotificationEvent
+    {
+        public string messageId { get; set; }
+        public string conversationThreadId { get; set; }
+        public string eventType { get; set; }
+        public string text { get; set; }
+        public string @event { get; set; }
+        public string isTextTruncated { get; set; }
+        public bool isFavourite { get; set; }
+        public string isUnread { get; set; }
+    }
+
+#endregion
+
 
 }

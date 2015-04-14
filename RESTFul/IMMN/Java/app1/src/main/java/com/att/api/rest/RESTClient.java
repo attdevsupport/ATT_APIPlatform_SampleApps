@@ -118,6 +118,9 @@ public class RESTClient {
     /** Http parameters to send. */
     private final Map<String, List<String>> parameters;
 
+    /** Status codes that are successful */
+    private int[] successCodes;
+
     /**
      * Internal method used to build an APIResponse using the specified
      * HttpResponse object.
@@ -131,8 +134,14 @@ public class RESTClient {
 
         APIResponse apir = APIResponse.fromHttpResponse(response);
         int statusCode = apir.getStatusCode();
-        // TODO (pk9069): allow these codes to be configurable
-        if (statusCode != 200 && statusCode != 201 && statusCode != 202 && statusCode != 204) {
+        boolean foundCode = false;
+        for (final int successCode : this.successCodes) {
+            if (statusCode == successCode) {
+                foundCode = true;
+                break;
+            }
+        }
+        if (!foundCode) {
             throw new RESTException(statusCode, apir.getResponseBody());
         }
 
@@ -152,7 +161,7 @@ public class RESTClient {
             return;
         }
 
-        try { 
+        try {
             if (entity.isStreaming()) {
                 InputStream instream = entity.getContent();
                 if (instream != null) {
@@ -339,6 +348,9 @@ public class RESTClient {
         this.trustAllCerts = cfg.trustAllCerts();
         this.proxyHost = cfg.getProxyHost();
         this.proxyPort = cfg.getProxyPort();
+
+        // default list of http status codes that are considered successful
+        this.successCodes = new int[] { 200, 201, 202, 204 };
     }
 
     /**
@@ -354,6 +366,10 @@ public class RESTClient {
      * @return a reference to 'this', which can be used for method chaining
      */
     public RESTClient addParameter(String name, String value) {
+        if (name == null || value == null) {
+            throw new IllegalArgumentException("Name or value was null!");
+        }
+
         if (!parameters.containsKey(name)) {
             parameters.put(name, new ArrayList<String>());
         }
@@ -451,6 +467,34 @@ public class RESTClient {
      */
     public RESTClient addAuthorizationHeader(String token) {
         this.addHeader("Authorization", "BEARER " + token);
+        return this;
+    }
+
+    /**
+     * Sets HTTP status codes that are considered successful.
+     *
+     * If the RESTFul request returns a status code that is not considered
+     * successful, a RESTException will be thrown.
+     *
+     * @param successCodes success codes
+     * @return a reference to 'this,' which can be used for method chaining
+     */
+    public RESTClient setSuccessCodes(final int[] successCodes) {
+        this.successCodes = successCodes;
+        return this;
+    }
+
+    /**
+     * Sets HTTP status code that is considered successful.
+     *
+     * If the RESTFul request returns a status code other than the one
+     * specified, a RESTException is thrown.
+     *
+     * @param successCode success code
+     * @return a reference to 'this,' which can be used for method chaining
+     */
+    public RESTClient setSuccessCode(final int successCode) {
+        this.setSuccessCodes(new int[] { successCode });
         return this;
     }
 
@@ -704,7 +748,7 @@ public class RESTClient {
 
             HttpPost httpPost = new HttpPost(url);
             this.setHeader("Content-Type",
-                    "multipart/related; type=\"application/json\"; "
+                    "multipart/form-data; type=\"application/json\"; "
                     + "start=\"<startpart>\"; boundary=\"foo\"");
             addInternalHeaders(httpPost);
 
@@ -837,6 +881,33 @@ public class RESTClient {
             addInternalHeaders(httpDelete);
 
             response = httpClient.execute(httpDelete);
+
+            APIResponse apiResponse = buildResponse(response);
+            return apiResponse;
+        } catch (IOException ioe) {
+            throw new RESTException(ioe);
+        } finally {
+            if (response != null) {
+                this.releaseConnection(response);
+            }
+        }
+    }
+
+    public APIResponse httpPatch(String body) throws RESTException {
+        HttpClient httpClient = null;
+        HttpResponse response = null;
+
+        try {
+            httpClient = createClient();
+
+            HttpPatch httpPatch = new HttpPatch(this.url);
+
+            addInternalHeaders(httpPatch);
+            if (body != null && !body.equals("")) {
+                httpPatch.setEntity(new StringEntity(body));
+            }
+
+            response = httpClient.execute(httpPatch);
 
             APIResponse apiResponse = buildResponse(response);
             return apiResponse;

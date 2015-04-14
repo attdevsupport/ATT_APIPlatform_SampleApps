@@ -584,7 +584,7 @@ module Att
         # @!attribute [r] wss_url
         #   @return [String] websocket url for accessing notifications
         # @!attribute [r] queues
-        #   @return [Array<String>] location queues can be accessed at
+        #   @return [String] location queues can be accessed at
 
         # Factory method to create an object from a json string
         #

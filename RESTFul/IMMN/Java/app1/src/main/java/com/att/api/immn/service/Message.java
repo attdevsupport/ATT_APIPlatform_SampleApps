@@ -64,7 +64,7 @@ public final class Message {
         msg.typeMetaData = TypeMetaData.valueOf(jobj.getJSONObject("typeMetaData"));
 
         if (jobj.has("isIncoming")) {
-            msg.isIncoming = jobj.getString("isIncoming").equals("true");
+            msg.isIncoming = jobj.getBoolean("isIncoming");
         }
 
         return msg;

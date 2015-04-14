@@ -1,648 +1,508 @@
 <!DOCTYPE html>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<jsp:useBean id="dateutil" class="com.att.api.util.DateUtil" scope="request">
-</jsp:useBean>
+<!--
+Copyright 2015 AT&T
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 <html lang="en">
   <head>
-    <title>AT&amp;T Sample Application - In App Messaging From Mobile Number</title>
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" type="text/css" href="style/common.css">
-    <script src="scripts/utils.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>In-App Messaging</title>
+
+    <!-- jquery and bootstrap js -->
+    <script src="https://lprod.code-api-att.com/public_files/js/jquery.min.js"></script>
+    <script src="https://lprod.code-api-att.com/public_files/js/bootstrap.min.js"></script>
+    <!-- custom js -->
+    <script src="js/config.js"></script>
+    <script src="js/form_handler.js"></script>
+    <script src="js/response_handler.js"></script>
+    <script src="js/sample_app.js"></script>
+
+    <!-- bootstrap css -->
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap-theme.min.css">
+    <!-- custom css -->
+    <link href="https://lprod.code-api-att.com/public_files/css/custom.css" rel="stylesheet">
+
     <script type="text/javascript">
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-33466541-1']);
-      _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-33466541-1']);
+        _gaq.push(['_trackPageview']);
 
-      (function () {
-       var ga = document.createElement('script');
-       ga.type = 'text/javascript';
-       ga.async = true;
-       ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-         : 'http://www') + '.google-analytics.com/ga.js';
-       var s = document.getElementsByTagName('script')[0];
-       s.parentNode.insertBefore(ga, s);
-       })();
-     </script>
-   </head>
-   <body>
-     <div id="pageContainer">
-       <div id="header">
-         <div class="logo">
-         </div>
-         <div id="menuButton" class="hide">
-           <a id="jump" href="#nav">Main Navigation</a>
-         </div>
-         <ul class="links" id="nav">
-           <li><a href="#" target="_blank">Full Page<img src="images/max.png" /></a>
-           <span class="divider"> |&nbsp;</span>
-           </li>
-           <li>
-           <a href="${cfg.linkSource}" target="_blank">Source<img src="images/opensource.png" /></a>
-           <span class="divider"> |&nbsp;</span>
-           </li>
-           <li>
-           <a href="${cfg.linkDownload}" target="_blank">Download<img src="images/download.png"></a>
-           <span class="divider"> |&nbsp;</span>
-           </li>
-           <li>
-           <a href="${cfg.linkHelp}" target="_blank">Help</a>
-           </li>
-           <li id="back"><a href="#top">Back to top</a>
-           </li>
-         </ul> <!-- end of links -->
-       </div> <!-- end of header -->
-       <div id="content">
-         <div id="contentHeading">
-           <h1>AT&amp;T Sample Application - In App Messaging From Mobile Number</h1>
-           <div class="border"></div>
-           <div id="introtext">
-             <div><b>Server Time:&nbsp;</b>${dateutil.serverTime}</div>
-             <div><b>Client Time:</b> <script>document.write("" + new Date());</script></div>
-             <div><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div>
-           </div> <!-- end of introtext -->
-         </div> <!-- end of contentHeading -->
-         <div class="formBox">
-           <div class="formContainer">
+        (function () {
+             var ga = document.createElement('script');
+             ga.type = 'text/javascript';
+             ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+                                         : 'https://www')
+                                         + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0];
+             s.parentNode.insertBefore(ga, s);
+         })();
+    </script>
 
-             <div class="lightBorder"></div>
+    <!--[if lt IE 9]>
+      <script src="https://lprod.code-api-att.com/public_files/js/html5shiv.min.js"></script>
+      <script src="https://lprod.code-api-att.com/public_files/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="header">
+          <ul class="nav nav-pills pull-left">
+            <li>
+              <a class="brand" href="https://developer.att.com">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-developer.png">
+              </a>
+            </li>
+          </ul>
+        </div><!--./header-->
+      </div><!--./row-->
+      <div class="row">
+        <h3 class="text-center">In-App Messaging</h3>
+      </div>
+      <div class="row">
+        <h5 class="text-center">This sample application showcases sending, receiving, updating, and deleting MMS and SMS messages on behalf of a specific user.</h5>
+      </div>
+      <hr>
+      <div class="inline-row">
+        <a class="btn btn-warning" id="github" href="#">Github</a>
+        <a class="btn btn-warning" id="download" href="#">Download</a>
+      </div><!--./row-->
+      <hr>
+      <div class="row">
+        <div class="alert alert-info">
+          Note: All features except for Send Message require a subscription to
+          <a href="http://messages.att.net">AT&amp;T Messages</a>
+        </div>
+      </div><!--./row-->
+      <div class="row">
+        <div class="col-md-12">
+          <!-- TODO: finish this portion -->
+          <div role="tabpanel">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#send-msg" aria-controls="send-msg" role="tab" data-toggle="tab">Send Message</a>
+              </li>
+              <li role="presentation">
+                <a href="#create-msg-index" aria-controls="create-msg-index" role="tab"
+                  data-toggle="tab">Message Index</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a href="#" id="messages-tab" class="dropdown-toggle" data-toggle="dropdown"
+                  aria-controls="messages-tab-contents">Get Message <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="messages-tab" id="messages-tab-contents">
+                  <li>
+                    <a href="#get-msg-list" tabindex="-1" role="tab" id="get-msg-list-tab" data-toggle="tab"
+                      aria-controls="get-msg-list">Get Message List</a>
+                  </li>
+                  <li>
+                    <a href="#get-msg" tabindex="-1" role="tab" id="get-msg-tab" data-toggle="tab"
+                      aria-controls="get-msg">Get Message</a>
+                  </li>
+                  <li>
+                    <a href="#get-msg-content" tabindex="-1" role="tab" id="get-msg-content-tab" data-toggle="tab"
+                      aria-controls="get-msg-content">Get Message Content</a>
+                  </li>
+                  <li>
+                    <a href="#get-delta" tabindex="-1" role="tab" id="get-delta-tab" data-toggle="tab"
+                      aria-controls="get-delta">Get Delta</a>
+                  </li>
+                  <li>
+                    <a href="#get-msg-index-info" tabindex="-1" role="tab" id="get-msg-index-info-tab"
+                      data-toggle="tab" aria-controls="get-msg-index-info">Get Message Index Info</a>
+                  </li>
+                </ul>
+              </li>
+              <li role="presentation">
+                <a href="#update-msg" aria-controls="update-msg" role="tab" data-toggle="tab">Update Message</a>
+              </li>
+              <li role="presentation">
+                <a href="#delete-msg" aria-controls="delete-msg" role="tab" data-toggle="tab">Delete Message</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a href="#" id="notifications-tab" class="dropdown-toggle" data-toggle="dropdown"
+                  aria-controls="notification-tab-contents">Notifications <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu"
+                  aria-labelledby="notifications-tab" id="notification-tab-contents">
+                  <li>
+                    <a href="#get-notification-details" tabindex="-1" role="tab" id="get-notification-details-tab"
+                      data-toggle="tab" aria-controls="get-notification-details">Websockets: Get Connection Details</a>
+                  </li>
+                  <li>
+                    <a href="#create-subscription" tabindex="-1" role="tab" id="create-subscription-tab"
+                      data-toggle="tab" aria-controls="create-subscription">Webhooks: Create Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#update-subscription" tabindex="-1" role="tab" id="update-subscription-tab"
+                      data-toggle="tab" aria-controls="update-subscription">Webhooks: Update Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#get-subscription" tabindex="-1" role="tab" id="get-subscription-tab" data-toggle="tab"
+                      aria-controls="get-subscription">Webhooks: Get Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#delete-subscription" tabindex="-1" role="tab" id="delete-subscription-tab"
+                      data-toggle="tab" aria-controls="delete-subscription">Webhooks: Delete Subscription</a>
+                  </li>
+                  <li>
+                    <a href="#view-notification-details" tabindex="-1" role="tab" id="view-notification-details-tab"
+                      data-toggle="tab" aria-controls="view-notification-details">Webhooks: View Notifications</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+              <div role="tabpanel" class="tab-pane active" id="send-msg">
+                <form id="sendMsg">
+                  <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" class="form-control" name="address" id="address"
+                      data-toggle="tooltip" data-placement="bottom"
+                      data-title="Format must be one of: tel:15555555"
+                      placeholder="Address">
+                  </div>
+                  <div class="checkbox">
+                    <label>
+                      <input name="groupCheckbox" type="checkbox"> Group
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label for="sendMsgInput">Message (max 200 characters allowed):</label>
+                    <input type="text" class="form-control" name="sendMsgInput" id="sendMsgInput"
+                      placeholder="Sample Message">
+                  </div>
+                  <div class="form-group">
+                    <label for="sendSubjectInput">Subject (max 30 characters allowed):</label>
+                    <input type="text" class="form-control" name="sendSubjectInput" id="sendSubjectInput"
+                      placeholder="Sample Subject">
+                  </div>
+                  <button type="submit" data-loading-text="Sending..." class="btn btn-primary">Send Message</button>
+                </form>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="create-msg-index">
+                <form id="createIndex">
+                  <div class="form-group">
+                    <label>Create Message Index:</label>
+                  </div>
+                  <button type="submit" data-loading-text="Creating..." class="btn btn-primary">Create Index</button>
+                </form>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="get-msg-list">
+                <form id="getMsgList">
+                  <label>Get Message List (Displays last 5 messages from the list):</label>
+                  <div class="checkbox">
+                    <label>
+                      <input name="favorite" type="checkbox"> Filter by favorite
+                    </label>
+                  </div>
+                  <div class="checkbox">
+                    <label>
+                      <input name="unread" type="checkbox"> Filter by unread
+                    </label>
+                  </div>
+                  <div class="checkbox">
+                    <label>
+                      <input name="incoming" type="checkbox"> Filter by incoming
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label for="filterByRecipients">Filter by recipients:</label>
+                    <input type="text" class="form-control" name="keyword" id="filterByRecipients"
+                      placeholder="555-555-5555, etc...">
+                  </div>
+                  <button type="submit" data-loading-text="Getting..." class="btn btn-primary">Get Message List</button>
+                </form>
+              </div> <!--./get-msg-list-->
+              <div role="tabpanel" class="tab-pane" id="get-msg">
+                <form id="getMsg">
+                  <div class="form-group">
+                    <label>Get Message:</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="getMsgId">Message Id</label>
+                    <input type="text" class="form-control" id="getMsgId" name="getMsgId" placeholder="Message Id">
+                  </div>
+                  <button type="submit" data-loading-text="Getting..." class="btn btn-primary">Get Message</button>
+                </form>
+              </div> <!--./get-msg-->
+              <div role="tabpanel" class="tab-pane" id="get-msg-content">
+                <form id="getMsgContent">
+                  <div class="form-group">
+                    <label>Get Message Content:</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="contentMsgId">Message Id</label>
+                    <input type="text" class="form-control" name="contentMsgId" id="contentMsgId"
+                      placeholder="Message Id">
+                  </div>
+                  <div class="form-group">
+                    <label for="contentPartNumber">Part Number</label>
+                    <input type="text" class="form-control" name="contentPartNumber"  id="contentPartNumber"
+                      placeholder="Part Number">
+                  </div>
+                  <button type="submit" data-loading-text="Getting..."
+                    class="btn btn-primary">Get Message Content</button>
+                </form>
+              </div> <!--./get-msg-content-->
+              <div role="tabpanel" class="tab-pane" id="get-delta">
+                <form id="getDelta">
+                  <div class="form-group">
+                    <label>Get Delta:</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="msgState">Message State</label>
+                    <input type="text" class="form-control" name="msgState" id="msgState" placeholder="Message State">
+                  </div>
+                  <button type="submit" data-loading-text="Getting..." class="btn btn-primary">Get Delta</button>
+                </form>
+              </div> <!--./get-delta-->
+              <div role="tabpanel" class="tab-pane" id="get-msg-index-info">
+                <form id="getMsgIndexInfo">
+                  <div class="form-group">
+                    <label>Get Message Index Info:</label>
+                  </div>
+                  <button type="submit" data-loading-text="Getting..."
+                    class="btn btn-primary">Get Message Index Info</button>
+                </form>
+              </div> <!--./get-msg-index-info-->
+              <div role="tabpanel" class="tab-pane" id="update-msg">
+                <form id="updateMsg">
+                  <div class="form-group">
+                    <label>Update Message(s):</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="updateMsgId">Message Id</label>
+                    <input type="text" class="form-control" name="updateMsgId" id="updateMsgId"
+                    placeholder="Message Id" data-toggle="tooltip" data-placement="bottom"
+                      data-title="More than one message ID can be separated by a comma (,)">
+                  </div>
+                  <div class="form-group">
+                    <label for="updateStatus">Change Status:</label>
+                    <select name="updateStatus" id="updateStatus" class="form-control">
+                      <option>Read</option>
+                      <option>Unread</option>
+                    </select>
+                  </div>
+                  <button type="submit" data-loading-text="Updating..."
+                    class="btn btn-primary">Update Message(s)</button>
+                </form>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="delete-msg">
+                <form id="delMsg">
+                  <div class="form-group">
+                    <label>Delete Message(s):</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="deleteMsgId">Message Id</label>
+                    <input type="text" class="form-control" name="deleteMsgId" id="deleteMsgId"
+                      placeholder="Message Id" data-toggle="tooltip" data-placement="bottom"
+                      data-title="More than one message ID can be separated by a comma (,)">
+                  </div>
+                  <button type="submit" data-loading-text="Deleting..."
+                    class="btn btn-primary">Delete Message(s)</button>
+                </form>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="get-notification-details">
+                <form id="getNotiDetails">
+                  <div class="form-group">
+                    <label>Get Notification Connection Details:</label>
+                  </div>
+                  <div class="form-group">
+                    <label>Notification Subscription:</label>
+                    <select name="notificationType" id="notificationType" class="form-control">
+                      <option>TEXT</option>
+                      <option>MMS</option>
+                    </select>
+                  </div>
+                  <button type="submit" data-loading-text="Getting..." class="btn btn-primary">Get Details</button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="create-subscription">
+                <form id="createSubscription">
+                  <div class="form-group">
+                    <label>Create Subscription:</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="callbackData">Callback Data</label>
+                    <input type="text" class="form-control" name="callbackData" id="callbackData"
+                      placeholder="Callback Data">
+                  </div>
+                  <div class="form-group">
+                    <div class="checkbox">
+                      <label>
+                        <input name="subscriptionText" type="checkbox"> Text
+                      </label>
+                    </div>
+                    <div class="checkbox">
+                      <label>
+                        <input name="subscriptionMms" type="checkbox"> MMS
+                      </label>
+                    </div>
+                  </div>
+                  <button type="submit" data-loading-text="Creating..."
+                    class="btn btn-primary">Create Subscription</button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="update-subscription">
+                <form id="updateSubscription">
+                  <div class="form-group">
+                    <label>Update Subscription:</label>
+                  </div>
+                  <div class="form-group">
+                    <label for="callbackData">Callback Data</label>
+                    <input type="text" class="form-control" name="updateCallbackData" id="updateCallbackData"
+                      placeholder="Callback Data">
+                  </div>
+                  <div class="form-group">
+                    <div class="checkbox">
+                      <label>
+                        <input name="updateSubscriptionText" type="checkbox"> Text
+                      </label>
+                    </div>
+                    <div class="checkbox">
+                      <label>
+                        <input name="updateSubscriptionMms" type="checkbox"> MMS
+                      </label>
+                    </div>
+                  </div>
+                  <button type="submit" data-loading-text="Updating..."
+                    class="btn btn-primary">Update Subscription</button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="get-subscription">
+                <form id="getSubscription">
+                  <div class="form-group">
+                    <label>Get Subscription:</label>
+                  </div>
+                  <button type="submit" data-loading-text="Getting..."
+                    class="btn btn-primary">Get Subscription</button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="delete-subscription">
+                <form id="deleteSubscription">
+                  <div class="form-group">
+                    <label>Delete Subscription:</label>
+                  </div>
+                  <button type="submit" data-loading-text="Deleting..."
+                    class="btn btn-primary">Delete Subscription</button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="view-notification-details">
+                <form id="viewNotificationDetails">
+                  <div class="form-group">
+                    <label>Notification Details Subscription:</label>
+                  </div>
+                  <div class="alert alert-info">
+                    Note: Webhooks requires apps to create a channel for receiving notifications. This app-specific
+                    resource has already been created for this sample app.
+                  </div>
+                  <div id="channelTable"></div>
+                  <div id="createSubscriptionAlert" class="alert alert-danger">
+                    Webhooks requires apps to create subscriptions for customers' message inbox in order to
+                    receive notifications. Create one using the tab option for 'Webhooks: Create Subscription'
+                  </div>
+                  <div id="receivingNotifications" class="hidden">
+                    <div class="alert alert-info">
+                      Note: Webhooks will provide a stream of notifications if a subscription and the user's inbox are
+                      both active. For seeing notifications, you will have to receive / delete messages on the phone used
+                      to authorize this sample app. You will only see notifications for the phone you used.
+                    </div>
+                    <div class="form-group">
+                      <label>Receiving...</label>
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100"
+                          aria-valuemin="0" aria-valuemax="100"
+                          style="width: 100%"> <span class="sr-only">Receiving...</span>
+                        </div>
+                      </div><!--./progress-->
+                    </div>
+                    <div id="notificationTable"></div>
+                  </div><!--./hidden-->
+                </form>
+              </div><!--./tab-pane-->
+            </div>
+          </div>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="hidden" id="response"></div>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <hr>
+      <div class="row"><div class="col-md-12"><b>Server Time:&nbsp;</b><span id="serverTime"></span></div></div>
+      <div class="row"><div class="col-md-12"><b>Client Time:</b> <script>document.write("" + new Date());</script></div></div>
+      <div class="row"><div class="col-md-12"><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div></div>
+      <hr>
+      <div class="footer text-muted">
+        <div class="row">
+          <div class="col-sm-12 text-left">
+            <p>
+              <small>
+                The application hosted on this site is a working example
+                intended to be used for reference in creating products to
+                consume AT&amp;T Services and not meant to be used as part of
+                your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services
+                perform.
+              </small>
+            </p>
+          </div> <!--./col-->
+        </div> <!--./row-->
+        <hr>
+        <div class="row">
+          <div class="text-left col-sm-6">
+            <div class="col-sm-1">
+              <a class="brand" href="https://developer.att.com" target="_blank">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-globe.png">
+              </a>
+            </div>
+            <div class="col-sm-11">
+              <p>
+                <small>
+                  <a href="https://www.att.com/gen/general?pid=11561" target="_blank">Terms of Use</a>
+                  <a href="https://www.att.com/gen/privacy-policy?pid=2506" target="_blank">Privacy Policy</a>
+                  <a href="https://developer.att.com/support" target="_blank">Contact Us</a>
+                  <br>
+                  &#169; 2015 AT&amp;T Intellectual Property. All rights reserved.
+                </small>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6 left-border">
+            <p class="text-right">
+              <small>
+                AT&amp;T, the AT&amp;T logo and all other AT&amp;T marks
+                contained herein are trademarks of
+                <br>
+                AT&amp;T Intellectual Property and/or AT&amp;T affiliated
+                companies. AT&amp;T 36USC220506
+              </small>
+            </p>
+          </div>
+        </div><!--./row-->
+      </div><!--./footer-->
+    </div><!--./container-->
 
-             <a id="sendMsgToggle"
-               href="javascript:toggle('sendMsg');">Send Message</a>
-             <div class="toggle" id="sendMsg">
-               <label><i>Max message size must be 1MB or less</i></label>
-               <h2>Send Message</h2>
-               <form method="post" action="index.jsp" id="sendMessageForm">
-                 <div class="inputFields">
-                   <c:choose>
-                   <c:when test="${not empty address}">
-                   <input placeholder="Address" value="${address}" name="address" type="text" />
-                   </c:when>
-                   <c:otherwise>
-                   <input placeholder="Address" name="address" type="text" />
-                   </c:otherwise>
-                   </c:choose>
-                   <label>Group:
-                     <c:choose>
-                     <c:when test="${not empty groupCheckBox}">
-                     <input type="checkbox" name="groupCheckBox" checked />
-                     </c:when>
-                     <c:otherwise>
-                     <input type="checkbox" name="groupCheckBox" />
-                     </c:otherwise>
-                     </c:choose>
-                   </label>
-                   <label>
-                     Message: <i>max 200 characters are allowed</i>
-                     <c:choose>
-                     <c:when test="${not empty message}">
-                     <input type="text" name="message" placeholder="ATT IMMN sample message" value="${message}" maxlength="200">
-                     </c:when>
-                     <c:otherwise>
-                     <input type="text" name="message" placeholder="ATT IMMN sample message" maxlength="200">
-                     </c:otherwise>
-                     </c:choose>
-                   </label>
-                   <label>
-                     Subject: <i>max 30 characters are allowed</i>
-                     <c:choose>
-                     <c:when test="${not empty subject}">
-                     <input type="text" name="subject" placeholder="ATT IMMN APP" value="${subject}" maxlength="30">
-                     </c:when>
-                     <c:otherwise>
-                     <input type="text" name="subject" placeholder="ATT IMMN APP" maxlength="30">
-                     </c:otherwise>
-                     </c:choose>
-                   </label>
-                   <label>
-                     Attachment:
-                     <select name="attachment">
-                       <option value="None">None</option>
-                       <option value="att.gif">att.gif</option>
-                     </select>
-                   </label>
-                   <button name="sendMessage" type="submit" class="submit">Send Message</button>
-                 </div>
-               </form>
-               <c:if test="${not empty immnError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${immnError}" />
-               </div>
-               </c:if>
-               <c:if test="${not empty immnResponse}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-                 <c:out value="${immnResponse.id}" />
-               </div>
-               </c:if>
-             </div> <!-- end of send message -->
+    <!-- enable bootstrap custom tootips -->
+    <script>$(function () { $('[data-toggle="tooltip"]').tooltip() });</script>
 
-             <div class="lightBorder"></div>
-             <label>
-               <b>Note:</b> In order to use the following features, you must be subscribed to
-               <a href="http://messages.att.net">AT&amp;T Messages</a>
-             </label>
-             <div class="lightBorder"></div>
-
-             <a id="createMsgToggle"
-               href="javascript:toggle('createMsg');">Create Message Index</a>
-             <div class="toggle" id="createMsg">
-               <h2>Create Message Index</h2>
-               <form method="post" action="index.jsp" id="createMessageIndexForm">
-                 <div class="inputFields">
-                   <button name="createMessageIndex" type="submit" class="submit">Create Index</button>
-                 </div>
-               </form>
-               <c:if test="${not empty indexError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${indexError}" />
-               </div>
-               </c:if>
-               <c:if test="${not empty indexResponse}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               </c:if>
-             </div> <!-- end of create message index -->
-
-             <div class="lightBorder"></div>
-
-             <a id="getMsgToggle"
-               href="javascript:toggle('getMsg');">Get Message</a>
-             <div class="toggle" id="getMsg">
-               <h2>Get Message List <i>(Displays last 5 messages from the list)</i></h2>
-               <form method="post" action="index.jsp" id="getMessageListForm">
-                 <div class="inputFields">
-                   <label>
-                     <c:choose>
-                     <c:when test="${not empty favorite}">
-                     <input name="favorite" type="checkbox" checked />
-                     </c:when>
-                     <c:otherwise>
-                     <input name="favorite" type="checkbox" />
-                     </c:otherwise>
-                     </c:choose>
-                     Filter by favorite
-                   </label>
-                   <label>
-                     <c:choose>
-                     <c:when test="${not empty unread}">
-                     <input name="unread" type="checkbox" checked />
-                     </c:when>
-                     <c:otherwise>
-                     <input name="unread" type="checkbox" />
-                     </c:otherwise>
-                     </c:choose>
-                     Filter by unread flag
-                   </label>
-                   <label>
-                     <c:choose>
-                     <c:when test="${not empty incoming}">
-                     <input name="incoming" type="checkbox" checked />
-                     </c:when>
-                     <c:otherwise>
-                     <input name="incoming" type="checkbox" />
-                     </c:otherwise>
-                     </c:choose>
-                     Filter by incoming flag
-                   </label>
-                   <label>Filter by recipients:
-                     <c:choose>
-                     <c:when test="${not empty keyword}">
-                     <input name="keyword" type="text" placeholder="555-555-5555, etc..." value="${keyword}">
-                     </c:when>
-                     <c:otherwise>
-                     <input name="keyword" type="text" placeholder="555-555-5555, etc...">
-                     </c:otherwise>
-                     </c:choose>
-                   </label>
-                   <button name="getMessageList" type="submit" class="submit">Get Message List</button>
-                 </div>
-               </form>
-               <c:if test="${not empty msgList}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               <table>
-                 <thead>
-                   <tr>
-                     <th>limit</th>
-                     <th>offset</th>
-                     <th>total</th>
-                     <th>state</th>
-                     <th>cache status</th>
-                     <th>failed messages</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr>
-                     <td data-value="limit"><c:out value="${msgList.limit}"/></td>
-                     <td data-value="offset"><c:out value="${msgList.offset}" /></td>
-                     <td data-value="total"><c:out value="${msgList.total}" /></td>
-                     <td data-value="state"><c:out value="${msgList.state}" /></td>
-                     <td data-value="cache status"><c:out value="${msgList.cacheStatus.string}" /></td>
-                     <td data-value="failed messages">
-                       <c:choose>
-                       <c:when test="${not empty msgList.failedMessages}" >
-                       <c:out value='${fn:join(msgList.failedMessages, ", ")}' />
-                       </c:when>
-                       <c:otherwise>
-                       None
-                       </c:otherwise>
-                       </c:choose>
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-                 <c:forEach items="${msgList.messages}" var="msg" varStatus="count">
-                 <h3>Message <c:out value="${count.index}" /></h3>
-                 <table>
-                   <thead>
-                     <tr>
-                       <th>message id</th>
-                       <th>from</th>
-                       <th>recipients</th>
-                       <th>text</th>
-                       <th>timestamp</th>
-                       <th>isFavorite</th>
-                       <th>isUnread</th>
-                       <th>isIncoming</th>
-                       <th>type</th>
-                       <!-- TODO: implement segment -->
-                     </tr>
-                   </thead>
-                   <tbody>
-                     <tr>
-                       <td data-value="message id"><c:out value="${msg.messageId}" /></td>
-                       <td data-value="from"><c:out value="${msg.from}" /></td>
-                       <td data-value="recipients"><c:out value='${fn:join(msg.recipients, ", ")}' /></td>
-                       <td data-value="text"><c:out value="${msg.text}" /></td>
-                       <td data-value="timestamp"><c:out value="${msg.timeStamp}" /></td>
-                       <td data-value="isFavorite"><c:out value="${msg.favorite}" /></td>
-                       <td data-value="isUnread"><c:out value="${msg.unread}" /></td>
-                       <td data-value="isIncoming"><c:out value="${msg.incoming}" /></td>
-                       <td data-value="type"><c:out value="${msg.type}" /></td>
-                       <!-- TODO: implement segment -->
-                     </tr>
-                   </tbody>
-                 </table>
-                 </c:forEach>
-               </c:if>
-               <c:if test="${not empty msgListError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${msgListError}" />
-               </div>
-               </c:if>
-
-               <h2>Get Message</h2>
-               <form method="post" action="index.jsp" id="getMessageForm">
-                 <div class="inputFields">
-                   <c:choose>
-                   <c:when test="${not empty messageId}">
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="${messageId}" />
-                   </c:when>
-                   <c:otherwise>
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" />
-                   </c:otherwise>
-                   </c:choose>
-                   <button name="getMessage" type="submit" class="submit">
-                     Get Message
-                   </button>
-                 </div>
-               </form>
-               <c:if test="${not empty getMsg}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               <table>
-                 <thead>
-                   <th>message id</th>
-                   <th>from</th>
-                   <th>recipients</th>
-                   <th>text</th>
-                   <th>timestamp</th>
-                   <th>isFavorite</th>
-                   <th>isUnread</th>
-                   <th>isIncoming</th>
-                   <th>type</th>
-                   <!-- TODO: implement segment -->
-                 </thead>
-                 <tbody>
-                   <td data-value="message id"><c:out value="${getMsg.messageId}" /></td>
-                   <td data-value="from"><c:out value="${getMsg.from}" /></td>
-                   <td data-value="recipients"><c:out value='${fn:join(getMsg.recipients, ", ")}' /></td>
-                   <td data-value="text"><c:out value="${getMsg.text}" /></td>
-                   <td data-value="timestamp"><c:out value="${getMsg.timeStamp}" /></td>
-                   <td data-value="isFavorite"><c:out value="${getMsg.favorite}" /></td>
-                   <td data-value="isUnread"><c:out value="${getMsg.unread}" /></td>
-                   <td data-value="isIncoming"><c:out value="${getMsg.incoming}" /></td>
-                   <td data-value="type"><c:out value="${getMsg.type}" /></td>
-                   <!-- TODO: implement segment -->
-                 </tbody>
-               </table>
-               </c:if>
-               <c:if test="${not empty getMsgError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${getMsgError}" />
-               </div>
-               </c:if>
-
-               <h2>Get Message Content</h2>
-               <form method="post" action="index.jsp" id="getMessageContentForm">
-                 <div class="inputFields">
-                   <c:choose>
-                   <c:when test="${not empty messageId}">
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="${messageId}" />
-                   </c:when>
-                   <c:otherwise>
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" />
-                   </c:otherwise>
-                   </c:choose>
-
-                   <c:choose>
-                   <c:when test="${not empty partNumber}">
-                   <input name="partNumber" type="text" maxlength="30" placeholder="Part Number" value="${partNumber}" />
-                   </c:when>
-                   <c:otherwise>
-                   <input name="partNumber" type="text" maxlength="30" placeholder="Part Number" />
-                   </c:otherwise>
-                   </c:choose>
-                   <button  type="submit" class="submit" name="getMessageContent">
-                     Get Message Content
-                   </button>
-                 </div>
-               </form>
-               <c:if test="${not empty msgContent}" >
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               ${msgContent}
-               </c:if>
-               <c:if test="${not empty msgContentError}" >
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${msgContentError}" />
-               </div>
-               </c:if>
-
-               <h2>Get Delta</h2>
-               <form method="post" action="index.jsp" id="getDeltaForm">
-                 <div class="inputFields">
-                   <c:if test="${not empty state}" >
-                   <input name="state" type="text" maxlength="30" placeholder="Message State" value="${state}" />
-                   </c:if>
-                   <c:if test="${empty state}">
-                   <input name="state" type="text" maxlength="30" placeholder="Message State" />
-                   </c:if>
-                   <button  type="submit" class="submit" name="getDelta">
-                     Get Delta
-                   </button>
-                 </div>
-               </form>
-               <c:if test="${not empty deltas}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               <c:forEach items="${deltas.deltas}" var="delta">
-               <p><b>Delta type:</b> <c:out value="${delta.type}" /></p>
-               <table>
-                 <thead>
-                   <tr>
-                     <th>Delta Operation</th>
-                     <th>MessageId</th>
-                     <th>Favorite</th>
-                     <th>Unread</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <c:forEach items="${delta.adds}" var="add">
-                   <tr>
-                     <td data-value="Delta Operation">Add</td>
-                     <td data-value="MessageId"><c:out value="${add.messageId}" /></td>
-                     <td data-value="Favorite"><c:out value="${add.favorite}" /></td>
-                     <td data-value="Unread"><c:out value="${add.unread}" /></td>
-                   </tr>
-                   </c:forEach>
-                   <c:forEach items="${delta.deletes}" var="del">
-                   <tr>
-                     <td data-value="Delta Operation">Delete</td>
-                     <td data-value="MessageId"><c:out value="${del.messageId}" /></td>
-                     <td data-value="Favorite"><c:out value="${del.favorite}" /></td>
-                     <td data-value="Unread"><c:out value="${del.unread}" /></td>
-                   </tr>
-                   </c:forEach>
-                   <c:forEach items="${delta.updates}" var="update">
-                   <tr>
-                     <td data-value="Delta Operation">Delete</td>
-                     <td data-value="MessageId"><c:out value="${update.messageId}" /></td>
-                     <td data-value="Favorite"><c:out value="${update.favorite}" /></td>
-                     <td data-value="Unread"><c:out value="${update.unread}" /></td>
-                   </tr>
-                   </c:forEach>
-                 </tbody>
-               </table>
-               </c:forEach>
-               </c:if>
-               <c:if test="${not empty getDeltaError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${getDeltaError}" />
-               </div>
-               </c:if>
-
-               <h2> Get Message Index Info</h2>
-               <form method="post" action="index.jsp" id="getMessageIndexInfoForm">
-                 <div class="inputFields">
-                   <button name="getMessageIndexInfo" type="submit" class="submit">
-                     Get Message Index Info
-                   </button>
-                 </div>
-               </form>
-               <c:if test="${not empty msgIndexInfo}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               <table>
-                 <thead>
-                   <tr>
-                     <th>Status</th>
-                     <th>State</th>
-                     <th>Message Count</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr>
-                     <td data-value="Status"><c:out value="${msgIndexInfo.status.string}" /></td>
-                     <td data-value="State"><c:out value="${msgIndexInfo.state}" /></td>
-                     <td data-value="Message Count"><c:out value="${msgIndexInfo.messageCount}" /></td>
-                   </tr>
-                 </tbody>
-               </table>
-               </c:if>
-               <c:if test="${not empty msgIndexInfoError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${msgIndexInfoError}" />
-               </div>
-               </c:if>
-
-             </div> <!-- end of get message toggle -->
-
-             <div class="lightBorder"></div>
-             <a id="updateMsgToggle"
-               href="javascript:toggle('updateMsg');">Update Message</a>
-             <div class="toggle" id="updateMsg">
-               <h2>Update Message/Messages</h2>
-               <form method="post" action="index.jsp" id="updateMessageForm">
-                 <div class="inputFields">
-                   <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
-                   <c:choose>
-                   <c:when test="${not empty messageId}">
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="${messageId}" />
-                   </c:when>
-                   <c:otherwise>
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" />
-                   </c:otherwise>
-                   </c:choose>
-                   <label>Change Status:</label>
-                   <label>
-                     <input type="radio" name="readflag" value="read" checked>
-                     Read
-                   </label>
-                   <label>
-                     <input type="radio" name="readflag" value="unread">
-                     Unread
-                   </label>
-                   <button name="updateMessage" type="submit" class="submit">
-                     Update Message/Messages
-                   </button>
-                 </div>
-               </form>
-
-               <c:if test="${not empty updateMsg}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               </c:if>
-               <c:if test="${not empty updateMsgError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${updateMsgError}" />
-               </div>
-               </c:if>
-             </div> <!-- end of update message toggle -->
-
-             <div class="lightBorder"></div>
-             <a id="delMsgToggle" href="javascript:toggle('delMsg');">Delete Message</a>
-             <div class="toggle" id="delMsg">
-               <h2>Delete Message/Messages</h2>
-               <form method="post" action="index.jsp" id="deleteMessageForm">
-                 <div class="inputFields">
-                   <label><i>More than one message ID's can be separated by comma(,) separator</i></label>
-                   <c:choose>
-                   <c:when test="${not empty messageId}">
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" value="${messageId}" />
-                   </c:when>
-                   <c:otherwise>
-                   <input name="messageId" type="text" maxlength="30" placeholder="Message ID" />
-                   </c:otherwise>
-                   </c:choose>
-                   <button name="deleteMessage" type="submit" class="submit">Delete Message/Messages</button>
-                 </div>
-               </form>
-
-               <c:if test="${not empty deleteMsg}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               </c:if>
-               <c:if test="${not empty deleteMsgError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${deleteMsgError}" />
-               </div>
-               </c:if>
-             </div> <!-- end of delete toggle -->
-
-             <div class="lightBorder"></div>
-
-             <a id="getMsgNotToggle"
-               href="javascript:toggle('getMsgNot');">Get Notification Connection Details</a>
-             <div class="toggle" id="getMsgNot">
-               <form method="post" action="index.jsp" id="getNotifyDetailsForm">
-                 <div class="inputFields">
-                   <label>Notification Subscription:</label>
-                   <label><input type="radio" name="queues" value="TEXT" checked >Text</label>
-                   <label><input type="radio" name="queues" value="MMS" >MMS</label>
-                   <button name="getNotifyDetails" type="submit" class="submit">Get Details</button>
-                 </div>
-               </form>
-               <c:if test="${not empty notificationDetails}">
-               <div class="successWide">
-                 <strong>SUCCESS:</strong>
-               </div>
-               <h3>Connection Details</h3>
-               <table>
-                 <thead>
-                   <tr>
-                     <th>Username</th>
-                     <th>Password</th>
-                     <th>https url</th>
-                     <th>wss url</th>
-                     <th>queues</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr>
-                     <td data-value="Username"><c:out value="${notificationDetails.username}" /></td>
-                     <td data-value="Password"><c:out value="${notificationDetails.password}" /></td>
-                     <td data-value="https url"><c:out value="${notificationDetails.httpsUrl}" /></td>
-                     <td data-value="wss url"><c:out value="${notificationDetails.wssUrl}" /></td>
-                     <td data-value="queues"><c:out value="${notificationDetails.queues}" /></td>
-                   </tr>
-                 </tbody>
-               </table>
-               </c:if>
-               <c:if test="${not empty notificationDetailsError}">
-               <div class="errorWide">
-                 <strong>ERROR:</strong>
-                 <c:out value="${notificationDetailsError}" />
-               </div>
-               </c:if>
-             </div> <!-- end of getMsgNot toggle -->
-           </div> <!-- end of form container -->
-         </div> <!-- end of form box -->
-       </div> <!-- end of content -->
-       <div class="border"></div>
-       <div id="footer">
-         <div id="powered_by">
-           Powered by AT&amp;T Cloud Architecture
-         </div>
-         <p>
-         The Application hosted on this site are working examples
-         intended to be used for reference in creating products to consume
-         AT&amp;T Services and not meant to be used as part of your
-         product. The data in these pages is for test purposes only and
-         intended only for use as a reference in how the services perform.
-         <br><br>
-         To access your apps, please go to
-         <a href="https://developer.att.com/developer/mvc/auth/login"
-         target="_blank">https://developer.att.com/developer/mvc/auth/login</a>
-         <br> For support refer to
-         <a href="https://developer.att.com/support">https://developer.att.com/support</a>
-         <br><br>
-         &#169; 2013 AT&amp;T Intellectual Property. All rights reserved.
-         <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
-         </p>
-       </div> <!-- end of footer -->
-     </div> <!-- end of page_container -->
-     <c:if test="${not empty toggleDiv}">
-     <script>toggle("${toggleDiv}")</script>
-     </c:if>
-   </body>
- </html>
+  </body>
+</html>
+<!-- vim: set ts=2 sts=2 sw=2 et : -->
