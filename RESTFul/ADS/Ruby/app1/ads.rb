@@ -18,6 +18,7 @@ require 'sinatra'
 require 'sinatra/config_file'
 require 'securerandom'
 require 'open-uri'
+require 'json'
 
 # require codekit
 require 'att/codekit'
@@ -108,7 +109,7 @@ class ADS < Sinatra::Application
 
       jbody = { :success => true }
       if ad.has_ads?
-        jbody[:table] = [{
+        jbody[:tables] = [{
           :caption => 'Ads Response:',
           :headers => ['Type', 'ClickUrl'],
           :values => [[ad.type, ad.clickurl]]
