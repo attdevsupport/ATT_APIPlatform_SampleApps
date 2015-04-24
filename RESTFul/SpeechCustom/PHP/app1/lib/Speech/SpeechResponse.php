@@ -101,11 +101,10 @@ final class SpeechResponse
 
         $responseId = $recognition['ResponseId'];
         $status = $recognition['Status'];
-        $nbests = $recognition['NBest'];
-        $jsonNBest = $nbests[0];
-
         $nBest = null;
         if (strtolower($status) == 'ok') {
+            $nbests = $recognition['NBest'];
+            $jsonNBest = $nbests[0];
             $nBest = NBest::fromArray($jsonNBest);
         }
 

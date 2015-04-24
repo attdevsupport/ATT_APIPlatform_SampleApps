@@ -19,13 +19,8 @@ require 'sinatra'
 require 'sinatra/config_file'
 require 'json'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # load bundled codekit if not installed via gems
-  require_relative 'codekit/lib/att/codekit'
-end
+# require codekit
+require 'att/codekit'
 
 include Att::Codekit
 

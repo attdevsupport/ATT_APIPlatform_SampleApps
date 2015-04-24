@@ -281,6 +281,7 @@ final class ContactCommon
 
         $mappings = array(
             'firstName' => &$contact->firstName,
+            'middleName' => &$contact->middleName,
             'lastName' => &$contact->lastName,
             'prefix' => &$contact->prefix,
             'suffix' => &$contact->suffix,

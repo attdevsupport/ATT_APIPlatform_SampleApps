@@ -2,7 +2,7 @@
 namespace Att\Api\Speech;
 
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ use Att\Api\Restful\HttpPost;
 use Att\Api\Restful\RestfulRequest;
 use Att\Api\Srvc\APIService;
 use Att\Api\Srvc\Service;
+use Att\Api\Srvc\ServiceException;
 
 use InvalidArgumentException;
 
@@ -112,7 +113,7 @@ class SpeechService extends APIService
             ->setHeader('X-SpeechContext', $speechContext);
 
         if ($chunked) {
-            $req->setHeader('Content-Transfer-Encoding', 'chunked');
+            $req->setHeader('Transfer-Encoding', 'chunked');
         } else {
             $req->setHeader('Content-Length', filesize($fname));
         }
@@ -163,6 +164,7 @@ class SpeechService extends APIService
         $result = $req->sendHttpPost($httpPost);
 
         $code = $result->getResponseCode();
+        $body = $result->getResponseBody();
         if ($code != 200 && $code != 201) {
             throw new ServiceException($body, $code);
         }

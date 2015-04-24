@@ -21,9 +21,6 @@ $scope = "SPEECH";
 // must have write permissions.
 $oauth_file = "oauthtoken.php";
 
-// Optional xarg parameter. Format is comma-seperated key-value pairs. 
-$x_arg = "test=123";
-
 // Mandatory. Directory where files to be uploaded are stored.
 $audioFolder = "audio";
 
@@ -35,12 +32,5 @@ $linkDownload = '#';
 
 // URL link for this sample app's help page.
 $linkHelp = '#';
-
-// Mandatory. Array of speech contexts to use when sending API request.
-$speech_context_config = array('Generic', 'TV', 'BusinessSearch', 'Websearch',
-    'SMS', 'Voicemail', 'QuestionAndAnswer', 'Gaming', 'SocialMedia');
-
-// Currently only supported for gaming
-$xSpeechSubContext = 'Chat';
 
 ?>

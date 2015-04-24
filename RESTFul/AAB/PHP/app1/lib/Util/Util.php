@@ -114,6 +114,17 @@ final class Util
         return $encodedAddr;
     }
 
+    /* TODO: document */
+    public static function convertNulls($arr, $replaceChar='-')
+    {
+        for ($i = 0; $i < count($arr); ++$i) {
+            if ($arr[$i] === null) {
+                $arr[$i] = $replaceChar;
+            }
+        }
+        return $arr;
+    }
+
 }
 
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */

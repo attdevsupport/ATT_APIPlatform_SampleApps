@@ -17,192 +17,235 @@
 require 'sinatra'
 require 'sinatra/config_file'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # try relative, fall back to ruby 1.8 method if fails
-  begin
-    require_relative 'codekit/lib/att/codekit'
-  rescue NoMethodError 
-    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
-  end
-end
+# require codekit
+require 'att/codekit'
 
 include Att::Codekit
 
-enable :sessions
+class SMS < Sinatra::Application
+  get '/' do index; end
+  get '/load' do load_data; end
+  post '/save' do save_data; end
+  post '/sendSms' do send_sms; end
+  post '/getDeliveryStatus' do delivery_status; end
+  post '/getMessages' do get_messages; end
+  post '/loadNotifications' do load_notifications; end
 
-config_file 'config.yml'
-
-set :port, settings.port
-set :protection, :except => :frame_options
-
-SCOPE = "SMS"
-
-RestClient.proxy = settings.proxy
-
-configure do
-  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
-  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
-
-  OAuth = Auth::ClientCred.new(settings.FQDN, 
-                               settings.api_key,
-                               settings.secret_key)
-  @@token = nil
-end
-
-helpers do
-  def h(html)
-    Rack::Utils.escape_html(html)
+  post '/statusListener' do 
+    request.body.rewind
+    input = JSON.parse(request.body.read)
+    if input.is_a?(Hash) && input.include?("deliveryInfoNotification")
+      handle_inbound settings.status_file
+    end
   end
-end
+  post '/messageListener' do 
+    request.body.rewind
+    input = JSON.parse(request.body.read)
+    if input.is_a?(Hash) && input.include?("DestinationAddress")
+      handle_inbound settings.messages_file
+    end
+  end
 
+  configure do
+    enable :sessions
+    config_file 'config.yml'
+    SCOPE = "SMS"
+    Transport.proxy(settings.proxy)
 
-#update listeners data before every request
-before do 
-  begin
-    @status_listener = load_file "#{settings.status_file}"
-    @message_listener = load_file "#{settings.message_file}"
+    # create files if doesn't exist
+    set :tokens_file, Dir.tmpdir + "/ruby_sms_token"
+    File.new(settings.tokens_file, 'w').close if !File.exists? settings.tokens_file
+    set :status_file, Dir.tmpdir + "/ruby_sms_status"
+    File.new(settings.status_file, 'w').close if !File.exists? settings.status_file
+    set :messages_file, Dir.tmpdir + "/ruby_sms_messages"
+    File.new(settings.messages_file, 'w').close if !File.exists? settings.messages_file
 
-    #check if token exists and create if necessary
-    if @@token.nil?
-      if FILE_EXISTS 
-        @@token = Auth::OAuthToken.load(settings.tokens_file)
-      else
-        @@token = OAuth.createToken(SCOPE)
+    OAuth = Auth::ClientCred.new(settings.FQDN, 
+                                 settings.api_key,
+                                 settings.secret_key)
+    set :token, nil
+  end
+
+  #update listeners data before every request
+  before do 
+    begin
+      #check if token exists and create if necessary
+      settings.token = Auth::OAuthToken.load(settings.tokens_file) if settings.token.nil?
+      if settings.token.nil?
+        settings.token = OAuth.createToken(SCOPE)
+        Auth::OAuthToken.save(settings.tokens_file, settings.token) 
+      elsif settings.token.expired?
+        settings.token = OAuth.refreshToken(settings.token)
+        Auth::OAuthToken.save(settings.tokens_file, settings.token) 
       end
-      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def index
+    erb :sms
+  end
+
+  def send_sms
+    begin
+      service = Service::SMSService.new(settings.FQDN, settings.token)
+
+      # set notify to a boolean based on checkbox exists or not in request
+      notify = !!params[:deliveryNotificationStatus]
+      sms = service.sendSms(params[:address], params[:message], notify)
+
+      {
+        :success => true,
+        :tables => [{ 
+          :caption => "Message sent successfully!",
+          :headers => ["Message ID", "Resource URL"],
+          :values => [[sms.id, sms.resource_url || '-']]
+        }]
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def delivery_status
+    begin
+      service = Service::SMSService.new(settings.FQDN, settings.token)
+
+      msgid = params[:messageId]
+      status = service.getDeliveryStatus(msgid)
+      delivery_info = status.delivery_info
+
+      infos = Array.new
+      delivery_info.each do |info|
+        infos << [info.id, info.address, info.status]
+      end
+      {
+        :success => true,
+        :tables => [{
+          :caption => "Resource URL: #{status.resource_url}",
+          :headers => ["Message ID", "Address", "Delivery Status"],
+          :values => infos
+        }]
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_messages
+    begin
+      service = Service::SMSService.new(settings.FQDN, settings.token)
+      message_list = service.getReceivedMessages(settings.short_code_check)
+
+      values = Array.new
+      message_list.messages.each do |msg|
+        values << [msg.id, msg.sender, msg.message]
+      end
+      {
+        :success => true,
+        :tables => [
+          {
+            :caption => "Message List Information:",
+            :headers => ["Number Of Messages In This Batch", 
+                         "Resource Url", 
+                         "Total Number Of Pending Messages"],
+            :values => [[message_list.count, message_list.url,
+                        message_list.pending]]
+          },
+          {
+            :caption => "Messages",
+            :headers => ["Message ID", "Sender Address", "Message"],
+            :values => values
+          }
+        ]
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def load_notifications
+    status = load_json_file settings.status_file
+    statuses = Array.new
+    status.each do |s|
+      info = s["deliveryInfoNotification"]
+      dinfo = info["deliveryInfo"]
+      statuses << [
+        info["messageId"], dinfo["address"], dinfo["deliveryStatus"]
+      ]
     end
 
-    if @@token.expired?
-      @@token = OAuth.refreshToken(@@token)
-      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+    messages = load_json_file settings.messages_file
+    msgs = Array.new
+    messages.each do |msg|
+      msgs << [
+        msg["MessageId"], msg["DateTime"], msg["SenderAddress"],
+        msg["DestinationAddress"], msg["Message"]
+      ]
     end
-
-  rescue Exception => e
-    @send_error = e.message
-  end
-end
-
-get '/' do
-  session[:sms_id] = nil
-
-  if !File.directory? settings.mosms_file_dir then
-    Dir.mkdir settings.mosms_file_dir
+    {
+      :messages => msgs,
+      :deliveryStatus => statuses,
+    }.to_json
   end
 
-  erb :sms
-end
-
-post '/sendSms' do
-  begin
-    service = Service::SMSService.new(settings.FQDN, @@token)
-
-    session[:sms1_address] = params[:address]
-    #set true if  we're sending a notification 
-    if params[:chkGetOnlineStatus].nil?
-      notify = false
-    else
-      notify = true
-    end
-
-    @send = service.sendSms(session[:sms1_address], params[:message], notify)
-
-    session[:sms_id] = @send.id unless notify
-
-  rescue Exception => e
-    @send_error = e.message
-  end
-  erb :sms
-end
-
-post '/getDeliveryStatus' do
-  session[:sms_id] = params["messageId"]
-
-  service = Service::SMSService.new(settings.FQDN, @@token)
-  begin
-    @status = service.getDeliveryStatus(session[:sms_id])
-    @status_resource_url = service.getResourceUrl(session[:sms_id])
-
-  rescue Exception => e
-    @delivery_error = e.message
-  end
-  erb :sms
-end
-
-post '/getReceivedSms' do
-  begin
-    service = Service::SMSService.new(settings.FQDN, @@token)
-    @messages = service.getReceivedMessages(settings.short_code_1)
-
-  rescue Exception => e
-    @received_error = e.message
-  end
-  erb :sms
-end
-
-post '/statusListener' do
-  handle_inbound "#{settings.status_file}"
-end
-
-post '/messageListener' do
-  handle_inbound "#{settings.message_file}"
-end
-
-get '/refreshStatus' do
-  erb :sms
-end
-
-get '/receiveMessages' do
-  erb :sms
-end
-
-# use this URL to clear files
-get '/clear' do
-  File.delete settings.tokens_file if File.exists? settings.tokens_file
-  File.delete settings.status_file if File.exists? settings.status_file
-  File.delete settings.message_file if File.exists? settings.message_file
-  redirect '/'
-end
-
-def load_file(file)
-  data = Array.new
-  if File.exists? file then
-    File.open(file, 'r') do |f|
+  def load_json_file(path)
+    data = Array.new
+    File.open(path, 'r') do |f|
       begin
-        f.flock(File::LOCK_EX)
+        f.flock(File::LOCK_SH)
         f.each_line {|line| data << JSON.parse(line)}
       ensure
         f.flock(File::LOCK_UN)
       end
     end
-  end
-  data
-end
-
-def handle_inbound(file)
-  input = request.env["rack.input"].read
-
-  if !File.exists? file
-    File.new(file, 'w')
+    data
   end
 
-  contents = File.readlines(file)
+  def handle_inbound(path)
+    request.body.rewind
+    input = request.body.read
 
-  File.open(file, 'w') do |f|
-    begin
-      f.flock(File::LOCK_EX)
-      #remove the first line if we're over limit
-      if contents.size > settings.listener_limit - 1 
-        offset = 1
-      else
-        offset = 0
+    File.open(path, 'w') do |f|
+      begin
+        f.flock(File::LOCK_EX)
+        contents = f.readlines
+        #remove the first line if we're over limit
+        if contents.size > settings.listener_limit - 1 
+          offset = 1
+        else
+          offset = 0
+        end
+        f.rewind
+        f.puts contents[offset, contents.size] 
+        f.puts JSON.parse(input).to_json
+      ensure
+        f.flock(File::LOCK_UN)
       end
-      f.puts contents[offset, contents.size] 
-      f.puts JSON.parse(input).to_json
-    ensure
-      f.flock(File::LOCK_UN)
     end
   end
+
+  ##################################
+  ####### Save data in forms #######
+  ##################################
+  def save_data
+    session['savedData'] = JSON.parse(params['data'])
+    ""
+  end
+
+  def load_data
+    data = {
+      :authenticated => true,
+      :server_time => Util::serverTime,
+      :download => settings.download_link,
+      :github => settings.github_link,
+      :short_code_check => settings.short_code_check,
+      :short_code_received => settings.short_code_received,
+    }
+    data[:savedData] = session[:savedData] unless session[:savedData].nil?
+    data.to_json
+  end
+
 end

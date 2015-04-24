@@ -1,22 +1,12 @@
-port:             4567
-proxy: 
-api_key:          
-secret_key:       
-FQDN:             
-listener_url:     http://localhost:4567/smslistener
+proxy:
+api_key:
+secret_key:
+FQDN: https://api.att.com
 
-vote_phone_number: 
-short_code_1: 
-short_code_2: 
-
-status_file:      received_data/status
-message_file:     received_data/messages
-mosms_file_dir:   MoSmsData
-votes_file:       MoSmsData/vote_data
-tokens_file:      tokens
+short_code_check:
+short_code_received:
 
 listener_limit: 5
 
-source_link: #
-download_link: #
-help_link: #
+download_link:  http://localhost:4567/download
+github_link:    http://localhost:4567/source

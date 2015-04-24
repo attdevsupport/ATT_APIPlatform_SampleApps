@@ -14,46 +14,40 @@
 
 1. Configuration
 
-  Configuration consists of a few steps necessary to get an application
-  registered on DevConnect with the proper services and endpoints, depending on
-  the type of client-side application (autonomous/non-autonomous). 
+Configuration consists of a few steps necessary to get an application
+registered with the proper services and 
+  endpoints, depending on the type of client-side application
+(autonomous/non-autonomous). 
 
-  To register an application, go to https://devconnect-api.att.com/ and login
-  with your valid username and password. Next, choose "My Apps" from the bar at
-  the top of the page and click the "Setup a New Application" button. 
+  To register an application, go to https://developer.att.com/developer/mvc/auth/login and login
+with your valid username and password.
+  Next, choose "My Apps" from the bar at the top of the page and click the
+"Setup a New Application" button. 
 
   Fill in the form, in particular all fields marked as "required". 
 
-  Be careful while filling in the "OAuth Redirect URL" field. It should contain
-  the URL that the OAuth provider will redirect users to when he/she
-  successfully authenticates and authorizes your application.  The oauth
-  redirect field must match the redirect specified in the app's config.yml
 
-  NOTE: You MUST select the Sample Applications name in the list of services
-  under field 'Services' in order to enable access to the cloud api. 
-
-  After your application is registered you will receive an API and Secret key.
-  They are necessary for your registered applications to access the AT&T
-  Platform APIs. See 'Adjusting parameters' below to learn how to use these
-  keys in your applications.
+  Having your application registered, you will get back an important pair of
+data: an API key and Secret key. They are 
+  necessary to get your applications working with the AT&T API Platform. See
+'Adjusting parameters' below to learn how to use 
+  these keys.
 
   Initially your newly registered application is restricted to the "Sandbox"
-  environment only. To move it to production, you may promote it by clicking
-  the "Promote to production" button. Notice that you will get a different API
-  key and secret, so these values in your application should be adjusted
-  accordingly.
+environment only. To move it to production,
+  you may promote it by clicking the "Promote to production" button. Notice
+that you will get a different API key and secret,
+  so these values in your application should be adjusted accordingly.
 
   Depending on the kind of authentication used, an application may be based on
-  either the Autonomous Client or the Web-Server Client OAuth flow; see:
-    https://devconnect-api.att.com/docs/oauth20/autonomous-client-application-oauth-flow
-    https://devconnect-api.att.com/docs/oauth20/web-server-client-application-oauth-flow
-
+either the Autonomous Client or the Web-Server 
+  Client OAuth flow (see https://developer.att.com/apis/oauth-2/docs).
 
 2. Installation
 
 ** Requirements
 
-  To run the examples you will need ruby 1.8+ and a few ruby gems that the
+  To run the examples you will need ruby 1.9.3+ and a few ruby gems that the
   applications are built upon:
   
     - sinatra: (http://www.sinatrarb.com/) used to construct a simple web

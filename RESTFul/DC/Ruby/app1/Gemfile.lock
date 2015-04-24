@@ -2,24 +2,27 @@ GEM
   remote: https://rubygems.org/
   remote: http://lprod.code-api-att.com:8808/
   specs:
-    att-codekit (4.3.2)
+    att-codekit (4.4.2)
       immutable_struct
       json
-      rest-client (~> 1.6)
-    backports (3.6.3)
-    daemons (1.1.9)
-    eventmachine (1.0.3)
+      rest-client
+    backports (3.6.4)
+    domain_name (0.5.24)
+      unf (>= 0.0.5, < 1.0.0)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
     immutable_struct (1.1.1)
-    json (1.8.1)
-    mime-types (1.25.1)
-    multi_json (1.10.1)
-    netrc (0.7.7)
-    rack (1.5.2)
+    json (1.8.2)
+    mime-types (2.4.3)
+    multi_json (1.11.0)
+    netrc (0.10.3)
+    rack (1.6.0)
     rack-protection (1.5.3)
       rack
-    rack-test (0.6.2)
+    rack-test (0.6.3)
       rack (>= 1.0)
-    rest-client (1.7.2)
+    rest-client (1.8.0)
+      http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
     sinatra (1.4.5)
@@ -33,22 +36,15 @@ GEM
       rack-test
       sinatra (~> 1.4.0)
       tilt (~> 1.3)
-    thin (1.6.3)
-      daemons (~> 1.0, >= 1.0.9)
-      eventmachine (~> 1.0)
-      rack (~> 1.0)
     tilt (1.4.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   att-codekit (~> 4.3)!
-  immutable_struct (~> 1.1)
-  json (~> 1.8)
-  mime-types (~> 1.25)
-  rack (~> 1.5)
-  rest-client (~> 1.6)
-  sinatra (~> 1.4)
-  sinatra-contrib
-  thin (~> 1.6)
+  sinatra (~> 1.4)!
+  sinatra-contrib!

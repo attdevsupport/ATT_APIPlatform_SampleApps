@@ -1,4 +1,4 @@
-# Copyright 2014 AT&T
+# Copyright 2015 AT&T
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-port:               4567
 proxy:              
 api_key:            
 secret_key:         
 tokens_file:        tokens
 FQDN:               https://api.att.com
-endpoint:           https://api.att.com/rest/2/SpeechToText
-speech_context:     Generic, TV, BusinessSearch, Websearch, SMS, Voicemail, QuestionAndAnswer
-X_arg:              
-X_subContext:       Chat,Rpg,PetCmd,Ui,War
-default_audio_file: BostonCeltics.wav
-source_link:        http://localhost/source
-help_link:          http://localhost/help
+
+github_link:          http://localhost/help
 download_link:      http://localhost/download

@@ -15,88 +15,130 @@
 # limitations under the License.
 
 require 'sinatra'
-require 'open-uri'
 require 'sinatra/config_file'
+require 'securerandom'
+require 'open-uri'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # try relative, fall back to ruby 1.8 method if fails
-  begin
-    require_relative 'codekit/lib/att/codekit'
-  rescue NoMethodError 
-    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
-  end
-end
-  
+# require codekit
+require 'att/codekit'
 
 #simplify our namespace
 include Att::Codekit
 
-enable :sessions
+class ADS < Sinatra::Application
+  get '/' do index; end
+  get '/load' do load_data; end
+  post '/save' do save_data; end
+  post '/getAds' do get_ads; end
 
-config_file 'config.yml'
+  configure do
+    enable :sessions
+    disable :protection
+    config_file 'config.yml'
+    #Setup proxy used by att/codekit
+    Transport.proxy(settings.proxy)
 
-set :port, settings.port
-set :protection, :except => :frame_options
-
-SCOPE = 'ADS'
-
-#Setup proxy used by att/codekit
-Transport.proxy(settings.proxy)
-
-configure do
-  begin
-    VALID_PARAMS = [:MMA]
+    SCOPE = 'ADS'
     OAuth = Auth::ClientCred.new(settings.FQDN,
                                  settings.api_key,
                                  settings.secret_key)
-    @@token = nil
-  rescue Exception => e
-    @error = e.message
-  end
-end
 
-# Setup filter for token handling
-[ '/getAds' ].each do |action|
-  before action do
+    set :tokens_file, Dir.tmpdir + "/ruby_ads_token"
+    File.new(settings.tokens_file, 'w').close unless File.exists? settings.tokens_file
+
+    set :token, nil
+  end
+
+  before '/getAds' do
     begin
-      if @@token.nil?
-        @@token = OAuth.createToken(SCOPE)
-      end
-      if @@token && @@token.expired?
-        @@token = OAuth.refreshToken(@@token) 
+      #check if token exists and create if necessary
+      settings.token = Auth::OAuthToken.load(settings.tokens_file) if settings.token.nil?
+      if settings.token.nil?
+        settings.token = OAuth.createToken(SCOPE)
+      elsif settings.token.expired?
+        settings.token = OAuth.refreshToken(settings.token) 
       end
     rescue Exception => e
-      @error = e.message
+      halt 401, { :success => false, :text => e.message }.to_json
     end
   end
-end
 
-get '/' do
-  erb :ads
-end
-
-post '/getAds' do
-  begin
-    service = Service::ADSService.new(settings.FQDN, @@token)
-
-    optional = Hash.new
-
-    VALID_PARAMS.each do |p|
-      optional[p] = params[p].strip unless params[p].nil? or params[p].strip.empty?
-    end
-
-    category = params[:Category]
-    user_agent = @env["HTTP_USER_AGENT"].to_s
-    udid = "012266005922565000000000000000"
-
-    @ad = service.getAds(category, user_agent, udid, optional) 
-
-  rescue Exception => e
-    @error = e.message
+  def index
+    erb :ads
   end
-  erb :ads
-end
 
+  def get_ads
+    begin
+      service = Service::ADSService.new(settings.FQDN, settings.token)
+
+      opts = {
+        :AgeGroup => params[:ageGroup],
+        :AreaCode => params[:areaCode], 
+        :City => params[:city],
+        :Country => params[:country], 
+        :Gender => params[:gender], 
+        :Latitude => params[:latitude], 
+        :Longitude => params[:longitude],
+        :ZipCode => params[:zipCode], 
+      }
+
+      mma = params[:mmaSize]
+      if mma && !mma.empty? 
+        size = mma.split("x")
+        width = size[0].strip
+        height = size[1].strip
+        opts[:MaxWidth] = width
+        opts[:MinWidth] = width
+        opts[:MaxHeight] = height
+        opts[:MinHeight] = height
+      end
+      if params[:keywords]
+        keywords = params[:keywords].split(",")
+        opts[:Keywords]  = keywords.map { |k| k.strip }
+      end
+
+      category = params[:category]
+      user_agent = @env["HTTP_USER_AGENT"].to_s
+      if session[:user_udid].nil?
+        session[:user_udid] = SecureRandom.uuid.gsub("-","") 
+      end
+      udid = session[:user_udid]
+
+      ad = service.getAds(category, user_agent, udid, opts) 
+
+      jbody = { :success => true }
+      if ad.has_ads?
+        jbody[:table] = [{
+          :caption => 'Ads Response:',
+          :headers => ['Type', 'ClickUrl'],
+          :values => [[ad.type, ad.clickurl]]
+        }]
+      else
+        jbody[:text] = 'No Ads were returned'
+      end
+      jbody.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  ##################################
+  ####### Save data in forms #######
+  ##################################
+  def save_data
+    session['savedData'] = JSON.parse(params['data'])
+    ""
+  end
+
+  def load_data
+    data = {
+      :authenticated => true,
+      :server_time => Util::serverTime,
+      :download => settings.download_link,
+      :github => settings.github_link,
+    }
+    data[:savedData] = session[:savedData] unless session[:savedData].nil?
+    data.to_json
+  end
+end

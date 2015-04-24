@@ -27,7 +27,7 @@ limitations under the License.
 -->
 <html lang="en"> 
   <head> 
-    <title>AT&amp;T Sample Application - Advertisement</title>		
+    <title>AT&amp;T Sample Application - Advertisement</title>
     <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
     <link rel="stylesheet" type="text/css" href="style/common.css">
     <script type="text/javascript">
@@ -264,6 +264,7 @@ limitations under the License.
                 ?>
               </div>
               <?php } else { ?>
+              </div>
               <table>
                 <thead>
                   <tr>

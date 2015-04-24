@@ -18,92 +18,100 @@ require 'sinatra'
 require 'sinatra/config_file'
 require 'base64'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # try relative, fall back to ruby 1.8 method if fails
-  begin
-    require_relative 'codekit/lib/att/codekit'
-  rescue NoMethodError 
-    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
-  end
-end
+# require codekit
+require 'att/codekit'
 
 include Att::Codekit
 
-enable :sessions
+class TTS < Sinatra::Application
+  get '/' do index; end
+  get '/textToSpeech' do index; end
+  post '/textToSpeech' do text_to_speech; end
+  get  '/load' do load_data; end
+  post '/save' do save_data; end
 
-config_file 'config.yml'
+  configure do
+    config_file 'config.yml'
+    SCOPE = "TTS"
+    Transport.proxy(settings.proxy)
+    FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
+    OAuth = Auth::ClientCred.new(settings.FQDN,
+                                 settings.api_key,
+                                 settings.secret_key)
+    set :token, nil
+  end
 
-set :port, settings.port
-set :protection, :except => :frame_options
-
-SCOPE = "TTS"
-
-TEXT_DIR = File.join(File.expand_path(File.dirname(__FILE__)), "public/text")
-
-RestClient.proxy = settings.proxy
-
-configure do
-  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
-  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
-
-  OAuth = Auth::ClientCred.new(settings.FQDN,
-                               settings.api_key,
-                               settings.secret_key)
-  @@token = nil
-end
-
-before do
-  @ssml_content = load_content("SSMLWithPhoneme.txt")
-  @text_content = load_content("PlainText.txt")
-
-  begin
-    if @@token.nil?
-      if FILE_EXISTS 
-        @@token = Auth::OAuthToken.load(settings.tokens_file)
-      else
-        @@token = OAuth.createToken(SCOPE)
+  before do
+    if settings.token && settings.token.expired?
+      begin 
+        settings.token = OAuth.refreshToken(settings.token)
+      rescue
+        settings.token = OAuth.createToken(SCOPE)
+      ensure
+        Auth::OAuthToken.save(settings.tokens_file, settings.token) if FILE_SUPPORT
       end
-      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
     end
+  end
 
-    if @@token.expired?
-      @@token = OAuth.refreshToken(@@token)
-      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
+  def index
+    file_exists = FILE_SUPPORT && File.file?(settings.tokens_file)
+    if settings.token.nil?
+      if file_exists 
+        settings.token = Auth::OAuthToken.load(settings.tokens_file)
+      else
+        settings.token = OAuth.createToken(SCOPE)
+        Auth::OAuthToken.save(settings.tokens_file, settings.token) if FILE_SUPPORT
+      end
     end
-
-  rescue Exception => e
-    @error = e.message
+    erb :tts
   end
-end
 
+  def text_to_speech
+    begin
+      service = Service::TTSService.new(settings.FQDN, settings.token)
 
-get '/' do
-  erb :tts
-end
+      xarg = params[:x_arg]
+      type = params[:contentType]
+      content = if type == 'text/plain'
+                  if params[:plaintext].length > 250
+                    raise Exception("Character limit of 250 reached")
+                  end
+                  params[:plaintext]
+                else
+                  params[:ssml]
+                end
 
-post '/TextToSpeech' do
-  begin
-    service = Service::TTSService.new(settings.FQDN, @@token)
+      audio = service.textToSpeech(content, :xargs => xarg, :type => type)
 
-    type = params[:ContentType]
-    content = case type
-              when "application/ssml+xml" then load_content("SSMLWithPhoneme.txt")
-              when "text/plain" then load_content("PlainText.txt")
-              end
-
-    @audio = service.textToSpeech(content, 
-                                  :xargs => params[:x_arg],
-                                  :type => type)
-
-  rescue Exception => e
-    @error = e.message
+      {
+        :success => true,
+        :audio => {
+          :type => 'audio/wav',
+          :base64 => Base64.encode64(audio.data)
+        }
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
   end
-  erb :tts
-end
 
-def load_content(text_file)
-  File.readlines(File.join(TEXT_DIR,text_file))
-end
+  ##################################
+  ####### Save data in forms #######
+  ##################################
+
+  def save_data
+    session['savedData'] = JSON.parse(params['data'])
+    ""
+  end
+
+  def load_data
+    data = {
+      :authenticated => true,
+      :server_time => Util::serverTime,
+      :download => settings.download_link,
+      :github => settings.github_link,
+    }
+    data[:savedData] = session[:savedData] unless session[:savedData].nil?
+    data.to_json
+  end
+end 

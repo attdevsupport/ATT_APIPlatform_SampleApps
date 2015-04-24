@@ -21,6 +21,7 @@ require_once __DIR__ . '/../Restful/HttpMultipart.php';
 
 use Att\Api\Util\Util;
 use Att\Api\Restful\HttpMultipart;
+use RuntimeException;
 
 /**
  * Used to handle the multipart aspect of a speech request.
@@ -85,10 +86,10 @@ class SpeechMultipartBody extends HttpMultipart
      *
      * @return void
      */
-    public function addXGrammarPart($fname)
+    public function addXGrammarPart($fname, $nameParam="x-grammar")
     {
         $pheaders = array();
-        $pheaders['Content-Disposition'] = 'form-data; name="x-grammar"';
+        $pheaders['Content-Disposition'] = 'form-data; name="'. $nameParam . '"';
         $pheaders['Content-Type'] = 'application/srgs+xml';
 
         $fileResource = fopen($fname, 'r');

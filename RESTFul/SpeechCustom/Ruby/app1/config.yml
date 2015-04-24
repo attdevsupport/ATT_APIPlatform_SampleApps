@@ -1,27 +1,24 @@
-# Copyright 2014 AT&T
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Mandatory parameter that should be set to the registered application's 
+# 'API Key' value.
+api_key:        
 
-port:               4567
-proxy:              
-api_key:            
+# Mandatory parameter that should be set to the registered application's
+# 'Secret Key' value.
 secret_key:         
+
+# File to store client credential token
 tokens_file:        tokens
+
+# Fully Qualified Domain Name. Mandatory parameter that points to the location
+# of AT&T's API.
 FQDN:               https://api.att.com
-endpoint:           https://api.att.com/rest/2/SpeechToText
-speech_context:     GenericHints,GrammarList
-X_arg:              
-default_audio_file: pizza-en-US.wav
-source_link:        http://localhost/source
-help_link:          http://localhost/help
+
+# setup http sessions to use a provided secret
+session_secret: 'super secret session key'
+
+# Set this to use a proxy on the server side
+proxy:              
+
+# Used to set links on production sample apps, can be ignored
+github_link:        http://localhost/github
 download_link:      http://localhost/download

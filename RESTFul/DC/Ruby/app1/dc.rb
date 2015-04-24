@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# Copyright 2014 AT&T
+# Copyright 2015 AT&T
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,67 +18,100 @@ require 'sinatra'
 require 'open-uri'
 require 'sinatra/config_file'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # try relative, fall back to ruby 1.8 method if fails
-  begin
-    require_relative 'codekit/lib/att/codekit'
-  rescue NoMethodError 
-    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
-  end
-end
+# require codekit
+require 'att/codekit'
 
 include Att::Codekit
 
-enable :sessions
 
-config_file 'config.yml'
+class DC < Sinatra::Application
+  get '/' do index; end
+  get  '/load' do load_data; end
+  post '/save' do save_data; end
+  post '/getDeviceCapabilities' do get_capabilities; end
+  get '/authorization' do auth; end
 
-set :port, settings.port
-set :protection, :except => :frame_options
+  configure do
+    enable :sessions
+    config_file 'config.yml'
+    disable :protection
 
-SCOPE = "DC"
+    #Setup proxy used by att/codekit
+    Transport.proxy(settings.proxy)
 
-RestClient.proxy = settings.proxy
-
-configure do
-  OAuth = Auth::AuthCode.new(settings.FQDN, 
-                             settings.api_key, 
-                             settings.secret_key)
-end
-
-before do
-  #add special headers for IE
-  headers "P3P" => "CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\""
-
-  begin
-    #create our token if isn't present
-    if params[:code] && session[:token].nil?
-      session[:token] = OAuth.createToken(params[:code]) 
-    end
-  rescue Exception => e
-    @error = e.message
+    SCOPE = "DC"
+    AuthService = Auth::AuthCode.new(settings.FQDN, 
+                                     settings.api_key, 
+                                     settings.secret_key,
+                                     :scope => SCOPE,
+                                     :redirect => settings.redirect_url)
   end
-end
 
-get '/' do
-  begin
-    #if there's a code we're returning from authenticaion
-    if session[:token]
-      @result = Service::DCService.new(settings.FQDN, session[:token]).getDeviceCapabilities
-
-    #something went wrong with authentication display error
-    elsif params[:error]
-      @error = params[:error] + ": " 
-
-    #Authenticate if neccessary
-    else
-      redirect OAuth.consentFlow(:scope => SCOPE, :redirect => settings.redirect_url)
+  def auth
+    begin
+      base_url = settings.redirect_url.split("authorization")[0]
+      if params[:code].nil?
+        raise Exception.new('Authentication Code not present')
+      end
+      session[:token] = AuthService.createToken(params[:code]) 
+      redirect to(base_url)
+    rescue Exception => e
+      session[:savedData][:redirecting] = nil
+      @main_page = base_url
+      erb :error
     end
-  rescue Exception => e
-    @error = e.message
   end
-  erb :dc
+
+  def index
+    erb :dc
+  end
+
+  def get_capabilities
+    begin
+      service = Service::DCService.new(settings.FQDN, session[:token])
+      response = service.getDeviceCapabilities
+
+      dc = response.capabilities
+
+      {
+        :success => true,
+        :tables => [{
+          :caption => 'Device Capabilities',
+          :headers => [
+            'TypeAllocationCode', 'Name', 'Vendor', 'Model', 'FirmwareVersion',
+            'UaProf', 'MmsCapable', 'AssistedGps', 'LocationTechnology',
+            'DeviceBrowser', 'WapPushCapable' 
+          ],
+          :values => [[ 
+            response.device_id.type_allocation_code, dc.name, dc.vendor,
+            dc.model, dc.firmware_version, dc.uaprof, dc.mms_capable,
+            dc.assisted_gps, dc.location_technology, dc.device_browser,
+            dc.wap_push_capable 
+          ]]
+        }]
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  ##################################
+  ####### Save data in forms #######
+  ##################################
+  def save_data
+    session['savedData'] = JSON.parse(params['data'])
+    ""
+  end
+
+  def load_data
+    data = {
+      :authenticated => !!session[:token],
+      :redirect_url => AuthService.consentFlow,
+      :server_time => Util::serverTime,
+      :download => settings.download_link,
+      :github => settings.github_link,
+    }
+    data[:savedData] = session[:savedData] unless session[:savedData].nil?
+    data.to_json
+  end
 end

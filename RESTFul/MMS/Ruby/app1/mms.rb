@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# Copyright 2014 AT&T
+# Copyright 2015 AT&T
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,221 +19,253 @@ require 'sinatra/config_file'
 require 'base64'
 require 'cgi'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # try relative, fall back to ruby 1.8 method if fails
-  begin
-    require_relative 'codekit/lib/att/codekit'
-  rescue NoMethodError 
-    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
-  end
-end
+# require codekit
+require 'att/codekit'
 
 #include namespace
 include Att::Codekit
 
-enable :sessions
+class MMS < Sinatra::Application
+  get '/' do index; end
+  get  '/load' do load_data; end
+  post '/save' do save_data; end
+  post '/sendMMS' do send_mms; end
+  post '/getDeliveryStatus' do get_status; end
+  post '/getNotifications' do get_notifications; end
+  post '/statusListener' do save_status; end
+  post '/mmslistener' do mms_listener; end
 
-config_file 'config.yml'
+  #setup our mms service for the application
+  configure do
+    enable :sessions
+    disable :protection
+    config_file 'config.yml'
 
-set :port, settings.port
-set :protection, :except => :frame_options
+    SCOPE = 'MMS'
+    Transport.proxy(settings.proxy)
 
-SCOPE = 'MMS'
-ATTACH_DIR=File.join(File.expand_path(File.dirname(__FILE__)), "public/attachments")
+    # create files if they don't exist
+    set :tokens_file, File.join(Dir.tmpdir, "ruby_mms_token")
+    File.new(settings.tokens_file, 'w').close unless File.exists? settings.tokens_file
+    set :status_file, File.join(Dir.tmpdir, "ruby_mms_status")
+    File.new(settings.status_file, 'w').close unless File.exists? settings.status_file
+    set :messages_file, File.join(Dir.tmpdir, "ruby_mms_messages")
+    File.new(settings.messages_file, 'w').close unless File.exists? settings.messages_file
 
-RestClient.proxy = settings.proxy
-
-#setup our mms service for the application
-configure do
-  FILE_SUPPORT = (settings.tokens_file && !settings.tokens_file.strip.empty?)
-  FILE_EXISTS = FILE_SUPPORT && File.file?(settings.tokens_file)
-
-  OAuth = Auth::ClientCred.new(settings.FQDN,
-                               settings.api_key,
-                               settings.secret_key)
-  @@token = nil
-end
-
-before do 
-  begin
-    Dir.mkdir(settings.momms_image_dir) unless File.directory?(settings.momms_image_dir)
-    Dir.mkdir(settings.momms_data_dir) unless File.directory?(settings.momms_data_dir)
-    display_images
-    drop_down_list
-    @status_listener = load_file "#{settings.status_file}"
-
-    #check if token exists and create if necessary
-    if @@token.nil?
-      if FILE_EXISTS 
-        @@token = Auth::OAuthToken.load(settings.tokens_file)
-      else
-        @@token = OAuth.createToken(SCOPE)
-      end
-      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
-    end
-
-    if @@token.expired?
-      @@token = OAuth.refreshToken(@@token)
-      Auth::OAuthToken.save(settings.tokens_file, @@token) if FILE_SUPPORT
-    end
-
-  rescue Exception => e
-    @send_error = e.message
+    MMSMessage = Struct.new(:id, :date, :sender, :text, :path)
+    IMAGE_DIR = File.join(File.dirname(__FILE__), 'public/attachments/')
+    OAuth = Auth::ClientCred.new(settings.FQDN,
+                                 settings.api_key,
+                                 settings.secret_key)
+    set :token, nil
+    set :messages, []
   end
-end
 
-get '/' do
-  session[:mms_id] = nil
-  erb :mms
-end
-
-post '/statusListener' do
-  handle_inbound "#{settings.status_file}"
-end
-
-post '/refreshStatus' do
-  erb :mms
-end
-
-post '/sendMms' do
-  begin
-    service = Service::MMSService.new(settings.FQDN, @@token)
-    session[:mms1_address] = params[:address]
-    session[:mms1_subject] = params[:subject]
-    session[:selected_file] = params[:attachment]
-
-    notify = false
-    notify = true if params[:chkGetOnlineStatus]
-
-    if params[:attachment] and params[:attachment].empty?
-      attachment = nil
-    else
-      attachment  = File.join(ATTACH_DIR, params[:attachment])
-    end
-
-    @send = service.sendMms(params[:address], params[:subject], attachment, notify)
-
-    session[:mms_id] = @send.id unless notify
-
-  rescue Exception => e
-    @send_error = e.message
-  end
-  erb :mms
-end
-
-post '/getStatus' do
-  begin 
-    service = Service::MMSService.new(settings.FQDN, @@token)
-    session[:mms_id] = params[:mmsId]
-
-    @status = service.getDeliveryStatus(session[:mms_id])
-
-  rescue Exception => e
-    @delivery_error = e.message
-  end
-  erb :mms
-end
-
-# use this URL to clear token file
-get '/clear' do
-  File.delete settings.tokens_file if File.exists? settings.tokens_file
-  redirect '/'
-end
-
-def drop_down_list
-  @attachments = Array.new
-  #insert a blank attachment
-  @attachments << ""
-  Dir.entries(ATTACH_DIR).sort.each do |x|
-    @attachments.push x unless x.match /\A\.+/
-  end
-end
-
-def load_attachment filename
-  return File.read(File.join(ATTACH_DIR,filename))
-end
-
-# # # # # # # # #
-# MMS LISTENER  #
-# # # # # # # # #
-post '/mmslistener' do
-  mms_listener
-end
-
-def display_images
-  data = get_image_data
-
-  @images_total = data[:image_count]
-  @images_list = data[:image_list]
-end
-
-def mms_listener
-  service = Service::MMSService.new(settings.FQDN, @@token)
-  input   = request.env["rack.input"].read
-  random  = rand(10000000).to_s
-  service.handleInput(input) do |sender, date, text, type, image|
-    File.open("#{settings.momms_image_dir}/#{random}.#{type}", 'w') { |f| f.puts image }
-    File.open("#{settings.momms_data_dir}/#{random}.#{type}.txt", 'w') { |f| f.puts sender, date, text } 
-  end
-end
-
-def get_image_data
-  images = Array.new
-
-  Dir.entries(settings.momms_image_dir).each do |entry|
-    rel_path = File.join(settings.momms_image_dir, entry)
-    if File.file? rel_path
-      data = File.join(settings.momms_data_dir, entry + ".txt");
-      if File.exists? data
-        File.open(data, "r") do |f|
-          images.push({:path => rel_path.sub("public/",""), :senderAddress => f.gets.strip, :date => f.gets.strip, :text => f.gets.strip}) 
+  ['/sendMMS', '/getDeliveryStatus'].each do |path| 
+    before path do 
+      begin
+        #check if token exists and create if necessary
+        if settings.token.nil? && File.exists?(settings.tokens_file)
+          settings.token = Auth::OAuthToken.load(settings.tokens_file)
         end
+        if settings.token.nil?
+          settings.token = OAuth.createToken(SCOPE)
+          Auth::OAuthToken.save(settings.tokens_file, settings.token)
+        elsif settings.token.expired?
+          settings.token = OAuth.refreshToken(settings.token)
+          Auth::OAuthToken.save(settings.tokens_file, settings.token)
+        end
+      rescue Exception => e
+        halt 401, { :success => false, :text => e.message }.to_json
       end
     end
   end
-  return {:image_count => images.length, :image_list => images}
-end
 
-def load_file(file)
-  data = Array.new
-  if File.exists? file 
-    File.open(file, 'r') do |f|
+  def index
+    erb :mms
+  end
+
+  def send_mms
+    begin
+      service = Service::MMSService.new(settings.FQDN, settings.token)
+      address = params[:address]
+      subject = params[:sendMsgInput]
+      attachment_name = params[:attachmentInput]
+      notify = !!params[:receiveStatus]
+
+      allowed_files = ['None', 'att.gif', 'coupon.jpg']
+      if !allowed_files.include? attachment_name
+        raise Exception.new('Invalid attachment file specified')
+      end
+
+      attachment = image_path_by_id(attachment_name) unless attachment_name == 'None'
+
+      sent = service.sendMms(address, subject, Array(attachment), notify)
+
+      {
+        :success => true,
+        :tables => [{
+          :headers => ['MessageId', 'ResourceURL'],
+          :values => [[ sent.id, sent.resource_url || '-' ]]
+        }]
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_status
+    begin 
+      service = Service::MMSService.new(settings.FQDN, settings.token)
+      mms_id = params[:msgId]
+
+      status = service.getDeliveryStatus(mms_id)
+      
+      values = []
+      status.delivery_info.each do |info|
+        values << [info.id, info.address, info.status]
+      end
+
+      {
+        :success => true,
+        :text => "ResourceURL: #{status.resource_url}",
+        :tables => [{
+          :caption => 'Status:',
+          :headers => ['MessageId', 'Address', 'DeliveryStatus'],
+          :values => values
+        }]
+      }.to_json
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_notifications
+    msgs = []
+    settings.messages.each do |msg|
+      msgs << {
+        :id => msg.id,
+        :date => msg.date,
+        :address => msg.sender, 
+        :text => msg.text || '-',
+        :subject => '-',
+        :image => msg.path
+      }
+    end
+    statuses = []
+    ss = load_status
+    ss.each do |s|
+      delivery = s['deliveryInfoNotification']
+      msg_id = delivery['messageId']
+      info = delivery['deliveryInfo']
+      addr = info['address']
+      status = info['deliveryStatus']
+      statuses << [msg_id, addr, status]
+    end
+    { :mmsNotifications => msgs, :statusNotifications => statuses }.to_json
+  end
+
+  def mms_listener
+    input = request.env["rack.input"].read
+    msgs = settings.messages
+    id = (msgs.length > 0 ? msgs.last.id + 1 : 0)
+    mms = parse_mms(input)
+    attach_path = write_binary_to_id(mms.attachment, id)
+    msgs << MMSMessage.new(id, mms.date, mms.sender, mms.text, attach_path)
+    if msgs.length > settings.listener_limit
+      old_file = image_path_by_id(msgs.first.id)
+      File.delete old_file if File.exists?(old_file)
+      msgs = msgs.shift 
+    end
+  end
+
+  def write_binary_to_id(binary, id)
+    path = image_path_by_id(id)
+    File.open(path, 'wb') do |f|
       begin
         f.flock(File::LOCK_EX)
+        f.write(binary)
+      ensure
+        f.flock(File::LOCK_UN)
+      end
+      path.split("public/")[-1]
+    end
+  end
+
+  def image_path_by_id(id)
+    File.join(IMAGE_DIR, id.to_s)
+  end
+
+  def load_status
+    path = settings.status_file
+    data = Array.new
+    File.open(path, 'r') do |f|
+      begin
+        f.flock(File::LOCK_SH)
         f.each_line {|line| data << JSON.parse(line)}
       ensure
         f.flock(File::LOCK_UN)
       end
     end
-  end
-  data
-end
-
-def handle_inbound(file)
-  input = request.env["rack.input"].read
-
-  if !File.exists? file
-    File.new(file, 'w')
+    data
   end
 
-  contents = File.readlines(file)
+  def save_status
+    request.body.rewind
+    input = request.body.read
+    path = settings.status_file
 
-  File.open(file, 'w') do |f|
-    begin
-      f.flock(File::LOCK_EX)
-      #remove the first line if we're over limit
-      if contents.size > settings.listener_limit - 1 
-        offset = 1
-      else
-        offset = 0
+    File.open(path, 'w+') do |f|
+      begin
+        f.flock(File::LOCK_EX)
+        contents = f.readlines
+        #remove the first line if we're over limit
+        if contents.size > settings.listener_limit - 1 
+          offset = 1
+        else
+          offset = 0
+        end
+        f.rewind
+        f.puts contents[offset, contents.size] 
+        f.puts JSON.parse(input).to_json
+      ensure
+        f.flock(File::LOCK_UN)
       end
-      f.puts contents[offset, contents.size] 
-      f.puts JSON.parse(input).to_json
-    ensure
-      f.flock(File::LOCK_UN)
     end
+  end
+
+  def parse_mms(input)
+    boundary = "--#{/content-type:.*;\s+boundary="([^"]+)"/i.match(input)[1]}"
+    sender = /\<SenderAddress\>tel:([0-9\+]+)<\/SenderAddress>/.match(input)[1]
+    date    = Time.now.utc
+    parts   = input.split(boundary)
+
+    attach_parts = parts[-2].split("\n\n")
+    attach_type = /Content\-Type: image\/([^;]+)/i.match(attach_parts[0])[1];
+    attach = Base64.decode64 attach_parts[-1]
+
+    text = parts.length > 4 ? Base64.decode64(parts[2].split("\n\n")[1]).strip : ""
+
+    Model::MMSMessage.new(sender, date, text, attach_type, attach)
+  end
+
+  ##################################
+  ####### Save data in forms #######
+  ##################################
+  def save_data
+    session['savedData'] = JSON.parse(params['data'])
+    ""
+  end
+
+  def load_data
+    data = {
+      :authenticated => true,
+      :server_time => Util::serverTime,
+      :download => settings.download_link,
+      :github => settings.github_link,
+      :notificationShortcode => settings.shortcode,
+    }
+    data[:savedData] = session[:savedData] unless session[:savedData].nil?
+    data.to_json
   end
 end
