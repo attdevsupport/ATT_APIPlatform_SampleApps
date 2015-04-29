@@ -95,6 +95,7 @@ public partial class Speech_App1 : System.Web.UI.Page
         BypassCertificateError();
         this.ReadConfigFile();
         this.SetContent();
+
     }
 
     /// <summary>
@@ -131,9 +132,11 @@ public partial class Speech_App1 : System.Web.UI.Page
         StreamReader streamReader = new StreamReader(this.xdictionary);
         xdictionaryContent = streamReader.ReadToEnd();
         mimeData.Text = "x-dictionary:" + Environment.NewLine + xdictionaryContent;
+        x_dictionary.Text = xdictionaryContent;
         StreamReader streamReader1 = new StreamReader(this.xgrammer);
         xgrammerContent = streamReader1.ReadToEnd();
         mimeData.Text = mimeData.Text + Environment.NewLine + "x-grammar:" + Environment.NewLine + xgrammerContent;
+        x_grammer.Text = xgrammerContent;
         streamReader.Close();
         streamReader1.Close();
     }
@@ -190,7 +193,7 @@ public partial class Speech_App1 : System.Web.UI.Page
         {
             this.refreshTokenExpiresIn = 24;
         }
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
         {
             SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
         }
@@ -215,7 +218,7 @@ public partial class Speech_App1 : System.Web.UI.Page
         else
         {
             HelpLink.HRef = "#"; // Default value
-        }
+        }*/
 
         if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SpeechFilesDir"]))
         {
@@ -790,6 +793,10 @@ public partial class Speech_App1 : System.Web.UI.Page
     }
 
     #endregion
+    /*protected void SpeechContext_Load(object sender, EventArgs e)
+    {
+
+    }*/
 }
 
 #region Access Token and Speech Response Data Structures
