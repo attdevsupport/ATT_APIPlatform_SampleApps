@@ -23,11 +23,26 @@
 <html lang="en">
 <!--<![endif]-->
 <head>
-    <title>AT&amp;T Sample Speech Application - Text To Speech </title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Speech to Text</title>
+
+    <!-- jquery and bootstrap js -->
+    <script src="https://lprod.code-api-att.com/public_files/js/jquery.min.js"></script>
+    <script src="https://lprod.code-api-att.com/public_files/js/bootstrap.min.js"></script>
+    <!-- custom js -->
+    <script src="js/config.js"></script>
+    <script src="js/form_handler.js"></script>
+    <script src="js/response_handler.js"></script>
+    <script src="js/sample_app.js"></script>
+
+    <!-- bootstrap css -->
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap-theme.min.css">
+    <!-- custom css -->
+    <link href="https://lprod.code-api-att.com/public_files/css/custom.css" rel="stylesheet">
+
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33466541-1']);
@@ -38,80 +53,79 @@
             ga.type = 'text/javascript';
             ga.async = true;
             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-                                      : 'http://www')
-                                      + '.google-analytics.com/ga.js';
+                                        : 'https://www')
+                                        + '.google-analytics.com/ga.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ga, s);
         })();
     </script>
-</head>
+
+    <!--[if lt IE 9]>
+      <script src="https://lprod.code-api-att.com/public_files/js/html5shiv.min.js"></script>
+      <script src="https://lprod.code-api-att.com/public_files/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
 <body>
-    <div id="pageContainer" class="pageContainer">
-        <div id="header">
-            <div class="logo" id="top">
-            </div>
-            <div id="menuButton" class="hide">
-                <a id="jump" href="#nav">Main Navigation</a>
-            </div>
-            <ul class="links" id="nav">
-                
-                <li><a id="SourceLink" runat="server" target="_blank">Source<img src="images/source.png"
-                    alt="" />
-                </a><span class="divider">|&nbsp;</span> </li>
-                <li><a id="DownloadLink" runat="server" target="_blank">Download<img src="images/download.png"
-                    alt="" />
-                </a><span class="divider">|&nbsp;</span> </li>
-                <li><a id="HelpLink" runat="server" target="_blank">Help </a></li>
-                <li id="back"><a href="#top">Back to top</a></li>
-            </ul>
-        </div>
+    <div class="container">
+      <div class="row">
+        <div class="header">
+          <ul class="nav nav-pills pull-left">
+            <li>
+              <a class="brand" href="https://developer.att.com">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-developer.png">
+              </a>
+            </li>
+          </ul>
+        </div><!--./header-->
+      </div><!--./row-->
+      <div class="row">
+        <h3 class="text-center">Text To Speech</h3>
+      </div>
+      <div class="row">
+        <h5 class="text-center">
+          This sample application showcases transcribing text into binary audio data and applying a male or female
+          synthesized voice.
+        </h5>
+      </div>
+      <hr>
+      <div class="inline-row">
+        <a class="btn btn-warning" id="github" href="#">Github</a>
+        <a class="btn btn-warning" id="download" href="#">Download</a>
+      </div><!--./row-->
+      <hr>
         <form id="form1" runat="server">
-        <div class="content">
-            <div class="contentHeading">
-                <h1>
-                    AT&amp;T Sample Application - Text To Speech</h1>
-                <div id="introtext">
-                    <div>
-                        <b>Server Time:&nbsp;</b><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %>
-                    </div>
-                    <div>
-                        <b>Client Time:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            var myDate = new Date();
-                            document.write(myDate);
-                        </script>
-                    </div>
-                    <div>
-                        <b>User Agent:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            document.write("" + navigator.userAgent);
-                        </script>
-                    </div>
-                </div>
-            </div>
-            <div class="formBox" id="formBox">
+<div class="container">
+             <div class="formBox" id="formBox">
                 <div id="formContainer" class="formContainer">
                     <div id="formData">
-                        <h3>
+                        <label>
                             Content Type:
-                        </h3>
-                        <asp:DropDownList ID="ContentType" name="ContentType" runat="server">
+                        </label>
+                        <asp:DropDownList ID="ContentType" name="ContentType" class="form-control" runat="server">
                             <asp:ListItem value="text/plain" Selected="True" Text="text/plain" />
                             <asp:ListItem value="application/ssml+xml" Text="application/ssml+xml" />
                         </asp:DropDownList>
-                        <h3>Content:</h3>
-                          <label>text/plain</label><br/>
-                          <asp:TextBox ID="plaintext" type="text" runat="server" name="plaintext" TextMode="MultiLine" Enabled="False" Rows="4"></asp:TextBox><br/>
-                          <label>application/ssml</label><br/>
-                          <asp:TextBox  ID="ssml" type="text" runat="server" name="ssml" TextMode="MultiLine" Enabled="False" Rows="4"></asp:TextBox >
-                        <h3>
-                            X-Arg:
-                        </h3>
-                        <asp:TextBox ID="x_arg" runat="server" TextMode="MultiLine" type="text" Enabled="False" Rows="4"></asp:TextBox>
+                        <label>Content:</label>
+                          <asp:TextBox ID="plaintext" type="text" class="form-control" runat="server" name="plaintext" TextMode="MultiLine" maxlength="250"
+                  rows="4" data-toggle="tooltip" data-placement="top"
+                  data-title="Limit of 250 characters"></asp:TextBox><br/>
+                        <label>application/ssml</label>
                         <br />
-                        <button id="btnSubmit" onserverclick="BtnSubmit_Click" runat="server" name="TextToSpeechButton"
+                          <asp:TextBox  ID="ssml" type="text" runat="server" name="ssml" TextMode="MultiLine" Enabled="False" Rows="4"></asp:TextBox >
+                        <br />
+                        <label>
+                            X-Arg*
+                        </label>
+                        <br />
+                        <asp:TextBox ID="x_arg" runat="server" class="form-control" type="text" readonly="true" value="AppId=12345,OrgId=54321,VoiceName=mike"></asp:TextBox>
+                        <br />
+                        <button id="btnSubmit" onserverclick="BtnSubmit_Click" class="btn btn-primary" runat="server" name="TextToSpeechButton"
                             type="submit">
                             Submit</button>
+                        <br />
+                        <div class="form-group">
+                            <div class="alert alert-info">* Denotes optional parameters.</div>
+                        </div>
                         <% if (!string.IsNullOrEmpty(TTSSuccessMessage)){%>
                         <div class="successWide" align="left">
                             <strong>SUCCESS:</strong>
@@ -131,32 +145,59 @@
             </div>
         </div>
         </form>
-        <div id="footer">
-            <div id="ft">
-                <div id="powered_by">
-                    Powered by AT&amp;T Cloud Architecture
-                </div>
-                <p>
-                    The Application hosted on this site are working examples intended to be used for
-                    reference in creating products to consume AT&amp;T Services and not meant to be
-                    used as part of your product. The data in these pages is for test purposes only
-                    and intended only for use as a reference in how the services perform.
-                    <br />
-                    <br />
-                    For download of tools and documentation, please go to <a href="https://developer.att.com/"
-                        target="_blank">https://developer.att.com</a>
-                    <br />
-                    For more information please go to <a href="https://developer.att.com/support"
-                        target="_blank">https://developer.att.com/support</a>
-                    <br />
-                    <br />
-                    © 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
-                        target="_blank">https://developer.att.com</a>
-                </p>
+        <hr>
+      <div class="row"><div class="col-md-12"><b>Server Time:&nbsp;</b><span id="serverTime"></span><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %></div></div>
+      <div class="row"><div class="col-md-12"><b>Client Time:</b> <script>document.write("" + new Date());</script></div></div>
+      <div class="row"><div class="col-md-12"><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div></div>
+      <hr>
+      <div class="footer text-muted">
+        <div class="row">
+          <div class="col-sm-12 text-left">
+            <p>
+              <small>
+                The application hosted on this site is a working example
+                intended to be used for reference in creating products to
+                consume AT&amp;T Services and not meant to be used as part of
+                your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services
+                perform.
+              </small>
+            </p>
+          </div> <!--./col-->
+        </div> <!--./row-->
+        <hr>
+        <div class="row">
+          <div class="text-left col-sm-6">
+            <div class="col-sm-1">
+              <a class="brand" href="https://developer.att.com" target="_blank">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-globe.png">
+              </a>
             </div>
-            <!-- end of ft -->
-        </div>
-        <!-- end of footer -->
+            <div class="col-sm-11">
+              <p>
+                <small>
+                  <a href="https://www.att.com/gen/general?pid=11561" target="_blank">Terms of Use</a>
+                  <a href="https://www.att.com/gen/privacy-policy?pid=2506" target="_blank">Privacy Policy</a>
+                  <a href="https://developer.att.com/support" target="_blank">Contact Us</a>
+                  <br>
+                  &#169; 2015 AT&amp;T Intellectual Property. All rights reserved.
+                </small>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6 left-border">
+            <p class="text-right">
+              <small>
+                AT&amp;T, the AT&amp;T logo and all other AT&amp;T marks
+                contained herein are trademarks of
+                <br>
+                AT&amp;T Intellectual Property and/or AT&amp;T affiliated
+                companies. AT&amp;T 36USC220506
+              </small>
+            </p>
+          </div>
+        </div><!--./row-->
+      </div><!--./footer-->
     </div>
 </body>
 </html>

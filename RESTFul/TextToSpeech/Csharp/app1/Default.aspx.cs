@@ -200,7 +200,7 @@ public partial class TTS_App1 : System.Web.UI.Page
         {
             this.refreshTokenExpiresIn = 24;
         }
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
         {
             SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
         }
@@ -225,7 +225,7 @@ public partial class TTS_App1 : System.Web.UI.Page
         else
         {
             HelpLink.HRef = "#"; // Default value
-        }
+        }*/
 
         if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["TTSPlainText"]))
         {
