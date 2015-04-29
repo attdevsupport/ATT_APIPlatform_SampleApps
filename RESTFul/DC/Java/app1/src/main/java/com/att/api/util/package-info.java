@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -19,7 +19,7 @@
 /**
  * Provides utility classes with helper methods.
  *
- * @since 2.2
+ * @since 1.0
  */
 
 package com.att.api.util;

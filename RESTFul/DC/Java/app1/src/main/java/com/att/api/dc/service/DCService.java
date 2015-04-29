@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -20,18 +20,23 @@ package com.att.api.dc.service;
 
 import com.att.api.dc.model.DCResponse;
 import com.att.api.oauth.OAuthToken;
-import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
 import com.att.api.rest.RESTException;
 import com.att.api.service.APIService;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * Used to interact with version 2 of the Device Capabilities API.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * <p>
+ * This class is thread safe.
+ * </p>
+ *
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  * @see <a href="https://developer.att.com/docs/apis/rest/2/Device%20Capabilities">DC Documentation</a>
  */
 public class DCService extends APIService {
@@ -42,7 +47,7 @@ public class DCService extends APIService {
      * @param fqdn fully qualified domain name to use for sending requests
      * @param token OAuth token to use for authorization
      */
-    public DCService(String fqdn, final OAuthToken token) {
+    public DCService(final String fqdn, final OAuthToken token) {
         super(fqdn, token);
     }
 
@@ -55,14 +60,16 @@ public class DCService extends APIService {
     public DCResponse getDeviceCapabilities() throws RESTException {
         String endpoint = getFQDN() + "/rest/2/Devices/Info";
 
-        final APIResponse response =
-            new RESTClient(endpoint)
+        final String responseBody = new RESTClient(endpoint)
             .addAuthorizationHeader(getToken())
-            .httpGet();
+            .httpGet()
+            .getResponseBody();
 
-        final String responseBody = response.getResponseBody();
-
-        JSONObject jsonResponse = new JSONObject(responseBody);
-        return DCResponse.valueOf(jsonResponse);
+        try {
+            JSONObject jsonResponse = new JSONObject(responseBody);
+            return DCResponse.valueOf(jsonResponse);
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 }

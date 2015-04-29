@@ -10,6 +10,22 @@
     <servlet-name>DCController</servlet-name>
     <servlet-class>com.att.api.dc.controller.DCController</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>LoadController</servlet-name>
+    <servlet-class>com.att.api.dc.controller.LoadController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SaveController</servlet-name>
+    <servlet-class>com.att.api.dc.controller.SaveController</servlet-class>
+  </servlet>
+  <servlet>
+      <servlet-name>OAuthController</servlet-name>
+      <servlet-class>com.att.api.dc.controller.OAuthController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetCapabilitiesController</servlet-name>
+    <servlet-class>com.att.api.dc.controller.GetCapabilitiesController</servlet-class>
+  </servlet>
   <servlet-mapping>
     <servlet-name>DCController</servlet-name>
     <url-pattern>/index.jsp</url-pattern> 
@@ -21,5 +37,21 @@
   <servlet-mapping>
     <servlet-name>DCController</servlet-name>
     <url-pattern>/dc.jsp</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>OAuthController</servlet-name>
+      <url-pattern>/oauth</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>LoadController</servlet-name>
+      <url-pattern>/load</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>SaveController</servlet-name>
+      <url-pattern>/save</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GetCapabilitiesController</servlet-name>
+      <url-pattern>/getDeviceCapabilities</url-pattern>
   </servlet-mapping>
 </web-app>
