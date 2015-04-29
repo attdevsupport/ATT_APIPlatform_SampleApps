@@ -2,6 +2,7 @@ package com.att.api.speech.service;
 
 import java.io.File;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.att.api.oauth.OAuthToken;
@@ -100,8 +101,13 @@ public class SpeechCustomService extends APIService {
 
         APIResponse apiResponse = restClient.httpPost(attachments, subType,
                 bodyNameAttribute);
-        return SpeechResponse.valueOf(
-                new JSONObject(apiResponse.getResponseBody())
-                );
+        try {
+            return SpeechResponse.valueOf(
+                    new JSONObject(apiResponse.getResponseBody())
+                    );
+        } catch (JSONException e) {
+            // Wrap in a RESTException
+            throw new RESTException(e);
+        }
     }
 }

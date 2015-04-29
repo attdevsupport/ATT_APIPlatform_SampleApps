@@ -137,7 +137,11 @@ public class APIResponse {
 
     /**
      * Gets the the value of the specified http header name or <tt>null</tt> if
-     * none is found.
+     * none is found. 
+     *
+     * <p>
+     * Note: the search function used is case insensitive.
+     * </p>
      *
      * @param name header name
      * @return http header value
@@ -149,8 +153,9 @@ public class APIResponse {
         // small array than an algorithm that would require building a data
         // structure.
         HttpHeader[] headers = getAllHeaders();
+        String lname = name.toLowerCase();
         for (HttpHeader header : headers) {
-            if (header.getName().equals(name)) {
+            if (header.getName().toLowerCase().equals(lname)) {
                 return header.getValue();
             }
         }
