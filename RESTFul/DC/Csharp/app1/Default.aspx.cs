@@ -149,11 +149,11 @@ public partial class DC_App1 : System.Web.UI.Page
                         }
 
                     }
-                    else
+                    /*else
                     {
                         Session["Cs_DC_App1_AccessToken"] = null;
                         GetAuthCode();
-                    }
+                    }*/
                 }
                 else
                 {
@@ -219,7 +219,7 @@ public partial class DC_App1 : System.Web.UI.Page
             this.scope = "DC";
         }
 
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
         {
             SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
         }
@@ -244,10 +244,12 @@ public partial class DC_App1 : System.Web.UI.Page
         else
         {
             HelpLink.HRef = "#"; // Default value
-        }
+        }*/
         return true;
     }
+    
 
+    
     /// <summary>
     /// This method gets access token based on either client credentials mode or refresh token.
     /// </summary>
@@ -358,13 +360,51 @@ public partial class DC_App1 : System.Web.UI.Page
     {
         Session["cs_dc_state"] = "FetchAuthCode";
         Response.Redirect(this.endPoint + "/oauth/v4/authorize?scope=" + this.scope + "&client_id=" + this.apiKey + "&redirect_url=" + this.authorizeRedirectUri);
-    }      
-      
+    }
+
+    private string IsTokenValid()
+    {
+        if (Session["cs_rest_AccessToken"] == null)
+        {
+            return "INVALID_ACCESS_TOKEN";
+        }
+
+        try
+        {
+            DateTime currentServerTime = DateTime.UtcNow.ToLocalTime();
+            if (currentServerTime >= DateTime.Parse(this.accessTokenExpiryTime))
+            {
+                if (currentServerTime >= DateTime.Parse(this.refreshTokenExpiryTime))
+                {
+                    return "INVALID_ACCESS_TOKEN";
+                }
+                else
+                {
+                    return "REFRESH_TOKEN";
+                }
+            }
+            else
+            {
+                return "VALID_ACCESS_TOKEN";
+            }
+        }
+        catch
+        {
+            return "INVALID_ACCESS_TOKEN";
+        }
+    }
+
+    protected void BtnGetDeviceInfo_Click(object sender, EventArgs e)
+    {
+        Session["Cs_DC_App1_AccessToken"] = null;
+        this.GetAuthCode();
+    }
      /// <summary>
     /// This method invokes DeviceInfo API of AT&amp;T platform to get the device information.
      /// </summary>
     private void GetDeviceInfo()
     {
+
         try
         {
             HttpWebRequest deviceInfoRequestObject = (HttpWebRequest)System.Net.WebRequest.Create(this.endPoint + "/rest/2/Devices/Info");
