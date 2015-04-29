@@ -354,6 +354,10 @@ public class RESTClient {
      * @return a reference to 'this', which can be used for method chaining
      */
     public RESTClient addParameter(String name, String value) {
+        if (name == null || value == null) {
+            throw new IllegalArgumentException("Name or value was null!");
+        }
+
         if (!parameters.containsKey(name)) {
             parameters.put(name, new ArrayList<String>());
         }
@@ -837,6 +841,33 @@ public class RESTClient {
             addInternalHeaders(httpDelete);
 
             response = httpClient.execute(httpDelete);
+
+            APIResponse apiResponse = buildResponse(response);
+            return apiResponse;
+        } catch (IOException ioe) {
+            throw new RESTException(ioe);
+        } finally {
+            if (response != null) {
+                this.releaseConnection(response);
+            }
+        }
+    }
+
+    public APIResponse httpPatch(String body) throws RESTException {
+        HttpClient httpClient = null;
+        HttpResponse response = null;
+
+        try {
+            httpClient = createClient();
+
+            HttpPatch httpPatch = new HttpPatch(this.url);
+
+            addInternalHeaders(httpPatch);
+            if (body != null && !body.equals("")) {
+                httpPatch.setEntity(new StringEntity(body));
+            }
+
+            response = httpClient.execute(httpPatch);
 
             APIResponse apiResponse = buildResponse(response);
             return apiResponse;

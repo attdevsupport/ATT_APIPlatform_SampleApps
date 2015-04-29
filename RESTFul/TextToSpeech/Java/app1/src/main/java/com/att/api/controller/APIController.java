@@ -66,6 +66,12 @@ public abstract class APIController extends HttpServlet {
         }
     }
 
+    protected void setSessionToken(HttpServletRequest request,
+            OAuthToken token) {
+        final HttpSession session = request.getSession();
+        session.setAttribute("token", token);
+    }
+
     protected OAuthToken getSessionToken(HttpServletRequest request, 
             HttpServletResponse response) throws RESTException {
 
