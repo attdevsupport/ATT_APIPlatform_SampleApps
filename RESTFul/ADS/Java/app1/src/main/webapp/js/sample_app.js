@@ -1,7 +1,5 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
-
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +14,9 @@
  * limitations under the License.
  */
 
-/**
- * Provides classes for sending RESTFul requests and handling responses.
- *
- * <p>
- * This class follows the dependency inversion principle by applying a varation
- * of the adapter pattern. That is, this class is essentially a wrapper with a
- * simplified interface to a full http client.
- * </p>
- *
- * @author pk9069
- * @since 1.0
- * @see com.att.api.rest.RESTClient
- */
+// define a custom hook for loading any custom values specific to
+// this sample app
+load_hook = function(data) {
+};
 
-package com.att.api.rest;
+// vim: set ts=8 sw=4 sts=4 tw=79 ft=javascript et :

@@ -11,6 +11,28 @@
     <servlet-name>ADSController</servlet-name>
     <servlet-class>com.att.api.ads.controller.ADSController</servlet-class>
   </servlet>
+  <servlet>
+      <servlet-name>LoadController</servlet-name>
+      <servlet-class>com.att.api.ads.controller.LoadController</servlet-class>
+  </servlet>
+  <servlet>
+      <servlet-name>SaveController</servlet-name>
+      <servlet-class>com.att.api.ads.controller.SaveController</servlet-class>
+  </servlet>
+  <servlet>
+      <servlet-name>GetAdsController</servlet-name>
+      <servlet-class>com.att.api.ads.controller.GetAdsController</servlet-class>
+  </servlet>
+
+
+  <servlet-mapping>
+      <servlet-name>LoadController</servlet-name>
+      <url-pattern>/load</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>SaveController</servlet-name>
+      <url-pattern>/save</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>ADSController</servlet-name>
     <url-pattern>/index.jsp</url-pattern>
@@ -21,6 +43,10 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>ADSController</servlet-name>
+    <url-pattern>/ads.jsp</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetAdsController</servlet-name>
     <url-pattern>/getAds</url-pattern> 
   </servlet-mapping>
 </web-app>

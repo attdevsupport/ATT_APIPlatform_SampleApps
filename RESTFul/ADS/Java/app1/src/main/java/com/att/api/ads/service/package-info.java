@@ -24,8 +24,8 @@
  * <a href="https://developer.att.com/docs/apis/rest/1/Advertising">ADS</a>.
  * </p>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @since 2.2
+ * @author pk9069
+ * @since 1.0
  * @see com.att.api.ads.service.ADSService
  */
 package com.att.api.ads.service;

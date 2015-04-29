@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -27,9 +27,9 @@ import org.apache.http.util.EntityUtils;
 /**
  * Immutable class that holds API response information.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  */
 public class APIResponse {
 
@@ -137,7 +137,11 @@ public class APIResponse {
 
     /**
      * Gets the the value of the specified http header name or <tt>null</tt> if
-     * none is found.
+     * none is found. 
+     *
+     * <p>
+     * Note: the search function used is case insensitive.
+     * </p>
      *
      * @param name header name
      * @return http header value
@@ -149,8 +153,9 @@ public class APIResponse {
         // small array than an algorithm that would require building a data
         // structure.
         HttpHeader[] headers = getAllHeaders();
+        String lname = name.toLowerCase();
         for (HttpHeader header : headers) {
-            if (header.getName().equals(name)) {
+            if (header.getName().toLowerCase().equals(lname)) {
                 return header.getValue();
             }
         }
@@ -165,7 +170,7 @@ public class APIResponse {
      * @return response
      * @throws RESTException if unable to parse http response
      * @see #valueOf(HttpResponse)
-     * @since 3.0
+     * @since 1.0
      */
     public static APIResponse fromHttpResponse(HttpResponse httpResponse)
             throws RESTException {
@@ -181,14 +186,17 @@ public class APIResponse {
      * @return response
      * @throws RESTException if unable to parse http response
      * @see org.apache.http.HttpResponse
-     * @since 3.0
+     * @since 1.0
      */
     public static APIResponse valueOf(HttpResponse httpResponse)
             throws RESTException {
 
         try {
             int statusCode = httpResponse.getStatusLine().getStatusCode();
-            String rb = EntityUtils.toString(httpResponse.getEntity());
+            String rb = "";
+            if (httpResponse.getEntity() != null) {
+                rb = EntityUtils.toString(httpResponse.getEntity());
+            }
             HttpHeader[] headers = APIResponse.buildHeaders(httpResponse);
             return new APIResponse(statusCode, rb, headers);
         } catch (IOException ioe) {
@@ -206,7 +214,7 @@ public class APIResponse {
      *
      * @param headers HTTP headers to copy
      * @return copy of http headers
-     * @since 3.0
+     * @since 1.0
      */
     public static HttpHeader[] copyHeaders(final HttpHeader[] headers) {
         final HttpHeader[] headersCopy = new HttpHeader[headers.length];

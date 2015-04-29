@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -25,8 +25,8 @@ import java.util.TimeZone;
 /**
  * Provides a set of utility date methods.
  *
- * @version 3.0
- * @since 2.2
+ * @version 1.0
+ * @since 1.0
  */
 public class DateUtil {
 
@@ -62,7 +62,7 @@ public class DateUtil {
      * <code>EEE, MMMM dd, yyyy HH:mm:ss zzz</code>
      *
      * @return UTC time
-     * @since 3.0
+     * @since 1.0
      * @see java.text.SimpleDateFormat
      */
     public static String getTime() {

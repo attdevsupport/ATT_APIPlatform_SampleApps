@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-/**
- * Provides classes for sending RESTFul requests and handling responses.
- *
- * <p>
- * This class follows the dependency inversion principle by applying a varation
- * of the adapter pattern. That is, this class is essentially a wrapper with a
- * simplified interface to a full http client.
- * </p>
- *
- * @author pk9069
- * @since 1.0
- * @see com.att.api.rest.RESTClient
- */
+package com.att.api.ads.service;
 
-package com.att.api.rest;
+public enum Type {
+    TEXT_OR_IMAGE(3);
+
+    private final int val;
+
+    private Type(int val) {
+        this.val = val;
+    }
+
+    public int getValue() {
+        return this.val;
+    }
+}
