@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# Copyright 2014 AT&T
+# Copyright 2015 AT&T
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,479 +18,641 @@ require 'base64'
 require 'sinatra'
 require 'sinatra/config_file'
 
-# require as a gem file load relative if fails
-begin
-  require 'att/codekit'
-rescue LoadError
-  # try relative, fall back to ruby 1.8 method if fails
-  begin
-    require_relative 'codekit/lib/att/codekit'
-  rescue NoMethodError 
-    require File.join(File.dirname(__FILE__), 'codekit/lib/att/codekit')
-  end
-end
+# require codekit
+require 'att/codekit'
 
+# Simplify the namespace
 include Att::Codekit
 include Att::Codekit::Model
 
-#regular sessions cause a problem with large amounts of data
-use Rack::Session::Pool
+class AAB < Sinatra::Application
+  get '/' do index; end
+  get  '/load' do load_data; end
+  get  '/authorization' do authorize; end
+  post '/save' do save_data; end
+  post '/createContact' do create_contact; end
+  post '/updateContact' do update_contact; end
+  post '/deleteContact' do delete_contact; end
+  post '/getContacts' do search_contact; end
+  post '/createGroup' do create_group; end
+  post '/updateGroup' do update_group; end
+  post '/deleteGroup' do delete_group; end
+  post '/getGroups' do get_groups; end
+  post '/getGroupContacts' do get_group_contacts; end
+  post '/addContactsToGroup' do add_contacts; end
+  post '/removeContactsFromGroup' do rm_contacts; end
+  post '/getContactGroups' do get_contact_groups; end
+  post '/getMyInfo' do get_myinfo; end
+  post '/updateMyInfo' do update_myinfo; end
 
-config_file 'config.yml'
+  use Rack::Session::Pool, :key => 'aab.ruby.session', :path => '/'
 
-set :port, settings.port
+  configure do
+    config_file 'config.yml'
 
-IMAGE_DIR = File.join(File.dirname(__FILE__), 'public/photos')
+    #Setup proxy used by att/codekit
+    Transport.proxy(settings.proxy)
 
-#Setup proxy used by att/codekit
-Transport.proxy(settings.proxy)
+    SCOPE = "AAB"
+    IMAGE_DIR = File.join(File.dirname(__FILE__), 'public/photos')
 
-SCOPE = "AAB"
-
-configure do
-  OAuth = Auth::AuthCode.new(settings.FQDN,
-                             settings.api_key,
-                             settings.secret_key)
-
-  AUTHENTICATING = :from_auth
-
-  special_case = Struct.new(:name, :parameters)
-
-  CONTACT_PARAMS = [ :firstName, :middleName, :lastName, :prefix, :suffix,
-                     :nickname, :organization, :jobTitle, :anniversary,
-                     :gender, :spouse, :children, :hobby, :assistant, 
-                     :attachPhotoMyInf, :contactId,
-                     special_case.new(:phone, [:number, :type]),
-                     special_case.new(:im, [:uri, :type]),
-                     special_case.new(:email, [:emailAddress, :type]),
-                     special_case.new(:weburl, [:url, :type]),
-                     special_case.new(:address, 
-                                      [:pobox, :pobox, :addressLine1, 
-                                       :addressLine2, :city, :country, 
-                                       :state, :zip, :type])
-  ]
-
-  SEARCH_PARAMS = [ :searchVal ]
-  GROUP_PARAMS = [ :groupId, :groupName, :groupType, :order, :contactIds ]
-end
-
-# Setup filters for saving session, 
-# loading select box data and catching the oauth redirect code
-before do
-  load_attachments
-
-  begin
-    if params[:code] && session[:token].nil?
-      session[:token] = OAuth.createToken(params[:code])
-    end
-    if session[:token] && session[:token].expired?
-      session[:token] = OAuth.refreshToken(session[:token])
-    end
-  rescue Exception => e
-    @oauth_error = e.message
+    AuthService = Auth::AuthCode.new(settings.FQDN,
+                               settings.api_key,
+                               settings.secret_key,
+                               :scope => SCOPE,
+                               :redirect => settings.redirect_url)
+    set :token, nil
   end
-end
 
-get '/' do
-  if params[:error]
-    @error = params[:error]
-  end
-  erb :aab
-end
-
-get '/createContact' do create_contact; end
-post '/createContact' do create_contact; end
-def create_contact
-  save_session(CONTACT_PARAMS) 
-  authenticate("createContact")
-
-  # Note that saving the session creates our complex objects such as phones
-  contact = Contact.new(
-    :first_name => session[:firstName],
-    :last_name => session[:lastName],
-    :middle_name => session[:middleName],
-    :prefix => session[:prefix],
-    :suffix => session[:suffix],
-    :nickname => session[:nickname],
-    :organization => session[:organization],
-    :job_title => session[:jobTitle],
-    :anniversary => session[:anniversary],
-    :gender => session[:gender],
-    :spouse => session[:spouse] ,
-    :children => session[:children],
-    :hobby => session[:hobby],
-    :assistant => session[:assistant],
-    :phones => session[:phone],
-    :addresses => session[:address],
-    :emails => session[:email],
-    :ims => session[:im],
-    :weburls => session[:weburl],
-    :photo => session[:photo]
-  )
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @create_contact = service.createContact(contact)
-  rescue Exception => e
-    @contact_error = e
-    puts e.backtrace
-  end
-  clear_session(CONTACT_PARAMS) 
-  erb :aab
-end
-
-get '/updateContact' do update_contact; end
-post '/updateContact' do update_contact; end
-def update_contact
-  save_session(CONTACT_PARAMS) 
-  authenticate("updateContact")
-
-  # Note that saving the session creates our complex objects such as phones
-  contact = Contact.new(
-    :first_name => session[:firstName],
-    :last_name => session[:lastName],
-    :middle_name => session[:middleName],
-    :prefix => session[:prefix],
-    :suffix => session[:suffix],
-    :nickname => session[:nickname],
-    :organization => session[:organization],
-    :job_title => session[:jobTitle],
-    :anniversary => session[:anniversary],
-    :gender => session[:gender],
-    :spouse => session[:spouse] ,
-    :children => session[:children],
-    :hobby => session[:hobby],
-    :assistant => session[:assistant],
-    :phones => session[:phone],
-    :addresses => session[:address],
-    :emails => session[:email],
-    :ims => session[:im],
-    :weburls => session[:weburl],
-    :photo => session[:photo]
-  )
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @success_contact = service.updateContact(session[:contactId], contact)
-  rescue Exception => e
-    @contact_error = e
-    puts e.backtrace
-  end
-  clear_session(CONTACT_PARAMS) 
-  erb :aab
-end
-
-
-get '/searchContact' do search_contact; end
-post '/searchContact' do search_contact; end
-def search_contact
-  save_session(SEARCH_PARAMS)
-  authenticate("searchContact")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @contact_resultset = service.getContacts(
-      :search => session[:searchVal]
-    )
-  rescue Exception => e
-    @contact_error = e
-    puts e.backtrace
-  end
-  clear_session(SEARCH_PARAMS)
-  erb :aab
-end
-
-get '/createGroup' do create_group; end
-post '/createGroup' do create_group; end
-def create_group
-  save_session(GROUP_PARAMS)
-  authenticate("createGroup")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  group = Group.new(:name => session[:groupName])
-
-  begin
-    @create_group = service.createGroup(group)
-  rescue Exception => e
-    @group_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/updateGroup' do update_group; end
-post '/updateGroup' do update_group; end
-def update_group
-  save_session(GROUP_PARAMS)
-  authenticate("updateGroup")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  group = Group.new(:name => session[:groupName])
-
-  begin
-    @success_group = service.updateGroup(session[:groupId], group)
-  rescue Exception => e
-    @group_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/deleteGroup' do delete_group; end
-post '/deleteGroup' do delete_group; end
-def delete_group
-  save_session(GROUP_PARAMS)
-  authenticate("deleteGroup")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @success_group = service.deleteGroup(session[:groupId])
-  rescue Exception => e
-    @group_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/getGroups' do get_groups; end
-post '/getGroups' do get_groups; end
-def get_groups
-  save_session(GROUP_PARAMS)
-  authenticate("getGroups")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @groups = service.getGroups(:name => session[:groupName],
-                                :order => session[:order])
-  rescue Exception => e
-    @group_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/getGroupContacts' do get_group_contacts; end
-post '/getGroupContacts' do get_group_contacts; end
-def get_group_contacts
-  save_session(GROUP_PARAMS)
-  authenticate("getGroupContacts")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @group_contact_ids = service.getGroupContacts(session[:groupId])
-  rescue Exception => e
-    @manage_groups_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/addContactsToGroup' do add_contacts; end
-post '/addContactsToGroup' do add_contacts; end
-def add_contacts
-  save_session(GROUP_PARAMS)
-  authenticate("addContactsToGroup")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @manage_groups = service.addContactToGroup(session[:groupId], 
-                                               session[:contactIds])
-  rescue Exception => e
-    @manage_groups_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/rmContactsFromGroup' do rm_contacts; end
-post '/rmContactsFromGroup' do rm_contacts; end
-def rm_contacts
-  save_session(GROUP_PARAMS)
-  authenticate("rmContactsFromGroup")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @manage_groups = service.removeContactFromGroup(session[:groupId], 
-                                                    session[:contactIds])
-  rescue Exception => e
-    @manage_groups_error = e
-    puts e.backtrace
-  end
-  clear_session(GROUP_PARAMS)
-  erb :aab
-end
-
-get '/getContactGroups' do get_contact_groups; end
-post '/getContactGroups' do get_contact_groups; end
-def get_contact_groups
-  save_session([:contactId])
-  authenticate("getContactGroups")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @contact_groups = service.getContactGroups(session[:contactId])
-  rescue Exception => e
-    @manage_groups_error = e
-    puts e.backtrace
-  end
-  clear_session([:contactId])
-  erb :aab
-end
-
-get '/getMyInfo' do get_myinfo; end
-post '/getMyInfo' do get_myinfo; end
-def get_myinfo
-  authenticate("getMyInfo")
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @myinfo = service.getMyInfo()
-  rescue Exception => e
-    @myinfo_error = e
-    puts e.backtrace
-  end
-  erb :aab
-end
-
-get '/updateMyInfo' do update_myinfo; end
-post '/updateMyInfo' do update_myinfo; end
-def update_myinfo
-  save_session(CONTACT_PARAMS) 
-  authenticate("updateMyInfo")
-
-  # Note that saving the session creates our complex objects such as phones
-  me = MyContactInfo.new(
-    :first_name => session[:firstName],
-    :last_name => session[:lastName],
-    :middle_name => session[:middleName],
-    :prefix => session[:prefix],
-    :suffix => session[:suffix],
-    :nickname => session[:nickname],
-    :organization => session[:organization],
-    :job_title => session[:jobTitle],
-    :anniversary => session[:anniversary],
-    :gender => session[:gender],
-    :spouse => session[:spouse] ,
-    :children => session[:children],
-    :hobby => session[:hobby],
-    :assistant => session[:assistant],
-    :phones => session[:phone],
-    :addresses => session[:address],
-    :emails => session[:email],
-    :ims => session[:im],
-    :weburls => session[:weburl],
-    :photo => session[:photo]
-  )
-
-  service = Service::AABService.new(settings.FQDN, session[:token])
-
-  begin
-    @update_myinfo = service.updateMyInfo(me)
-  rescue Exception => e
-    @myinfo_error = e
-    puts e.backtrace
-  end
-  clear_session(CONTACT_PARAMS) 
-  erb :aab
-end
-
-def authenticate(url)
-  session[AUTHENTICATING] = true
-  if session[:token].nil?
-    #remove the leading / from action if redirect ends with /
-    suburl = settings.redirect_url.end_with?("/") ? url : "/#{url}"
-
-    redirect_url = "#{settings.redirect_url}#{suburl}"
-    redirect OAuth.consentFlow(:scope => SCOPE, :redirect => redirect_url) 
-  end
-  session[AUTHENTICATING] = false
-end
-
-def load_attachments
-  # make first box blank
-  @attachments = [""] 
-  Dir.entries(IMAGE_DIR).sort.each do |x|
-    #add file, filter names with one or more leading '.'
-    @attachments.push x unless x.match /\A\.+/
-  end
-end
-
-def clear_session(parameters)
-  parameters.each do |p|
-    if p.is_a? Struct
-      session[p.name] = nil
-    else
-      session[p] = nil
-    end
-  end
-end
-
-def save_session(parameters)
-  return if session[AUTHENTICATING]
-  parameters.each do |p|
-    if p.is_a? Struct
-      if params[p.name]
-        session[p.name] = create_object(p.name, p.parameters)
+  # Setup filters for saving session, 
+  # loading select box data and catching the oauth redirect code
+  before do
+    begin
+      if session[:token] && session[:token].expired?
+        session[:token] = AuthService.refreshToken(session[:token])
       end
-    else
-      session[p] = params[p]
-    end
-  end
-end
-
-def create_object(name, parameters)
-  objs = Array.new
-
-  #special objects are mapped via html forms with the following notation.
-  #    address[0]{parameter => value}
-  #    address[1]{parameter => value}
-  params[name].each_index do |i|
-
-    # item will equal be the {parameter => value} as described above
-    item = params[name][i]
-
-    opts = Hash.new
-
-    # Test if the current index is the preferred index
-    opts[:preferred] = params["#{name}Pref"].to_i == i
-
-    parameters.each do |p|
-      opts[p] = item[p]
-    end
-
-    objs << case name
-    when :phone
-      Phone.new(opts)
-    when :address
-      Address.new(opts)
-    when :im
-      IM.new(opts)
-    when :email
-      Email.new(opts)
-    when :weburl
-      WebUrl.new(opts)
+    rescue Exception => e
+      { :success => false, :text => e.message }.to_json
     end
   end
 
-  objs
-end
+  def authorize
+    begin
+      base_url = settings.redirect_url.split("authorization")[0]
+      if params[:code].nil?
+        raise Exception.new('Authentication Code not present')
+      end
+      session[:token] = AuthService.createToken(params[:code]) 
+      redirect to(base_url)
+    rescue Exception => e
+      session[:savedData][:redirecting] = nil
+      @main_page = base_url
+      erb :error
+    end
+  end
 
-#  vim: set ts=8 sw=2 tw=80 et :
+  def index
+    erb :aab
+  end
+
+  def create_contact
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    phones = []
+    get_complex_params(:createPhone, :Number) do |number, pref, type|
+      phones << Phone.new(:number => number, :preferred => pref, :type => type)
+    end
+    emails = []
+    get_complex_params(:createEmail, :Address) do |address, pref, type|
+      emails << Email.new(:address => address, :preferred => pref, :type => type)
+    end
+    ims = []
+    get_complex_params(:createIM, :Uri) do |uri, pref, type|
+      ims << IM.new(:uri => uri, :preferred => pref, :type => type)
+    end
+    weburls = []
+    get_complex_params(:createWeburl) do |url, pref, type|
+      weburls << WebUrl.new(:url => url, :preferred => pref, :type => type)
+    end
+    addresses = []
+    get_addresses(:createAddress) do |addr|
+      addresses << addr
+    end
+
+    # Create a contact object
+    new_contact = Contact.new(
+      :first_name => params[:createFirstName],
+      :last_name => params[:createLastName],
+      :middle_name => params[:createMiddleName],
+      :prefix => params[:createPrefix],
+      :suffix => params[:createSuffix],
+      :nickname => params[:createNickname],
+      :organization => params[:createOrganization],
+      :job_title => params[:createJobTitle],
+      :anniversary => params[:createAnniversary],
+      :gender => params[:createGender],
+      :spouse => params[:createSpouse] ,
+      :children => params[:createChildren],
+      :hobby => params[:createHobby],
+      :assistant => params[:createAssistant],
+      :phones => phones,
+      :addresses => addresses,
+      :emails => emails,
+      :ims => ims,
+      :weburls => weburls,
+    )
+
+    begin
+      created = service.createContact(new_contact)
+
+      {
+        :success => true,
+        :text => created.location
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def update_contact
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    phones = []
+    get_complex_params(:updatePhone, :Number) do |number, pref, type|
+      phones << Phone.new(:number => number, :preferred => pref, :type => type)
+    end
+    emails = []
+    get_complex_params(:updateEmail, :Address) do |address, pref, type|
+      emails << Email.new(:address => address, :preferred => pref, :type => type)
+    end
+    ims = []
+    get_complex_params(:updateIM, :Uri) do |uri, pref, type|
+      ims << IM.new(:uri => uri, :preferred => pref, :type => type)
+    end
+    weburls = []
+    get_complex_params(:updateWeburl) do |url, pref, type|
+      weburls << WebUrl.new(:url => url, :preferred => pref, :type => type)
+    end
+    addresses = []
+    get_addresses(:updateAddress) do |addr|
+      addresses << addr
+    end
+    update_contact = Contact.new(
+      :first_name => params[:updateFirstName],
+      :last_name => params[:updateLastName],
+      :middle_name => params[:updateMiddleName],
+      :prefix => params[:updatePrefix],
+      :suffix => params[:updateSuffix],
+      :nickname => params[:updateNickname],
+      :organization => params[:updateOrganization],
+      :job_title => params[:updateJobTitle],
+      :anniversary => params[:updateAnniversary],
+      :gender => params[:updateGender],
+      :spouse => params[:updateSpouse] ,
+      :children => params[:updateChildren],
+      :hobby => params[:updateHobby],
+      :assistant => params[:updateAssistant],
+      :phones => phones,
+      :addresses => addresses,
+      :emails => emails,
+      :ims => ims,
+      :weburls => weburls,
+    )
+
+    begin
+      updated = service.updateContact(params[:updateContactId], update_contact)
+
+      {
+        :success => true,
+        :text => 'Successfully updated contact.'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def delete_contact
+    service = Service::AABService.new(settings.FQDN, session[:token])
+    begin
+      service.deleteContact(params[:deleteContactId])
+      {
+        :success => true,
+        :text => 'Successfully deleted contact.'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def search_contact
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      results = service.getContacts(:search => session[:contactsSearchValue])
+      contacts = results.contacts
+      qcontacts = results.quick_contacts
+
+      tables = []
+      if contacts
+        contacts.each do |contact|
+          tables << make_contact_table(contact)
+          contact_id = contact.contact_id
+          tables << make_phones_table(contact_id, contact.phones) unless contact.phones.empty?
+          tables << make_emails_table(contact_id, contact.emails) unless contact.emails.empty?
+          tables << make_ims_table(contact_id, contact.ims) unless contact.ims.empty?
+          tables << make_addresses_table(contact_id, contact.addresses) unless contact.addresses.empty?
+          tables << make_weburls_table(contact_id, contact.weburls) unless contact.weburls.empty?
+        end
+      end
+
+      if qcontacts
+        qcontacts.each do |qcontact|
+          tables << make_qcontact_table(qcontact)
+          contact_id = qcontact.contact_id
+          tables << make_phones_table(contact_id, qcontact.phone) unless qcontact.phone.nil?
+          tables << make_emails_table(contact_id, qcontact.email) unless qcontact.email.nil?
+          tables << make_ims_table(contact_id, qcontact.im) unless qcontact.im.nil?
+          tables << make_addresses_table(contact_id, qcontact.address) unless qcontact.address.nil?
+        end
+      end
+      
+      {
+        :success => true,
+        :tables => tables
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def create_group
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    group = Group.new(:name => params[:createGroupName])
+
+    begin
+      created = service.createGroup(group)
+
+      {
+        :success => true,
+        :text => created.location
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def update_group
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    group = Group.new(:name => params[:updateGroupName])
+
+    begin
+      updated = service.updateGroup(params[:updateGroupId], group)
+      {
+        :success => true,
+        :text => 'Successfully updated group'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def delete_group
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      deleted = service.deleteGroup(params[:deleteGroupId])
+      {
+        :success => true,
+        :text => 'Successfully deleted group'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_groups
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      results = service.getGroups(:name => params[:getGroupName],
+                                  :order => params[:getGroupOrder])
+      table = {
+        :caption => 'Groups:',
+        :headers => ['groupId', 'groupName', 'groupType'],
+        :values => []
+      }
+      if results.groups?
+        results.groups.each do |group|
+          table[:values] << [ group.id, group.name, group.type ]
+        end
+      end
+      {
+        :success => true,
+        :tables => [table]
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_group_contacts
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      gid = params[:getContactsGroupId]
+      raise Exception.new('Group Id must not be empty') if gid.empty?
+      ids = service.getGroupContacts(gid)
+      {
+        :success => true,
+        :tables => [{
+          :caption => 'Contacts:',
+          :headers => ['contactId'],
+          :values => [ids],
+        }]
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def add_contacts
+    service = Service::AABService.new(settings.FQDN, session[:token])
+    begin
+      gid = params[:addContactsGroupId]
+      cid = params[:addContactIds]
+      if gid.empty?
+        raise Exception.new('Group Id must not be empty')
+      end
+      if cid.empty?
+        raise Exception.new('Contact Ids must not be empty')
+      end
+      added = service.addContactToGroup(gid, cid.split(','))
+      {
+        :success => true,
+        :text =>  'Successfully added contacts to group.'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def rm_contacts
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      gid = params[:removeContactsGroupId]
+      cid = params[:removeContactIds]
+      if gid.empty?
+        raise Exception.new('Group Id must not be empty')
+      end
+      if cid.empty?
+        raise Exception.new('Contact Ids must not be empty')
+      end
+      removed = service.removeContactFromGroup(gid, cid.split(','))
+      {
+        :success => true,
+        :text => 'Successfully removed contacts from group.'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_contact_groups
+    service = Service::AABService.new(settings.FQDN, session[:token])
+    begin
+      cid = params[:getGroupsContactId]
+      if cid.empty?
+        raise Exception.new('Contact Id must not be empty')
+      end
+      results = service.getContactGroups(cid)
+      table = {
+        :caption => 'Groups:',
+        :headers => ['groupId', 'groupName', 'groupType'],
+        :values => []
+      }
+      if results.groups?
+        results.groups.each do |group|
+          table[:values] << [group.id, group.name, group.type]
+        end
+      end
+      {
+        :success => true,
+        :tables => [table]
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_myinfo
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      myinfo = service.getMyInfo()
+      tables = []
+      tables << make_contact_table(myinfo)
+      contact_id = myinfo.contact_id
+      tables << make_phones_table(contact_id, myinfo.phones) unless myinfo.phones.empty?
+      tables << make_emails_table(contact_id, myinfo.emails) unless myinfo.emails.empty?
+      tables << make_ims_table(contact_id, myinfo.ims) unless myinfo.ims.empty?
+      tables << make_addresses_table(contact_id, myinfo.addresses) unless myinfo.addresses.empty?
+      tables << make_weburls_table(contact_id, myinfo.weburls) unless myinfo.weburls.empty?
+      {
+        :success => true,
+        :tables => tables
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def update_myinfo
+    phones = []
+    get_complex_params(:myInfoPhone, :Number) do |number, pref, type|
+      phones << Phone.new(:number => number, :preferred => pref, :type => type)
+    end
+    emails = []
+    get_complex_params(:myInfoEmail, :Address) do |address, pref, type|
+      emails << Email.new(:address => address, :preferred => pref, :type => type)
+    end
+    ims = []
+    get_complex_params(:myInfoIM, :Uri) do |uri, pref, type|
+      ims << IM.new(:uri => uri, :preferred => pref, :type => type)
+    end
+    weburls = []
+    get_complex_params(:myInfoWeburl) do |url, pref, type|
+      weburls << WebUrl.new(:url => url, :preferred => pref, :type => type)
+    end
+    addresses = []
+    get_addresses(:myInfoAddress) do |addr|
+      addresses << addr
+    end
+
+    me = MyContactInfo.new(
+      :first_name => params[:myInfoFirstName],
+      :last_name => params[:myInfoLastName],
+      :middle_name => params[:myInfoMiddleName],
+      :prefix => params[:myInfoPrefix],
+      :suffix => params[:myInfoSuffix],
+      :nickname => params[:myInfoNickname],
+      :organization => params[:myInfoOrganization],
+      :job_title => params[:myInfoJobTitle],
+      :anniversary => params[:myInfoAnniversary],
+      :gender => params[:myInfoGender],
+      :spouse => params[:myInfoSpouse] ,
+      :children => params[:myInfoChildren],
+      :hobby => params[:myInfoHobby],
+      :assistant => params[:myInfoAssistant],
+      :phones => phones,
+      :addresses => addresses,
+      :emails => emails,
+      :ims => ims,
+      :weburls => weburls,
+    )
+
+    service = Service::AABService.new(settings.FQDN, session[:token])
+
+    begin
+      updated = service.updateMyInfo(me)
+      {
+        :success => true,
+        :text => 'Successfully updated MyInfo'
+      }.to_json
+    rescue Exception => e
+      puts e.backtrace
+      { :success => false, :text => e.message }.to_json
+    end
+  end
+
+  def get_complex_params(param_name, data_name=nil)
+    count = params["#{param_name}Index"].to_i
+    count.times do |i|
+      data = params["#{param_name}#{data_name}#{i}"]
+      pref = !!params["#{param_name}Pref#{i}"]
+      type = params["#{param_name}Type#{i}"]
+      yield(data, pref, type) unless data.to_s.empty?
+    end
+  end
+
+  def get_addresses(param_name)
+    count = params["#{param_name}Index"].to_i
+    count.times do |i|
+      pref = !!params["#{param_name}Pref#{i}"]
+      type = params["#{param_name}Type#{i}"]
+      pobox = params["#{param_name}PoBox#{i}"]
+      addr1 = params["#{param_name}LineOne#{i}"]
+      addr2 = params["#{param_name}LineTwo#{i}"]
+      city = params["#{param_name}City#{i}"]
+      state = params["#{param_name}State#{i}"]
+      zip = params["#{param_name}Zip#{i}"]
+      country = params["#{param_name}Country#{i}"]
+      addr = Address.new(:type => type, :preferred => pref, :po_box => pobox,
+                         :address_line_1 => addr1, :address_line_2 => addr2,
+                         :city => city, :state => state, :zipcode => zip, 
+                         :country => country)
+      yield(addr) unless addr1.to_s.empty?
+    end
+  end
+
+  def make_contact_table(c)
+    {
+      :caption => 'Contact:',
+      :headers => [ 'contactId', 'creationDate', 'modificationDate',
+                    'formattedName', 'firstName', 'lastName', 'prefix',
+                    'suffix', 'nickName', 'organization', 'jobTitle',
+                    'anniversary', 'gender', 'spouse', 'hobby', 'assistant' ],
+      :values => [[ c.contact_id, c.creation_date, c.modification_date,
+                    c.formatted_name, c.first_name, c.last_name, c.prefix,
+                    c.suffix, c.nickname, c.organization, c.job_title,
+                    c.anniversary, c.gender, c.spouse, c.hobby, c.assistant ]]
+    }
+  end
+
+  def make_qcontact_table(q)
+    table = {
+      :caption => 'Quick Contact:',
+      :headers => ['contactId', 'formattedName', 'firstName', 'middleName',
+                   'lastName', 'prefix', 'suffix', 'nickName', 'organization'],
+      :values => [[ q.contact_id, q.formatted_name, q.first_name,
+                    q.middle_name, q.last_name, q.prefix, q.suffix, q.nickname,
+                    q.organization ]]
+    }
+  end
+
+  def make_phones_table(id, phones)
+    table = { :caption => "Contact (#{id}) Phones:",
+              :headers => [ 'type', 'number', 'preferred' ] }
+    values = []
+    Array(phones).each do |phone|
+     values << [ phone.type, phone.number, phone.preferred || '-' ]
+    end
+    table[:values] = values
+    table
+  end
+
+  def make_emails_table(id, emails)
+    table = { :caption => "Contact (#{id}) Emails:",
+              :headers => [ 'type', 'address', 'preferred' ] }
+    values = []
+    Array(emails).each do |email|
+     values << [ email.type, email.address, email.preferred || '-' ]
+    end
+    table[:values] = values
+    table
+  end
+
+  def make_ims_table(id, ims)
+    table = { :caption => "Contact (#{id}) Ims:",
+              :headers => [ 'type', 'uri', 'preferred' ] }
+    values = []
+    Array(ims).each do |im|
+     values << [ im.type, im.uri, im.preferred || '-' ]
+    end
+    table[:values] = values
+    table
+  end
+
+  def make_weburls_table(id, weburls)
+    table = { :caption => "Contact (#{id}) Weburls:",
+              :headers => [ 'type', 'url', 'preferred' ] }
+    values = []
+    Array(weburls).each do |weburl|
+     values << [ weburl.type, weburl.url, weburl.preferred || '-' ]
+    end
+    table[:values] = values
+    table
+  end
+
+  def make_addresses_table(id, addrs)
+    table = { 
+      :caption => "Contact (#{id}) Addresses:",
+      :headers => [ 'type', 'preferred', 'poBox', 'addressLine1',
+                    'addressLine2', 'city', 'state', 'zipcode', 'country' ]
+    }
+    values = []
+    Array(addrs).each do |addr|
+      values << [ addr.type, addr.preferred || '-', addr.address_line_1,
+                  addr.address_line_2, addr.city, addr.state, addr.zipcode,
+                  addr.country ]
+    end
+    table[:values] = values
+  end
+
+  ##################################
+  ####### Save data in forms #######
+  ##################################
+
+  def save_data
+    session['savedData'] = JSON.parse(params['data'])
+    ""
+  end
+
+  def load_data
+    data = {
+      :authenticated => !!session[:token],
+      :redirect_url => AuthService.consentFlow,
+      :server_time => Util::serverTime,
+      :download => settings.download_link,
+      :github => settings.github_link,
+    }
+    data[:savedData] = session[:savedData] unless session[:savedData].nil?
+    data.to_json
+  end
+end
+#  vim: set ts=8 sw=2 sts=2 tw=79 ft=ruby et :
