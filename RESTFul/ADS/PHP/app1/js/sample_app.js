@@ -1,8 +1,5 @@
-<?php
-namespace Att\Api\Restful;
-
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +14,9 @@ namespace Att\Api\Restful;
  * limitations under the License.
  */
 
-final class HttpPut
-{
-    private $_putData;
+// define a custom hook for loading any custom values specific to
+// this sample app
+load_hook = function(data) {
+};
 
-    public function __construct($putData)
-    {
-        $this->_putData = $putData;
-    }
-
-    public function getPutData()
-    {
-        return $this->_putData;
-    }
-
-}
-
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
-?>
+// vim: set ts=8 sw=4 sts=4 tw=79 ft=javascript et :

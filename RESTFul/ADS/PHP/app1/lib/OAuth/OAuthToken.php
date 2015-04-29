@@ -65,6 +65,13 @@ final class OAuthToken
     private $_accessTokenExpiry;
 
     /**
+     * Time token expires in, from the creation time.
+     *
+     * @var int
+     */
+     private $_expiresIn;
+
+    /**
      * Creates an OAuthToken object with the specified parameters. 
      * 
      * Note: To make the access token never expire, set the expiresIn to 
@@ -89,6 +96,7 @@ final class OAuthToken
 
         $this->_accessToken = $accessToken;
         $this->_refreshToken = $refreshToken;
+        $this->_expiresIn = $expiresIn;
 
         if ($expiresIn == OAuthToken::NO_EXPIRATION) {
             $this->_accessTokenExpiry = OAuthToken::NO_EXPIRATION;
@@ -96,6 +104,16 @@ final class OAuthToken
             $this->_accessTokenExpiry = $expiresIn + $creationTime;
         }
     }
+
+    /**
+     * Gets the time the token expires in from the creation date.
+     *
+     * @return int expires in time, as measured in seconds
+     */
+     public function getExpiresIn()
+     {
+        return $this->_expiresIn;
+     }
 
     /**
      * Gets the access token.

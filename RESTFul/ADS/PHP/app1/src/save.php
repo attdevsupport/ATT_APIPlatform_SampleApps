@@ -1,8 +1,6 @@
 <?php
-namespace Att\Api\Restful;
-
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +15,8 @@ namespace Att\Api\Restful;
  * limitations under the License.
  */
 
-final class HttpPut
-{
-    private $_putData;
+session_start();
 
-    public function __construct($putData)
-    {
-        $this->_putData = $putData;
-    }
+$_SESSION['savedData'] = $_POST['data'];
 
-    public function getPutData()
-    {
-        return $this->_putData;
-    }
-
-}
-
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 ?>

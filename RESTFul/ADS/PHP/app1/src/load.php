@@ -1,6 +1,4 @@
 <?php
-namespace Att\Api\Restful;
-
 /*
  * Copyright 2014 AT&T
  *
@@ -17,21 +15,24 @@ namespace Att\Api\Restful;
  * limitations under the License.
  */
 
-final class HttpPut
-{
-    private $_putData;
+session_start();
 
-    public function __construct($putData)
-    {
-        $this->_putData = $putData;
-    }
+require __DIR__ . '/../config.php';
+require_once __DIR__ . '/../lib/Util/Util.php';
 
-    public function getPutData()
-    {
-        return $this->_putData;
-    }
+use Att\Api\Util\Util;
 
+$arr = array(
+    'authenticated' => true,
+    'server_time' => Util::getServerTime(),
+    'download' => $linkDownload,
+    'github' => $linkGithub,
+);
+
+if (isset($_SESSION['savedData'])) {
+    $arr['savedData'] = json_decode($_SESSION['savedData'], true);
 }
 
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
+echo json_encode($arr);
+
 ?>
