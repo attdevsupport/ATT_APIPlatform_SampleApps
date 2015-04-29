@@ -1,14 +1,43 @@
 <!DOCTYPE html>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<jsp:useBean id="dateutil" class="com.att.api.util.DateUtil" scope="request">
-</jsp:useBean>
-<html lang="en"> 
-  <head> 
-    <title>AT&amp;T Sample Application - Basic SMS Service Application</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
-    <link rel="stylesheet" type="text/css" href="style/common.css">
-    <script src="scripts/utils.js"></script>
+<!--
+Copyright 2015 AT&T
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AT&amp;T Sample Application - Basic SMS Service</title>
+
+    <!-- jquery and bootstrap js -->
+    <script src="https://lprod.code-api-att.com/public_files/js/jquery.min.js"></script>
+    <script src="https://lprod.code-api-att.com/public_files/js/bootstrap.min.js"></script>
+
+    <!-- custom js -->
+    <script src="js/config.js"></script>
+    <script src="js/form_handler.js"></script>
+    <script src="js/response_handler.js"></script>
+    <script src="js/sample_app.js"></script>
+
+    <!-- bootstrap css -->
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap-theme.min.css">
+
+    <!-- custom css -->
+    <link href="https://lprod.code-api-att.com/public_files/css/custom.css" rel="stylesheet">
+
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33466541-1']);
@@ -19,248 +48,210 @@
              ga.type = 'text/javascript';
              ga.async = true;
              ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-                                         : 'http://www')
+                                         : 'https://www')
                                          + '.google-analytics.com/ga.js';
              var s = document.getElementsByTagName('script')[0];
              s.parentNode.insertBefore(ga, s);
          })();
     </script>
+
+    <!--[if lt IE 9]>
+      <script src="https://lprod.code-api-att.com/public_files/js/html5shiv.min.js"></script>
+      <script src="https://lprod.code-api-att.com/public_files/js/respond.min.js"></script>
+    <![endif]-->
   </head>
   <body>
-    <div id="pageContainer">
-      <div id="header">
-        <div class="logo"></div> 
-        <div id="menuButton" class="hide"><a id="jump" href="#nav">Main Navigation</a></div> 
-        <ul class="links" id="nav">
-          <li>
-            <a href="${cfg.linkSource}" target="_blank" 
-                id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
-            <span class="divider"> |&nbsp;</span>
-          </li>
-          <li>
-            <a href="${cfg.linkDownload}" target="_blank"
-                id="DownloadLink">Download<img alt="download" src="images/download.png"></a>
-            <span class="divider"> |&nbsp;</span>
-          </li>
-          <li>
-            <a href="${cfg.linkHelp}" target="_blank" id="HelpLink">Help</a>
-          </li>
-          <li id="back"><a href="#top">Back to top</a></li>
-        </ul> <!-- end of links -->
-      </div> <!-- end of header -->
-      <div id="content">
-        <div id="contentHeading">
-          <h1>AT&amp;T Sample Application - Basic SMS Service Application</h1>
-          <div class="border"></div>
-          <div id="introtext">
-            <div><b>Server Time:&nbsp;</b>${dateutil.serverTime}</div> 
-            <div><b>Client Time:&nbsp;</b><script>document.write("" + new Date());</script></div>
-            <div><b>User Agent:&nbsp;</b><script>document.write("" + navigator.userAgent);</script></div>
-          </div> <!-- end of introtext -->
-        </div> <!-- end of contentHeading -->
+    <div class="container">
+      <div class="row">
+        <div class="header">
+          <ul class="nav nav-pills pull-left">
+            <li>
+              <a class="brand" href="https://developer.att.com">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-developer.png">
+              </a>
+            </li>
+          </ul>
+        </div><!--./header-->
+      </div><!--./row-->
+      <div class="row">
+        <h3 class="text-center">Basic SMS Service</h3>
+      </div>
+      <div class="row">
+        <h5 class="text-center">The SMS API sends SMS messages to one or more AT&T Wireless mobile phones in a single
+          request. This API contains methods for sending and receiving messages and querying for the status of
+          previously submitted SMS messages. For Mobile Originating messages, the SMS API allows you to poll the
+          delivery status of the message or request that delivery status notifications be sent to a registered callback
+          listener URI as soon as the message arrives.</h5>
+      </div>
+      <div class="row"><div class="col-xs-12"><hr></div></div>
+      <div class="inline-row">
+        <div class="col-lg-12">
+          <div class="col-lg-2 col-sm-0 col-xs-0"></div>
+          <div class="col-lg-4 col-sm-6 col-xs-12">
+            <a class="btn btn-block btn-warning" id="github" href="#">Github</a>
+          </div>
+          <div class="col-lg-4 col-sm-6 col-xs-12">
+            <a class="btn btn-block btn-warning" id="download" href="#">Download</a>
+          </div>
+          <div class="col-lg-2 col-sm-0 col-xs-0"></div>
+        </div><!--/.col-lg-12-->
+      </div><!--/.row-->
+      <div class="row"><div class="col-xs-12"><hr></div></div>
+      <div class="row">
+        <div class="col-md-12">
+          <div role="tabpanel">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#send-sms" aria-controls="send-sms" role="tab" data-toggle="tab">Send SMS</a>
+              </li>
+              <li role="presentation">
+                <a href="#delivery-status" aria-controls="delivery-status" role="tab" data-toggle="tab">
+                  Get Delivery Status</a>
+              </li>
+              <li role="presentation">
+                <a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Get Messages</a>
+              </li>
+              <li role="presentation" class="dropdown">
+                <a href="#" id="notifications-tab" class="dropdown-toggle" data-toggle="dropdown"
+                    aria-controls="notification-tab-contents">Notifications <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="notifications-tab"
+                    id="notification-tab-contents">
+                  <li>
+                    <a href="#receive-delivery-status" tabindex="-1" role="tab" data-toggle="tab"
+                        aria-controls="receive-delivery-status">Delivery Status</a>
+                  </li>
+                  <li>
+                    <a href="#receive-messages" tabindex="-1" role="tab" data-toggle="tab"
+                        aria-controls="receive-messages">Messages</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+              <div role="tabpanel" class="tab-pane active" id="send-sms">
+                <form id="sendSms">
+                  <div class="form-group">
+                    <label for="address">Addresses</label>
+                    <input type="text" class="form-control" name="address" data-toggle="tooltip" 
+                        data-placement="bottom" data-title="Multiple numbers can be submitted comma separated. Format of
+                        each address must be: tel:15555555" placeholder="AT&amp;T mobile numbers">
+                  </div>
+                  <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea class="form-control" type="text" name="message" maxlength=120 rows="1">AT&amp;T Sample message</textarea>
+                  </div><!--./form-group-->
+                  <div class="checkbox">
+                    <label>
+                      <input name="deliveryNotificationStatus" type="checkbox">Receive Delivery Status Notification
+                    </label>
+                  </div>
+                  <button type="submit" data-loading-text="Sending..." class="btn btn-primary">Send SMS</button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="delivery-status">
+                <form id="getDeliveryStatus">
+                  <div class="form-group">
+                    <label for="messageId">Message ID</label>
+                    <input type="text" class="form-control" name="messageId" data-toggle="tooltip" 
+                        data-placement="bottom" data-title="Specifies the unique identifier for the SMS message that is
+                        returned by the API Gateway." placeholder="Message ID">
+                  </div>
+                  <button type="submit" data-loading-text="Checking Status..." class="btn btn-primary">
+                    Get Delivery Status
+                  </button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="messages">
+                <label>Get messages from short code <span id="shortCodePoll"></span></label>
+                <form id="getMessages">
+                  <button type="submit" data-loading-text="Checking Messages..." class="btn btn-primary">
+                    Get Messages
+                  </button>
+                </form>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="receive-delivery-status">
+                <label>Receiving delivery status...</label>
+                <div class="progress">
+                  <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100"
+                      aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                </div><!--./progress-->
+                <span class="sr-only">Receiving...</span>
+                <div id="receiveStatusTable"></div>
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="receive-messages">
+                <label>Receiving messages from short code <span id="shortCodeReceiveMessages"></span></label>
+                <div class="progress">
+                  <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100"
+                      aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                </div><!--./progress-->
+                <span class="sr-only">Receiving...</span>
+                <div id="receiveMessagesTable"></div>
+              </div><!--./tab-pane-->
+            </div><!--./tab-content-->
+          </div> <!--tabpanel-->
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="hidden" id="response"></div>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <div class="row"><div class="col-xs-12"><hr></div></div>
+      <div class="row"><div class="col-md-12"><b>Server Time:&nbsp;</b><span id="serverTime"></span></div></div>
+      <div class="row"><div class="col-md-12"><b>Client Time:</b> <script>document.write("" + new Date());</script></div></div>
+      <div class="row"><div class="col-md-12"><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div></div>
+        <div class="row"><div class="col-xs-12"><hr></div></div>
+      <div class="footer text-muted">
+        <div class="row">
+          <div class="col-sm-12 text-left">
+            <p>
+              <small>
+                The application hosted on this site is a working example intended to be used for reference in creating
+                products to consume AT&amp;T Services and not meant to be used as part of your product. The data in
+                these pages is for test purposes only and intended only for use as a reference in how the services
+                perform.
+              </small>
+            </p>
+          </div> <!--./col-->
+        </div> <!--./row-->
+        <div class="row"><div class="col-xs-12"><hr></div></div>
+        <div class="row">
+          <div class="text-left col-sm-6">
+            <div class="col-sm-1">
+              <a class="brand" href="https://developer.att.com" target="_blank">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-globe.png">
+              </a>
+            </div>
+            <div class="col-sm-11">
+              <p>
+                <small>
+                  <a href="https://www.att.com/gen/general?pid=11561" target="_blank">Terms of Use</a>
+                  <a href="https://www.att.com/gen/privacy-policy?pid=2506" target="_blank">Privacy Policy</a>
+                  <a href="https://developer.att.com/support" target="_blank">Contact Us</a>
+                  <br>
+                  &#169; 2015 AT&amp;T Intellectual Property. All rights reserved.
+                </small>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6 left-border">
+            <p class="text-right">
+              <small>
+                AT&amp;T, the AT&amp;T logo and all other AT&amp;T marks contained herein are trademarks of
+                <br>
+                AT&amp;T Intellectual Property and/or AT&amp;T affiliated companies. AT&amp;T 36USC220506
+              </small>
+            </p>
+          </div>
+        </div><!--./row-->
+      </div><!--./footer-->
+    </div><!--./container-->
 
-        <div class="formBox" id="formBox">
-          <div id="formContainer" class="formContainer">
-            <div class="inputFields">
-              <div id="sendSMSdiv">
-                <h2>Feature 1: Send SMS</h2>
-                <form method="post" action="sendSMS" name="sendSMSForm" id="sendSMSForm">
-                  <c:if test="${not empty addr}"> 
-                  <input placeholder="Address" name="address" id="address" type="text" value="${addr}"/>
-                  </c:if>
-                  <c:if test="${empty addr}"> 
-                  <input placeholder="Address" name="address" id="address" type="text" />
-                  </c:if>
-                  <label>
-                    Message
-                    <select name="message" id="message">
-                      <option value="ATT SMS sample Message">ATT SMS sample message</option>
-                    </select>
-                  </label>
-                  <label>
-                    <input type="checkbox" name="chkGetOnlineStatus" id="chkGetOnlineStatus" value="true"
-                        title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
-                    Receive Delivery Status Notification<br>
-                  </label>
-                  <button type="submit" class="submit" name="sendSMS" id="sendSMS">Send SMS</button>
-                </form>
-                <c:if test="${not empty requestScope.sendError}">
-                <div class="errorWide">
-                  <strong>ERROR: </strong><br>
-                  ${requestScope.sendError}
-                </div>
-                </c:if>
-                <c:if test="${not empty requestScope.sendId}">
-                <div class="successWide">
-                  <strong>SUCCESS: </strong><br>
-                  <strong>messageId: </strong>${requestScope.sendId}<br>
-                  <c:if test="${not empty requestScope.resourceURL}">
-                  <strong>resourceURL: </strong>${requestScope.resourceURL}<br>
-                  </c:if>
-                </div>
-                </c:if>
-              </div> <!-- end of sendSMS -->
-              <div class="lightBorder"></div>
-              <div id="getStatusdiv">
-                <h2>Feature 2: Get Delivery Status</h2>
-                <form method="post" action="getStatus" name="getStatusForm" id="getStatusForm">
-                  <c:if test="${not empty sessionScope.statusId}">
-                  <input placeholder="Message ID" name="messageId" id="messageId" type="text" 
-                    value="${sessionScope.statusId}">
-                  </c:if>
-                  <c:if test="${empty sessionScope.statusId}">
-                  <input placeholder="Message ID" name="messageId" id="messageId" type="text">
-                  </c:if>
-                  <button type="submit" class="submit" name="getStatus" id="getStatus">Get Status</button>
-                </form>
-                <c:if test="${not empty requestScope.statusError}">
-                <div class="errorWide">
-                  <strong>ERROR: </strong><br>
-                  ${requestScope.statusError}
-                </div>
-                </c:if>
-                <c:if test="${not empty requestScope.resultGetStatuses}">
-                <div class="successWide">
-                  <strong>SUCCESS: </strong><br>
-                  <strong>ResourceUrl: </strong>${requestScope.resourceURL}<br>
-                </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Id</th>
-                      <th>Address</th>
-                      <th>DeliveryStatus</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  <c:forEach var="status" items="${resultGetStatuses}">
-                    <tr>
-                      <td data-value="Message Id"><c:out value="${status.messageId}" /></td>
-                      <td data-value="Status"><c:out value="${status.address}" /></td>
-                      <td data-value="Resouce Url"><c:out value="${status.deliveryStatus}" /></td>
-                    </tr>
-                  </c:forEach>
-                  </tbody>
-                </table>
-                </c:if>
-              </div> <!-- end of getStatus -->
-              <div class="lightBorder"></div>
-              <div id="receiveStatusdiv">
-                <h2>Feature 3: Receive Delivery Status</h2>
-                <form method="post" action="refresh" name="refreshStatusForm" id="refreshStatusForm">
-                  <button type="submit" class="submit" name="receiveStatusBtn" id="receiveStatusBtn">
-                    Refresh Notifications</button>
-                </form>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Message Id</th>
-                      <th>Address</th>
-                      <th>Delivery Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <c:forEach var="status" items="${resultStatuses}">
-                      <tr>
-                        <td data-value="Message Id"><c:out value="${status.messageId}" /></td>
-                        <td data-value="Status"><c:out value="${status.address}" /></td>
-                        <td data-value="Resouce Url"><c:out value="${status.deliveryStatus}" /></td>
-                      </tr>
-                    </c:forEach>
-                  </tbody>
-                </table>
-              </div><!-- end of receiveStatus -->
-              <div id="getMessages">
-                <h2>Feature 4: Get Messages (${cfg.pollMsgsShortCode})</h2>
-                <form method="post" action="getMessages" name="getMessagesForm" id="getMessagesForm">
-                  <button type="submit" class="submit" name="getMessages" id="getMessages">Get Messages</button>
-                </form>
-                <c:if test="${not empty requestScope.receiveError}">
-                <div class="errorWide">
-                  <strong>ERROR: </strong><br>
-                  ${requestScope.receiveError}
-                </div>
-                </c:if>
-                <c:if test="${not empty requestScope.numbMessages}">
-                <div class="successWide">
-                  <strong>SUCCESS:</strong><br>
-                  <strong>Messages in this batch: <strong>${requestScope.numbMessages}<br>
-                  <strong>Messages pending: <strong>${requestScope.numbPending}<br>
-                </div>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Message Index</th>
-                      <th>Message Text</th>
-                      <th>Sender Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <c:forEach var="msg" items="${requestScope.SMSMessages}">
-                    <tr>
-                      <td data-value="Message Index">${msg.messageIndex}</td>
-                      <td data-value="Message Text">${msg.messageText}</td>
-                      <td data-value="Sender Address">${msg.senderAddress}</td>
-                    </tr>
-                    </c:forEach>
-                  </tbody>
-                </table>
-                </c:if>
-              </div> <!-- end of getMessages -->
-              <div class="lightBorder"></div>
-              <div id="receiveMsgs">
-                <h2>Feature 5: Receive Messages (${cfg.receiveMsgsShortCode})</h2>
-                <form method="post" action="refresh" name="receiveMessagesForm" id="receiveMessagesForm">
-                  <button type="submit" class="submit" name="receiveMessages" 
-                      id="receiveMessages">Refresh Received Messages</button>
-                </form>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>DateTime</th>
-                        <th>Message Id</th>
-                        <th>Message</th>
-                        <th>Sender Address</th>
-                        <th>Destination Address</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    <c:forEach var="msg" items="${resultReceiveMsgs}">
-                        <tr>
-                          <td data-value="DateTime"><c:out value="${msg.dateTime}" /></td>
-                          <td data-value="Message Id"><c:out value="${msg.msgId}" /></td>
-                          <td data-value="Message"><c:out value="${msg.msg}" /></td>
-                          <td data-value="Sender Address"><c:out value="${msg.senderAddr}" /></td>
-                          <td data-value="Destination Address"><c:out value="${msg.destinationAddr}" /></td>
-                        </tr>
-                    </c:forEach>
-                  </tbody>
-                </table>
-              </div> <!-- end of receiveMsgs -->
-            </div> <!-- end of inputFields -->
-          </div> <!-- end of formContainer -->
-        </div> <!-- end of formBox -->
-      </div> <!-- end of content -->
-      <div class="border"></div>
-      <div id="footer">
-        <div id="powered_by">Powered by AT&amp;T Cloud Architecture</div>
-        <p>
-          The Application hosted on this site are working examples intended to be used for reference in creating 
-          products to consume AT&amp;T Services and not meant to be used as part of your product. The data in 
-          these pages is for test purposes only and intended only for use as a reference in how the services 
-          perform. 
-          <br> <br> 
-          To access your apps, please go to
-          <a href="https://developer.att.com/developer/mvc/auth/login"
-          target="_blank">https://developer.att.com/developer/mvc/auth/login</a>
-          <br> For support refer to
-          <a href="https://developer.att.com/support">https://developer.att.com/support</a>
-          <br> <br>
-          &copy; 2014 AT&amp;T Intellectual Property. All rights reserved.
-          <a href="http://developer.att.com/" target="_blank">http://developer.att.com</a>
-        </p>
-      </div> <!-- end of footer -->
-    </div> <!-- end of page_container -->
-    <script>setup();</script>
+    <!-- enable bootstrap custom tootips -->
+    <script>$(function () { $('[data-toggle="tooltip"]').tooltip() });</script>
+
   </body>
 </html>
+<!-- vim: set ts=2 sts=2 sw=2 cc=120 tw=120 et : -->

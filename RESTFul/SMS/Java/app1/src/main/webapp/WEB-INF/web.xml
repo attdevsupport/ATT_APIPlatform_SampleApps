@@ -2,7 +2,7 @@
 <web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
   <display-name>sms</display-name>
   <welcome-file-list>
-    <welcome-file>SMS.jsp</welcome-file>
+    <welcome-file>sms.jsp</welcome-file>
   </welcome-file-list>
   <display-name>AT&amp;T SMS Sample Application</display-name>
 
@@ -10,47 +10,80 @@
     <servlet-name>SMSController</servlet-name>
     <servlet-class>com.att.api.sms.controller.SMSController</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>SMSStatusListener</servlet-name>
+    <servlet-class>com.att.api.sms.controller.SMSStatusListener</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SMSMsgListener</servlet-name>
+    <servlet-class>com.att.api.sms.controller.SMSMsgListener</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SendSMSController</servlet-name>
+    <servlet-class>com.att.api.sms.controller.SendSMSController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>LoadController</servlet-name>
+    <servlet-class>com.att.api.sms.controller.LoadController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SaveController</servlet-name>
+    <servlet-class>com.att.api.sms.controller.SaveController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>LoadNotifications</servlet-name>
+    <servlet-class>com.att.api.sms.controller.LoadNotifications</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetMessages</servlet-name>
+    <servlet-class>com.att.api.sms.controller.GetMessages</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetDeliveryStatus</servlet-name>
+    <servlet-class>com.att.api.sms.controller.GetDeliveryStatus</servlet-class>
+  </servlet>
+
+
   <servlet-mapping>
     <servlet-name>SMSController</servlet-name>
     <url-pattern>/index.jsp</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>SMSController</servlet-name>
-    <url-pattern>/SMS.jsp</url-pattern> 
+    <url-pattern>/sms.jsp</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>SMSController</servlet-name>
-    <url-pattern>/sendSMS</url-pattern> 
+    <servlet-name>SMSStatusListener</servlet-name>
+    <url-pattern>/statusListener</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>SMSController</servlet-name>
-    <url-pattern>/getStatus</url-pattern> 
+    <servlet-name>SMSMsgListener</servlet-name>
+    <url-pattern>/messageListener</url-pattern> 
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>SaveController</servlet-name>
+    <url-pattern>/save</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>SMSController</servlet-name>
+    <servlet-name>LoadController</servlet-name>
+    <url-pattern>/load</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SendSMSController</servlet-name>
+    <url-pattern>/sendSms</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetMessages</servlet-name>
     <url-pattern>/getMessages</url-pattern> 
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>SMSController</servlet-name>
-    <url-pattern>/refresh</url-pattern> 
+    <servlet-name>GetDeliveryStatus</servlet-name>
+    <url-pattern>/getDeliveryStatus</url-pattern> 
   </servlet-mapping>
-
-  <servlet>
-    <servlet-name>SMSStatusListener</servlet-name>
-    <servlet-class>com.att.api.sms.controller.SMSStatusListener</servlet-class>
-  </servlet>
   <servlet-mapping>
-    <servlet-name>SMSStatusListener</servlet-name>
-    <url-pattern>/statuslistener</url-pattern> 
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>SMSMsgListener</servlet-name>
-    <servlet-class>com.att.api.sms.controller.SMSMsgListener</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>SMSMsgListener</servlet-name>
-    <url-pattern>/msglistener</url-pattern> 
+    <servlet-name>LoadNotifications</servlet-name>
+    <url-pattern>/loadNotifications</url-pattern> 
   </servlet-mapping>
 
 </web-app>

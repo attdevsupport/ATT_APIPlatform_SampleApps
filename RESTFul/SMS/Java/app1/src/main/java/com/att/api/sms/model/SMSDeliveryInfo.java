@@ -1,7 +1,5 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
-
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,44 +19,44 @@ package com.att.api.sms.model;
 import org.json.JSONObject;
 
 /**
- * Immutable class that holds an SMS message.
+ * Immutable class that holds SMS delivery information.
  *
  * @author pk9069
  * @version 1.0
  * @since 1.0
  */
-public final class SMSMessage {
+public final class SMSDeliveryInfo {
 
     private final String msgId;
 
-    private final String msg;
+    private final String addr;
 
-    private final String senderAddr;
+    private final String status;
 
-    public SMSMessage(String msgId, String msg, String senderAddr) {
+    public SMSDeliveryInfo(String msgId, String addr, String status) {
         this.msgId = msgId;
-        this.msg = msg;
-        this.senderAddr = senderAddr;
+        this.addr = addr;
+        this.status = status;
     }
 
     public String getMessageId() {
         return msgId;
     }
 
-    public String getMessage() {
-        return msg;
+    public String getAddress() {
+        return addr;
     }
 
-    public String getSenderAddress() {
-        return senderAddr;
+    public String getDeliveryStatus() {
+        return status;
     }
 
-    public static SMSMessage valueOf(JSONObject jobj) {
-        final String msgId = jobj.getString("MessageId");
-        final String msg = jobj.getString("Message");
-        final String senderAddr = jobj.getString("SenderAddress");
+    public static SMSDeliveryInfo valueOf(JSONObject jobj) {
+        final String id = jobj.getString("Id");
+        final String addr = jobj.getString("Address");
+        final String status = jobj.getString("DeliveryStatus");
 
-        return new SMSMessage(msgId, msg, senderAddr);
+        return new SMSDeliveryInfo(id, addr, status);
     }
-
 }
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */

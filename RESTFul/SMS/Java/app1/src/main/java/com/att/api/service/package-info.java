@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -19,9 +19,9 @@
 /**
  * Provides common code for service classes.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @author <a href="mailto:kh455g@att.com">Kyle Hill</a>
- * @since 3.0
+ * @author pk9069
+ * @author kh455g
+ * @since 1.0
  */
 
 package com.att.api.service;

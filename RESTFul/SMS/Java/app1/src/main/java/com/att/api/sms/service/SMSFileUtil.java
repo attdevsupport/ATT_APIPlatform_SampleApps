@@ -1,22 +1,23 @@
 package com.att.api.sms.service;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-import com.att.api.sms.model.SMSReceiveMsg;
-import com.att.api.sms.model.SMSStatus;
+import com.att.api.sms.model.SMSReceiveMessage;
+import com.att.api.sms.model.SMSReceiveStatus;
 
 public class SMSFileUtil {
-    private static final Object lockObj = new Object();
+    private static final Object statusLockObj = new Object();
+    private static final Object msgLockObj = new Object();
 
     // For now store in memory
     // TODO: Store in a file
-    private static List<SMSStatus> statuses = new ArrayList<SMSStatus>();
-    private static List<SMSReceiveMsg> msgs = new ArrayList<SMSReceiveMsg>();
+    private static List<SMSReceiveStatus> statuses = new ArrayList<SMSReceiveStatus>();
+    private static List<SMSReceiveMessage> msgs = new ArrayList<SMSReceiveMessage>();
 
-    public static SMSStatus[] getStatuses() {
-        SMSStatus[] localStatuses = new SMSStatus[statuses.size()];
-        synchronized(lockObj) {
+    public static SMSReceiveStatus[] getStatuses() {
+        SMSReceiveStatus[] localStatuses = new SMSReceiveStatus[statuses.size()];
+        synchronized(statusLockObj) {
             for (int i = 0; i < statuses.size(); ++i) {
                 localStatuses[i] = statuses.get(i);
             }
@@ -24,19 +25,18 @@ public class SMSFileUtil {
         return localStatuses;
     }
 
-    public static void addStatus(SMSStatus status) {
-        synchronized(lockObj) {
-            // TODO: Move limit to config
-            while (statuses.size() > 5) {
+    public static void addStatus(SMSReceiveStatus status, int limit) {
+        synchronized(statusLockObj) {
+            while (statuses.size() > limit) {
                 statuses.remove(0);
             }
             statuses.add(status);
         }
     }
 
-    public static SMSReceiveMsg[] getReceiveMsgs() {
-        SMSReceiveMsg[] localMsgs = new SMSReceiveMsg[msgs.size()];
-        synchronized(lockObj) {
+    public static SMSReceiveMessage[] getMsgs() {
+        SMSReceiveMessage[] localMsgs = new SMSReceiveMessage[msgs.size()];
+        synchronized(msgLockObj) {
             for (int i = 0; i < msgs.size(); ++i) {
                 localMsgs[i] = msgs.get(i);
             }
@@ -44,10 +44,9 @@ public class SMSFileUtil {
         return localMsgs;
     }
 
-    public static void addSMSReceiveMsg(SMSReceiveMsg msg) {
-        synchronized(lockObj) {
-            // TODO: Move limit to config
-            while (msgs.size() > 5) {
+    public static void addSMSMsg(SMSReceiveMessage msg, int limit) {
+        synchronized(msgLockObj) {
+            while (msgs.size() > limit) {
                 msgs.remove(0);
             }
 

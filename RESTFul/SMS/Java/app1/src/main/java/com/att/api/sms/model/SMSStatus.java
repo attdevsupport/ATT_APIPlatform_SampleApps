@@ -1,7 +1,5 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
-
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,60 +16,60 @@
 
 package com.att.api.sms.model;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 /**
  * Immutable class that holds SMS API status information.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @author kh455g
+ * @version 1.0
+ * @since 1.0
  */
 public final class SMSStatus {
-    /** SMS message id. */
-    private final String msgId;
+    private final String resourceUrl;
 
-    /** Address. */
-    private final String addr;
+    private final SMSDeliveryInfo[] infoList;
 
-    /** Delivery status. */
-    private final String deliveryStatus;
-
-    /**
-     * Creates an SMSStatus object.
-     *
-     * @param msgId message id
-     * @param addr address
-     * @param deliveryStatus delivery status
-     */
-    public SMSStatus(String msgId, String addr, String deliveryStatus) {
-        this.msgId = msgId;
-        this.addr = addr;
-        this.deliveryStatus = deliveryStatus;
+    public SMSStatus(String resourceUrl, SMSDeliveryInfo[] infoList) {
+        this.resourceUrl = resourceUrl;
+        this.infoList = infoList;
     }
 
-    /**
-     * Gets message id.
-     *
-     * @return message id.
-     */
-    public String getMessageId() {
-        return msgId;
+    public String getResourceUrl() {
+        return resourceUrl;
     }
 
-    /**
-     * Gets address.
-     *
-     * @return address
-     */
-    public String getAddress() {
-        return addr;
+    public SMSDeliveryInfo[] getInfoList() {
+        if (infoList == null)
+            return null;
+
+        // provide a copy instead of exposing internal array
+        SMSDeliveryInfo[] list = new SMSDeliveryInfo[infoList.length];
+        for (int i = 0; i < list.length; ++i) {
+            list[i] = infoList[i];
+        }
+
+        return list;
     }
 
-    /**
-     * Gets delivery status.
-     *
-     * @return delivery status
-     */
-    public String getDeliveryStatus() {
-        return deliveryStatus;
+    public static SMSStatus valueOf(JSONObject jobj) {
+        JSONObject deliveryInfoList = jobj.getJSONObject("DeliveryInfoList");
+
+        final String resourceUrl = deliveryInfoList.getString("ResourceUrl");
+
+        JSONArray infos = deliveryInfoList.getJSONArray("DeliveryInfo");
+        final int length = infos.length();
+
+        SMSDeliveryInfo[] infoList = new SMSDeliveryInfo[length];
+
+        for (int i = 0; i < length; ++i) {
+            infoList[i] = SMSDeliveryInfo.valueOf(infos.getJSONObject(i));
+        }
+
+        return new SMSStatus(resourceUrl, infoList);
     }
+
 }
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */

@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -18,25 +18,32 @@
 
 package com.att.api.sms.service;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.att.api.oauth.OAuthToken;
-import com.att.api.rest.APIResponse;
 import com.att.api.rest.RESTClient;
 import com.att.api.rest.RESTException;
 import com.att.api.service.APIService;
+import com.att.api.sms.model.SMSGetResponse;
+import com.att.api.sms.model.SMSSendResponse;
+import com.att.api.sms.model.SMSStatus;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Used to interact with version 3 of the SMS API.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * <p>
+ * This class is thread safe.
+ * </p>
+ *
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  * @see <a href="https://developer.att.com/docs/apis/rest/3/SMS">SMS Documentation</a>
  */
 public class SMSService extends APIService {
-    // TODO (pk9069): the json objects need to be moved to explicit models
 
     /**
      * Creates an SMSService object.
@@ -57,7 +64,7 @@ public class SMSService extends APIService {
      * @return api response
      * @throws RESTException if API request was not successful
      */
-    public JSONObject sendSMS(String rawAddr, String msg,
+    public SMSSendResponse sendSMS(String rawAddr, String msg,
             boolean notifyDeliveryStatus) throws RESTException {
 
         String[] addrs = APIService.formatAddresses(rawAddr);
@@ -77,19 +84,20 @@ public class SMSService extends APIService {
         body.put("notifyDeliveryStatus", notifyDeliveryStatus);
         rpcObject.put("outboundSMSRequest", body);
 
-        String endpoint = getFQDN() + "/sms/v3/messaging/outbox";
-        APIResponse response =
-            new RESTClient(endpoint)
+        final String endpoint = getFQDN() + "/sms/v3/messaging/outbox";
+
+        final String responseBody = new RESTClient(endpoint)
             .addHeader("Content-Type", "application/json")
             .addAuthorizationHeader(getToken())
             .addHeader("Accept", "application/json")
-            .httpPost(rpcObject.toString());
+            .httpPost(rpcObject.toString())
+            .getResponseBody();
 
-        final String responseBody = response.getResponseBody();
-
-        JSONObject jsonResponse;
-        jsonResponse = new JSONObject(responseBody);
-        return jsonResponse;
+        try {
+            return SMSSendResponse.valueOf(new JSONObject(responseBody));
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     /**
@@ -99,19 +107,20 @@ public class SMSService extends APIService {
      * @return api response
      * @throws RESTException if API request was not successful
      */
-    public JSONObject getSMSDeliveryStatus(String msgId) throws RESTException {
+    public SMSStatus getSMSDeliveryStatus(String msgId) throws RESTException {
         String endpoint = getFQDN() + "/sms/v3/messaging/outbox/" + msgId;
-        APIResponse response =
-            new RESTClient(endpoint)
+
+        final String responseBody = new RESTClient(endpoint)
             .addAuthorizationHeader(getToken())
             .addHeader("Accept", "application/json")
-            .httpGet();
+            .httpGet()
+            .getResponseBody();
 
-        final String responseBody = response.getResponseBody();
-
-        JSONObject jsonResponse;
-        jsonResponse = new JSONObject(responseBody);
-        return jsonResponse;
+        try {
+            return SMSStatus.valueOf(new JSONObject(responseBody));
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 
     /**
@@ -122,20 +131,21 @@ public class SMSService extends APIService {
      * @return api response
      * @throws RESTException if API request was not successful
      */
-    public JSONObject getSMSReceive(String registrationID) throws RESTException {
+    public SMSGetResponse getSMS(String registrationID) throws RESTException {
 
-        String endpoint = getFQDN() + "/rest/sms/2/messaging/inbox";
-        APIResponse response =
-            new RESTClient(endpoint)
+        String fqdn = getFQDN();
+        String endpoint = fqdn + "/sms/v3/messaging/inbox/" + registrationID;
+
+        final String responseBody = new RESTClient(endpoint)
             .addAuthorizationHeader(getToken())
             .addHeader("Accept", "application/json")
-            .addParameter("RegistrationID", registrationID)
-            .httpGet();
+            .httpGet()
+            .getResponseBody();
 
-        final String responseBody = response.getResponseBody();
-
-        JSONObject jsonResponse;
-        jsonResponse = new JSONObject(responseBody);
-        return jsonResponse;
+        try {
+            return SMSGetResponse.valueOf(new JSONObject(responseBody));
+        } catch (JSONException pe) {
+            throw new RESTException(pe);
+        }
     }
 }

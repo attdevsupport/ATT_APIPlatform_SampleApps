@@ -2,16 +2,16 @@ package com.att.api.sms.controller;
 
 import java.io.BufferedReader;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 
-import com.att.api.sms.model.SMSStatus;
+import com.att.api.controller.APIController;
+import com.att.api.sms.model.SMSReceiveStatus;
 import com.att.api.sms.service.SMSFileUtil;
 
-public class SMSStatusListener extends HttpServlet {
+public class SMSStatusListener extends APIController {
     private static final long serialVersionUID = 1L;
 
     public void doPost(HttpServletRequest request, 
@@ -26,19 +26,10 @@ public class SMSStatusListener extends HttpServlet {
 
             final String contentBody = sb.toString();
             JSONObject jobj = new JSONObject(contentBody);
-            JSONObject dInfoNotification 
-                = jobj.getJSONObject("deliveryInfoNotification");
-            JSONObject dInfo = dInfoNotification.getJSONObject("deliveryInfo");
+            final SMSReceiveStatus status = SMSReceiveStatus.valueOf(jobj);
 
-            SMSStatus status = new SMSStatus
-                (
-                 dInfoNotification.getString("messageId"),
-                 dInfo.getString("address"),
-                 dInfo.getString("deliveryStatus")
-                );
-
-            SMSFileUtil.addStatus(status);
-
+            final int limit = Integer.parseInt(appConfig.getProperty("limit"));
+            SMSFileUtil.addStatus(status, limit);
         } catch (Exception e) {
             // log error
             e.printStackTrace();

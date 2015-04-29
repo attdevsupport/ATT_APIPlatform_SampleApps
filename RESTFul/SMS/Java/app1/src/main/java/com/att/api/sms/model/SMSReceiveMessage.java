@@ -1,7 +1,5 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
-
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +16,17 @@
 
 package com.att.api.sms.model;
 
+import org.json.JSONObject;
+
 /**
  * Immutable class that holds SMS API receive message information.
  *
  * @author pk9069
+ * @author kh455g
  * @version 1.0
  * @since 1.0
  */
-public final class SMSReceiveMsg {
+public final class SMSReceiveMessage {
     /** Message date time. */
     private final String dTime;
 
@@ -50,7 +51,7 @@ public final class SMSReceiveMsg {
      * @param senderAddr sender address
      * @param destinationAddr destination address
      */
-    public SMSReceiveMsg(String dTime, String msgId, String msg,
+    public SMSReceiveMessage(String dTime, String msgId, String msg,
             String senderAddr, String destinationAddr) {
 
         // TODO (pk9069): probably not the best place to set default...
@@ -79,7 +80,7 @@ public final class SMSReceiveMsg {
      *
      * @return message id
      */
-    public String getMsgId() {
+    public String getMessageId() {
         return msgId;
     }
 
@@ -88,7 +89,7 @@ public final class SMSReceiveMsg {
      *
      * @return message
      */
-    public String getMsg() {
+    public String getMessage() {
         return msg;
     }
 
@@ -97,7 +98,7 @@ public final class SMSReceiveMsg {
      *
      * @return address of sender
      */
-    public String getSenderAddr() {
+    public String getSenderAddress() {
         return senderAddr;
     }
 
@@ -106,7 +107,19 @@ public final class SMSReceiveMsg {
      *
      * @return destination of address.
      */
-    public String getDestinationAddr() {
+    public String getDestinationAddress() {
         return destinationAddr;
     }
+
+    public static SMSReceiveMessage valueOf(JSONObject jobj) {
+        final String msgId = jobj.getString("MessageId");
+        final String msg = jobj.getString("Message");
+        final String senderAddr = jobj.getString("SenderAddress");
+        final String dateTime = jobj.getString("DateTime");
+        final String dest = jobj.getString("DestinationAddress");
+
+        return new SMSReceiveMessage(dateTime, msgId, msg, senderAddr, dest);
+    }
 }
+
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
