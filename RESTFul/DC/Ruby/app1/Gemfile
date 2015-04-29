@@ -1,0 +1,11 @@
+# include common source and gems
+source "https://rubygems.org" do
+  gem 'sinatra', '~>1.4'
+  gem 'sinatra-contrib'
+end
+
+
+# include codekit source and gem
+gem 'att-codekit', '~>4.3', 
+  :require => 'att/codekit',
+  :source => "http://lprod.code-api-att.com:8808" 
