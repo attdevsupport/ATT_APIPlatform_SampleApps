@@ -92,7 +92,11 @@ public partial class SMS_App1 : System.Web.UI.Page
     public string receiveSMSDeliveryStatusSuccessMessagae = string.Empty;
     public List<deliveryInfoNotification> receiveSMSDeliveryStatusResponseData = new List<deliveryInfoNotification>();
     public string receiveSMSDeliveryStatusFilePath = "\\DeliveryStatus.txt";
-    
+
+    public string showSendMsg = string.Empty;
+    public string showGetStatus = string.Empty;
+    public string showReceiveStatus = string.Empty;
+    public string showReceiveMessage = string.Empty;
     /// <summary>
     /// Access Token Types
     /// </summary>
@@ -137,6 +141,18 @@ public partial class SMS_App1 : System.Web.UI.Page
                 readOnlineMessages();
                 readOnlineDeliveryStatus();
             //}
+
+                if (Session["cs_rest_ServiceRequest"] != null)
+                {
+                    if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "BtnSubmit_Click") == 0)
+                        showSendMsg = "true";
+                    else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "GetDeliveryStatusButton_Click") == 0)
+                        showGetStatus = "true";
+                    else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "receiveStatusBtn_Click") == 0)
+                        showReceiveStatus = "true";
+                    else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "receiveMessagesBtn_Click") == 0)
+                        showReceiveMessage = "true";
+                }
         }
         catch (Exception ex)
         {
@@ -200,7 +216,7 @@ public partial class SMS_App1 : System.Web.UI.Page
             this.refreshTokenExpiresIn = 24; // Default value
         }
 
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
         {
             SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
         }
@@ -225,7 +241,7 @@ public partial class SMS_App1 : System.Web.UI.Page
         else
         {
             HelpLink.HRef = "#"; // Default value
-        }
+        }*/
 
         this.onlineShortCode = ConfigurationManager.AppSettings["OnlineShortCode"];
         if (string.IsNullOrEmpty(this.onlineShortCode))
@@ -261,6 +277,14 @@ public partial class SMS_App1 : System.Web.UI.Page
         return true;
     }
 
+    private void ResetAllFlags()
+    {
+        showSendMsg = "";
+        showGetStatus = "";
+        showReceiveStatus = "";
+        showReceiveMessage = "";
+
+    }
     /// <summary>
     /// This function is called with user clicks on send SMS
     /// This validates the access token and then calls sendSMS method to invoke send SMS API.
@@ -269,6 +293,9 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <param name="e">List of Arguments</param>
     protected void BtnSubmit_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showSendMsg = "true";
+        Session["cs_rest_ServiceRequest"] = "BtnSubmit_Click";
         try
         {
             if (this.ReadAndGetAccessToken(ref sendSMSErrorMessage) == true)
@@ -293,6 +320,7 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <param name="e">List of Arguments</param>
     protected void GetMessagesButton_Click(object sender, EventArgs e)
     {
+        
         try
         {
             if (this.ReadAndGetAccessToken(ref getSMSErrorMessage) == true)
@@ -389,6 +417,9 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <param name="e">EventArgs, specific to this method</param>
     protected void receiveStatusBtn_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showReceiveStatus = "true";
+        Session["cs_rest_ServiceRequest"] = "receiveStatusBtn_Click";
         try
         {
             //this.readOnlineDeliveryStatus();
@@ -406,6 +437,9 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <param name="e">EventArgs, specific to this method</param>
     protected void receiveMessagesBtn_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showReceiveMessage = "true";
+        Session["cs_rest_ServiceRequest"] = "receiveMessagesBtn_Click";
         try
         {
             //this.readOnlineMessages();
@@ -931,6 +965,8 @@ public partial class SMS_App1 : System.Web.UI.Page
     /// <param name="e">List of Arguments</param>
     protected void GetDeliveryStatusButton_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showGetStatus = "true";
         try
         {
             Session["lastSentSMSID"] = System.Web.HttpUtility.HtmlEncode(messageId.Value);
