@@ -27,6 +27,7 @@
 *.sql
 *.sqlite
 *.db
+*.session
 
 # OS generated files #
 ######################

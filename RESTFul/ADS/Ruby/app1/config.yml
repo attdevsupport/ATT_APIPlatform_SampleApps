@@ -1,8 +1,10 @@
-proxy:
+proxy: 
 
-api_key:
-secret_key:
-FQDN: https://api.att.com
+api_key:          
+secret_key:       
+FQDN:             https://api.att.com
 
-download_link:  http://localhost:4567/download
-github_link:    http://localhost:4567/source
+redirect_url:     http://localhost:9292/authorization
+
+download_link:  http://localhost:9292/download
+github_link:    http://localhost:9292/source

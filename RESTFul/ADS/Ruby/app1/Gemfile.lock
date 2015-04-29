@@ -2,7 +2,7 @@ GEM
   remote: https://rubygems.org/
   remote: http://lprod.code-api-att.com:8808/
   specs:
-    att-codekit (4.4.2)
+    att-codekit (4.4.3)
       immutable_struct
       json
       rest-client

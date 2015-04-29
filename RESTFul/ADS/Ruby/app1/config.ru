@@ -3,6 +3,6 @@ require 'bundler'
 #make sure all gems are installed
 Bundler.require
 
-require_relative './ads'
+require_relative './aab'
 
-run ADS
+run AAB

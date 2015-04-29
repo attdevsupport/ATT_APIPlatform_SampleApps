@@ -15,7 +15,20 @@
  */
 
 var attapisuccess = {
-    getAds: genericSuccess,
+    createContact: genericSuccess,
+    updateContact: genericSuccess,
+    deleteContact: genericSuccess,
+    getContacts: genericSuccess,
+    getMyInfo: genericSuccess,
+    updateMyInfo: genericSuccess,
+    createGroup: genericSuccess,
+    updateGroup: genericSuccess,
+    deleteGroup: genericSuccess,
+    getGroups: genericSuccess,
+    getGroupContacts: genericSuccess,
+    addContactsToGroup: genericSuccess,
+    removeContactsFromGroup: genericSuccess,
+    getContactGroups: genericSuccess,
 };
 
 // vim: set ts=8 sw=4 sts=4 tw=79 ft=javascript et :
