@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /*
  * Copyright 2014 AT&T
@@ -16,18 +16,21 @@
  * limitations under the License.
  */
 
-/**
- * Provides classes for sending RESTFul requests and handling responses.
- *
- * <p>
- * This class follows the dependency inversion principle by applying a varation
- * of the adapter pattern. That is, this class is essentially a wrapper with a
- * simplified interface to a full http client.
- * </p>
- *
- * @author pk9069
- * @since 1.0
- * @see com.att.api.rest.RESTClient
- */
-
 package com.att.api.rest;
+
+import java.net.URI;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+
+// http://tools.ietf.org/html/rfc5789
+public class HttpPatch extends HttpEntityEnclosingRequestBase {
+    public HttpPatch(final String uri) {
+        super();
+        setURI(URI.create(uri));
+    }
+
+    @Override
+    public String getMethod() {
+        return "PATCH";
+    }
+
+}

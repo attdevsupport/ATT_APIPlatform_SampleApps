@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -18,61 +18,66 @@
 
 package com.att.api.mms.model;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 /**
  * Immutable class for holding MMS status response information.
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @version 3.0
- * @since 2.2
+ * @author pk9069
+ * @version 1.0
+ * @since 1.0
  */
 public final class MMSStatus {
-    /** Message id. */
-    private final String msgId;
+    private final String resourceUrl;
 
-    /** Address. */
-    private final String addr;
+    private final MMSDeliveryInfo[] infoList;
 
-    /** Message delivery status. */
-    private final String deliveryStatus;
-
-
-    /**
-     * Creates an MMS status object.
-     *
-     * @param msgId message id
-     * @param addr address
-     * @param deliveryStatus delivery status
-     */
-    public MMSStatus(String msgId, String addr, String deliveryStatus) {
-        this.msgId = msgId;
-        this.addr = addr;
-        this.deliveryStatus = deliveryStatus;
+    public MMSStatus(String resourceUrl, MMSDeliveryInfo[] infoList) {
+        this.resourceUrl = resourceUrl;
+        this.infoList = infoList;
     }
 
     /**
-     * Gets message id.
-     *
-     * @return message id
+     * @return the resourceUrl
      */
-    public String getMessageId() {
-        return msgId;
+    public String getResourceUrl() {
+        return resourceUrl;
     }
 
     /**
-     * Gets address.
+     * Gets an array that contains delivery information for each message.
      *
-     * @return address
+     * @return info list
      */
-    public String getAddress() {
-        return addr;
+    public MMSDeliveryInfo[] getInfoList() {
+        if (infoList == null)
+            return null;
+
+        // provide a copy instead of exposing internal array
+        MMSDeliveryInfo[] list = new MMSDeliveryInfo[infoList.length];
+        for (int i = 0; i < list.length; ++i) {
+            list[i] = infoList[i];
+        }
+
+        return list;
     }
 
-    /**
-     * Gets delivery status.
-     *
-     * @return delivery status
-     */
-    public String getDeliveryStatus() {
-        return deliveryStatus;
+    public static MMSStatus valueOf(JSONObject jobj) {
+        JSONObject deliveryInfoList = jobj.getJSONObject("DeliveryInfoList");
+
+        final String resourceUrl = deliveryInfoList.getString("ResourceUrl");
+
+        JSONArray infos = deliveryInfoList.getJSONArray("DeliveryInfo");
+        final int length = infos.length();
+
+        MMSDeliveryInfo[] infoList = new MMSDeliveryInfo[length];
+
+        for (int i = 0; i < length; ++i) {
+            infoList[i] = MMSDeliveryInfo.valueOf(infos.getJSONObject(i));
+        }
+
+        return new MMSStatus(resourceUrl, infoList);
     }
+
 }

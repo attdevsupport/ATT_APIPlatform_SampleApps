@@ -47,31 +47,35 @@ public class MMSListenerController extends HttpServlet {
 
     private void parseData(String data) throws IOException {
         String senderAddress = data.split("<SenderAddress>tel:")[1]
-            .split("</SenderAddress>")[0].substring(2);
-        String date = new DateUtil().getServerTime();
+            .split("</SenderAddress>")[0].substring(2).replaceFirst("...$", "***");
+
+        String date = DateUtil.getTime();
 
         String[] parts = data.split("--Nokia-mm-messageHandler-BoUnDaRy");
-        String[] lowerParts = parts[2].split("BASE64");
+        String[] lowerParts = parts[3].split("BASE64");
 
-        String type = lowerParts[0].split("image/")[1].split(";")[0];
         byte[] outFile = Base64.decodeBase64(lowerParts[1]);
-        int random = (int)(Math.random()*10000000);
-        String imgName = random + "." + type;
+
+        String imgName = null;
+        synchronized (ImageEntry.fileCountLock) {
+            imgName = "" + ImageEntry.fileCount;
+            ImageEntry.fileCount += 1;
+        }
         String savePath = this.getPath() + "/" + imgName;
 
-        FileOutputStream fous = new FileOutputStream(savePath);
-        fous.write(outFile);
-        fous.close();
+        FileOutputStream fos = new FileOutputStream(savePath);
+        fos.write(outFile);
+        fos.close();
         String decodedText = "";
-        if(parts.length > 4) {
-            String textPart = parts[3].split("BASE64")[1];
+        if (parts.length > 4) {
+            String textPart = parts[2].split("BASE64")[1];
             decodedText = new String(Base64.decodeBase64(textPart));
             decodedText = decodedText.trim();
         }
 
         String imgPath = "MMSImages/" + imgName;
-        ImageEntry entry 
-            = new ImageEntry(imgPath,decodedText, date, senderAddress);   
+        ImageEntry entry = new ImageEntry(imgPath, decodedText, date,
+                senderAddress, imgName);
 
         new ImageFileHandler(this.getPath() + "/mmslistener.db")
             .addImageEntry(entry);

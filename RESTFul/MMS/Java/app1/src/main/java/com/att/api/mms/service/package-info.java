@@ -1,4 +1,4 @@
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker */
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
  * Copyright 2014 AT&T
@@ -24,8 +24,8 @@
  * <a href="https://developer.att.com/docs/apis/rest/3/MMS">MMS</a>.
  * </p>
  *
- * @author <a href="mailto:pk9069@att.com">Pavel Kazakov</a>
- * @since 2.2
+ * @author pk9069
+ * @since 1.0
  */
 
 package com.att.api.mms.service;

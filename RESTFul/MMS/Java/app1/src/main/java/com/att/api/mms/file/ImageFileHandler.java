@@ -25,7 +25,8 @@ public class ImageFileHandler {
     public void addImageEntry(ImageEntry entry) throws IOException {
             List<ImageEntry> entries = this.getImageEntrys();
             if (entries.size() >= this.limit) {
-                entries.remove(0);
+                ImageEntry toRemove = entries.remove(0);
+                new File(toRemove.getImagePath()).delete();
             }
             entries.add(entry);
 
@@ -43,6 +44,7 @@ public class ImageFileHandler {
                     props.setProperty("date" + i, lentry.getDate());
                     props.setProperty("senderAddr" + i, 
                             lentry.getSenderAddress());
+                    props.setProperty("id" + i, lentry.getId());
                 }
                 props.store(fOutputStream, "Image Information");
             } catch (IOException ioe) {
@@ -77,7 +79,8 @@ public class ImageFileHandler {
                         imgPath,
                         props.getProperty("text" + i),
                         props.getProperty("date" + i),
-                        props.getProperty("senderAddr" + i)
+                        props.getProperty("senderAddr" + i),
+                        props.getProperty("id" + i)
                         );
                 entries.add(entry);
             }

@@ -10,10 +10,35 @@
     <servlet-name>MMSController</servlet-name>
     <servlet-class>com.att.api.mms.controller.MMSController</servlet-class>
   </servlet>
-  <servlet-mapping>
-    <servlet-name>MMSController</servlet-name>
-    <url-pattern>/MMSAction</url-pattern> 
-  </servlet-mapping>
+  <servlet>
+    <servlet-name>LoadController</servlet-name>
+    <servlet-class>com.att.api.mms.controller.LoadController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SaveController</servlet-name>
+    <servlet-class>com.att.api.mms.controller.SaveController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SendMMSController</servlet-name>
+    <servlet-class>com.att.api.mms.controller.SendMMSController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetStatusController</servlet-name>
+    <servlet-class>com.att.api.mms.controller.GetStatusController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetNotificationsController</servlet-name>
+    <servlet-class>com.att.api.mms.controller.GetNotificationsController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>MMSListenerController</servlet-name>
+    <servlet-class>com.att.api.mms.controller.MMSListenerController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>MMSStatusListener</servlet-name>
+    <servlet-class>com.att.api.mms.controller.MMSStatusListener</servlet-class>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>MMSController</servlet-name>
     <url-pattern>/index.jsp</url-pattern> 
@@ -24,22 +49,32 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>MMSController</servlet-name>
-    <url-pattern>/refresh</url-pattern> 
+    <url-pattern>/mms.jsp</url-pattern> 
   </servlet-mapping>
-
-  <servlet>
-    <servlet-name>MMSListenerController</servlet-name>
-    <servlet-class>com.att.api.mms.controller.MMSListenerController</servlet-class>
-  </servlet>
+  <servlet-mapping>
+    <servlet-name>LoadController</servlet-name>
+    <url-pattern>/load</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SaveController</servlet-name>
+    <url-pattern>/save</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SendMMSController</servlet-name>
+    <url-pattern>/sendMMS</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetStatusController</servlet-name>
+    <url-pattern>/getDeliveryStatus</url-pattern> 
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetNotificationsController</servlet-name>
+    <url-pattern>/getNotifications</url-pattern> 
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>MMSListenerController</servlet-name>
     <url-pattern>/listener.jsp</url-pattern> 
   </servlet-mapping>
-
-  <servlet>
-    <servlet-name>MMSStatusListener</servlet-name>
-    <servlet-class>com.att.api.mms.controller.MMSStatusListener</servlet-class>
-  </servlet>
   <servlet-mapping>
     <servlet-name>MMSStatusListener</servlet-name>
     <url-pattern>/statuslistener.jsp</url-pattern> 
