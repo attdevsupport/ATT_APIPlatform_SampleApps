@@ -17,20 +17,7 @@
 var endpoints = {
     save: "save",
     load: "load",
-    createContact: "createContact",
-    updateContact: "updateContact",
-    deleteContact: "deleteContact",
-    getContacts: "getContacts",
-    getMyInfo: "getMyInfo",
-    updateMyInfo: "updateMyInfo",
-    createGroup: "createGroup",
-    updateGroup: "updateGroup",
-    deleteGroup: "deleteGroup",
-    getGroups: "getGroups",
-    getGroupContacts: "getGroupContacts",
-    addContactsToGroup: "addContactsToGroup",
-    removeContactsFromGroup: "removeContactsFromGroup",
-    getContactGroups: "getContactGroups",
+    getAds: "getAds",
 };
 
 // vim: set ts=8 sw=4 sts=4 tw=79 ft=javascript et :
