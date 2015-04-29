@@ -97,6 +97,7 @@ final class Util
         $addresses = explode(',', $addrStr);
         $encodedAddr = array(); 
         foreach ($addresses as $addr) {
+            $addr = trim($addr);
             $cleanAddr = str_replace('-', '', $addr);
             $cleanAddr = str_replace('tel:', '', $cleanAddr);
             $cleanAddr = str_replace('+1', '', $cleanAddr);
