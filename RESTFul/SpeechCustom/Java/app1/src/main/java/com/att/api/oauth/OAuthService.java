@@ -87,6 +87,9 @@ public class OAuthService {
     /** Added to fqdn to use for sending OAuth requests. */
     public static final String API_URL = "/oauth/v4/token";
 
+    /** Added to the fqdn to use for revoking tokens. */
+    public static final String REVOKE_URL = "/oauth/v4/revoke";
+
     /** Fully qualified domain name. */
     private final String fqdn;
 
@@ -246,4 +249,40 @@ public class OAuthService {
 
         return parseResponse(response);
     }
+
+    /**
+     * Revokes a token.
+     * 
+     * @param token token to revoke
+     * @param hint a hint for the type of token to revoke
+     *
+     * @throws RESTException if request was unsuccessful
+     */
+    public void revokeToken(String token, String hint) throws RESTException {
+        RESTClient client =
+            new RESTClient(this.fqdn + REVOKE_URL)
+            .addParameter("client_id", clientId)
+            .addParameter("client_secret", clientSecret)
+            .addParameter("token", token)
+            .addParameter("token_type_hint", hint);
+        APIResponse response = sendRequest(client);
+        if (response.getStatusCode() != 200) {
+            throw new RESTException(response.getResponseBody());
+        }
+    }
+
+    /**
+     * Revokes a token, where the token hint set to "access_token"
+     * 
+     * @param token token to revoke
+     * @param hint a hint for the type of token to revoke
+     *
+     * @throws RESTException if request was unsuccessful
+     * @see OAuthToken#revokeToken(String, String)
+     */
+    public void revokeToken(String token) throws RESTException {
+        final String hint = "access_token";
+        this.revokeToken(token, hint);
+    }
+
 }
