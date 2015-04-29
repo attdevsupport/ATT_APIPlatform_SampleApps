@@ -506,12 +506,22 @@ public final class Contact {
             builder.setEmails(emails);
         }
         if (jobj.has("ims")) {
-            JSONArray jarr = jobj.getJSONObject("ims").getJSONArray("im");
-            Im[] ims = new Im[jarr.length()];
-            for (int i = 0; i < jarr.length(); ++i) {
-                ims[i] = Im.valueOf(jarr.getJSONObject(i));
+            JSONObject jims = jobj.getJSONObject("ims");
+            if (jims.has("im")) {
+                JSONArray jarr = jims.getJSONArray("im");
+                Im[] ims = new Im[jarr.length()];
+                for (int i = 0; i < jarr.length(); ++i) {
+                    ims[i] = Im.valueOf(jarr.getJSONObject(i));
+                }
+                builder.setIms(ims);
+            } else {
+                JSONArray jarr = jims.getJSONArray("IM");
+                Im[] ims = new Im[jarr.length()];
+                for (int i = 0; i < jarr.length(); ++i) {
+                    ims[i] = Im.valueOf(jarr.getJSONObject(i));
+                }
+                builder.setIms(ims);
             }
-            builder.setIms(ims);
         }
         if (jobj.has("weburls")) {
             JSONArray jarr = jobj.getJSONObject("weburls").getJSONArray("webUrl");

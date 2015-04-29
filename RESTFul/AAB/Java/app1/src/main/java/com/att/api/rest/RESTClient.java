@@ -354,6 +354,10 @@ public class RESTClient {
      * @return a reference to 'this', which can be used for method chaining
      */
     public RESTClient addParameter(String name, String value) {
+        if (name == null || value == null) {
+            throw new IllegalArgumentException("Name or value was null!");
+        }
+
         if (!parameters.containsKey(name)) {
             parameters.put(name, new ArrayList<String>());
         }

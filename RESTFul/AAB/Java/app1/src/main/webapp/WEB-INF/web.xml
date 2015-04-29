@@ -2,7 +2,7 @@
 <web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
   <display-name>aab</display-name>
   <welcome-file-list>
-    <welcome-file>AAB.jsp</welcome-file>
+    <welcome-file>aab.jsp</welcome-file>
   </welcome-file-list>
   <display-name>AT&amp;T AAB Sample Application</display-name>
 
@@ -11,12 +11,150 @@
     <servlet-name>AABController</servlet-name>
     <servlet-class>com.att.api.aab.controller.AABController</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>LoadController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.LoadController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>SaveController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.SaveController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>OAuthController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.OAuthController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>CreateContactController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.CreateContactController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>UpdateContactController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.UpdateContactController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>DeleteContactController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.DeleteContactController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetContactsController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.GetContactsController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetMyInfoController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.GetMyInfoController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>UpdateMyInfoController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.UpdateMyInfoController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>CreateGroupController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.CreateGroupController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>UpdateGroupController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.UpdateGroupController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>DeleteGroupController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.DeleteGroupController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetGroupsController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.GetGroupsController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetGroupContactsController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.GetGroupContactsController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>AddContactsToGroupController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.AddContactsToGroupController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>RemoveContactsFromGroupController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.RemoveContactsFromGroupController</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetContactGroupsController</servlet-name>
+    <servlet-class>com.att.api.aab.controller.GetContactGroupsController</servlet-class>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>AABController</servlet-name>
     <url-pattern>/index.jsp</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>AABController</servlet-name>
-    <url-pattern>/AAB.jsp</url-pattern>
+    <url-pattern>/aab.jsp</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>OAuthController</servlet-name>
+      <url-pattern>/oauth</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>LoadController</servlet-name>
+      <url-pattern>/load</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>SaveController</servlet-name>
+      <url-pattern>/save</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>CreateContactController</servlet-name>
+      <url-pattern>/createContact</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>UpdateContactController</servlet-name>
+      <url-pattern>/updateContact</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>DeleteContactController</servlet-name>
+      <url-pattern>/deleteContact</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GetContactsController</servlet-name>
+      <url-pattern>/getContacts</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GetMyInfoController</servlet-name>
+      <url-pattern>/getMyInfo</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>UpdateMyInfoController</servlet-name>
+      <url-pattern>/updateMyInfo</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>CreateGroupController</servlet-name>
+      <url-pattern>/createGroup</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>UpdateGroupController</servlet-name>
+      <url-pattern>/updateGroup</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>DeleteGroupController</servlet-name>
+      <url-pattern>/deleteGroup</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GetGroupsController</servlet-name>
+      <url-pattern>/getGroups</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GetGroupContactsController</servlet-name>
+      <url-pattern>/getGroupContacts</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>AddContactsToGroupController</servlet-name>
+      <url-pattern>/addContactsToGroup</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>RemoveContactsFromGroupController</servlet-name>
+      <url-pattern>/removeContactsFromGroup</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>GetContactGroupsController</servlet-name>
+      <url-pattern>/getContactGroups</url-pattern>
+  </servlet-mapping>
+
 </web-app>

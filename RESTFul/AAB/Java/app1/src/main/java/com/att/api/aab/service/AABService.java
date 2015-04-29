@@ -110,6 +110,10 @@ public class AABService extends APIService {
     }
 
 
+    public ContactResultSet getContacts() throws RESTException {
+        return getContacts(null, null, null);
+    }
+
     public ContactResultSet getContacts(String sParams) throws RESTException {
         return getContacts(null, null, sParams);
     }
@@ -140,8 +144,9 @@ public class AABService extends APIService {
             this.addPageParams(client, pParams);
         }
 
-        if (sParams != null && !sParams.isEmpty())
+        if (sParams != null) {
             client.addParameter("search", sParams);
+        }
 
         APIResponse response = client.httpGet();
         if (response.getStatusCode() != 200) {
@@ -154,6 +159,11 @@ public class AABService extends APIService {
         } catch (JSONException pe) {
             throw new RESTException(pe);
         }
+    }
+
+    public GroupResultSet getContactGroups(String contactId)
+            throws RESTException {
+        return getContactGroups(contactId, null);
     }
 
     public GroupResultSet getContactGroups(String contactId, PageParams params)
@@ -226,6 +236,11 @@ public class AABService extends APIService {
         }
 
         return response.getHeader("location");
+    }
+
+    public GroupResultSet getGroups(String groupName) 
+            throws RESTException {
+        return getGroups(null, groupName);
     }
 
     public GroupResultSet getGroups(PageParams params, String groupName)

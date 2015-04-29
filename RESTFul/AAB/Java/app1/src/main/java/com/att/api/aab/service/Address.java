@@ -111,8 +111,8 @@ public final class Address {
     public Address(JSONObject jobj) {
         this.type = jobj.has("type") ? jobj.getString("type") : null;
 
-        this.preferred = jobj.has("preferred") ? jobj.getString("preferred")
-            .toLowerCase().equals("true") : null;
+        this.preferred 
+            = jobj.has("preferred") ? jobj.getBoolean("preferred") : null;
 
         this.poBox = jobj.has("poBox") ? jobj.getString("poBox") : null;
 

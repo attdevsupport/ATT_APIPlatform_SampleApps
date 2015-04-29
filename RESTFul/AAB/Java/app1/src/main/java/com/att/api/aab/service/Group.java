@@ -24,6 +24,10 @@ public final class Group {
     private final String groupId;
     private final String groupName;
     private final String groupType;
+
+    public Group(String groupName) {
+        this(null, groupName, null);
+    }
     
     public Group(String groupName, String groupType) {
         this(null, groupName, groupType);
