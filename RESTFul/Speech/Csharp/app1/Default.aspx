@@ -1,33 +1,42 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="Speech_App1" %>
-
 <!DOCTYPE html>
-<!-- 
-* Copyright 2014 AT&T
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
+<!--
+Copyright 2015 AT&T
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 -->
-<!--[if lt IE 7]> <html class="ie6" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="ie7" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!-->
 <html lang="en">
-<!--<![endif]-->
-<head>
-    <title>AT&amp;T Sample Speech Application - Speech to Text (Generic) </title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Speech to Text</title>
+
+    <!-- jquery and bootstrap js -->
+    <script src="https://lprod.code-api-att.com/public_files/js/jquery.min.js"></script>
+    <script src="https://lprod.code-api-att.com/public_files/js/bootstrap.min.js"></script>
+    <!-- custom js -->
+    <script src="js/config.js"></script>
+    <script src="js/form_handler.js"></script>
+    <script src="js/response_handler.js"></script>
+    <script src="js/sample_app.js"></script>
+
+    <!-- bootstrap css -->
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap-theme.min.css">
+    <!-- custom css -->
+    <link href="https://lprod.code-api-att.com/public_files/css/custom.css" rel="stylesheet">
+
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33466541-1']);
@@ -38,101 +47,99 @@
             ga.type = 'text/javascript';
             ga.async = true;
             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-                                      : 'http://www')
-                                      + '.google-analytics.com/ga.js';
+                                        : 'https://www')
+                                        + '.google-analytics.com/ga.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ga, s);
         })();
     </script>
-</head>
-<body>
-    <div id="pageContainer" class="pageContainer">
-        <div id="header">
-            <div class="logo" id="top">
+
+    <!--[if lt IE 9]>
+      <script src="https://lprod.code-api-att.com/public_files/js/html5shiv.min.js"></script>
+      <script src="https://lprod.code-api-att.com/public_files/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="header">
+          <ul class="nav nav-pills pull-left">
+            <li>
+              <a class="brand" href="https://developer.att.com">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-developer.png">
+              </a>
+            </li>
+          </ul>
+        </div><!--./header-->
+      </div><!--./row-->
+      <div class="row">
+        <h3 class="text-center">Speech to Text</h3>
+      </div>
+      <div class="row">
+        <h5 class="text-center">
+          This sample application showcases transcribing audio data files into text-based output
+        </h5>
+      </div>
+      <hr>
+      <div class="inline-row">
+        <a class="btn btn-warning" id="github" href="#">Github</a>
+        <a class="btn btn-warning" id="download" href="#">Download</a>
+      </div><!--./row-->
+      <hr>
+      <div class="row">
+        <div class="col-md-12">
+          <form id="speechToText" name="speechToText" runat="server" >
+            <div class="form-group">
+                <label>
+                  Speech Context:
+                </label>
+                <asp:DropDownList ID="SpeechContext" class="form-control" runat="server" AutoPostBack="true">
+                </asp:DropDownList>
+             </div>
+            <div class="form-group">
+                <label>
+                   Audio File<a id="linkPlay" href="#">(Play)</a>:
+                </label>
+                <asp:DropDownList ID="audio_file" class="form-control" runat="server">
+                </asp:DropDownList>
+            </div><!--./form-group-->
+            <div id="form-group">
+                <label>Send Chunked:</label>
+                <asp:CheckBox ID="chkChunked" class="form-control" runat="server" />
             </div>
-            <div id="menuButton" class="hide">
-                <a id="jump" href="#nav">Main Navigation</a>
+              <br />
+            <div class="form-group">
+            <label>
+                X-Arg*:
+            </label>
+            <asp:TextBox ID="x_arg" class="form-control" type="text" name="x_arg" readonly="true" rows="1" runat="server"  Enabled="False" value="ClientApp=NoteTaker" ></asp:TextBox>
+            <br />
+            </div><!--./form-group-->
+              <br/>
+            <div id="formSubContext" class="hidden form-group">
+                <label>X-SpeechSubContext</label>
+                <asp:TextBox ID="x_subContext" runat="server" class="form-control" TextMode="MultiLine" Enabled="False" Rows="4" name="x_subContext"></asp:TextBox>
+                <br />
+            </div><!--./form-group-->
+            <div class="form-group">
+              <div class="alert alert-info">* Denotes optional parameters.</div>
             </div>
-            <ul class="links" id="nav">
-                
-                <li><a id="SourceLink" runat="server" target="_blank">Source<img src="images/source.png"
-                    alt="" />
-                </a><span class="divider">|&nbsp;</span> </li>
-                <li><a id="DownloadLink" runat="server" target="_blank">Download<img src="images/download.png"
-                    alt="" />
-                </a><span class="divider">|&nbsp;</span> </li>
-                <li><a id="HelpLink" runat="server" target="_blank">Help </a></li>
-                <li id="back"><a href="#top">Back to top</a></li>
-            </ul>
-        </div>
-        <form id="form1" runat="server">
-        <div class="content">
-            <div class="contentHeading">
-                <h1>
-                    AT&amp;T Sample Application - Speech to Text</h1>
-                <div id="introtext">
-                    <div>
-                        <b>Server Time:&nbsp;</b><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %>
-                    </div>
-                    <div>
-                        <b>Client Time:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            var myDate = new Date();
-                            document.write(myDate);
-                        </script>
-                    </div>
-                    <div>
-                        <b>User Agent:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            document.write("" + navigator.userAgent);
-                        </script>
-                    </div>
-                </div>
-            </div>
-            <div class="formBox" id="formBox">
-                <div id="formContainer" class="formContainer">
-                    <div id="formData">
-                        <h3>
-                            Speech Context:
-                        </h3>
-                        <asp:DropDownList ID="SpeechContext" runat="server" AutoPostBack="true">
-                        </asp:DropDownList>
-                        <h3>
-                            Audio File:
-                        </h3>
-                        <asp:DropDownList ID="audio_file" runat="server">
-                        </asp:DropDownList>
-                        <br />
-                        <div id="chunked">
-                            <b>Send Chunked:</b>
-                            <asp:CheckBox ID="chkChunked" runat="server" />
-                        </div>
-                        <h3>
-                            X-Arg:
-                        </h3>
-                        <asp:TextBox ID="x_arg" type="text" runat="server" TextMode="MultiLine" Enabled="False" Rows="4" name="x_arg"></asp:TextBox>
-                        <br />
-                        <h3>X-SpeechSubContext</h3>
-                        <asp:TextBox ID="x_subContext" type="text" runat="server" TextMode="MultiLine" Enabled="False" Rows="4" name="x_subContext"></asp:TextBox>
-                        <br />
-                        <button id="btnSubmit" onserverclick="BtnSubmit_Click" runat="server" name="SpeechToText"
+            <button id="btnSubmit" onserverclick="BtnSubmit_Click" runat="server" class="btn btn-primary" name="SpeechToText"
                             type="submit">
-                            Submit</button>
-                    </div>
-                </div>
-            </div>
-            <br clear="all" />
+                            Speech to Text</button>
+                          <br clear="all" />
           <% if (!string.IsNullOrEmpty (speechSuccessMessage)){ %>
-            <div class="successWide" align="left">
+            <div class="alert alert-info" align="left">
               <strong>SUCCESS:</strong>
               <br />
-              Response parameters listed below.
-            </div>
-            <table class="kvp">
+                </div>
+              <label>Speech Response:</label>
+              <div class="table-responsive">
+            <table class="table table-condensed table-striped table-bordered">
               <thead>
                 <tr>
-                  <th class="label">Parameter</th>
-                  <th class="label">Value</th>
+                  <th >Parameter</th>
+                  <th>Value</th>
                 </tr>
               </thead>
               <tbody>
@@ -295,6 +302,7 @@
                       <%} %>
                     </tbody>
                   </table>
+                  </div>
                 <% } %>
                 <% if (!string.IsNullOrEmpty(speechErrorMessage)){ %>
                   <div class="errorWide">
@@ -303,34 +311,117 @@
                     <%= speechErrorMessage  %>
                   </div>
                 <% } %>
-        </div>
-        </form>
-        <div id="footer">
-            <div id="ft">
-                <div id="powered_by">
-                    Powered by AT&amp;T Cloud Architecture
-                </div>
-                <p>
-                    The Application hosted on this site are working examples intended to be used for
-                    reference in creating products to consume AT&amp;T Services and not meant to be
-                    used as part of your product. The data in these pages is for test purposes only
-                    and intended only for use as a reference in how the services perform.
-                    <br />
-                    <br />
-                    For download of tools and documentation, please go to <a href="https://developer.att.com/"
-                        target="_blank">https://developer.att.com</a>
-                    <br />
-                    For more information please go to <a href="https://developer.att.com/support"
-                        target="_blank">https://developer.att.com/support</a>
-                    <br />
-                    <br />
-                    © 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
-                        target="_blank">https://developer.att.com</a>
-                </p>
+        <%--</div>--%>
+          </form>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="hidden" id="response"></div>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+      <hr>
+      <div class="row"><div class="col-md-12"><b>Server Time:&nbsp;</b><span id="serverTime"></span><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %></div></div>
+      <div class="row"><div class="col-md-12"><b>Client Time:</b> <script>document.write("" + new Date());</script></div></div>
+      <div class="row"><div class="col-md-12"><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div></div>
+      <hr>
+      <div class="footer text-muted">
+        <div class="row">
+          <div class="col-sm-12 text-left">
+            <p>
+              <small>
+                The application hosted on this site is a working example
+                intended to be used for reference in creating products to
+                consume AT&amp;T Services and not meant to be used as part of
+                your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services
+                perform.
+              </small>
+            </p>
+          </div> <!--./col-->
+        </div> <!--./row-->
+        <hr>
+        <div class="row">
+          <div class="text-left col-sm-6">
+            <div class="col-sm-1">
+              <a class="brand" href="https://developer.att.com" target="_blank">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-globe.png">
+              </a>
             </div>
-            <!-- end of ft -->
+            <div class="col-sm-11">
+              <p>
+                <small>
+                  <a href="https://www.att.com/gen/general?pid=11561" target="_blank">Terms of Use</a>
+                  <a href="https://www.att.com/gen/privacy-policy?pid=2506" target="_blank">Privacy Policy</a>
+                  <a href="https://developer.att.com/support" target="_blank">Contact Us</a>
+                  <br>
+                  &#169; 2015 AT&amp;T Intellectual Property. All rights reserved.
+                </small>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6 left-border">
+            <p class="text-right">
+              <small>
+                AT&amp;T, the AT&amp;T logo and all other AT&amp;T marks
+                contained herein are trademarks of
+                <br>
+                AT&amp;T Intellectual Property and/or AT&amp;T affiliated
+                companies. AT&amp;T 36USC220506
+              </small>
+            </p>
+          </div>
+        </div><!--./row-->
+      </div><!--./footer-->
+    </div><!--./container-->
+    <!-- modal for playing audio files-->
+    <div class="modal fade" id="playModal" tabindex="-1" role="dialog" aria-labelledby="playFiles"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="playFiles">Select Audio File to Play:</h4>
+          </div><!--/.modal-header-->
+          <div class="modal-body">
+            <div class="row">
+              <a target="_blank" href="audio/boston_celtics.wav"><p class="text-center">boston_celtics.wav</p></a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" class="text-center" href="audio/california.amr">
+                <p class="text-center">california.amr</p>
+              </a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" href="audio/coffee.amr"><p class="text-center">coffee.amr</p></a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" href="audio/doctors.wav"><p class="text-center">doctors.wav</p></a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" href="audio/nospeech.wav"><p class="text-center">nospeech.wav</p></a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" href="audio/samplerate_conflict_error.wav">
+                <p class="text-center">samplerate_conflict_error.wav</p>
+              </a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" href="audio/this_is_a_test.spx"><p class="text-center">this_is_a_test.spx</p></a>
+            </div><!--./row-->
+            <div class="row">
+              <a target="_blank" href="audio/too_many_channels_error.wav">
+                <p class="text-center">too_many_channels_error.wav</p>
+              </a>
+            </div><!--./row-->
+          </div><!--/.modal-body-->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
         </div>
-        <!-- end of footer -->
-    </div>
-</body>
+      </div>
+    </div><!--/.modal-->
+  </body>
 </html>
+<!-- vim: set ts=2 sts=2 sw=2 cc=120 tw=120 et : -->

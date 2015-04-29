@@ -181,32 +181,32 @@ public partial class Speech_App1 : System.Web.UI.Page
         {
             this.refreshTokenExpiresIn = 24;
         }
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
         {
             SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
         }
         else
         {
             SourceLink.HRef = "#"; // Default value
-        }
+        }*/
 
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DownloadLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DownloadLink"]))
         {
             DownloadLink.HRef = ConfigurationManager.AppSettings["DownloadLink"];
         }
         else
         {
             DownloadLink.HRef = "#"; // Default value
-        }
+        }*/
 
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["HelpLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["HelpLink"]))
         {
             HelpLink.HRef = ConfigurationManager.AppSettings["HelpLink"];
         }
         else
         {
             HelpLink.HRef = "#"; // Default value
-        }
+        }*/
 
         if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SpeechFilesDir"]))
         {
