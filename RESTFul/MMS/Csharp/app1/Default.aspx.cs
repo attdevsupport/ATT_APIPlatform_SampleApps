@@ -82,6 +82,11 @@ public partial class MMS_App1 : System.Web.UI.Page
     public string ImageDirectory = string.Empty;
     public int totalImages = 0;
 
+    public string showSendMsg = string.Empty;
+    public string showGetStatus = string.Empty;
+    public string showReceiveStatus = string.Empty;
+    public string showReceiveMessage = string.Empty;
+
     public GetDeliveryStatus getMMSDeliveryStatusResponseData = null;
 
 
@@ -126,6 +131,8 @@ public partial class MMS_App1 : System.Web.UI.Page
 
     public void DisplayImagesReceived()
     {
+        
+        
         try
         {
 
@@ -238,7 +245,7 @@ public partial class MMS_App1 : System.Web.UI.Page
             this.refreshTokenExpiresIn = 24;
         }
 
-        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
+        /*if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SourceLink"]))
         {
             SourceLink.HRef = ConfigurationManager.AppSettings["SourceLink"];
         }
@@ -263,7 +270,7 @@ public partial class MMS_App1 : System.Web.UI.Page
         else
         {
             HelpLink.HRef = "#"; // Default value
-        }
+        }*/
 
         if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SendImageFilesDir"]))
         {
@@ -305,12 +312,36 @@ public partial class MMS_App1 : System.Web.UI.Page
             this.DisplayImagesReceived();
 
             readOnlineDeliveryStatus();
+            if (Session["cs_rest_ServiceRequest"] != null)
+            {
+                if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "SendMessage_Click") == 0)
+                    showSendMsg = "true";
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "GetStatus_Click") == 0)
+                    showGetStatus = "true";
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "receiveStatusBtn_Click") == 0)
+                    showReceiveStatus = "true";
+                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "receiveMessageBtn_Click") == 0)
+                    showReceiveMessage = "true";
+                
+            }
+            
+
         }
         catch (Exception ex)
         {
             sendMessageResponseError = ex.ToString();
         }
     }
+
+    private void ResetAllFlags()
+    {
+        showSendMsg = "";
+        showGetStatus = "";
+        showReceiveStatus = "";
+        showReceiveMessage = "";
+
+    }
+
     /// <summary>
     /// This funciton initiates send mms api call to send selected files as an mms
     /// </summary>
@@ -362,10 +393,25 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// <param name="e">EventArgs, specific to this method</param>
     protected void receiveStatusBtn_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showReceiveStatus = "true";
+        Session["cs_rest_ServiceRequest"] = "receiveStatusBtn_Click";
+        readOnlineDeliveryStatus();
+    }
+
+    protected void receiveMessageBtn_Click(object sender, EventArgs e)
+    {
+        ResetAllFlags();
+        showReceiveMessage = "true";
+        Session["cs_rest_ServiceRequest"] = "receiveMessageBtn_Click";
+        this.DisplayImagesReceived();
     }
 
     protected void GetStatus_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showGetStatus = "true";
+        Session["cs_rest_ServiceRequest"] = "GetStatus_Click";
         try
         {
             string messageId = mmsId.Value;
@@ -828,6 +874,9 @@ public partial class MMS_App1 : System.Web.UI.Page
     /// <param name="e">Event that invoked this function</param>
     protected void SendMessage_Click(object sender, EventArgs e)
     {
+        ResetAllFlags();
+        showSendMsg = "true";
+        Session["cs_rest_ServiceRequest"] = "SendMessage_Click";
         try
         {
             if (this.ReadAndGetAccessToken(ref sendMessageResponseError) == true)

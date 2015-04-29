@@ -21,11 +21,27 @@
 <!--[if IE 8]>    <html class="ie8" lang="en"> <![endif]-->
 <!--[if gt IE 8]><!-->
 <html lang="en">
-<head>
-    <title>AT&amp;T Sample Application - Multimedia Messaging Service</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <meta id="viewport" name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1" />
-    <link rel="stylesheet" type="text/css" href="style/common.css" />
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AT&amp;T Sample Application - MMS</title>
+
+    <!-- jquery and bootstrap js -->
+    <script src="https://lprod.code-api-att.com/public_files/js/jquery.min.js"></script>
+    <script src="https://lprod.code-api-att.com/public_files/js/bootstrap.min.js"></script>
+    <!-- custom js -->
+    <script src="js/config.js"></script>
+    <script src="js/form_handler.js"></script>
+    <script src="js/response_handler.js"></script>
+    <script src="js/sample_app.js"></script>
+
+    <!-- bootstrap css -->
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lprod.code-api-att.com/public_files/css/bootstrap-theme.min.css">
+    <!-- custom css -->
+    <link href="https://lprod.code-api-att.com/public_files/css/custom.css" rel="stylesheet">
+
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33466541-1']);
@@ -36,91 +52,102 @@
             ga.type = 'text/javascript';
             ga.async = true;
             ga.src = ('https:' == document.location.protocol ? 'https://ssl'
-                                      : 'http://www')
-                                      + '.google-analytics.com/ga.js';
+                                        : 'https://www')
+                                        + '.google-analytics.com/ga.js';
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ga, s);
         })();
     </script>
-</head>
+
+    <!--[if lt IE 9]>
+      <script src="https://lprod.code-api-att.com/public_files/js/html5shiv.min.js"></script>
+      <script src="https://lprod.code-api-att.com/public_files/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
 <body onload="setup()">
+
     <form id="form1" runat="server">
-    <div id="pageContainer">
-        <div id="header">
-            <div class="logo">
-            </div>
-            <div id="menuButton" class="hide">
-                <a id="jump" href="#nav">Main Navigation</a></div>
-            <ul class="links" id="nav">
-                
-                <li><a runat="server" target="_blank" id="SourceLink">Source<img alt="source" src="images/opensource.png" /></a>
-                    <span class="divider">|&nbsp;</span> </li>
-                <li><a runat="server" target="_blank" id="DownloadLink">Download<img alt="download"
-                    src="images/download.png" /></a> <span class="divider">|&nbsp;</span> </li>
-                <li><a runat="server" target="_blank" id="HelpLink">Help</a> </li>
-                <li id="back"><a href="#top">Back to top</a></li>
-            </ul>
-            <!-- end of links -->
-        </div>
-        <!-- end of header -->
-        <div id="content">
-            <div id="contentHeading">
-                <h1>
-                    AT&amp;T Sample Application - Multimedia Messaging Service</h1>
-                <div class="border">
-                </div>
-                <div id="introtext">
-                    <div>
-                        <b>Server Time:&nbsp;</b><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %></div>
-                    <div>
-                        <b>Client Time:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            var myDate = new Date();
-                            document.write(myDate);
-                        </script>
-                    </div>
-                    <div>
-                        <b>User Agent:</b>
-                        <script language="JavaScript" type="text/javascript">
-                            document.write("" + navigator.userAgent);
-                        </script>
-                    </div>
-                </div>
-                <!-- end of introtext -->
-            </div>
-            <!-- end of contentHeading -->
-            <div class="lightBorder">
-            </div>
-            <div class="formBox" id="formBox">
-                <div id="formContainer" class="formContainer">
-                    <div id="sendMMS">
-                        <h2>
-                            Feature 1: Send MMS Message</h2>
-                        <div class="inputFields">
-                            <input name="address" placeholder="Address" runat="server" id="address" />
-                            <label>
-                                Message:
-                                <asp:DropDownList name="subject" id="subject" runat="server">
-                                <asp:ListItem>MMS Sample Message</asp:ListItem>
-                                </asp:DropDownList>
-                            </label>
-                            <label>
-                                Attachment:
-                                <asp:DropDownList ID="attachment" runat="server" name="attachment">
-                                </asp:DropDownList>
-                            </label>
-                            <label>
-                                <asp:CheckBox ID="chkGetOnlineStatus" name="chkGetOnlineStatus" runat="server" title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
-                                Receive Delivery Status Notification<br />
-                            </label>
-                            <button type="submit" class="submit" onserverclick="SendMessage_Click" runat="server"
-                                name="sendMms">
-                                Send MMS Message</button>
-                        </div>
-                        <!-- end of inputFields -->
-                    </div>
-                    <!-- end of sendMMS -->
-                    <% if (!string.IsNullOrEmpty(sendMessageResponseError))
+     <div class="container">
+      <div class="row">
+        <div class="header">
+          <ul class="nav nav-pills pull-left">
+            <li>
+              <a class="brand" href="https://developer.att.com">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-developer.png">
+              </a>
+            </li>
+          </ul>
+        </div><!--./header-->
+      </div><!--./row-->
+      <div class="row">
+        <h3 class="text-center">MMS</h3>
+      </div>
+      <div class="row">
+        <h5 class="text-center">
+        This sample application showcases sending MMS messages, checking status for sent MMS messages, and receiving
+        notifications.
+        </h5>
+      </div>
+      <hr>
+      <div class="inline-row">
+        <a class="btn btn-warning" id="github" href="#">Github</a>
+        <a class="btn btn-warning" id="download" href="#">Download</a>
+      </div><!--./row-->
+      <hr>
+         <div class="row">
+        <div class="col-md-12">
+          <div role="tabpanel" id="tabs">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#send-mms" aria-controls="send-mms" role="tab" data-toggle="tab">Send MMS</a>
+              </li>
+              <li role="presentation">
+                <a href="#get-status" aria-controls="get-status" role="tab"
+                  data-toggle="tab">Get Delivery Status</a>
+              </li>
+              <li role="presentation">
+                <a href="#receive-status" aria-controls="receive-status" role="tab"
+                  data-toggle="tab">Receive Delivery Status</a>
+              </li>
+              <li role="presentation">
+                <a href="#receive-msg" aria-controls="receive-msg" role="tab"
+                  data-toggle="tab">Receive MMS</a>
+              </li>
+                </ul>
+              <%--</li>
+                </ul>--%>
+            <!-- Tab panes -->
+            <div class="tab-content">
+              <div role="tabpanel" class="tab-pane active" id="send-mms">
+                  <div class="inputFields">
+                        <label>Address</label> 
+                        <br />
+                        <input type="text" name="address" class="form-control" data-toggle="tooltip" data-placement="bottom"
+                      data-title="Format must be one of: tel:15555555"
+                      placeholder="tel:15551234" runat="server" id="address" />
+                      <br />
+                      <label>
+                            <asp:CheckBox ID="chkGetOnlineStatus" name="chkGetOnlineStatus" runat="server" title="If Checked, Delivery status is sent to the listener, use feature 3 to view the status" />
+                            Receive Delivery Status<br />
+                        </label>
+                      <br />
+                        <label>
+                            Message:
+                            <asp:DropDownList name="subject" class="form-control" id="subject" runat="server">
+                            <asp:ListItem>MMS Sample Message</asp:ListItem>
+                            </asp:DropDownList>
+                        </label>
+                      <br />
+                        <label>
+                            Attachment:
+                            <asp:DropDownList ID="attachment" class="form-control" runat="server" name="attachment">
+                            </asp:DropDownList>
+                        </label>
+                        <br />
+                        <asp:Button ID="sendMms" runat="server" class="btn btn-primary" Text="Send Message" OnClick="SendMessage_Click" />
+                   </div>
+                  <% if (!string.IsNullOrEmpty(sendMessageResponseError))
                        { %>
                     <div class="errorWide">
                         <strong>ERROR: </strong>
@@ -131,7 +158,10 @@
                     <% if (!string.IsNullOrEmpty(sendMessageResponseSuccess))
                        { %>
                     <div class="successWide">
-                        <strong>SUCCESS:</strong><br />
+                        <div class="alert alert-info" align="left">
+                            <strong>SUCCESS:</strong>
+                            <br />
+                        </div>  
                         <strong>messageId: </strong>
                         <%= sendMMSResponseData.outboundMessageResponse.messageId%>
                         <% if (sendMMSResponseData.outboundMessageResponse.resourceReference != null)
@@ -144,19 +174,16 @@
                     <% } %>
                     <div class="lightBorder">
                     </div>
-                    <div id="getDeliveryStatus">
-                        <h2>
-                            Feature 2: Get Delivery Status</h2>
-                        <div class="inputFields">
-                            <input maxlength="20" name="mmsId" placeholder="Message ID" runat="server" id="mmsId" />
-                            <button type="submit" class="submit" name="getStatus" onserverclick="GetStatus_Click"
-                                runat="server" id="getStatus">
-                                Get Status</button>
-                        </div>
-                        <!-- end of inputFields -->
+                
+              </div><!--./tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="get-status">
+                <div class="inputFields">
+                    <label>Message Id</label>
+                    <input maxlength="20" class="form-control" name="mmsId" placeholder="Message Id" runat="server" id="mmsId" />
+                    <br/>
+                    <asp:Button ID="getStatus" runat="server" class="btn btn-primary" Text="Get Delivery Status" OnClick="GetStatus_Click" />
                     </div>
-                    <!-- end of getDeliveryStatus -->
-                    <% if (!string.IsNullOrEmpty(getDeliveryStatusResponseError))
+                     <% if (!string.IsNullOrEmpty(getDeliveryStatusResponseError))
                        { %>
                     <div class="errorWide">
                         <strong>ERROR: </strong>
@@ -167,12 +194,15 @@
                     <% if (!string.IsNullOrEmpty(getDeliveryStatusResponseSuccess))
                        { %>
                             <div class="successWide">
-                                <strong>SUCCESS: </strong>
+                                <div class="alert alert-info" align="left">
+                                <strong>SUCCESS:</strong>
                                 <br />
+                                </div>
                                 <strong>ResourceUrl: </strong>
                                 <%=getMMSDeliveryStatusResponseData.DeliveryInfoList.ResourceURL%><br />
                             </div>
-                            <table>
+                            <div class="table-responsive">
+                            <table class="table table-condensed table-striped table-bordered">
                                 <thead>
                                     <tr>
                                         <th>
@@ -203,16 +233,15 @@
                                     <% }%>
                                 </tbody>
                             </table>
-                    <% } %>
-                        <div class="lightBorder">
-                        </div>
-                        <div id="receiveStatusdiv">
-                            <h2>
-                                Feature 3: Receive Delivery Status</h2>
-                            <button type="submit" class="submit" name="receiveStatusBtn" id="receiveStatusBtn"
-                                runat="server" onserverclick="receiveStatusBtn_Click">
-                                Refresh Notifications</button>
-                                <table>
+                                </div>
+                    <% } %>                        
+              </div><!--/.tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="receive-status">
+                  <asp:Button ID="receiveStatusBtn" runat="server" class="btn btn-primary" Text="Refresh Notifications" OnClick="receiveStatusBtn_Click" />
+                  <br />
+                  <br />
+                  <div class="table-responsive">
+                        <table class="table table-condensed table-striped table-bordered">
                                     <thead>
                                         <tr>
                                             <th>
@@ -246,13 +275,14 @@
                                     </tbody>
                             <% } %>
                                 </table>
+                      </div>
                                 <br />
-                        </div>
-                    <div class="lightBorder">
-                    </div>
-                    <div id="webGallery">
-                        <h2>
-                            Feature 4: Web gallery of MMS photos sent to short code</h2>
+              </div><!--/.tab-pane-->
+              <div role="tabpanel" class="tab-pane" id="receive-msg">
+                  <asp:Button ID="receiveMessageBtn" runat="server" class="btn btn-primary" Text="Refresh Rececived Messages" OnClick="receiveMessageBtn_Click" />
+                        <div id="webGallery">
+                        <label>
+                            Web gallery of MMS photos sent to short code</label>
                         <p>
                             Photos sent to short code
                             <%= ListenerShortCode %>
@@ -266,40 +296,89 @@
                         <strong>Text:&nbsp;</strong><%= imgdata.text  %><br />
                         <% } %>
                     </div>
-                    <!-- end of webGallery -->
-                </div>
-                <!-- end of formContainer -->
-            </div>
-            <!-- end of formBox -->
-            <!-- end of formBox -->
-        </div>
-        <!-- end of content -->
-        <div class="border">
-        </div>
-        <div id="footer">
-            <div id="powered_by">
-                Powered by AT&amp;T Cloud Architecture</div>
+                  <br />
+                  <br />
+                <div id="statusTable"></div>
+              </div><!--/.tab-pane-->
+            </div><!--/.tab-content-->
+          </div>
+        </div><!--./col-md-12-->
+      </div><!--./row-->
+         <hr>
+      <div class="row"><div class="col-md-12"><b>Server Time:&nbsp;</b><span id="serverTime"></span><%= String.Format("{0:ddd, MMMM dd, yyyy HH:mm:ss}", DateTime.UtcNow) + " UTC" %></div></div>
+      <div class="row"><div class="col-md-12"><b>Client Time:</b> <script>document.write("" + new Date());</script></div></div>
+      <div class="row"><div class="col-md-12"><b>User Agent:</b> <script>document.write("" + navigator.userAgent);</script></div></div>
+      <hr>
+      <div class="footer text-muted">
+        <div class="row">
+          <div class="col-sm-12 text-left">
             <p>
-                The Application hosted on this site are working examples intended to be used for
-                reference in creating products to consume AT&amp;T Services and not meant to be
-                used as part of your product. The data in these pages is for test purposes only
-                and intended only for use as a reference in how the services perform.
-                <br />
-                <br />
-                For download of tools and documentation, please go to <a href="https://developer.att.com/"
-                    target="_blank">https://developer.att.com</a>
-                <br />
-                For more information please go to <a href="https://developer.att.com/support"
-                    target="_blank">https://developer.att.com/support</a>
-                <br />
-                <br />
-                &#169; 2014 AT&amp;T Intellectual Property. All rights reserved. <a href="https://developer.att.com/"
-                    target="_blank">https://developer.att.com</a>
+              <small>
+                The application hosted on this site is a working example
+                intended to be used for reference in creating products to
+                consume AT&amp;T Services and not meant to be used as part of
+                your product. The data in these pages is for test purposes only
+                and intended only for use as a reference in how the services
+                perform.
+              </small>
             </p>
-        </div>
-        <!-- end of footer -->
-    </div>
-    <!-- end of page_container -->
+          </div> <!--./col-->
+        </div> <!--./row-->
+        <hr>
+        <div class="row">
+          <div class="text-left col-sm-6">
+            <div class="col-sm-1">
+              <a class="brand" href="https://developer.att.com" target="_blank">
+                <img alt="AT&amp;T Developer" src="https://developer.att.com/static-assets/images/logo-globe.png">
+              </a>
+            </div>
+            <div class="col-sm-11">
+              <p>
+                <small>
+                  <a href="https://www.att.com/gen/general?pid=11561" target="_blank">Terms of Use</a>
+                  <a href="https://www.att.com/gen/privacy-policy?pid=2506" target="_blank">Privacy Policy</a>
+                  <a href="https://developer.att.com/support" target="_blank">Contact Us</a>
+                  <br>
+                  &#169; 2015 AT&amp;T Intellectual Property. All rights reserved.
+                </small>
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-6 left-border">
+            <p class="text-right">
+              <small>
+                AT&amp;T, the AT&amp;T logo and all other AT&amp;T marks
+                contained herein are trademarks of
+                <br>
+                AT&amp;T Intellectual Property and/or AT&amp;T affiliated
+                companies. AT&amp;T 36USC220506
+              </small>
+            </p>
+          </div>
+        </div><!--./row-->
+      </div><!--./footer-->
+    </div><!--./container-->
+
+    <!-- enable bootstrap custom tootips -->
+    <script>$(function () { $('[data-toggle="tooltip"]').tooltip() });</script>
+
+        <% if (!string.IsNullOrEmpty(showSendMsg))
+           { %>
+        <script type="text/javascript">   $('#tabs a[href="#send-mms"]').tab('show');</script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showGetStatus))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#get-status"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showReceiveStatus))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#receive-status"]').tab('show'); </script>
+        <% } %>
+        <% if (!string.IsNullOrEmpty(showReceiveMessage))
+           { %>
+        <script type="text/javascript">        $('#tabs a[href="#receive-msg"]').tab('show'); </script>
+        <% } %>
+        
     </form>
 </body>
 </html>
