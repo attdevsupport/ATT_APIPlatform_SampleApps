@@ -85,6 +85,20 @@ public partial class AAB_App1 : System.Web.UI.Page
     public string group_error = null;
     public string manage_groups_error = null;
 
+    public string showCreateContact = string.Empty;
+    public string showUpdateContact = string.Empty;
+    public string showDeleteContact = string.Empty;
+    public string showGetContacts = string.Empty;
+    public string showGetMyInfo = string.Empty;
+    public string showUpdateMyInfo = string.Empty;
+    public string showCreateGroup = string.Empty;
+    public string showUpdateGroup = string.Empty;
+    public string showDeleteGroup = string.Empty;
+    public string showGetGroups = string.Empty;
+    public string showGetGroupContacts = string.Empty;
+    public string showAddContactsToGroup = string.Empty;
+    public string showRemoveContactsfrmGroup = string.Empty;
+    public string showGetContactGroups = string.Empty;
     /// <summary>
     /// Initial set up for the application. We read the config file and create the instance of Oauth and addressbook object.
     /// If it's post back from getting Auth code then perform operations.
@@ -111,6 +125,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                     switch (operation)
                     {
                         case Operation.CreateContactOperation:
+                            showCreateContact = "true";
                             try
                             {
                                 if (null == addressbook.createContact(Session["JSONstring"].ToString()))
@@ -129,6 +144,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.UpdateContactOperation:
+                            showUpdateContact = "true";
                             try
                             {
                                 if (!addressbook.updateContact(Session["contactid"].ToString(), Session["JSONstring"].ToString()))
@@ -147,6 +163,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.DeleteContactOperation:
+                            showDeleteContact = "true";
                             try
                             {
                                 if (!addressbook.deleteContact(Session["contactid"].ToString()))
@@ -165,6 +182,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.GetContactsOperation:
+                            showGetContacts = "true";
                             try
                             {
                                 this.qContactResult = addressbook.getContacts(Session["querystring"].ToString());
@@ -191,6 +209,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.UpdateMyInfoOperation:
+                            showUpdateMyInfo = "true";
                             try
                             {
                                 if (!addressbook.updateMyInfo(Session["JSONstring"].ToString()))
@@ -209,6 +228,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.GetMyInfoOperation:
+                            showGetMyInfo = "true";
                             try
                             {
                                 string result = addressbook.getMyInfo();
@@ -231,6 +251,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.CreateGroupOperation:
+                            showCreateGroup = "true";
                             try
                             {
                                 if (null == addressbook.createGroup(Session["JSONstring"].ToString()))
@@ -249,6 +270,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.UpdateGroupOperation:
+                            showUpdateGroup = "true";
                             try
                             {
                                 if (!addressbook.updateGroup(Session["groupid"].ToString(), Session["JSONstring"].ToString()))
@@ -267,6 +289,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.DeleteGroupOperation:
+                            showDeleteGroup = "true";
                             if (!addressbook.deleteGroup(Session["groupid"].ToString()))
                             {
                                 this.group_error = this.addressbook.apiService.errorResponse;
@@ -278,6 +301,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.GetGroupsOperation:
+                            showGetGroups = "true";
                             try
                             {
                                 this.groupResult = addressbook.getGroups(Session["querystring"].ToString());
@@ -301,6 +325,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.GetGroupContactsOperation:
+                            showGetGroupContacts = "true";
                             try
                             {
                                 String result = addressbook.getGroupContacts(Session["groupid"].ToString());
@@ -323,6 +348,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.AddContctsToGroupOperation:
+                            showAddContactsToGroup = "true";
                             try
                             {
 
@@ -342,6 +368,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.RemoveContactsFromGroupOperation:
+                            showRemoveContactsfrmGroup = "true";
                             try
                             {
                                 if (!addressbook.removeContactsFromGroup(Session["groupid"].ToString(), Session["contactids"].ToString()))
@@ -360,6 +387,7 @@ public partial class AAB_App1 : System.Web.UI.Page
                             }
                             break;
                         case Operation.GetContactGroupsOperation:
+                            showGetContactGroups = "true";
                             try
                             {
                                 String result = addressbook.getContactGroups(Session["contactid"].ToString());
@@ -417,6 +445,7 @@ public partial class AAB_App1 : System.Web.UI.Page
     #region Contact Operations
     public void createContact_Click(object sender, EventArgs e)
     {
+        showCreateContact = "true";
         try
         {
             checkAccessToken(Operation.CreateContactOperation);
@@ -440,6 +469,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void updateContact_Click(object sender, EventArgs e)
     {
+        showUpdateContact = "true";
         var contactid = contactIdUpd.Text.Trim();
         try
         {
@@ -470,7 +500,8 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void deleteContact_Click(object sender, EventArgs e)
     {
-        var contactid = contactIdUpd.Text;
+        showDeleteContact = "true";
+        var contactid = contactIdDel.Text;
         try
         {
             if (contactid == "")
@@ -499,6 +530,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void getContacts_Click(object sender, EventArgs e)
     {
+        showGetContacts = "true";
         try
         {
             checkAccessToken(Operation.GetContactsOperation);
@@ -528,6 +560,7 @@ public partial class AAB_App1 : System.Web.UI.Page
     #region MyInfo Operations
     public void updateMyInfo_Click(object sender, EventArgs e)
     {
+        showUpdateMyInfo = "true";
         try
         {
             checkAccessToken(Operation.UpdateMyInfoOperation);
@@ -550,6 +583,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void getMyInfo_Click(object sender, EventArgs e)
     {
+        showGetMyInfo = "true";
         checkAccessToken(Operation.GetMyInfoOperation);
         try
         {
@@ -578,6 +612,7 @@ public partial class AAB_App1 : System.Web.UI.Page
     #region group
     public void createGroup_Click(object sender, EventArgs e)
     {
+        showCreateGroup = "true";
         checkAccessToken(Operation.CreateGroupOperation);
         var json = this.getGroupJSON(Operation.CreateGroupOperation);
         try
@@ -600,6 +635,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void updateGroup_Click(object sender, EventArgs e)
     {
+        showUpdateGroup = "true";
         checkAccessToken(Operation.UpdateGroupOperation);
         var json = this.getGroupJSON(Operation.UpdateGroupOperation);
         try
@@ -622,6 +658,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void deleteGroup_Click(object sender, EventArgs e)
     {
+        showDeleteGroup = "true";
         checkAccessToken(Operation.DeleteGroupOperation);
         try
         {
@@ -643,6 +680,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void getGroups_Click(object sender, EventArgs e)
     {
+        showGetGroups = "true";
         checkAccessToken(Operation.GetGroupsOperation);
         var qs = "?order=" + order.SelectedValue + "&groupName=" + getGroupName.Text;
         try
@@ -670,6 +708,7 @@ public partial class AAB_App1 : System.Web.UI.Page
     #region groups
     public void groupIdContacts_Click(object sender, EventArgs e)
     {
+        showGetGroupContacts = "true";
         checkAccessToken(Operation.GetGroupContactsOperation);
         try
         {
@@ -695,6 +734,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void addContctsToGroup_Click(object sender, EventArgs e)
     {
+        showAddContactsToGroup = "true";
         try
         {
             checkAccessToken(Operation.AddContctsToGroupOperation);
@@ -716,6 +756,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void removeContctsFromGroup_Click(object sender, EventArgs e)
     {
+        showRemoveContactsfrmGroup = "true";
         try
         {
             checkAccessToken(Operation.RemoveContactsFromGroupOperation);
@@ -737,6 +778,7 @@ public partial class AAB_App1 : System.Web.UI.Page
 
     public void getContactGroups_Click(object sender, EventArgs e)
     {
+        showGetContactGroups = "true";
         try
         {
             checkAccessToken(Operation.GetContactGroupsOperation);
@@ -1082,22 +1124,53 @@ public partial class AAB_App1 : System.Web.UI.Page
         return type;
     }
 
+    private string[] getValueFromRequest(string str)
+    {
+        string [] type = new String[3];
+        for (int i = 0; i < 3; i++)
+        {
+            str += Convert.ToString(i);
+            type[i] = Request[str] != null ? Request[str].ToString() : string.Empty;
+        }
+        return type;
+    }
+
     private string getContactJSON(Operation operation)
     {
-        string phonePref = Request["phonePref"] != null ? Request["phonePref"].ToString() : "0";
-        string[] ptype = getInputType("phone[][type]");
-        string[] pnumber = getInputValue("phone[][number]");
+        int maxNumberOfEntries = 3;
+        string[] pPref = new String[maxNumberOfEntries];
+        string[] ptype = new String[maxNumberOfEntries];
+        string[] pnumber = new String[maxNumberOfEntries];
+
+        if (operation == Operation.CreateContactOperation)
+        {
+            pPref = getValueFromRequest("createPhonePref");
+            ptype = getValueFromRequest("createPhoneType");
+            pnumber = getValueFromRequest("createPhoneNumber");
+        }
+        else if (operation == Operation.UpdateContactOperation)
+        {
+            pPref = getValueFromRequest("updatePhonePref");
+            ptype = getValueFromRequest("updatePhoneType");
+            pnumber = getValueFromRequest("updatePhoneNumber");
+        }
+        else if (operation == Operation.UpdateMyInfoOperation)
+        {
+            pPref = getValueFromRequest("myInfoPhonePref");
+            ptype = getValueFromRequest("myInfoPhoneType");
+            pnumber = getValueFromRequest("myInfoPhoneNumber");
+        }
+
         string[] phone_list = new String[ptype.Length];
         if (ptype.Length != pnumber.Length)
         {
             throw new Exception("Number of fields does not match the number of values");
         }
-        int phone_int_pref = Convert.ToInt32(phonePref);
-
+        
         var phone = new List<ContactObj.Phone>();
         for (int i = 0; i < ptype.Length; i++)
         {
-            bool pref = i == phone_int_pref ? true : false;
+            bool pref = (pPref[i].Equals("True")) ? true : false;
             phone.Add(new ContactObj.Phone() { type = ptype[i], number = pnumber[i], preferred = pref });
         }
         var phones = new ContactObj.Phones();
@@ -1108,19 +1181,39 @@ public partial class AAB_App1 : System.Web.UI.Page
         var empty_phones = new ContactObj.Phones();
         empty_phones.phone = empty_phone;
 
-        string Pref = Request["imPref"] != null ? Request["imPref"].ToString() : "0";
-        string[] im_type = getInputType("im[][type]");
-        string[] im_im = getInputValue("im[][uri]");
+        string[] im_type = new String[maxNumberOfEntries];
+        string[] im_im = new String[maxNumberOfEntries];
+        string[] im_pref = new String[maxNumberOfEntries];
+
+        if (operation == Operation.CreateContactOperation)
+        {
+            im_pref = getValueFromRequest("createIMPref");
+            im_type = getValueFromRequest("createIMType");
+            im_im = getValueFromRequest("createIMUri");
+        }
+        else if (operation == Operation.UpdateContactOperation)
+        {
+            im_pref = getValueFromRequest("updateIMPref");
+            im_type = getValueFromRequest("updateIMType");
+            im_im = getValueFromRequest("updateIMUri");
+        }
+        else if (operation == Operation.UpdateMyInfoOperation)
+        {
+            im_pref = getValueFromRequest("myInfoIMPref");
+            im_type = getValueFromRequest("myInfoIMType");
+            im_im = getValueFromRequest("myInfoIMUri");
+        }
+        
         string[] im_list = new String[im_type.Length];
         if (im_type.Length != im_im.Length)
         {
             throw new Exception("Number of fields does not match the number of values");
         }
-        int im_int_pref = Convert.ToInt32(Pref);
+        
         var im = new List<ContactObj.Im>();
         for (int i = 0; i < im_type.Length; i++)
         {
-            bool pref = i == im_int_pref ? true : false;
+            bool pref = (im_pref[i].Equals("True")) ? true : false;
             im.Add(new ContactObj.Im() { type = im_type[i], imUri = im_im[i], preferred = pref });
         };
         var ims = new ContactObj.Ims();
@@ -1131,19 +1224,39 @@ public partial class AAB_App1 : System.Web.UI.Page
         var empty_ims = new ContactObj.Ims();
         empty_ims.im = empty_im;
 
-        string emailPref = Request["emailPref"] != null ? Request["emailPref"].ToString() : "0";
-        string[] email_type = getInputType("email[][type]");
-        string[] email_email = getInputValue("email[][email_address]");
+        string[] email_pref = new String[maxNumberOfEntries];
+        string[] email_type = new String[maxNumberOfEntries];
+        string[] email_email = new String[maxNumberOfEntries];
+
+        if (operation == Operation.CreateContactOperation)
+        {
+            email_pref = getValueFromRequest("createEmailPref");
+            email_type = getValueFromRequest("createEmailType");
+            email_email = getValueFromRequest("createEmailAddress");
+        }
+        else if (operation == Operation.UpdateContactOperation)
+        {
+            email_pref = getValueFromRequest("updateEmailPref");
+            email_type = getValueFromRequest("updateEmailType");
+            email_email = getValueFromRequest("updateEmailAddress");
+        }
+        else if (operation == Operation.UpdateMyInfoOperation)
+        {
+            email_pref = getValueFromRequest("myInfoEmailPref");
+            email_type = getValueFromRequest("myInfoEmailType");
+            email_email = getValueFromRequest("myInfoEmailAddress");
+        }
+        
         string[] email_list = new String[email_type.Length];
         if (email_type.Length != email_email.Length)
         {
             throw new Exception("Number of fields does not match the number of values");
         }
-        int email_int_pref = Convert.ToInt32(emailPref);
+        
         var email = new List<ContactObj.Email>();
         for (int i = 0; i < email_type.Length; i++)
         {
-            bool pref = i == email_int_pref ? true : false;
+            bool pref = (email_pref[i].Equals("True")) ? true : false;
             email.Add(new ContactObj.Email() { type = email_type[i], emailAddress = email_email[i], preferred = pref });
         }
         var emails = new ContactObj.Emails();
@@ -1152,21 +1265,43 @@ public partial class AAB_App1 : System.Web.UI.Page
         var empty_email = new List<ContactObj.Email>();
         empty_email.Add(new ContactObj.Email() { type = string.Empty, emailAddress = string.Empty, preferred = true });
         var empty_emails = new ContactObj.Emails();
-        empty_emails.email = email;
+        empty_emails.email = empty_email;
 
-        string weburlPref = Request["weburlPref"] != null ? Request["weburlPref"].ToString() : "0";
-        string[] weburl_type = getInputType("weburl[][type]");
-        string[] weburl_weburl = getInputValue("weburl[][url]");
+        string[] weburl_type = new String[maxNumberOfEntries];
+        string[] weburl_weburl = new String[maxNumberOfEntries];
+        string[] weburl_pref = new String[maxNumberOfEntries];
+        
+        if (operation == Operation.CreateContactOperation)
+        {
+            weburl_pref = getValueFromRequest("createWeburlPref");
+            weburl_type = getValueFromRequest("createWeburlType");
+            weburl_weburl = getValueFromRequest("createWeburl");
+        }
+        else if (operation == Operation.UpdateContactOperation)
+        {
+            weburl_pref = getValueFromRequest("updateWeburlPref");
+            weburl_type = getValueFromRequest("updateWeburlType");
+            weburl_weburl = getValueFromRequest("updateWeburl");
+        }
+        else if (operation == Operation.UpdateMyInfoOperation)
+        {
+            weburl_pref = getValueFromRequest("myInfoWeburlPref");
+            weburl_type = getValueFromRequest("myInfoWeburlType");
+            weburl_weburl = getValueFromRequest("myInfoWeburl");
+        }
+
+        
         string[] weburl_list = new String[weburl_type.Length];
         if (weburl_type.Length != weburl_weburl.Length)
         {
             throw new Exception("Number of fields does not match the number of values");
         }
-        int weburl_int_pref = Convert.ToInt32(weburlPref);
+        
         var weburl = new List<ContactObj.WebUrl>();
         for (int i = 0; i < weburl_type.Length; i++)
         {
-            bool pref = i == weburl_int_pref ? true : false;
+
+            bool pref = (weburl_pref[i].Equals("True")) ? true : false;
             weburl.Add(new ContactObj.WebUrl() { type = weburl_type[i], url = weburl_weburl[i], preferred = pref });
         }
         var weburls = new ContactObj.Weburls();
@@ -1175,25 +1310,67 @@ public partial class AAB_App1 : System.Web.UI.Page
         var empty_weburl = new List<ContactObj.WebUrl>();
         empty_weburl.Add(new ContactObj.WebUrl() { type = string.Empty, url = string.Empty, preferred = true });
         var empty_weburls = new ContactObj.Weburls();
-        empty_weburls.webUrl = weburl;
+        empty_weburls.webUrl = empty_weburl;
 
         //address
-        string addressPref = Request["addressPref"] != null ? Request["addressPref"].ToString() : "0";
-        string[] atype = getInputType("address[][type]");
-        string[] apoBox = getInputValue("address[][pobox]");
-        string[] aaddressLine1 = getInputValue("address[][addressLine1]");
-        string[] aaddressLine2 = getInputValue("address[][addressLine2]");
-        string[] acity = getInputValue("address[][city]");
-        string[] astate = getInputValue("address[][state]");
-        string[] azip = getInputValue("address[][zip]");
-        string[] acountry = getInputValue("address[][country]");
+        string[] address_pref = new String[maxNumberOfEntries];
+        string[] atype = new String[maxNumberOfEntries];
+        string[] apoBox = new String[maxNumberOfEntries];
+        string[] aaddressLine1 = new String[maxNumberOfEntries];
+        string[] aaddressLine2 = new String[maxNumberOfEntries];
+        string[] acity = new String[maxNumberOfEntries];
+        string[] astate = new String[maxNumberOfEntries];
+        string[] azip = new String[maxNumberOfEntries];
+        string[] acountry = new String[maxNumberOfEntries];
+
+
+        if (operation == Operation.CreateContactOperation)
+        {
+            address_pref = getValueFromRequest("createAddressPref");
+            atype = getValueFromRequest("createAddressType");
+            apoBox = getValueFromRequest("createAddressPoBox");
+            aaddressLine1 = getValueFromRequest("createAddressLineOne1");
+            aaddressLine2 = getValueFromRequest("createAddressLineTwo");
+            acity = getValueFromRequest("createAddressCity");
+            astate = getValueFromRequest("createAddressState");
+            azip = getValueFromRequest("createAddressZip");
+            acountry = getValueFromRequest("createAddressCountry");
+
+        }
+        else if (operation == Operation.UpdateContactOperation)
+        {
+            address_pref = getValueFromRequest("updateAddressPref");
+            atype = getValueFromRequest("updateAddressType");
+            apoBox = getValueFromRequest("updateAddressPoBox");
+            aaddressLine1 = getValueFromRequest("updateAddressLineOne1");
+            aaddressLine2 = getValueFromRequest("updateAddressLineTwo");
+            acity = getValueFromRequest("updateAddressCity");
+            astate = getValueFromRequest("updateAddressState");
+            azip = getValueFromRequest("updateAddressZip");
+            acountry = getValueFromRequest("updateAddressCountry");
+
+        }
+        else if (operation == Operation.UpdateMyInfoOperation)
+        {
+            address_pref = getValueFromRequest("myInfoAddressPref");
+            atype = getValueFromRequest("myInfoAddressType");
+            apoBox = getValueFromRequest("myInfoAddressPoBox");
+            aaddressLine1 = getValueFromRequest("myInfoAddressLineOne1");
+            aaddressLine2 = getValueFromRequest("myInfoAddressLineTwo");
+            acity = getValueFromRequest("myInfoAddressCity");
+            astate = getValueFromRequest("myInfoAddressState");
+            azip = getValueFromRequest("myInfoAddressZip");
+            acountry = getValueFromRequest("myInfoAddressCountry");
+        }
+
         int entryCount = atype.Length;
         string[] address_list = new String[entryCount];
-        int address_int_pref = Convert.ToInt32(addressPref);
+        
         var address = new List<ContactObj.Address>();
         for (int i = 0; i < entryCount; i++)
         {
-            bool pref = i == address_int_pref ? true : false;
+            bool pref = (address_pref[i].Equals("True")) ? true : false; 
+            
             address.Add(new ContactObj.Address()
             {
                 type = atype[i],
@@ -1224,7 +1401,7 @@ public partial class AAB_App1 : System.Web.UI.Page
             country = string.Empty
         });
         var empty_addresses = new ContactObj.Addresses();
-        empty_addresses.address = address;
+        empty_addresses.address = empty_address;
 
         //var contact = new List<ContactJSON.Contact>();
         var contact_obj = new ContactObj.Contact();
@@ -1314,10 +1491,10 @@ public partial class AAB_App1 : System.Web.UI.Page
         {
             string imgString = getImageto64base(attachPhotoUpd.Value);
             photo.value = imgString;
-            if (formattedNameUpd.Text != "")
-            {
-                contact_obj.formattedName = formattedNameUpd.Text;
-            }
+            //if (formattedNameUpd.Text != "")
+            //{
+                contact_obj.formattedName = "";
+            //}
             if (firstNameUpd.Text != "")
             {
                 contact_obj.firstName = firstNameUpd.Text;
