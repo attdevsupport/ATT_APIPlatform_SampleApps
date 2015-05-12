@@ -82,8 +82,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
     public string createMessageIndexErrorResponse = string.Empty;
     public string csGetMessageListDetailsErrorResponse = string.Empty;
     public string csGetMessageListDetailsSuccessResponse = string.Empty;
-    public string getNotificationConnectionDetailsSuccessResponse = string.Empty;
-    public string getNotificationConnectionDetailsErrorResponse = string.Empty;
+    
 
     
     public string notificationChannelSuccessResponse = string.Empty;
@@ -124,7 +123,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
 
     public List<Dictionary<string, string>> notificationDetails = new List<Dictionary<string, string>>();
     
-    public csNotificationConnectionDetails getNotificationConnectionDetailsResponse = new csNotificationConnectionDetails();
+    
     public MessageList csGetMessageListDetailsResponse = new MessageList();
     public DeltaResponse csDeltaResponse = new DeltaResponse();
     public csMessageContentDetails getMessageContentResponse = new csMessageContentDetails();
@@ -147,7 +146,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
     public string[] imageData = null;
     public string showSendMsg = string.Empty;
     public string showCreateMessageIndex = string.Empty;
-    public string showGetNotificationConnectionDetails = string.Empty;
     public string showDeleteMessage = string.Empty;
     public string showUpdateMessage = string.Empty;
     public string showGetMessage = string.Empty;
@@ -199,8 +197,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
                     this.GetMessageContentByIDnPartNumber();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "createmessageindex") == 0)
                     this.createMessageIndex();
-                else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "getnotificationconnectiondetails") == 0)
-                    this.getNotificationConnectionDetails();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deletemessage") == 0)
                     this.deleteMessage();
                 else if (string.Compare(Session["cs_rest_ServiceRequest"].ToString(), "deltamessage") == 0)
@@ -287,11 +283,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
                                                                         "createmessageindex") == 0))
             {
                 createMessageIndexErrorResponse = ex.Message;
-            }
-            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
-                                                        "getnotificationconnectiondetails") == 0))
-            {
-                getNotificationConnectionDetailsErrorResponse = ex.Message;
             }
             else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
                                                         "deletemessage") == 0))
@@ -493,11 +484,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
                         createMessageIndexErrorResponse = errorMessage;
                     }
                     else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
-                                        "getnotificationconnectiondetails") == 0))
-                    {
-                        getNotificationConnectionDetailsErrorResponse = errorMessage;
-                    }
-                    else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
                                         "deletemessage") == 0))
                     {
                         deleteMessageErrorResponse = errorMessage;
@@ -522,11 +508,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
                                                     "createmessageindex") == 0))
             {
                 createMessageIndexErrorResponse = errorMessage;
-            }
-            else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
-                                    "getnotificationconnectiondetails") == 0))
-            {
-                getNotificationConnectionDetailsErrorResponse = errorMessage;
             }
             else if (Session["cs_rest_ServiceRequest"] != null && (string.Compare(Session["cs_rest_ServiceRequest"].ToString(),
                                         "deletemessage") == 0))
@@ -948,10 +929,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
         Session["cs_rest_GetHeaderIndex"] = "abc";
         Session["cs_rest_GetMessageId"] = "";
         Session["cs_rest_GetMessagePart"] = "";
-        if (notificationMms.Checked)
-            Session["cs_rest_GetNotificationConnectionDetailsQueue"] = notificationMms.Value;
-        else if (notificationText.Checked)
-            Session["cs_rest_GetNotificationConnectionDetailsQueue"] = notificationText.Value;
         Session["cs_rest_deleteMessageId"] = deleteMessageId.Text;
         Session["cs_rest_updateMessageId"] = updateMessageId.Text;
         Session["cs_rest_createSubscriptionCheckbox1"] = subscribeCheckBox1.Checked.ToString();
@@ -974,7 +951,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
         Session["cs_rest_GetHeaderIndex"] = null;
         Session["cs_rest_GetMessageId"] = null;
         Session["cs_rest_GetMessagePart"] = null;
-        Session["cs_rest_GetNotificationConnectionDetailsQueue"] = null;
         Session["cs_rest_deleteMessageId"] = null;
         Session["cs_rest_updateMessageId"] = null;
         Session["cs_rest_createSubscriptionCheckbox1"] = null;
@@ -994,14 +970,6 @@ public partial class IMMN_App1 : System.Web.UI.Page
         //indexCursorTextBox.Value = Session["cs_rest_GetHeaderIndex"].ToString();
         MessageId.Text = Session["cs_rest_GetMessageId"].ToString();
         //PartNumber.Value = Session["cs_rest_GetMessagePart"].ToString();
-        if (string.Compare(Session["cs_rest_GetNotificationConnectionDetailsQueue"].ToString(), notificationMms.Value) == 0)
-        {
-            notificationMms.Checked = true;
-        }
-        else if (string.Compare(Session["cs_rest_GetNotificationConnectionDetailsQueue"].ToString(), notificationText.Value) == 0)
-        {
-            notificationText.Checked = true;
-        }
         deleteMessageId.Text = Session["cs_rest_deleteMessageId"].ToString();
         updateMessageId.Text = Session["cs_rest_updateMessageId"].ToString();
 
@@ -1636,112 +1604,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
     }
     #endregion
 
-    #region getNotificationConnectionDetailsRoutines
-
-    protected void getNotificationConnectionDetails_Click(object sender, EventArgs e)
-    {
-        showGetNotificationConnectionDetails = "true";
-        this.ReadTokenSessionVariables();
-
-        string tokentResult = this.IsTokenValid();
-
-        if (tokentResult.CompareTo("INVALID_ACCESS_TOKEN") == 0)
-        {
-            SetRequestSessionVariables();
-            Session["cs_rest_ServiceRequest"] = "getnotificationconnectiondetails";
-            Session["cs_rest_appState"] = "GetToken";
-            this.GetAuthCode();
-        }
-        else if (tokentResult.CompareTo("REFRESH_TOKEN") == 0)
-        {
-            if (this.GetAccessToken(AccessTokenType.Refresh_Token) == false)
-            {
-                getNotificationConnectionDetailsErrorResponse = "Failed to get Access token";
-                this.ResetTokenSessionVariables();
-                this.ResetTokenVariables();
-                return;
-            }
-        }
-
-        if (this.accessToken == null || this.accessToken.Length <= 0)
-        {
-            return;
-        }
-        string queueType = string.Empty;
-        if (notificationMms.Checked)
-            queueType = notificationMms.Value;
-        else if (notificationText.Checked)
-            queueType = notificationText.Value;
-        this.getNotificationConnectionDetails(this.accessToken, this.endPoint, queueType);
-    }
-
-    protected void getNotificationConnectionDetails()
-    {
-        showGetNotificationConnectionDetails = "show";
-        string queueType = string.Empty;
-        if (notificationMms.Checked)
-            queueType = notificationMms.Value;
-        else if (notificationText.Checked)
-            queueType = notificationText.Value;
-        this.getNotificationConnectionDetails(this.accessToken, this.endPoint, queueType);
-    }
-
-    private void getNotificationConnectionDetails(string accTok, string endP, string queues)
-    {
-        try
-        {
-            HttpWebRequest getNotificationConnectionDetailsWebRequest = (HttpWebRequest)WebRequest.Create(string.Empty + endP + "/myMessages/v2/notificationConnectionDetails?queues=" + queues);
-            getNotificationConnectionDetailsWebRequest.Headers.Add("Authorization", "Bearer " + accTok);
-            getNotificationConnectionDetailsWebRequest.Method = "GET";
-            getNotificationConnectionDetailsWebRequest.KeepAlive = true;
-            getNotificationConnectionDetailsWebRequest.Accept = "application/json";
-            WebResponse getNotificationConnectionDetailsWebResponse = getNotificationConnectionDetailsWebRequest.GetResponse();
-            using (StreamReader sr = new StreamReader(getNotificationConnectionDetailsWebResponse.GetResponseStream()))
-            {
-                string getNotificationConnectionDetailsData = sr.ReadToEnd();
-
-                JavaScriptSerializer deserializeJsonObject = new JavaScriptSerializer();
-                csGetNotificationConnectionDetails deserializedJsonObj = (csGetNotificationConnectionDetails)deserializeJsonObject.Deserialize(getNotificationConnectionDetailsData, typeof(csGetNotificationConnectionDetails));
-
-                if (null != deserializedJsonObj)
-                {
-                    getNotificationConnectionDetailsSuccessResponse = "SUCCESS";
-                    getNotificationConnectionDetailsResponse = deserializedJsonObj.notificationConnectionDetails;
-                }
-                else
-                {
-                    getNotificationConnectionDetailsErrorResponse = "No response from server";
-                }
-
-                sr.Close();
-            }
-        }
-        catch (WebException we)
-        {
-            string errorResponse = string.Empty;
-            try
-            {
-                using (StreamReader sr2 = new StreamReader(we.Response.GetResponseStream()))
-                {
-                    errorResponse = sr2.ReadToEnd();
-                    sr2.Close();
-                }
-                getNotificationConnectionDetailsErrorResponse = errorResponse;
-            }
-            catch
-            {
-                errorResponse = "Unable to get response";
-                getNotificationConnectionDetailsErrorResponse = errorResponse;
-            }
-        }
-        catch (Exception ex)
-        {
-            getNotificationConnectionDetailsErrorResponse = ex.Message;
-            return;
-        }
-
-    }
-    #endregion
+    
 
     #region createMessageIndexRoutines
 
@@ -2147,28 +2010,7 @@ public partial class IMMN_App1 : System.Web.UI.Page
     }
     #endregion
 
-    #region GetNotificationConnectionDetailsDataTypes
-
-    public class csGetNotificationConnectionDetails
-    {
-        public csNotificationConnectionDetails notificationConnectionDetails { get; set; }
-    }
-
-    public class csNotificationConnectionDetails
-    {
-        public string username { get; set; }
-        public string password { get; set; }
-        public string httpsUrl { get; set; }
-        public string wssUrl { get; set; }
-        public csqueues queues { get; set; }
-    }
-
-    public class csqueues
-    {
-        public string text { get; set; }
-        public string mms { get; set; }
-    }
-    #endregion
+    
 
     #region GetMessageContentDetails
 

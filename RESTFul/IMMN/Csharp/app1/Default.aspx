@@ -144,10 +144,6 @@ limitations under the License.
                 <ul class="dropdown-menu" role="menu"
                   aria-labelledby="notifications-tab" id="notification-tab-contents">
                   <li>
-                    <a href="#get-notification-details" tabindex="-1" role="tab" id="get-notification-details-tab"
-                      data-toggle="tab" aria-controls="get-notification-details">Websockets: Get Connection Details</a>
-                  </li>
-                  <li>
                     <a href="#create-subscription" tabindex="-1" role="tab" id="create-subscription-tab"
                       data-toggle="tab" aria-controls="create-subscription">Webhooks: Create Subscription</a>
                   </li>
@@ -722,57 +718,6 @@ limitations under the License.
                         <% } %>
                 <%---- </form> -->--%>
               </div>
-              <div role="tabpanel" class="tab-pane" id="get-notification-details">
-                <%---- <form id="getNotiDetails" runat="server"> -->--%>
-				        <label>Get Notification Connection Details:</label>
-                        <br />
-					    <div class="inputFields">
-						    <label> Notification Subscription : 
-                             
-                                <input type="radio" id="notificationText" runat="server" name="notifciationDetails" value="TEXT" checked/> TEXT
-                                <input type="radio" id="notificationMms" runat="server" name="notifciationDetails" value="MMS" /> MMS
-					        </label>
-                            <br />
-                            <asp:Button ID="GetNotificationDetailsId" class="btn btn-primary" runat="server" Text="Get Details" OnClick="getNotificationConnectionDetails_Click" />
-                        </div>
-                        <% if (!string.IsNullOrEmpty(getNotificationConnectionDetailsSuccessResponse))
-                           { %>
-                        <div class="alert alert-success" align="left">
-                            <strong>SUCCESS:</strong>                                                     
-                        </div>
-                        <label> Connection Details </label><br />
-                        <div class="table-responsive">
-                        <table class="table table-condensed table-striped table-bordered">
-                          <thead>
-							<tr>
-							  <th>Username</th>
-							  <th>Password</th>
-							  <th>https url</th>
-							  <th>wss url</th>
-							  <th>queues</th>
-							</tr>
-						  </thead>
-						  <tbody>
-							<tr>
-							  <td data-value="Username"><%= getNotificationConnectionDetailsResponse.username%></td>
-							  <td data-value="Password"><%= getNotificationConnectionDetailsResponse.password%></td>
-							  <td data-value="https url"><%= getNotificationConnectionDetailsResponse.httpsUrl%></td>
-							  <td data-value="wss url"><%= getNotificationConnectionDetailsResponse.wssUrl%></td>
-							  <td data-value="queues"><%= getNotificationConnectionDetailsResponse.queues%></td>
-							</tr>
-						  </tbody>
-						</table>                        
-                        </div>
-                        <% } %>
-                        <% if (!string.IsNullOrEmpty(getNotificationConnectionDetailsErrorResponse))
-                           { %>
-                        <div class="alert alert-danger">
-                            <strong>ERROR:</strong><br />
-                            <%=getNotificationConnectionDetailsErrorResponse.ToString()%>
-                        </div>
-                        <% } %>
-                <%--!-- </form> -->--%>
-              </div><!--./tab-pane-->
               <div role="tabpanel" class="tab-pane" id="create-subscription">
                 <%---- <form id="createSubscription" runat="server"> -->--%>
                             <label>Create Subscription:</label>
@@ -1143,11 +1088,7 @@ limitations under the License.
            { %>
         <script type="text/javascript">        $('#tabs a[href="#delete-msg"]').tab('show'); </script>
         <% } %>
-        <% if (!string.IsNullOrEmpty(showGetNotificationConnectionDetails))
-           { %>
-        <script type="text/javascript">        $('#tabs a[href="#get-notification-details"]').tab('show'); </script>
-        <% } %>
-        <% if (!string.IsNullOrEmpty(showCreateSubscription))
+	  <% if (!string.IsNullOrEmpty(showCreateSubscription))
            { %>
         <script type="text/javascript">        $('#tabs a[href="#create-subscription"]').tab('show'); </script>
         <% } %>
