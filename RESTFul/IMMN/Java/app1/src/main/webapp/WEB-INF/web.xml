@@ -56,10 +56,6 @@
         <servlet-class>com.att.api.immn.controller.DelMsgController</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>GetNotiDetailsController</servlet-name>
-        <servlet-class>com.att.api.immn.controller.GetNotiDetailsController</servlet-class>
-    </servlet>
-    <servlet>
         <servlet-name>UpdateMsgController</servlet-name>
         <servlet-class>com.att.api.immn.controller.UpdateMsgController</servlet-class>
     </servlet>
@@ -143,10 +139,6 @@
     <servlet-mapping>
         <servlet-name>DelMsgController</servlet-name>
         <url-pattern>/delMsg</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>GetNotiDetailsController</servlet-name>
-        <url-pattern>/getNotiDetails</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>UpdateMsgController</servlet-name>

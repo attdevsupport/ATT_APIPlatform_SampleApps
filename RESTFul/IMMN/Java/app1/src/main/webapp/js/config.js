@@ -26,7 +26,6 @@ var endpoints = {
     getMsgIndexInfo: "getMsgIndexInfo",
     updateMsg: "updateMsg",
     delMsg: "delMsg",
-    getNotiDetails: "getNotiDetails",
     createSubscription: "createSubscription",
     updateSubscription: "updateSubscription",
     getSubscription: "getSubscription",
