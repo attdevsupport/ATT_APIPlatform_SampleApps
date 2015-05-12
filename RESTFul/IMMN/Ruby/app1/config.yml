@@ -9,5 +9,5 @@ notifications_file: notifications.json
 sub_expires_in: 3600
 session_secret: 'super secret session key'
 
-download_link:  http://localhost:4567/download
-github_link:    http://localhost:4567/source
+download_link:  http://localhost:9292/download
+github_link:    http://localhost:9292/source

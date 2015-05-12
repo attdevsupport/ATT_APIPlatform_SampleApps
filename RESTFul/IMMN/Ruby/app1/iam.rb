@@ -37,7 +37,6 @@ class IAM < Sinatra::Application
   post '/getMsgIndexInfo' do get_message_index_info; end
   post '/updateMsg' do update_message; end
   post '/delMsg' do delete_message; end
-  post '/getNotiDetails' do get_notify_details; end
   post '/createSubscription' do create_subscription; end
   post '/updateSubscription' do update_subscription; end
   post '/getSubscription' do get_subscription; end
@@ -45,12 +44,13 @@ class IAM < Sinatra::Application
   post '/getNotifications' do get_notifications; end
   post '/notification' do notification; end
 
+  # Use session middleware
+  use Rack::Session::Pool, :key => 'iam.ruby.session', :path => '/'
+
   #########################################
   ####### Configure the Application #######
   #########################################
   configure do
-    enable :sessions
-    disable :protection
     config_file 'config.yml'
 
     #Setup proxy used by att/codekit
@@ -371,27 +371,6 @@ class IAM < Sinatra::Application
       delete_msg = service.deleteMessage(msgids)
 
       { :success => true, :text => 'Message(s) Deleted' }.to_json
-    rescue Exception => e
-      { :success => false, :text => e.message }.to_json
-    end
-  end
-
-  def get_notify_details
-    begin
-      service = Service::MIMService.new(settings.FQDN, session[:token])
-
-      queues = params[:notificationType]
-      details = service.getNotificationDetails(queues)
-
-      {
-        :success => true,
-        :tables => [{
-          :caption => 'Connection Details:',
-          :headers => [:Username, :Password, :"Https Url", :"Wss Url", :Queues],
-          :values => [[ details.username, details.password, details.https_url, 
-                        details.wss_url, details.queues ]]
-        }]
-      }.to_json
     rescue Exception => e
       { :success => false, :text => e.message }.to_json
     end
