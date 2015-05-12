@@ -140,28 +140,24 @@ limitations under the License.
                 <ul class="dropdown-menu" role="menu"
                   aria-labelledby="notifications-tab" id="notification-tab-contents">
                   <li>
-                    <a href="#get-notification-details" tabindex="-1" role="tab" id="get-notification-details-tab"
-                      data-toggle="tab" aria-controls="get-notification-details">Websockets: Get Connection Details</a>
-                  </li>
-                  <li>
                     <a href="#create-subscription" tabindex="-1" role="tab" id="create-subscription-tab"
-                      data-toggle="tab" aria-controls="create-subscription">Webhooks: Create Subscription</a>
+                      data-toggle="tab" aria-controls="create-subscription">Create Subscription</a>
                   </li>
                   <li>
                     <a href="#update-subscription" tabindex="-1" role="tab" id="update-subscription-tab"
-                      data-toggle="tab" aria-controls="update-subscription">Webhooks: Update Subscription</a>
+                      data-toggle="tab" aria-controls="update-subscription">Update Subscription</a>
                   </li>
                   <li>
                     <a href="#get-subscription" tabindex="-1" role="tab" id="get-subscription-tab" data-toggle="tab"
-                      aria-controls="get-subscription">Webhooks: Get Subscription</a>
+                      aria-controls="get-subscription">Get Subscription</a>
                   </li>
                   <li>
                     <a href="#delete-subscription" tabindex="-1" role="tab" id="delete-subscription-tab"
-                      data-toggle="tab" aria-controls="delete-subscription">Webhooks: Delete Subscription</a>
+                      data-toggle="tab" aria-controls="delete-subscription">Delete Subscription</a>
                   </li>
                   <li>
                     <a href="#view-notification-details" tabindex="-1" role="tab" id="view-notification-details-tab"
-                      data-toggle="tab" aria-controls="view-notification-details">Webhooks: View Notifications</a>
+                      data-toggle="tab" aria-controls="view-notification-details">View Notifications</a>
                   </li>
                 </ul>
               </li>
@@ -318,21 +314,6 @@ limitations under the License.
                     class="btn btn-primary">Delete Message(s)</button>
                 </form>
               </div>
-              <div role="tabpanel" class="tab-pane" id="get-notification-details">
-                <form id="getNotiDetails">
-                  <div class="form-group">
-                    <label>Get Notification Connection Details:</label>
-                  </div>
-                  <div class="form-group">
-                    <label>Notification Subscription:</label>
-                    <select name="notificationType" id="notificationType" class="form-control">
-                      <option>TEXT</option>
-                      <option>MMS</option>
-                    </select>
-                  </div>
-                  <button type="submit" data-loading-text="Getting..." class="btn btn-primary">Get Details</button>
-                </form>
-              </div><!--./tab-pane-->
               <div role="tabpanel" class="tab-pane" id="create-subscription">
                 <form id="createSubscription">
                   <div class="form-group">
@@ -415,7 +396,7 @@ limitations under the License.
                   <div id="channelTable"></div>
                   <div id="createSubscriptionAlert" class="alert alert-danger">
                     Webhooks requires apps to create subscriptions for customers' message inbox in order to
-                    receive notifications. Create one using the tab option for 'Webhooks: Create Subscription'
+                    receive notifications. Create one using the tab option for 'Create Subscription'
                   </div>
                   <div id="receivingNotifications" class="hidden">
                     <div class="alert alert-info">
