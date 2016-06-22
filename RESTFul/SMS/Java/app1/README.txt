@@ -77,5 +77,5 @@ based on the generated API keys and secrets.
   This command should run the application on port 8080. Make sure no other
   application is running on port 8080. In order to change the port, consult
   Jetty's documentation. To connect to the sample application, open a web
-  browser and visit 'http://localhost:8080/<appname>' replacing <appname> with
-  the application's name.
+  browser and visit 'http://localhost:8080/<appname>/index.jsp' replacing
+  <appname> with the application's name.

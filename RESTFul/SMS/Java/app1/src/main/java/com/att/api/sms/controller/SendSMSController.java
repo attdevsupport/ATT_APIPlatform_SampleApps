@@ -18,6 +18,7 @@ import com.att.api.sms.service.SMSService;
 
 public class SendSMSController extends APIController {
     private static final long serialVersionUID = 1L;
+    private final String DEFAULT_MESSAGE = "AT&T Sample Message";
 
     public void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -28,7 +29,7 @@ public class SendSMSController extends APIController {
             SMSService service = new SMSService(appConfig.getApiFQDN(), token);
 
             String addr = request.getParameter("address");
-            String msg = request.getParameter("message");
+            String msg = DEFAULT_MESSAGE;
             boolean getNotification 
                 = request.getParameter("deliveryNotificationStatus") != null;
 

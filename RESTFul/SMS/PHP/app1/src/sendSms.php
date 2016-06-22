@@ -23,6 +23,8 @@ require_once __DIR__ . '/../lib/SMS/SMSService.php';
 use Att\Api\Util\Util;
 use Att\Api\SMS\SMSService;
 
+DEFINE('MESSAGE', 'AT&T Sample Message');
+
 $arr = null;
 try {
     envinit();
@@ -30,10 +32,9 @@ try {
 
     $addr = Util::convertAddresses($_POST['address']);
     $addr = count($addr) == 1 ? $addr[0] : $addr;
-    $msg = $_POST['message'];
     $notifyDeliveryStatus = isset($_POST['deliveryNotificationStatus']);
 
-    $response = $smsService->sendSMS($addr, $msg, $notifyDeliveryStatus);
+    $response = $smsService->sendSMS($addr, MESSAGE, $notifyDeliveryStatus);
 
     $resourceUrl = $response->getResourceUrl();
     $resourceUrl = $resourceUrl == null ? '-' : $resourceUrl;

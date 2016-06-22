@@ -94,7 +94,8 @@ class SMS < Sinatra::Application
 
       # set notify to a boolean based on checkbox exists or not in request
       notify = !!params[:deliveryNotificationStatus]
-      sms = service.sendSms(params[:address], params[:message], notify)
+      message = "AT&T Sample Message"
+      sms = service.sendSms(params[:address], message, notify)
 
       {
         :success => true,

@@ -31,7 +31,11 @@ public class SMSReceiveStatus {
     private final String deliveryStatus;
 
     /**
+     * Construct a received sms status
      *
+     * @param msgid the message id
+     * @param addr the address
+     * @param ds the delivery status
      */
     public SMSReceiveStatus(final String msgid, final String addr,
             final String ds) {

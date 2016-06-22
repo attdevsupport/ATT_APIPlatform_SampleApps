@@ -103,6 +103,8 @@ public final class AppConfig {
     /**
      * Convenience method for getting the fully qualified domain name for
      * api or null if no api FQDN has been set.
+     *
+     * @return String the fqdn set in the properties file
      */
     public String getApiFQDN() {
         final String fqdn = config.properties.getProperty("apiFQDN");
@@ -162,8 +164,8 @@ public final class AppConfig {
      * Gets the property value for the specified key or uses the specified 
      * default value if key was not found..
      *
-     * @param key
-     *            key value to search
+     * @param key key value to search
+     * @param defaultValue return default if key not found
      * @return value for the specified key
      */
     public String getProperty(String key, String defaultValue) {

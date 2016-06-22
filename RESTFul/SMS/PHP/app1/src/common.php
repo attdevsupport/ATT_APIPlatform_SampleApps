@@ -42,25 +42,25 @@ function envinit()
 {
     if (defined('PROXY_HOST') && defined('PROXY_PORT')) {
         // set any RESTFul environmental settings
-        RestfulEnvironment::setProxy($proxy_host, $proxy_port);
+        RestfulEnvironment::setProxy(PROXY_HOST, PROXY_PORT);
     }
     if (defined('ACCEPT_ALL_CERTS')) {
-        RestfulEnvironment::setAcceptAllCerts($acceptAllCerts);
+        RestfulEnvironment::setAcceptAllCerts(ACCEPT_ALL_CERTS);
     }
 }
 
-/** 
- * Gets an access token that will be cached using a file. 
+/**
+ * Gets an access token that will be cached using a file.
  *
- * This method works first trying to load the file specified in config, 
- * and, if a saved OAuth token isn't found, this method will send an API 
+ * This method works first trying to load the file specified in config,
+ * and, if a saved OAuth token isn't found, this method will send an API
  * request. The OAuth token will then be saved for future use.
  *
  * @return OAuthToken OAuth token that can be used for authorization
- * @throws OAuthException if API request was not successful or if 
+ * @throws OAuthException if API request was not successful or if
  *                        there was a file IO issue
  */
-function getFileToken() 
+function getFileToken()
 {
     $token = OAuthToken::loadToken(OAUTH_FILE);
     if ($token == null || $token->isAccessTokenExpired()) {
@@ -82,14 +82,14 @@ function getFqdn() {
     return FQDN;
 }
 
-/** 
+/**
  * Gets the URL to redirect an application to for authorization.
  *
  * This function uses the parameters specified in the configuration file.
  *
  * @return string URL to redirect for authorization
  */
-function getCodeLocation() 
+function getCodeLocation()
 {
     $codeUrl = getFqdn() . '/oauth/v4/authorize';
     $codeRequest = new OAuthCodeRequest(
@@ -99,20 +99,20 @@ function getCodeLocation()
 }
 
 
-/** 
- * Gets an access token that will be cached using the user's session. 
+/**
+ * Gets an access token that will be cached using the user's session.
  *
- * This method works by first trying to load the token from the user's 
- * session, and, if a saved OAuth token isn't found, this method will send 
+ * This method works by first trying to load the token from the user's
+ * session, and, if a saved OAuth token isn't found, this method will send
  * an API request.
  *
  * @return OAuthToken OAuth token that can be used for authorization
- * @throws OAuthException if API request was not successful or if 
- *                        there was a session issue  
+ * @throws OAuthException if API request was not successful or if
+ *                        there was a session issue
  */
-function getSessionToken() 
+function getSessionToken()
 {
-    // Try loading token from session 
+    // Try loading token from session
     $token = isset($_SESSION['token']) ?
         unserialize($_SESSION['token']) : null;
 
@@ -130,7 +130,7 @@ function getSessionToken()
 
         $code = null;
         // check for code in request params
-        if (isset($_REQUEST['code'])) { 
+        if (isset($_REQUEST['code'])) {
             $code = new OAuthCode($_REQUEST['code']);
         } else {
             $error = 'Invalid state';
@@ -147,7 +147,7 @@ function getSessionToken()
     return $token;
 }
 
-/** 
+/**
  * Gets whether the user is authenticated.
  *
  * This function is only applicable to applications that use authorization code
@@ -155,11 +155,36 @@ function getSessionToken()
  *
  * @return boolean true if authenticated, false otherwise
  */
-function isSessionAuthenticated() 
+function isSessionAuthenticated()
 {
     $token = isset($_SESSION['token']) ? unserialize($_SESSION['token']) : null;
     return $token != null && !$token->isAccessTokenExpired();
 }
+
+/**
+ * Gets an access token, by scope, that will be cached using a file.
+ *
+ * This method works first trying to load the file specified in config,
+ * and, if a saved OAuth token isn't found, this method will send an API
+ * request. The OAuth token will then be saved for future use.
+ *
+ * @return OAuthToken OAuth token that can be used for authorization
+ * @throws OAuthException if API request was not successful or if
+ *                        there was a file IO issue
+ */
+function getFileTokenByScope($scope)
+{
+    $token = OAuthToken::loadToken(OAUTH_FILE);
+    if ($token == null || $token->isAccessTokenExpired()) {
+        $tokenSrvc = new OAuthTokenService(FQDN, CLIENT_ID, CLIENT_SECRET);
+        $token = $tokenSrvc->getTokenUsingScope($scope);
+        // save token for future use
+        $token->saveToken(OAUTH_FILE);
+    }
+
+    return $token;
+}
+
 
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 ?>

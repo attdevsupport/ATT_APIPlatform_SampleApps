@@ -140,7 +140,7 @@ limitations under the License.
                   </div>
                   <div class="form-group">
                     <label for="message">Message</label>
-                    <textarea class="form-control" type="text" name="message" maxlength=120 rows="1">AT&amp;T Sample message</textarea>
+                    <textarea class="form-control" type="text" name="message" maxlength=120 rows="1" disabled>AT&amp;T Sample Message</textarea>
                   </div><!--./form-group-->
                   <div class="checkbox">
                     <label>

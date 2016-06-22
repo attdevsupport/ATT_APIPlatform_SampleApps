@@ -1,7 +1,7 @@
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4 */
 
 /*
- * Copyright 2014 AT&T
+ * Copyright 2015 AT&T
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.util.HashMap;
 import java.util.Properties;
+
+import org.json.JSONObject;
 
 /**
  * An immutable OAuthToken object that encapsulates an OAuth 2.0 token, which
@@ -188,6 +190,20 @@ public class OAuthToken {
      */
     public String getRefreshToken() {
         return refreshToken;
+    }
+
+
+    public static OAuthToken valueOf(JSONObject jobj) {
+        final String accessToken = jobj.getString("access_token");
+        final String refreshToken = jobj.getString("refresh_token");
+        long expiresIn = jobj.getLong("expires_in");
+
+        // 0 indicates no expiry
+        if (expiresIn == 0) {
+            expiresIn = OAuthToken.NO_EXPIRATION;
+        }
+
+        return new OAuthToken(accessToken, expiresIn, refreshToken);
     }
 
     /**
