@@ -1,10 +1,10 @@
 proxy:
-api_key: adfasdf
-secret_key: asd
-FQDN: http://localhost:8888
+api_key: 
+secret_key: 
+FQDN: https://api.att.com
 
-short_code_check: asdf
-short_code_received: asdfaof
+short_code_check: 
+short_code_received: 
 
 listener_limit: 5
 
