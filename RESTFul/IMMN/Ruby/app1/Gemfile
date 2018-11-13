@@ -6,6 +6,6 @@ end
 
 
 # include codekit source and gem
-gem 'att-codekit', '~>4.3', 
+gem 'att-codekit', '~>6.0', 
   :require => 'att/codekit',
   :source => "http://lprod.code-api-att.com:8808" 
